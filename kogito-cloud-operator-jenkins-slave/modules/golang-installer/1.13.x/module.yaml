@@ -1,0 +1,16 @@
+name: org.kie.kogito.golang
+version: "1.13"
+description: "Module used to install golang 1.13"
+envs:
+  - name: GOROOT
+    value: /usr/local/go
+  - name: GOPATH
+    value: /home/jenkins/go
+  - name: PATH
+    value: /home/jenkins/go/bin:/usr/local/go/bin/:$PATH
+artifacts: 
+  - name: go1.13.linux-amd64.tar.gz
+    url: https://dl.google.com/go/go1.13.linux-amd64.tar.gz
+    sha256: 68a2297eb099d1a76097905a2ce334e3155004ec08cdea85f24527be3c48e856
+execute:
+  - script: install.sh
