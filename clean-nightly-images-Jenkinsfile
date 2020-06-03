@@ -1,0 +1,21 @@
+pipeline{
+    agent {label 'jenkins-slave'}
+    environment {
+        QUAY_ACCESS_TOKEN = credentials("QUAY_ACCESS_TOKEN")
+    }
+    stages{
+        stage('Clone Repo'){
+            steps{
+                sh "rm -rf kogito-pipelines"
+                sh "git clone https://github.com/kiegroup/kogito-pipelines"
+            }
+        }
+        stage('Clean Images'){
+            steps{
+                dir('kogito-pipelines'){
+                    sh "python3 tools/clean-nightly-tags.py" 
+                }
+            }
+        }
+    }
+}
