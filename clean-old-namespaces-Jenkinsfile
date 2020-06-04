@@ -1,0 +1,13 @@
+pipeline{
+    agent {label 'operator-slave'}
+    triggers {
+        cron('@midnight')
+    }
+    stages{
+        stage('Clean Old Namespaces'){
+            steps{
+                sh "tools/clean-old-namespaces.sh" 
+            }
+        }
+    }
+}
