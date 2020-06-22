@@ -1,0 +1,332 @@
+REMOTE_JOB_TIMEOUT=21600 // Timeout to 6 hours (some jobs take time to start)
+WAIT_FAIL_AFTER_X_ERRORS=60
+
+BUILD_URLS=[]
+
+// Should be multibranch pipeline
+pipeline {
+    agent {
+        label 'kie-rhel7 && !master'
+    }
+
+    triggers {
+        cron ('H 0 * * *')
+    }
+
+    environment {
+        KOGITO_CI_EMAIL_TO = credentials('KOGITO_CI_EMAIL_TO')
+
+        // This will be deleted once we move all jobs to main jenkins
+        JENKINS_CLOUD_ROOT_URL = "https://jenkins-kogito-tools.apps.kogito.automation.rhmw.io/job/Kogito"
+        JENKINS_CLOUD_CREDS = credentials('JENKINS_CLOUD_KOGITO_CREDS')
+        JENKINS_CLOUD_JOB_REMOTE_TOKEN = credentials('JENKINS_CLOUD_KOGITO_JOBS_REMOTE_TOKEN')
+
+        IMAGE_REGISTRY_CREDENTIALS = "quay"
+        IMAGE_REGISTRY = "quay.io"
+        IMAGE_NAMESPACE = "kiegroup"
+        IMAGE_NAME_SUFFIX = "nightly"
+
+        NIGHTLY_MAVEN_REPOSITORY = "https://origin-repository.jboss.org/nexus/content/groups/public/"
+
+        // Temp tag as we are using quay as temporary registry for testing, due to https://issues.redhat.com/browse/KOGITO-2219
+        TEMP_TAG = "temp-${BRANCH_NAME}-tests"
+        // Use branch name in nightly tag as we may have parallel master and release branch builds
+        NIGHTLY_TAG = """nightly-${BRANCH_NAME}-${sh(
+                returnStdout: true,
+                script: 'date -u "+%Y-%m-%d"'
+            ).trim()}"""
+
+        // TODO to uncomment
+        // BRANCH_FOR_LATEST="master"
+        BRANCH_FOR_LATEST="pipelines"
+    }
+
+    stages {
+        stage("Initialize") {
+            steps {
+                script {
+                    echo "temporary tag is ${TEMP_TAG}"
+                    echo "nightly tag is ${NIGHTLY_TAG}"
+
+                    currentBuild.displayName = "${NIGHTLY_TAG}"
+                }
+            }
+        }
+
+        stage("Build & Deploy Runtimes") {
+            steps {
+                script {
+                    echo "Call kogito-runtimes-deploy job"
+                    def runtimesBuildJob = build(job:"../kogito-runtimes-deploy", wait: true, parameters: [
+                        string(name: "DISPLAY_NAME", value: "${NIGHTLY_TAG}"),
+                        string(name: "BUILD_BRANCH_NAME", value: "${BRANCH_NAME}")
+                    ])
+                    // See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
+                    // for more options on built job entity
+                    addBuildUrl(runtimesBuildJob.getAbsoluteUrl())
+                }
+            }
+        }
+
+        stage("Build & Deploy Images") {
+            steps {
+                script {
+                    def buildParams = getDefaultRemoteBuildParams()
+                    // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
+                    addImageBuildParams(buildParams, "", "${TEMP_TAG}", true)
+                    // Added to be sure to get latest snapshots
+                    buildParams.MAVEN_ARTIFACT_REPOSITORY = env.NIGHTLY_MAVEN_REPOSITORY
+
+                    startAndWaitForRemoteBuild("kogito-images-deploy", buildParams, REMOTE_JOB_TIMEOUT)
+                }
+            }
+        }
+
+        stage("Build & Deploy Operator") {
+            steps {
+                script {
+                    def buildParams = getDefaultRemoteBuildParams()
+                    // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
+                    addImageBuildParams(buildParams, "", "${TEMP_TAG}", true)
+                    // For BDD tests
+                    // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
+                    // buildParams.KOGITO_IMAGES_IN_OPENSHIFT_REGISTRY = true
+                    buildParams.KOGITO_IMAGES_REGISTRY = "${IMAGE_REGISTRY}"
+                    buildParams.KOGITO_IMAGES_NAMESPACE = "${IMAGE_NAMESPACE}"
+                    buildParams.KOGITO_IMAGES_NAME_SUFFIX = "${IMAGE_NAME_SUFFIX}"
+                    buildParams.KOGITO_IMAGES_TAG = "${TEMP_TAG}"
+
+                    // Added to be sure to get latest snapshots
+                    // TODO to enable once https://issues.redhat.com/browse/KOGITO-1957 is solved
+                    buildParams.MAVEN_ARTIFACT_REPOSITORY = env.NIGHTLY_MAVEN_REPOSITORY
+
+                    startAndWaitForRemoteBuild("kogito-operator-deploy", buildParams, REMOTE_JOB_TIMEOUT)
+                }
+            }
+        }
+
+        stage("Promote images") {
+            steps {
+                script {
+                    def buildParams = getDefaultRemoteBuildParams()
+                    // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
+                    addImageBuildParams(buildParams, "BASE", "${TEMP_TAG}", true)
+                    addImageBuildParams(buildParams, "PROMOTE", "${NIGHTLY_TAG}", true)
+                    if("${BRANCH_NAME}" == "${BRANCH_FOR_LATEST}"){
+                        buildParams.DEPLOY_WITH_LATEST_TAG = true
+                    }
+
+                    startAndWaitForRemoteBuild("kogito-images-promote", buildParams, REMOTE_JOB_TIMEOUT)
+                }
+            }
+        }
+
+        stage("Promote operator image") {
+            steps {
+                script {
+                    def buildParams = getDefaultRemoteBuildParams()
+                    // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
+                    addImageBuildParams(buildParams, "BASE", "${TEMP_TAG}", true)
+                    addImageBuildParams(buildParams, "PROMOTE", "${NIGHTLY_TAG}", true)
+                    if("${BRANCH_NAME}" == "${BRANCH_FOR_LATEST}"){
+                        buildParams.DEPLOY_WITH_LATEST_TAG = true
+                    }
+
+                    startAndWaitForRemoteBuild("kogito-operator-promote", buildParams, REMOTE_JOB_TIMEOUT)
+                }
+            }
+        }
+    }
+    post {
+        failure {
+            sendNotification()
+        }
+        unstable {
+            sendNotification()
+        }
+        always {
+            updateDescription()
+        }
+    }
+}
+
+void sendNotification(){
+    emailext body: 'Kogito nightly build #${BUILD_NUMBER} was: ' + "${currentBuild.currentResult}" +  '\n' +
+            'Please look here: ${BUILD_URL} ',
+                subject: 'Kogito nightly build #${BRANCH_NAME}',
+                to: env.KOGITO_CI_EMAIL_TO
+}
+
+void addBuildUrl(String url){
+    BUILD_URLS.add(url)
+    updateDescription()
+}
+
+void updateDescription(){
+    String desc = ""
+    for(String buildUrl : BUILD_URLS){
+        desc += "${buildUrl}\n"
+    }
+    currentBuild.description = desc
+}
+
+Map getDefaultRemoteBuildParams(){
+    Map buildParams = [:]
+    buildParams.DISPLAY_NAME = "${NIGHTLY_TAG}"
+    buildParams.BUILD_BRANCH_NAME = "${BRANCH_NAME}"
+    return buildParams
+}
+
+void addImageBuildParams(Map buildParams = [:], String paramsPrefix = "", String tag, boolean isRegistryIncluded = false){
+    if(isRegistryIncluded){
+        buildParams."${constructKey(paramsPrefix, "IMAGE_REGISTRY_CREDENTIALS")}" = "${IMAGE_REGISTRY_CREDENTIALS}"
+        buildParams."${constructKey(paramsPrefix, "IMAGE_REGISTRY")}" = "${IMAGE_REGISTRY}"
+        buildParams."${constructKey(paramsPrefix, "IMAGE_NAMESPACE")}" = "${IMAGE_NAMESPACE}"
+    }
+    buildParams."${constructKey(paramsPrefix, "IMAGE_NAME_SUFFIX")}" = "${IMAGE_NAME_SUFFIX}"
+    buildParams."${constructKey(paramsPrefix, "IMAGE_TAG")}" = "${tag}"
+}
+
+String constructKey(String prefix, String paramId){
+    if (prefix == null || prefix == ''){
+        return paramId
+    }
+    return "${prefix}_${paramId}"
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+// Start remote job
+// This part will be removed once we use the same Jenkins for both runtimes and cloud jobs
+
+void startAndWaitForRemoteBuild(String jobName, Map buildParams, int timeoutInSec){    
+    echo "Start & Wait for remote job ${jobName} with buildParams ${buildParams} and timeout ${timeoutInSec}s"
+    // Get last build before to have the number so we should wait for a new one
+    def previousBuildId = getRemoteJobLatestBuild(jobName).id
+    //echo "Got previous build id ${previousBuildId}"
+    
+    startRemoteJobBuild(jobName, buildParams)
+    remoteBuildId=-1
+
+    // Get next build first
+    waitFor("new build", 3600, 5, {
+        def remoteBuild = getRemoteJobLatestBuild(jobName)
+        if (previousBuildId != remoteBuild.id){
+            remoteBuildId = remoteBuild.id
+            return true
+        }
+        return false
+    })
+    echo "Created build '${buildJobUrl(jobName)}/${remoteBuildId}'"
+    addBuildUrl("${buildJobUrl(jobName)}/${remoteBuildId}")
+
+    // Wait for completion
+    String jobFailureStatus = null
+    waitFor("${jobName} to finish", timeoutInSec, 60, {
+        def remoteBuild = getRemoteJobBuild(jobName, remoteBuildId)
+        if(!remoteBuild.building){
+            if (remoteBuild.result != "SUCCESS") {
+                jobFailureStatus = remoteBuild.result
+                return true // Exit the waitFor if remote build is not success
+            } else {
+                echo "Job ${jobName} succeeded"
+                return true
+            }        
+        }
+        return false
+    })
+    if (jobFailureStatus != null) {
+        error "Dependent job ${jobName} is in status ${jobFailureStatus}"
+    }
+}
+
+void startRemoteJobBuild(String jobName, Map buildParams=[:]){
+    path = ""
+    if(buildParams.size() > 0) {
+        path = "buildWithParameters?token=${JENKINS_CLOUD_JOB_REMOTE_TOKEN}"
+        for(def entry : buildParams.entrySet()){
+            path += "&${entry.getKey()}=${entry.getValue()}"
+        }
+    }else{
+        path = "build?token=${JENKINS_CLOUD_JOB_REMOTE_TOKEN}"
+    }
+    try {
+        httpGet("${buildJobUrl(jobName)}/${path}", "${JENKINS_CLOUD_CREDS_USR}", "${JENKINS_CLOUD_CREDS_PSW}")
+    }catch (e) {
+        error "Error starting build for job ${jobName}: ${e.message}"
+    }
+}
+
+def getRemoteJobLatestBuild(String jobName) {
+    try {
+        def callResult = httpGet("${buildJobUrl(jobName)}/lastBuild/api/json", "${JENKINS_CLOUD_CREDS_USR}", "${JENKINS_CLOUD_CREDS_PSW}")
+        return readJSON(text: callResult)
+    }catch (e) {
+        error "Error getting latest build for job ${jobName}: ${e.message}"
+    }
+}
+
+def getRemoteJobBuild(String jobName, String buildId) {
+    try {
+        def callResult = httpGet("${buildJobUrl(jobName)}/${buildId}/api/json", "${JENKINS_CLOUD_CREDS_USR}", "${JENKINS_CLOUD_CREDS_PSW}")
+        return readJSON(text: callResult)
+    }catch (e) {
+        error "Error getting build ${buildId} for job ${jobName}: ${e.message}"
+    }
+}
+
+String buildJobUrl(String jobName){
+    return "${JENKINS_CLOUD_ROOT_URL}/job/${jobName}"
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// HTTP utils
+
+String httpGet(String url, String username, String password) {
+    return httpCall(url, "GET", username, password)
+}
+
+String httpCall(String url, String method, String username, String password) {
+    // echo "httpCall with url ${url}"
+    String auth = ""
+    if (username != null && password != null) {
+        auth = "-u ${username}:${password}"
+    }
+    httpStatus = sh (script: '#!/bin/sh -e\n' + "curl -X ${method} -s -o curl_result -w \"%{http_code}\" ${auth} '${url}'", returnStdout: true).trim()
+    //echo "status = ${httpStatus}"
+    output = sh(script: '#!/bin/sh -e\n' + "cat curl_result", returnStdout: true).trim()
+
+    if(!httpStatus.startsWith("2")){
+        error "Error calling url ${url}: Return status ${httpStatus}. Output = ${output}"
+    }
+    return output
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+// Utils
+
+void waitFor(String display, int timeoutInSec, int checkInterval, Closure check){
+    echo "Wait for ${display}"
+    timeout = 0
+    errorCount = 0
+    while(true) {
+        if (timeout > timeoutInSec){
+            error "Timeout waiting for ${display}"
+        }
+
+        try {
+            if(check()){
+                break
+            }
+        } catch (e) {
+            echo "Error waiting for ${display}: ${e.message}"
+            errorCount++
+            if(errorCount >= WAIT_FAIL_AFTER_X_ERRORS){
+                error "Error count has been reached. Failing waitFor loop ..."
+            }
+        }
+
+        sh '#!/bin/sh -e\n' + "sleep ${checkInterval}s"
+        timeout += checkInterval
+    }
+}
