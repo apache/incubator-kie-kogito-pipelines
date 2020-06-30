@@ -1,5 +1,5 @@
 name: kogito-cloud-operator-jenkins-slave
-version: "0.9.1"
+version: "0.12.0"
 from: registry.redhat.io/openshift4/ose-jenkins-agent-base
 description: Image used by dynamic jenkins slave to build kogito-cloud-operator using podman
 modules:
@@ -11,7 +11,7 @@ modules:
     - name: org.kie.kogito.mercurial
       version: "5.3.1"
     - name: org.kie.kogito.operator-sdk
-      version: "v0.15.1"
+      version: "v0.18.2"
     - name: org.kie.kogito.graalvm
       version: "19.3.1-java-11"
     - name: org.kie.kogito.maven 
