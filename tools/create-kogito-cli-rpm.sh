@@ -22,7 +22,7 @@ cat <<EOF > SPECS/kogito.spec
 %define        __os_install_post %{_dbpath}/brp-compress
 
 Summary: Kogito Operator is a Kubernetes based operator for deployment of Kogito Runtimes from source. Additionally, to facilitate interactions with the operator we also offer a CLI (Command Line Interface) that can deploy Kogito applications for you.
-Name: kogito
+Name: kogito-cli
 Version: ${KOGITO_CLI_VERSION}
 Release: 1
 License: Apache License 2.0
