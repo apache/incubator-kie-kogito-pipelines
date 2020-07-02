@@ -1,0 +1,32 @@
+pipeline{
+    agent {label 'kogito-cloud && !master'}
+    parameters {
+        string(name: 'KOGIT0_CLI_BINARY_URL', defaultValue: '', description: 'Kogito binary .tar.gz file')
+        string(name: 'KOGITO_CLI_VERSION', defaultValue: '', description: 'Kogito CLI version')
+        string(name: 'KOGITO_CLI_RPM_CHANGELOG', defaultValue: '', description: 'Changelog must be in this format Thu Jul 02 2020  Your Name <yourname@redhat.com>')
+        string(name: 'KOGITO_CLI_RPM_CHANGELOG_DESCRIPTION', defaultValue: '', description: 'Changelog description')
+    }
+
+    options {
+        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')
+        timeout(time: 360, unit: 'MINUTES')
+    }
+
+    environment {
+        WORKING_DIR = "/home/jenkins/rpmbuild"
+    }
+    stages{
+        stage('Create Kogito CLI RPM'){
+            steps{
+                sh "tools/create-kogito-cli-rpm.sh $KOGIT0_CLI_BINARY_URL $KOGITO_CLI_VERSION '$KOGITO_CLI_RPM_CHANGELOG' $KOGITO_CLI_RPM_CHANGELOG_DESCRIPTION" 
+            }
+            post {
+                always {
+                    dir("${WORKING_DIR}") {
+                        archiveArtifacts artifacts: 'RPMS/x86_64/**/*.rpm', allowEmptyArchive: true
+                    }
+                }
+            }
+        }
+    }
+}
