@@ -1,0 +1,313 @@
+pipeline {
+    parameters {
+        string(name: 'AGENT_LABEL', defaultValue: '', description: 'Agent to use')
+        // need to be set as param directly in job config
+        // string(name: 'EMAIL_REPORTING', defaultValue: '', description: 'Where to send the results ?')
+
+        // Container registry
+        booleanParam(name: 'USE_OPENSHIFT_INTERNAL_REGISTRY', defaultValue: true, description: 'If using the Openshift registry')
+        string(name: 'IMAGE_GROUP', defaultValue: 'openshift', description: 'In which namespace should your image be pushed ?')
+
+        string(name: 'IMAGE_REGISTRY', defaultValue: '', description: 'If `USE_OPENSHIFT_INTERNAL_REGISTRY` is false')
+        // need to be set as param directly in job config
+        // string(name: 'REGISTRY_USER', defaultValue: 'user', description: 'If `USE_OPENSHIFT_INTERNAL_REGISTRY` is false')
+        // string(name: 'REGISTRY_PASSWORD', defaultValue: '', description: 'If `USE_OPENSHIFT_INTERNAL_REGISTRY` is false')
+
+        // Openshift
+        // need to be set as param directly in job config
+        // string(name: 'OPENSHIFT_URL_DOMAIN', defaultValue: 'openshift.com', description: 'Openshift url suffix. All other openshift url(s) will be setup according to that one')
+        // string(name: 'OPENSHIFT_USER', defaultValue: 'admin', description: 'Openshift user')
+        // string(name: 'OPENSHIFT_PASSWORD', defaultValue: '', description: 'Openshift password')
+
+        // Repository
+        string(name: 'REPOSITORY_URL', defaultValue: 'https://github.com/kiegroup/kogito-cloud-operator.git', description: 'Repository to use')
+        string(name: 'REPOSITORY_BRANCH', defaultValue: 'master', description: 'Which branch ?')
+
+        // Test parameters
+        string(name: 'TEST_TAGS', defaultValue: '', description: 'Which tags for the tests ?')
+        booleanParam(name: 'LOAD_DEFAULT_CONFIG', defaultValue: true, description: 'Load the test default config.')
+        string(name: 'MAVEN_MIRROR_URL', defaultValue: '', description: 'If you want to use a Maven Mirror Url')
+        string(name: 'BUILD_IMAGE_NAME_SUFFIX', defaultValue: 'nightly', description: 'Build image(s) name suffix')
+        string(name: 'BUILD_IMAGE_VERSION', defaultValue: '', description: 'Build image(s) version')
+        string(name: 'EXAMPLES_URI', defaultValue: '', description: 'Examples URI to test with')
+        string(name: 'EXAMPLES_REF', defaultValue: 'master', description: 'Examples reference to test with')
+        string(name: 'FEATURE', defaultValue: 'scripts/examples', description: 'Feature path to be executed.')
+    }
+
+    agent {
+        label "${AGENT_LABEL}"
+    }
+
+    environment {
+        WORKING_DIR = "kogito-cloud-operator"
+        ENV_FILE = "${WORKSPACE}/.env"
+
+        MAVEN_RELEASE_VERSION = "3.6.3"
+        GRAALVM_RELEASE_VERSION = "19.3.1"
+        OPERATOR_SDK_RELEASE_VERSION = "v0.18.2"
+    }
+
+    stages {
+        stage("Init"){
+            steps{
+                script {
+                    // Calculate build display name
+                    setBuildDisplayName()
+
+                    // Set Openshift & registry urls
+                    env.OPENSHIFT_API_URL = "https://api.${params.OPENSHIFT_URL_DOMAIN}:6443"
+                    if (params.USE_OPENSHIFT_INTERNAL_REGISTRY){
+                        env.INTERNAL_IMAGE_REGISTRY = "image-registry.openshift-image-registry.svc:5000"
+                        env.EXTERNAL_IMAGE_REGISTRY = "default-route-openshift-image-registry.apps.${params.OPENSHIFT_URL_DOMAIN}"
+                    } else {
+                        env.INTERNAL_IMAGE_REGISTRY = "${params.IMAGE_REGISTRY}"
+                        env.EXTERNAL_IMAGE_REGISTRY = "${params.IMAGE_REGISTRY}"
+                    }
+
+                    // Test params
+                    env.TEST_PARAMS=""
+                    // In case of SKIP_BUILD, we have no CLI, so we should use CR only in tests
+                    addTestParamFromValue("cr_deployment_only", "true")
+                    // Don't use cache, override it
+                    addTestParamFromValue("image_cache_mode", "never")
+                    addTestParamFromValue("build_image_version", "latest")
+                    addTestParamFromValue("disabled_crds_update", "true")
+                    addTestParamFromValue("container_engine", "podman")
+                    addTestParamFromValue("runtime_application_image_registry", env.EXTERNAL_IMAGE_REGISTRY)
+                    addTestParamFromParamIfExist("tags", "TEST_TAGS")
+                    if (params.LOAD_DEFAULT_CONFIG) { addTestParamFromValue("load_default_config", "true") }
+                    addTestParamFromParamIfExist("maven_mirror", "MAVEN_MIRROR_URL")
+                    addTestParamFromParamIfExist("build_image_name_suffix", "BUILD_IMAGE_NAME_SUFFIX")
+                    addTestParamFromParamIfExist("build_image_version", "BUILD_IMAGE_VERSION")
+                    // Generated images will have same name suffix and version as build images
+                    addTestParamFromParamIfExist("runtime_application_image_name_suffix", "BUILD_IMAGE_NAME_SUFFIX")
+                    addTestParamFromParamIfExist("runtime_application_image_version", "BUILD_IMAGE_VERSION")
+                    addTestParamFromParamIfExist("examples_uri", "EXAMPLES_URI")
+                    addTestParamFromParamIfExist("examples_ref", "EXAMPLES_REF")
+                    addTestParamFromParamIfExist("runtime_application_image_namespace", "IMAGE_GROUP")
+                    addTestParamFromParamIfExist("feature", "FEATURE")
+
+                    echo "Test parameters = ${TEST_PARAMS}"
+                    echo "Openshift url = ${OPENSHIFT_API_URL}"
+                    echo "Internal openshift registry url = ${INTERNAL_IMAGE_REGISTRY}"
+                    echo "External openshift registry url${EXTERNAL_IMAGE_REGISTRY}"
+                }
+            }
+        }
+        stage("Checkout code"){
+            steps {
+                deleteDir()
+                sh "rm -rf ${WORKING_DIR} && mkdir -p ${WORKING_DIR}"
+                dir("${WORKING_DIR}") {
+                    git url: "${REPOSITORY_URL}", branch: "${REPOSITORY_BRANCH}"
+                }
+            }
+        }
+        stage("Setup node") {
+            steps {
+                script {
+                    installGo()
+                    installOperatorSDK()
+                    installOpenshiftClient()
+                    installGraalVMWithNative()
+                    installMaven()
+
+                    sh """
+                        . ${ENV_FILE}
+
+                        go version
+                        hg version
+                        python2 --version
+                        operator-sdk version
+                        oc version
+
+                        echo \$JAVA_HOME
+                        echo \$GRAALVM_HOME
+
+                        java -version
+                        native-image --version
+                        mvn --version
+                    """
+
+                    loginOpenshift()
+                    loginContainerRegistry()
+                }
+            }
+        }
+
+        stage("Run Full tests"){
+            steps {
+                dir("${WORKING_DIR}") {
+                    sh ". ${ENV_FILE} && make run-tests ${TEST_PARAMS}"
+                }
+            }
+            post {
+                always {
+                    dir("${WORKING_DIR}") {
+                        archiveArtifacts artifacts: 'test/logs/full/**/*.log', allowEmptyArchive: true
+                        junit testResults: 'test/logs/full/junit.xml', allowEmptyResults: true
+                    }
+                }
+            }
+        }
+    }
+    post {
+        unstable {
+            script {
+                sendMail()
+            }
+        }
+        failure {
+            script {
+                sendMail()
+            }
+        }
+        changed {
+            script {
+                sendMail()
+            }
+        }
+        always {
+            dir("${WORKING_DIR}") {
+                deleteDir()
+            }
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// utils
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+void addTestParamFromParamIfExist(String key, String envKey) {
+    if (params[envKey] != null && params[envKey] != "") {
+        addTestParamFromValue(key, "${params[envKey]}")
+    }
+}
+void addTestParamFromValue(String key, String value) {
+    env.TEST_PARAMS += " ${key}=\"${value}\""
+}
+
+void loginOpenshift(){
+    sh "oc login ${OPENSHIFT_API_URL} -u ${OPENSHIFT_USER} -p \${OPENSHIFT_PASSWORD} --insecure-skip-tls-verify"
+}
+
+void loginContainerRegistry() {
+    if (params.USE_OPENSHIFT_INTERNAL_REGISTRY) {
+        sh "podman login -u ${OPENSHIFT_USER} -p \$(oc whoami -t) --tls-verify=false ${EXTERNAL_IMAGE_REGISTRY}"
+    } else {
+        sh "podman login -u ${REGISTRY_USER} -p \${REGISTRY_PASSWORD} --tls-verify=false ${IMAGE_REGISTRY}"
+    }
+}
+
+void setBuildDisplayName(){
+    displayName = "${REPOSITORY_BRANCH}"
+    if(env.TEST_TAGS != '') {
+        displayName += " (${TEST_TAGS})"
+    }
+    currentBuild.displayName = displayName
+}
+
+void sendMail(){
+    mail to: "${EMAIL_REPORTING}", subject: "${currentBuild.currentResult} for job ${JOB_NAME}", body: "${BUILD_URL}"
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Setup node
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void installGo(){
+    // Download and install Go binary
+    sh """
+        rm -rf go/
+        GO_VERSION=1.13.6
+        GO_PACKAGE="go\${GO_VERSION}.linux-amd64.tar.gz"
+        curl -LO https://dl.google.com/go/\${GO_PACKAGE} -o ${WORKSPACE}/\${GO_PACKAGE}
+        tar xzf ${WORKSPACE}/\${GO_PACKAGE}
+        chmod u+x ${WORKSPACE}/go/bin/*
+    """
+
+    // Set go env variables into env file
+    sh '''
+        rm -rf ${ENV_FILE}
+
+        echo \"export GOROOT=${WORKSPACE}/go\" >> ${ENV_FILE}
+
+        mkdir -p ${WORKSPACE}/go-${GO_VERSION}
+        mkdir -p ${WORKSPACE}/go-${GO_VERSION}/.cache
+
+        echo \"export GOCACHE=${WORKSPACE}/go-${GO_VERSION}/.cache\" >> ${ENV_FILE}
+        echo \"export GOPATH=${WORKSPACE}/go-${GO_VERSION}\" >> ${ENV_FILE}
+
+        . ${ENV_FILE}
+
+        echo 'export PATH=\${PATH}:\${GOROOT}/bin' >> ${ENV_FILE}
+        echo 'export PATH=\${PATH}:\${GOPATH}/bin' >> ${ENV_FILE}
+
+        cat ${ENV_FILE}
+    '''
+
+    // Install Go dependencies
+    sh """
+        . ${ENV_FILE}
+        export GO111MODULE=on
+        go get github.com/gobuffalo/packr/v2/packr2
+        go get -u golang.org/x/lint/golint
+    """
+}
+
+void installOperatorSDK(){
+    sh """
+        # Install mercurial, needed by operator-sdk
+        sudo yum install -y python2
+        sudo yum install -y --skip-broken '*mercurial*'
+
+        # Install operator-sdk 0.18.2
+        rm -rf \$HOME/bin/operator-sdk
+        curl -LO https://github.com/operator-framework/operator-sdk/releases/download/\${OPERATOR_SDK_RELEASE_VERSION}/operator-sdk-\${OPERATOR_SDK_RELEASE_VERSION}-x86_64-linux-gnu
+        chmod +x operator-sdk-\${OPERATOR_SDK_RELEASE_VERSION}-x86_64-linux-gnu && mkdir -p \$HOME/bin/ && cp operator-sdk-\${OPERATOR_SDK_RELEASE_VERSION}-x86_64-linux-gnu \$HOME/bin/operator-sdk && rm operator-sdk-\${OPERATOR_SDK_RELEASE_VERSION}-x86_64-linux-gnu
+    """
+}
+
+void installOpenshiftClient(){
+    sh """
+        # Download and unzip latest OC client
+        URL="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/"
+        PACKAGE_URL=`curl \$URL --silent | grep "openshift-client-linux.tar.gz" | sed -n 's/.*href="\\([^"]*\\).*/\\1/p'`
+        PACKAGE_URL="\${URL}\${PACKAGE_URL}"
+        PACKAGE_NAME=`basename \${PACKAGE_URL}`
+        wget \${PACKAGE_URL}
+        tar xzf ./\${PACKAGE_NAME}
+        mv oc \${OSE_CLIENT_DIR}
+    """
+}
+
+void installGraalVMWithNative(){
+    echo "installGraalVMWithNative"
+    sh """
+        rm -rf ${WORKSPACE}/graalvm*
+        curl -LO https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-\${GRAALVM_RELEASE_VERSION}/graalvm-ce-java11-linux-amd64-\${GRAALVM_RELEASE_VERSION}.tar.gz
+        tar xzf graalvm-ce-java11-linux-amd64-\${GRAALVM_RELEASE_VERSION}.tar.gz
+
+        echo \"export GRAALVM_HOME=${WORKSPACE}/graalvm-ce-java11-\${GRAALVM_RELEASE_VERSION}\" >> ${ENV_FILE}
+        echo \"export JAVA_HOME=${WORKSPACE}/graalvm-ce-java11-\${GRAALVM_RELEASE_VERSION}\" >> ${ENV_FILE}
+        . ${ENV_FILE}
+        echo 'export PATH=\${GRAALVM_HOME}/bin:\${PATH}' >> ${ENV_FILE}
+        . ${ENV_FILE}
+
+        gu install native-image
+    """
+}
+
+void installMaven(){
+    sh """
+        rm -rf ${WORKSPACE}/apache-maven-*
+        curl -LO https://mirrors.ocf.berkeley.edu/apache/maven/maven-3/\${MAVEN_RELEASE_VERSION}/binaries/apache-maven-\${MAVEN_RELEASE_VERSION}-bin.tar.gz
+        tar xzf apache-maven-\${MAVEN_RELEASE_VERSION}-bin.tar.gz
+
+        echo \"export MVN_HOME=${WORKSPACE}/apache-maven-\${MAVEN_RELEASE_VERSION}\" >> ${ENV_FILE}
+        . ${ENV_FILE}
+        echo 'export PATH=\${PATH}:\${MVN_HOME}/bin' >> ${ENV_FILE}
+    """
+}
