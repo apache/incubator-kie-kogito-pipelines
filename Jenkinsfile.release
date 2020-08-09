@@ -36,9 +36,12 @@ pipeline {
         string(name: 'EXAMPLES_URI', defaultValue: '', description: 'Override default. Git uri to the kogito-examples repository to use for tests.')
         string(name: 'EXAMPLES_REF', defaultValue: '', description: 'Override default. Git reference (branch/tag) to the kogito-examples repository to use for tests.')
 
-        booleanParam(name: 'SKIP_RUNTIMES', defaultValue: false, description: 'To skip Runtimes. If skipped, please provide `ARTIFACTS_REPOSITORY`')
-        booleanParam(name: 'SKIP_IMAGES', defaultValue: false, description: 'To skip Images Deployment')
-        booleanParam(name: 'SKIP_OPERATOR', defaultValue: false, description: 'To skip Operator Deployment')
+        booleanParam(name: 'SKIP_RUNTIMES_DEPLOY', defaultValue: false, description: 'To skip Runtimes Test & Deployment. If skipped, please provide `ARTIFACTS_REPOSITORY`')
+        booleanParam(name: 'SKIP_RUNTIMES_PROMOTE', defaultValue: false, description: 'To skip Runtimes Promote only. Automatically skipped if SKIP_RUNTIMES_DEPLOY is skipped.')
+        booleanParam(name: 'SKIP_IMAGES_DEPLOY', defaultValue: false, description: 'To skip Images Test & Deployment.')
+        booleanParam(name: 'SKIP_IMAGES_PROMOTE', defaultValue: false, description: 'To skip Images Promote only. Automatically skipped if SKIP_IMAGES_DEPLOY is skipped.')
+        booleanParam(name: 'SKIP_OPERATOR_DEPLOY', defaultValue: false, description: 'To skip Operator Test & Deployment.')
+        booleanParam(name: 'SKIP_OPERATOR_PROMOTE', defaultValue: false, description: 'To skip Operator Promote only. Automatically skipped if SKIP_OPERATOR_DEPLOY is skipped.')
 
         booleanParam(name: 'USE_TEMP_OPENSHIFT_REGISTRY', defaultValue: false, description: 'If enabled, use Openshift registry to push temporary images')
     }
@@ -112,7 +115,7 @@ pipeline {
 
         stage('Build & Deploy Runtimes') {
             when {
-                expression { return !params.SKIP_RUNTIMES }
+                expression { return isRuntimesDeploy() }
             }
             steps {
                 script {
@@ -156,7 +159,7 @@ pipeline {
 
         stage('Build & Deploy Images') {
             when {
-                expression { return !params.SKIP_IMAGES }
+                expression { return isImagesDeploy() }
             }
             steps {
                 script {
@@ -176,7 +179,7 @@ pipeline {
 
         stage('Build & Deploy Operator') {
             when {
-                expression { return !params.SKIP_OPERATOR }
+                expression { return isOperatorDeploy() }
             }
             steps {
                 script {
@@ -188,11 +191,13 @@ pipeline {
                     
                     // For BDD tests
                     // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
-                    addBooleanParam(buildParams, 'KOGITO_IMAGES_IN_OPENSHIFT_REGISTRY', params.USE_TEMP_OPENSHIFT_REGISTRY)
-                    addStringParam(buildParams, 'KOGITO_IMAGES_REGISTRY', env.IMAGE_REGISTRY)
-                    addStringParam(buildParams, 'KOGITO_IMAGES_NAMESPACE', env.IMAGE_NAMESPACE)
-                    addStringParam(buildParams, 'KOGITO_IMAGES_NAME_SUFFIX', env.IMAGE_NAME_SUFFIX)
-                    addStringParam(buildParams, 'KOGITO_IMAGES_TAG', env.TEMP_TAG)
+                    if(isImagesDeploy()){
+                        addBooleanParam(buildParams, 'KOGITO_IMAGES_IN_OPENSHIFT_REGISTRY', params.USE_TEMP_OPENSHIFT_REGISTRY)
+                        addStringParam(buildParams, 'KOGITO_IMAGES_REGISTRY', env.IMAGE_REGISTRY)
+                        addStringParam(buildParams, 'KOGITO_IMAGES_NAMESPACE', env.IMAGE_NAMESPACE)
+                        addStringParam(buildParams, 'KOGITO_IMAGES_NAME_SUFFIX', env.IMAGE_NAME_SUFFIX)
+                        addStringParam(buildParams, 'KOGITO_IMAGES_TAG', env.TEMP_TAG)
+                    }
                     addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
                     addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
                     addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY) // Get artifacts from staging repository
@@ -204,7 +209,7 @@ pipeline {
 
         stage('Promote runtimes') {
             when {
-                expression { return !params.SKIP_RUNTIMES }
+                expression { return isRuntimesPromote() }
             }
             steps {
                 script {
@@ -220,7 +225,7 @@ pipeline {
 
         stage('Promote images') {
             when {
-                expression { return !params.SKIP_IMAGES }
+                expression { return isImagesPromote() }
             }
             steps {
                 script {
@@ -241,7 +246,7 @@ pipeline {
 
         stage('Promote operator image') {
             when {
-                expression { return !params.SKIP_OPERATOR }
+                expression { return isOperatorPromote() }
             }
             steps {
                 script {
@@ -397,4 +402,28 @@ String getProjectVersion(){
 
 String getReleaseBranch(){
     return env.RELEASE_BRANCH
+}
+
+boolean isRuntimesDeploy(){
+    return !params.SKIP_RUNTIMES_DEPLOY
+}
+
+boolean isImagesDeploy(){
+    return !params.SKIP_IMAGES_DEPLOY
+}
+
+boolean isOperatorDeploy(){
+    return !params.SKIP_OPERATOR_DEPLOY
+}
+
+boolean isRuntimesPromote(){
+    return !params.SKIP_RUNTIMES_DEPLOY && !params.SKIP_RUNTIMES_PROMOTE
+}
+
+boolean isImagesPromote(){
+    return !params.SKIP_IMAGES_DEPLOY && !params.SKIP_IMAGES_PROMOTE
+}
+
+boolean isOperatorPromote(){
+    return !params.SKIP_OPERATOR_DEPLOY && !params.SKIP_OPERATOR_PROMOTE
 }
