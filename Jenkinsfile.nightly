@@ -35,8 +35,6 @@ pipeline {
     environment {
         KOGITO_CI_EMAIL_TO = credentials('KOGITO_CI_EMAIL_TO')
 
-        MAVEN_REPOSITORY = 'https://origin-repository.jboss.org/nexus/content/groups/public/'
-
         // We use quay as temporary registry for testing between the jobs instead of Openshift, due to https://issues.redhat.com/browse/KOGITO-2219
         IMAGE_REGISTRY_CREDENTIALS = 'nightly_kogito'
         IMAGE_REGISTRY = 'quay.io'
@@ -94,7 +92,6 @@ pipeline {
                     addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
                     addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
                     addStringParam(buildParams, 'EXAMPLES_REF', getBuildBranch())
-                    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.MAVEN_REPOSITORY) // Added to be sure to get latest snapshots
 
                     buildJob(IMAGES_DEPLOY, buildParams, false)
                 }
@@ -120,7 +117,6 @@ pipeline {
                     addStringParam(buildParams, 'KOGITO_IMAGES_TAG', env.TEMP_TAG)
                     addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
                     addStringParam(buildParams, 'EXAMPLES_REF', getBuildBranch())
-                    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.MAVEN_REPOSITORY) // Added to be sure to get latest snapshots
 
                     buildJob(OPERATOR_DEPLOY, buildParams, false)
                 }
