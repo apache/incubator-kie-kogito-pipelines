@@ -1,0 +1,400 @@
+@Library('jenkins-pipeline-shared-libraries')_
+
+RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
+IMAGES_DEPLOY = 'kogito-images-deploy'
+OPERATOR_DEPLOY = 'kogito-operator-deploy'
+RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
+IMAGES_PROMOTE = 'kogito-images-promote'
+OPERATOR_PROMOTE = 'kogito-operator-promote'
+
+KOGITO_REPOS = [
+    'kogito-runtimes',
+    'kogito-apps',
+    'kogito-examples',
+    'kogito-images',
+    'kogito-cloud-operator',
+    'kogito-pipelines' // Create branch to activate nightlies if needed
+]
+
+// Map of executed jobs
+// See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
+// for more options on built job entity
+JOBS = [:]
+
+pipeline {
+    agent {
+        label 'kie-rhel7 && !master'
+    }
+
+    parameters {
+        string(name: 'PROJECT_VERSION', defaultValue: '', description: 'Project version to release as Major.minor.micro')
+        booleanParam(name: 'DEPLOY_IMAGES_WITH_LATEST', defaultValue: 'false', description: 'Deploy images with `latest` tag')
+
+        booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip all tests')
+
+        string(name: 'ARTIFACTS_REPOSITORY', defaultValue: '', description: 'Override default. Provide a staging repository for artifacts to be deployed to')
+        string(name: 'EXAMPLES_URI', defaultValue: '', description: 'Override default. Git uri to the kogito-examples repository to use for tests.')
+        string(name: 'EXAMPLES_REF', defaultValue: '', description: 'Override default. Git reference (branch/tag) to the kogito-examples repository to use for tests.')
+
+        booleanParam(name: 'SKIP_RUNTIMES', defaultValue: false, description: 'To skip Runtimes. If skipped, please provide `ARTIFACTS_REPOSITORY`')
+        booleanParam(name: 'SKIP_IMAGES', defaultValue: false, description: 'To skip Images Deployment')
+        booleanParam(name: 'SKIP_OPERATOR', defaultValue: false, description: 'To skip Operator Deployment')
+
+        booleanParam(name: 'USE_TEMP_OPENSHIFT_REGISTRY', defaultValue: false, description: 'If enabled, use Openshift registry to push temporary images')
+    }
+
+    environment {
+        KOGITO_CI_EMAIL_TO = credentials('KOGITO_CI_EMAIL_TO')
+
+        // RELEASE_BRANCH => will be set in Initialization phase
+
+        // We use quay as temporary registry for testing between the jobs instead of Openshift, due to https://issues.redhat.com/browse/KOGITO-2219
+        IMAGE_REGISTRY_CREDENTIALS = 'release_kogito'
+        IMAGE_REGISTRY = 'quay.io'
+        IMAGE_NAMESPACE = 'kiegroup'
+        // Use nightly for now with a different tag but we should find another solution
+        IMAGE_NAME_SUFFIX = 'nightly'
+        // TEMP_TAG => will be set in Initialization phase
+
+        // IMAGE_PROMOTE_TAG => will be set in Initialization phase
+
+        AUTHOR_CREDS_ID = 'kie-ci'
+        GIT_AUTHOR='kiegroup'
+    }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    echo 'Initialize'
+
+                    assert getProjectVersion() != ''
+
+                    currentBuild.displayName = getProjectVersion()
+                    
+                    // Set release branch
+                    Integer[] versionSplit = util.parseVersion(getProjectVersion())
+                    env.RELEASE_BRANCH = "${versionSplit[0]}.${versionSplit[1]}.x"
+                    echo "Release Branch ${getReleaseBranch()}"
+
+                    env.TEMP_TAG = "${getProjectVersion()}-temp"
+                    echo "temporary tag is ${env.TEMP_TAG}"
+
+                    env.IMAGE_PROMOTE_TAG = getProjectVersion()
+                }
+            }
+        }
+
+        stage('Create release branches') {
+            steps {
+                script {
+                    echo 'Create release branches'
+
+                    for(String repo : KOGITO_REPOS){
+                        echo "Checkout repo ${repo}"
+                        dir(repo){
+                            deleteDir()
+                            checkout(githubscm.resolveRepository(repo, env.GIT_AUTHOR, 'master', false))
+                            sh 'git fetch origin'
+                            String branchRemoteResult = sh(script: "git ls-remote origin ${getReleaseBranch()} | wc -l", returnStdout: true).trim()
+                            if(Integer.parseInt(branchRemoteResult) > 0){
+                                echo 'Release branch already exist ... will not create it'
+                            } else {
+                                echo "Release branch ${getReleaseBranch()} does not exist ... gonna create it"
+                                githubscm.createBranch(getReleaseBranch())
+                                githubscm.pushObject('origin', getReleaseBranch(), env.AUTHOR_CREDS_ID)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Build & Deploy Runtimes') {
+            when {
+                expression { return !params.SKIP_RUNTIMES }
+            }
+            steps {
+                script {
+                    echo "Call ${RUNTIMES_DEPLOY} job"
+
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    if(params.ARTIFACTS_REPOSITORY != ''){
+                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', params.ARTIFACTS_REPOSITORY)
+                    }
+
+                    buildJob(RUNTIMES_DEPLOY, buildParams)
+                }
+            }
+        }
+
+        stage('Retrieve Runtimes information'){
+            steps {
+                script {
+                    String jobUrl = getJobUrl(RUNTIMES_DEPLOY)
+                    def deployProps = [:]
+                    if(jobUrl != "") {
+                        deployProps = readDeployProperties(jobUrl)
+                    }
+
+                    env.STAGING_REPOSITORY = params.ARTIFACTS_REPOSITORY != '' ? params.ARTIFACTS_REPOSITORY : deployProps['staging-repo.url']
+                    
+                    env.EXAMPLES_URI = params.EXAMPLES_URI != '' ? params.EXAMPLES_URI : deployProps['kogito-examples.pr.source.uri']
+                    env.EXAMPLES_REF = params.EXAMPLES_REF != '' ? params.EXAMPLES_REF : deployProps['kogito-examples.pr.source.ref']
+
+                    // Check at least `STAGING_REPOSITORY` is defined
+                    if(env.STAGING_REPOSITORY==null && env.STAGING_REPOSITORY == ''){
+                        error 'No staging repository could be retrieved from deployment'
+                    }
+                    echo "Got staging repository ${env.STAGING_REPOSITORY}"
+                    echo "Got examples uri ${env.EXAMPLES_URI}"
+                    echo "Got examples ref ${env.EXAMPLES_REF}"
+                }
+            }
+        }
+
+        stage('Build & Deploy Images') {
+            when {
+                expression { return !params.SKIP_IMAGES }
+            }
+            steps {
+                script {
+                    echo "Call ${IMAGES_DEPLOY} job"
+
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
+                    addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
+                    addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
+                    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY) // Get artifacts from staging repository
+
+                    buildJob(IMAGES_DEPLOY, buildParams)
+                }
+            }
+        }
+
+        stage('Build & Deploy Operator') {
+            when {
+                expression { return !params.SKIP_OPERATOR }
+            }
+            steps {
+                script {
+                    echo "Call ${OPERATOR_DEPLOY} job"
+
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
+                    
+                    // For BDD tests
+                    // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
+                    addBooleanParam(buildParams, 'KOGITO_IMAGES_IN_OPENSHIFT_REGISTRY', params.USE_TEMP_OPENSHIFT_REGISTRY)
+                    addStringParam(buildParams, 'KOGITO_IMAGES_REGISTRY', env.IMAGE_REGISTRY)
+                    addStringParam(buildParams, 'KOGITO_IMAGES_NAMESPACE', env.IMAGE_NAMESPACE)
+                    addStringParam(buildParams, 'KOGITO_IMAGES_NAME_SUFFIX', env.IMAGE_NAME_SUFFIX)
+                    addStringParam(buildParams, 'KOGITO_IMAGES_TAG', env.TEMP_TAG)
+                    addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
+                    addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
+                    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY) // Get artifacts from staging repository
+
+                    buildJob(OPERATOR_DEPLOY, buildParams)
+                }
+            }
+        }
+
+        stage('Promote runtimes') {
+            when {
+                expression { return !params.SKIP_RUNTIMES }
+            }
+            steps {
+                script {
+                    echo "Call ${RUNTIMES_PROMOTE} job"
+
+                    def buildParams = getDefaultBuildParams()
+                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(RUNTIMES_DEPLOY))
+
+                    buildJob(RUNTIMES_PROMOTE, buildParams)
+                }
+            }
+        }
+
+        stage('Promote images') {
+            when {
+                expression { return !params.SKIP_IMAGES }
+            }
+            steps {
+                script {
+                    echo "Call ${IMAGES_PROMOTE} job"
+                    
+                    def buildParams = getDefaultBuildParams()
+                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(IMAGES_DEPLOY))
+                    addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
+
+                    if(params.DEPLOY_IMAGES_WITH_LATEST){
+                        addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', true)
+                    }
+
+                    buildJob(IMAGES_PROMOTE, buildParams)
+                }
+            }
+        }
+
+        stage('Promote operator image') {
+            when {
+                expression { return !params.SKIP_OPERATOR }
+            }
+            steps {
+                script {
+                    echo "Call ${OPERATOR_PROMOTE} job"
+
+                    def buildParams = getDefaultBuildParams()
+                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(OPERATOR_DEPLOY))
+                    addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
+
+                    if(params.DEPLOY_IMAGES_WITH_LATEST){
+                        addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', true)
+                    }
+
+                    buildJob(OPERATOR_PROMOTE, buildParams)
+                }
+            }
+        }
+
+        // To be enabled later
+        // stage("Deploy docs") {
+        //     steps {
+        //         script {
+        //             echo "Call kogito-operator-promote job"
+
+        //             // TODO manual confirmation from Stetson
+
+        //             // Set params
+        //             def buildParams = [:]
+        //             // TODO how to set oldVersion ?
+        //             addStringParam(buildParams, "oldVersion", "???")
+        //             addStringParam(buildParams, "newVersion", getProjectVersion())
+        //             addStringParam(buildParams, "tagName", "${getProjectVersion()}-kogito")
+        //             // TODO how to set nextSnapshot ?
+        //             addStringParam(buildParams, "nextSnapshot", "???")
+
+        //             buildJob(OPERATOR_DEPLOY, "../../kogito-docs/kogito-docs-upload", buildParams) 
+        //         }
+        //     }
+        // }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            sendNotification("Version ${getProjectVersion()} has been successfully released !!!!")
+        }
+        failure {
+            sendErrorNotification()
+        }
+        unstable {
+            sendErrorNotification()
+        }
+    }
+}
+
+def buildJob(String jobName, List buildParams) {
+    echo "Build ${jobName} with params ${buildParams}"
+    
+    def job = build(job: "./${jobName}", wait: true, parameters: buildParams, propagate: false)
+    JOBS[jobName] = job
+
+    def jobResult = job.getResult()
+    def jobUrl = getJobUrl(jobName)
+    if(jobResult != 'SUCCESS'){
+        sendNotification("${jobName} finished with status ${jobResult}. See: ${jobUrl}\nPlease provide which action should be done (retry ? skip ? abort ?): ${env.BUILD_URL}input")
+
+        // abort is handled automatically by the pipeline in the input
+        String choice = input message: "Job in status ${jobResult}. What do you want to do ?", parameters: [choice(name: 'ACTION', choices: ['retry', 'skip'].join('\n'))]
+        echo "Choice made => ${choice}"
+        if(choice == 'retry') {
+            return buildJob(jobName, buildParams)
+        }
+    }
+    return job
+}
+
+def getJob(String jobName){
+    return JOBS[jobName]
+}
+
+String getJobUrl(String jobName){
+    echo "getJobUrl for ${jobName}"
+    def job = getJob(jobName)
+    return job ? job.getAbsoluteUrl() : ''
+}
+
+void sendErrorNotification(){
+    sendNotification("Kogito release job #${BUILD_NUMBER} was: ${currentBuild.currentResult}\nPlease look here: ${BUILD_URL}")
+}
+
+void sendNotification(String body){
+    emailext body: body, subject: "Kogito Release on #${getReleaseBranch()}",
+                to: env.KOGITO_CI_EMAIL_TO
+}
+
+def readDeployProperties(String buildUrl){
+    def deployProperties = [:]
+    if (buildUrl != ''){
+        if(!buildUrl.endsWith('/')){
+            buildUrl += '/'
+        }
+        sh "wget ${buildUrl}artifact/deployment.properties -O deployment.properties"
+        deployProperties = readProperties file: 'deployment.properties'
+        echo deployProperties.collect{ entry -> "${entry.key}=${entry.value}" }.join('\n')
+    }
+    return deployProperties
+}
+
+List getDefaultBuildParams(){
+    List buildParams = []
+    addStringParam(buildParams, 'DISPLAY_NAME', "release-${getProjectVersion()}")
+    addStringParam(buildParams, 'BUILD_BRANCH_NAME', getReleaseBranch())
+    addStringParam(buildParams, 'GIT_AUTHOR', env.GIT_AUTHOR)
+    addBooleanParam(buildParams, 'RELEASE', true)
+    addStringParam(buildParams, 'PROJECT_VERSION', getProjectVersion())
+    return buildParams
+}
+
+void addSkipTestsParam(buildParams){
+    addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
+}
+
+void addImageBuildParams(List buildParams = [], String paramsPrefix = '', String tag, boolean isRegistryIncluded = false, boolean isFinalImage = false){
+    if (!isFinalImage && params.USE_TEMP_OPENSHIFT_REGISTRY) {
+        addBooleanParam(buildParams, constructKey(paramsPrefix, 'IMAGE_USE_OPENSHIFT_REGISTRY'), true)
+    } else if(isRegistryIncluded) {
+        addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
+        addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_REGISTRY'), env.IMAGE_REGISTRY)
+        addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_NAMESPACE'), env.IMAGE_NAMESPACE)
+    }
+    if(!isFinalImage){
+        addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_NAME_SUFFIX'), env.IMAGE_NAME_SUFFIX)
+    }
+    addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_TAG'), tag)
+}
+
+void addStringParam(List params, String key, String value){
+    params.add(string(name: key, value: value))
+}
+
+void addBooleanParam(List params, String key, boolean value){
+    params.add(booleanParam(name: key, value: value))
+}
+
+String constructKey(String prefix, String paramId){
+    return prefix == null || prefix == '' ? paramId : "${prefix}_${paramId}"
+}
+
+String getProjectVersion(){
+    return params.PROJECT_VERSION
+}
+
+String getReleaseBranch(){
+    return env.RELEASE_BRANCH
+}
