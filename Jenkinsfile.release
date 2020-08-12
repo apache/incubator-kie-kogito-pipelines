@@ -37,11 +37,11 @@ pipeline {
         string(name: 'EXAMPLES_REF', defaultValue: '', description: 'Override default. Git reference (branch/tag) to the kogito-examples repository to use for tests.')
 
         booleanParam(name: 'SKIP_RUNTIMES_DEPLOY', defaultValue: false, description: 'To skip Runtimes Test & Deployment. If skipped, please provide `ARTIFACTS_REPOSITORY`')
-        booleanParam(name: 'SKIP_RUNTIMES_PROMOTE', defaultValue: false, description: 'To skip Runtimes Promote only. Automatically skipped if SKIP_RUNTIMES_DEPLOY is skipped.')
+        booleanParam(name: 'SKIP_RUNTIMES_PROMOTE', defaultValue: false, description: 'To skip Runtimes Promote only. Automatically skipped if SKIP_RUNTIMES_DEPLOY is true.')
         booleanParam(name: 'SKIP_IMAGES_DEPLOY', defaultValue: false, description: 'To skip Images Test & Deployment.')
-        booleanParam(name: 'SKIP_IMAGES_PROMOTE', defaultValue: false, description: 'To skip Images Promote only. Automatically skipped if SKIP_IMAGES_DEPLOY is skipped.')
+        booleanParam(name: 'SKIP_IMAGES_PROMOTE', defaultValue: false, description: 'To skip Images Promote only. Automatically skipped if SKIP_IMAGES_DEPLOY is true')
         booleanParam(name: 'SKIP_OPERATOR_DEPLOY', defaultValue: false, description: 'To skip Operator Test & Deployment.')
-        booleanParam(name: 'SKIP_OPERATOR_PROMOTE', defaultValue: false, description: 'To skip Operator Promote only. Automatically skipped if SKIP_OPERATOR_DEPLOY is skipped.')
+        booleanParam(name: 'SKIP_OPERATOR_PROMOTE', defaultValue: false, description: 'To skip Operator Promote only. Automatically skipped if SKIP_OPERATOR_DEPLOY is true.')
 
         booleanParam(name: 'USE_TEMP_OPENSHIFT_REGISTRY', defaultValue: false, description: 'If enabled, use Openshift registry to push temporary images')
     }
