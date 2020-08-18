@@ -12,6 +12,9 @@ OPERATOR_PROMOTE = 'kogito-operator-promote'
 // for more options on built job entity
 JOBS = [:]
 
+FAILED_STAGES=[]
+UNSTABLE_STAGES=[]
+
 // Should be multibranch pipeline
 pipeline {
     agent {
@@ -79,6 +82,14 @@ pipeline {
                     buildJob(RUNTIMES_DEPLOY, buildParams, false)
                 }
             }
+            post {
+                failure {
+                    addFailedStage()
+                }
+                unstable {
+                    addUnstableStage()
+                }
+            }
         }
 
         stage('Build & Deploy Images') {
@@ -97,6 +108,14 @@ pipeline {
                     addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.MAVEN_REPOSITORY) // Added to be sure to get latest snapshots
 
                     buildJob(IMAGES_DEPLOY, buildParams, false)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage()
+                }
+                unstable {
+                    addUnstableStage()
                 }
             }
         }
@@ -125,6 +144,14 @@ pipeline {
                     buildJob(OPERATOR_DEPLOY, buildParams, false)
                 }
             }
+            post {
+                failure {
+                    addFailedStage()
+                }
+                unstable {
+                    addUnstableStage()
+                }
+            }
         }
 
         stage('Promote images') {
@@ -143,6 +170,14 @@ pipeline {
                     }
 
                     buildJob(IMAGES_PROMOTE, buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage()
+                }
+                unstable {
+                    addUnstableStage()
                 }
             }
         }
@@ -165,14 +200,22 @@ pipeline {
                     buildJob(OPERATOR_PROMOTE, buildParams)
                 }
             }
+            post {
+                failure {
+                    addFailedStage()
+                }
+                unstable {
+                    addUnstableStage()
+                }
+            }
         }
     }
     post {
         failure {
-            sendErrorNotification()
+            sendPipelineErrorNotification()
         }
         unstable {
-            sendErrorNotification()
+            sendPipelineErrorNotification()
         }
     }
 }
@@ -199,12 +242,25 @@ boolean isJobSucceeded(String jobName){
     return job ? job.getResult() == 'SUCCESS' : false
 }
 
-void sendErrorNotification(){
-    sendNotification("Kogito nightly job #${BUILD_NUMBER} was: ${currentBuild.currentResult}\nPlease look here: ${BUILD_URL}")
+void addFailedStage(){
+    FAILED_STAGES.add("${STAGE_NAME}")
+}
+void addUnstableStage(){
+    UNSTABLE_STAGES.add("${STAGE_NAME}")
 }
 
-void sendNotification(String body){
-    emailext body: body, subject: "Kogito Nightly Build on #${getBuildBranch()}",
+void sendPipelineErrorNotification(){
+    String bodyMsg = "Kogito nightly job #${BUILD_NUMBER} was: ${currentBuild.currentResult}"
+    if(FAILED_STAGES.size() > 0){
+        bodyMsg += "\nFailed stages: \n- "
+        bodyMsg += FAILED_STAGES.join("\n- ")
+    }
+    if(UNSTABLE_STAGES.size() > 0){
+        bodyMsg += "\nUnstable stages: \n- "
+        bodyMsg += UNSTABLE_STAGES.join("\n- ")
+    }
+    bodyMsg += "\nPlease look here: ${BUILD_URL}"
+    emailext body: bodyMsg, subject: "Kogito Nightly Build on #${getBuildBranch()}",
                 to: env.KOGITO_CI_EMAIL_TO
 }
 
