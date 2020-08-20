@@ -260,7 +260,7 @@ void sendPipelineErrorNotification(){
         bodyMsg += UNSTABLE_STAGES.join("\n- ")
     }
     bodyMsg += "\nPlease look here: ${BUILD_URL}"
-    emailext body: bodyMsg, subject: "Kogito Nightly Build on #${getBuildBranch()}",
+    emailext body: bodyMsg, subject: "[${getBuildBranch()}][d] Full Pipeline",
                 to: env.KOGITO_CI_EMAIL_TO
 }
 
