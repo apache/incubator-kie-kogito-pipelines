@@ -279,10 +279,7 @@ pipeline {
         success {
             sendNotification("Version ${getProjectVersion()} has been successfully released !!!!")
         }
-        failure {
-            sendErrorNotification()
-        }
-        unstable {
+        unsuccessful {
             sendErrorNotification()
         }
     }
@@ -297,11 +294,17 @@ def buildJob(String jobName, List buildParams) {
     def jobResult = job.getResult()
     def jobUrl = getJobUrl(jobName)
     if(jobResult != 'SUCCESS'){
-        sendNotification("${jobName} finished with status ${jobResult}. See: ${jobUrl}\nPlease provide which action should be done (retry ? skip ? abort ?): ${env.BUILD_URL}input")
+        sendNotification("`${jobName}` finished with status `${jobResult}`.\nSee: ${jobUrl}\n\nPlease provide which action should be done (retry ? skip ? abort ?): ${env.BUILD_URL}input")
 
         // abort is handled automatically by the pipeline in the input
-        String choice = input message: "Job in status ${jobResult}. What do you want to do ?", parameters: [choice(name: 'ACTION', choices: ['retry', 'skip'].join('\n'))]
-        echo "Choice made => ${choice}"
+        def result = input message: "Job `${jobName}` is in status ${jobResult}. What do you want to do ?", parameters: [choice(name: 'ACTION', choices: ['retry', 'skip'].join('\n')), string(name: 'MESSAGE', description: 'If you want to add information to your action...')]
+        String resultStr = "Decision was made to ${result['ACTION']} the job `${jobName}`."
+        if(result['MESSAGE'] != ''){
+            resultStr += "Additional Information: `${result['MESSAGE']}`"
+        }
+        echo resultStr
+        sendNotification(resultStr)
+        
         if(choice == 'retry') {
             return buildJob(jobName, buildParams)
         }
