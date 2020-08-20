@@ -211,10 +211,7 @@ pipeline {
         }
     }
     post {
-        failure {
-            sendPipelineErrorNotification()
-        }
-        unstable {
+        unsuccessful {
             sendPipelineErrorNotification()
         }
     }
