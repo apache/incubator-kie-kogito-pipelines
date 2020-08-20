@@ -1,5 +1,6 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
+CREATE_RELEASE_BRANCHES = 'create-release-branches'
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
@@ -91,24 +92,13 @@ pipeline {
         stage('Create release branches') {
             steps {
                 script {
-                    echo 'Create release branches'
+                    echo "Call ${CREATE_RELEASE_BRANCHES} job"
 
-                    for(String repo : KOGITO_REPOS){
-                        echo "Checkout repo ${repo}"
-                        dir(repo){
-                            deleteDir()
-                            checkout(githubscm.resolveRepository(repo, env.GIT_AUTHOR, 'master', false))
-                            sh 'git fetch origin'
-                            String branchRemoteResult = sh(script: "git ls-remote origin ${getReleaseBranch()} | wc -l", returnStdout: true).trim()
-                            if(Integer.parseInt(branchRemoteResult) > 0){
-                                echo 'Release branch already exist ... will not create it'
-                            } else {
-                                echo "Release branch ${getReleaseBranch()} does not exist ... gonna create it"
-                                githubscm.createBranch(getReleaseBranch())
-                                githubscm.pushObject('origin', getReleaseBranch(), env.AUTHOR_CREDS_ID)
-                            }
-                        }
-                    }
+                    def buildParams = [:]
+                    addDisplayNameParam(buildParams)
+                    addStringParam(buildParams, 'RELEASE_BRANCH', getReleaseBranch())
+
+                    buildJob(CREATE_RELEASE_BRANCHES, buildParams)
                 }
             }
         }
@@ -358,12 +348,16 @@ def readDeployProperties(String buildUrl){
 
 List getDefaultBuildParams(){
     List buildParams = []
-    addStringParam(buildParams, 'DISPLAY_NAME', "release-${getProjectVersion()}")
+    addDisplayNameParam(buildParams)
     addStringParam(buildParams, 'BUILD_BRANCH_NAME', getReleaseBranch())
     addStringParam(buildParams, 'GIT_AUTHOR', env.GIT_AUTHOR)
     addBooleanParam(buildParams, 'RELEASE', true)
     addStringParam(buildParams, 'PROJECT_VERSION', getProjectVersion())
     return buildParams
+}
+
+void addDisplayNameParam(buildParams){
+    addStringParam(buildParams, 'DISPLAY_NAME', "release-${getProjectVersion()}")
 }
 
 void addSkipTestsParam(buildParams){
