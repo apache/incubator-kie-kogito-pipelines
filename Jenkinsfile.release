@@ -29,7 +29,7 @@ pipeline {
 
     parameters {
         string(name: 'PROJECT_VERSION', defaultValue: '', description: 'Project version to release as Major.minor.micro')
-        booleanParam(name: 'DEPLOY_IMAGES_WITH_LATEST', defaultValue: 'false', description: 'Deploy images with `latest` tag')
+        booleanParam(name: 'DEPLOY_AS_LATEST', defaultValue: 'false', description: 'Given project version is considered the latest version')
 
         booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip all tests')
 
@@ -207,6 +207,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(RUNTIMES_DEPLOY))
+                    addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', params.DEPLOY_AS_LATEST)
 
                     buildJob(RUNTIMES_PROMOTE, buildParams)
                 }
@@ -224,10 +225,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(IMAGES_DEPLOY))
                     addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
-
-                    if(params.DEPLOY_IMAGES_WITH_LATEST){
-                        addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', true)
-                    }
+                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
 
                     buildJob(IMAGES_PROMOTE, buildParams)
                 }
@@ -245,10 +243,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(OPERATOR_DEPLOY))
                     addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
-
-                    if(params.DEPLOY_IMAGES_WITH_LATEST){
-                        addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', true)
-                    }
+                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
 
                     buildJob(OPERATOR_PROMOTE, buildParams)
                 }
