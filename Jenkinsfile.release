@@ -324,7 +324,7 @@ void sendErrorNotification(){
 }
 
 void sendNotification(String body){
-    emailext body: body, subject: "Kogito Release on #${getReleaseBranch()}",
+    emailext body: body, subject: "[${getReleaseBranch()}] Release Pipeline",
                 to: env.KOGITO_CI_EMAIL_TO
 }
 
