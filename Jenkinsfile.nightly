@@ -3,6 +3,7 @@
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
+OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
 RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
 IMAGES_PROMOTE = 'kogito-images-promote'
 OPERATOR_PROMOTE = 'kogito-operator-promote'
@@ -78,6 +79,29 @@ pipeline {
                     
                     // images and operator deploy testing will use older working artifacts if that one fails
                     buildJob(RUNTIMES_DEPLOY, buildParams, false)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage()
+                }
+                unstable {
+                    addUnstableStage()
+                }
+            }
+        }
+
+        stage('Build & Deploy OptaPlanner') {
+            when {
+                expression { return !params.SKIP_RUNTIMES }
+            }
+            steps {
+                script {
+                    echo "Call ${OPTAPLANNER_DEPLOY} job"
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+
+                    buildJob(OPTAPLANNER_DEPLOY, buildParams, false)
                 }
             }
             post {
