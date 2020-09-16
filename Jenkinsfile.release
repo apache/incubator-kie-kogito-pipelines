@@ -305,7 +305,7 @@ def buildJob(String jobName, List buildParams) {
         echo resultStr
         sendNotification(resultStr)
         
-        if(choice == 'retry') {
+        if(result['ACTION'] == 'retry') {
             return buildJob(jobName, buildParams)
         }
     }
