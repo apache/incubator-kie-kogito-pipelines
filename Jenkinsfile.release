@@ -94,7 +94,7 @@ pipeline {
                 script {
                     echo "Call ${CREATE_RELEASE_BRANCHES} job"
 
-                    def buildParams = getDefaultBuildParams()
+                    def buildParams = []
                     addDisplayNameParam(buildParams)
                     addStringParam(buildParams, 'RELEASE_BRANCH', getReleaseBranch())
 
