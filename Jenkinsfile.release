@@ -85,6 +85,8 @@ pipeline {
                     echo "temporary tag is ${env.TEMP_TAG}"
 
                     env.IMAGE_PROMOTE_TAG = getProjectVersion()
+                    
+                    sendNotification("Release Pipeline for version ${getProjectVersion()} has started...")
                 }
             }
         }
@@ -99,6 +101,8 @@ pipeline {
                     addStringParam(buildParams, 'RELEASE_BRANCH', getReleaseBranch())
 
                     buildJob(CREATE_RELEASE_BRANCHES, buildParams)
+
+                    sendNotification("${getReleaseBranch} branches have been created on the different kogito repositories")
                 }
             }
         }
