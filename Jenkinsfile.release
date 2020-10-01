@@ -77,6 +77,8 @@ pipeline {
                     echo 'Initialize'
 
                     assert getProjectVersion() != ''
+
+                    currentBuild.displayName = getProjectVersion()
                     
                     // Set release branch
                     Integer[] versionSplit = util.parseVersion(getProjectVersion())
@@ -87,7 +89,7 @@ pipeline {
                     echo "temporary tag is ${env.TEMP_TAG}"
 
                     env.IMAGE_PROMOTE_TAG = getProjectVersion()
-                    
+
                     currentBuild.displayName = getDisplayName()
 
                     sendNotification("Release Pipeline for version ${getProjectVersion()} has started...")
@@ -104,6 +106,8 @@ pipeline {
         stage('Create release branches') {
             steps {
                 script {
+                    echo "Call ${CREATE_RELEASE_BRANCHES} job"
+
                     def buildParams = []
                     addDisplayNameParam(buildParams)
                     addStringParam(buildParams, 'RELEASE_BRANCH', getReleaseBranch())
@@ -329,7 +333,7 @@ pipeline {
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(IMAGES_DEPLOY))
                     addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
-                    
+
                     // To be uncommented for testing if artifacts are released to same repository as the staging
                     // addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY) // Get artifacts from staging repository
 
@@ -517,7 +521,7 @@ String constructKey(String prefix, String paramId){
 String getDisplayName(){
     if(isCreateReleaseBranchesOnly()){
         return "Cut-off ${getReleaseBranch()}"
-    } 
+    }
     return "Release ${getProjectVersion()}"
 }
 
