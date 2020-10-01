@@ -102,7 +102,7 @@ pipeline {
 
                     buildJob(CREATE_RELEASE_BRANCHES, buildParams)
 
-                    sendNotification("${getReleaseBranch} branches have been created on the different kogito repositories")
+                    sendNotification("${getReleaseBranch()} branches have been created on the different kogito repositories")
                 }
             }
         }
