@@ -1,134 +1,83 @@
-# kogito-pipelines
+# Kogito Pipelines
 
-CI/CD pipelines for Kogito
+This repository contains some of the pipelines of Kogito project.  
 
-## Nightly & Release pipelines
+* [Kogito Pipelines](#kogito-pipelines)
+  * [Kogito Repositories](#kogito-repositories)
+  * [The different Kogito pipelines](#the-different-kogito-pipelines)
+    * [Nightly & Release pipelines](#nightly--release-pipelines)
+    * [Tools pipelines](#tools-pipelines)
+    * [Repositories' specific pipelines](#repositories-specific-pipelines)
+      * [Runtimes other jobs](#runtimes-other-jobs)
+      * [PR checks](#pr-checks)
+      * [Sonar cloud](#sonar-cloud)
+  * [Configuration of pipelines](#configuration-of-pipelines)
+    * [Jenkins](#jenkins)
+    * [Zulip notifications](#zulip-notifications)
+      * [Format](#format)
 
-### Background & Objectives
+## Kogito Repositories
 
-The Kogito project is composed of 3 parts: 
+Apart from this repository, pipelines are also conerning those repositories:
 
-* Runtimes (kogito-runtimes, kogito-apps, kogito-examples)
+* [kogito-runtimes](https://github.com/kiegroup/kogito-runtimes)
+* [kogito-apps](https://github.com/kiegroup/kogito-apps)
+* [kogito-examples](https://github.com/kiegroup/kogito-examples)
+* [kogito-images](https://github.com/kiegroup/kogito-images)
+* [kogito-cloud-operator](https://github.com/kiegroup/kogito-cloud-operator)
 
-  * Jar artifacts
-  * Deployed to Maven repository
+## The different Kogito pipelines
 
-* Images (kogito-images)
+### Nightly & Release pipelines
 
-  * Cekit (docker) build
-  * Deployed to Quay
+Kogito has 2 main pipelines:
 
-* Operator (kogito-cloud-operator)
+* [Nightly pipeline](./Jenkinsfile.nightly)  
+  is a multibranch pipeline which is run daily on each active branch
+* [Release pipeline](./Jenkinsfile.release)  
+  is a on-demand single pipeline job
 
-  * Go / OperatorSDK
-  * Deployed to Quay
+More information can be found [here](./docs/nightly_and_release.md).
 
-The objectives are:
+### Tools pipelines
 
-* Unify deployment process from runtimes to operator
-* Avoid human interaction
-* Reuse processes
+This is a set of cleanup utils jobs.
 
-### Problems / Solutions
+### Repositories' specific pipelines
 
-#### Problems
+#### Runtimes other jobs
 
-* Need runtimes’ artifacts to test images & operator
-* Different technologies (Java, Cekit/Docker, Go)
-* High-level tests are done in BDD tests (operator)
+Those jobs can be found into the `kogito-runtimes` repository.  
+They are daily run jobs:
 
-#### Solution
+* [kogito-native](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.native)  
+  Perform a daily native build&test of runtimes.
+* [kogito-quarkus](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.quarkus)  
+  Perform a daily check of runtimes against latest snapshot of Quarkus.
+* [kogito-drools-snapshot](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.drools)  
+  Perform a daily check of runtimes against latest snapshot of Drools.
 
-* Main pipeline to control the flow
-* Separate build&tests and promote
-* Promote is done only when all tests in all repositories are ok
-* Each “repo” keeps its own deployment/promote process
+#### PR checks
 
-### Nightly pipeline
+Each repository has a `Jenkinsfile` for the PR check.
 
-The [nightly pipeline](./Jenkinsfile.nightly) for Kogito is responsible to build&test runtimes artifacts, images and operator.  
-For that, it will call different jobs for deployment and then for promote if all tests passed.  
+The jobs are located into the `ghrpb-webhooks` folder in Jenkins.  
+Only the Operator PR check is not yet in this folder as it is still on another Jenkins
 
-![Nightly pipeline](./docs/images/pipeline-nightly.png)
+#### Sonar cloud
 
-If the pipeline is failing or is unstable, then a notification is sent to Zulip.
+// TODO
 
-### Release pipeline
+## Configuration of pipelines
 
-The [release pipeline](./Jenkinsfile.release) aims to enhance the nightly pipeline by providing added features like `set version`, `create/merge PRs`, `git tag`...
+### Jenkins
 
-![Release pipeline](./docs/images/pipeline-release.png)
+All pipelines can be found in [kogito Jenkins folder](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito).
 
-Some steps are still manual (like jar artifacts promotion to Maven Central) and notifications are sent to Zulip for manual intervention.
+### Zulip notifications
 
-### Job dependencies
+Any message / error is sent to [kogito-ci](https://kie.zulipchat.com/#narrow/stream/236603-kogito-ci) stream.
 
-In order to perform, Nightly and Release pipelines need to call deploy and promote jobs for runtimes, images and operator.  
-Those jobs should be present at the same level as the nightly and/or release job, so they can be found when called.  
+#### Format
 
-Here is the list of jobs and link to Jenkinsfiles:
-
-* [create-release-branches](create-release-branches.Jenkinsfile) (only called by the release pipeline)
-* [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
-* [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
-* [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
-* [kogito-images-promote](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.promote)
-* [kogito-operator-deploy](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.deploy)
-* [kogito-operator-promote](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.promote)
-
-## Test release pipeline
-
-In order to test the full release pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.release](./Jenkinsfile.release), create jobs in Jenkins and setup some credentials.
-
-* Have a specific author repository that you can test against
-* If you don't want to flood your main repository, you should use a "bot account", referred as `BOT_*`
-* For deploying runtimes artifacts, you will need to provide a nexus repository to deploy to (see [nexus-operator](https://github.com/m88i/nexus-operator))
-
-### Change pipeline envs
-
-* `GIT_AUTHOR` (and `GIT_AUTHOR_CREDS_ID`, see [Setup Jenkins creds](#setup-jenkins-creds))
-* `BOT_AUTHOR` (and `BOT_AUTHOR_CREDS_ID`, see [Setup Jenkins creds](#setup-jenkins-creds))
-* `IMAGE_NAMESPACE` (and `IMAGE_REGISTRY_CREDENTIALS`, see [Setup Jenkins creds](#setup-jenkins-creds))
-
-### Setup Jenkins job
-
-You will need to create single pipeline jobs and let them run once to update the `parameters` part (you should stop them quickly as it makes no sense to let them run until the end. Just wait for the checkout of repo and the `node` command done).
-
-**NOTE:** You will need to access the correct branch for each !
-
-* [kogito-release](./Jenkinsfile.release)
-* [create-release-branches](./Jenkinsfile.create-release-branches)
-* [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
-* [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
-* [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
-* [kogito-images-promote](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.promote)
-* [kogito-operator-deploy](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.deploy)
-* [kogito-operator-promote](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.promote)
-
-**NOTE:** Deploy & Promote jobs of a specific repository can be ignored (and so not created for testing), but you will need to check the corresponding `SKIP_` parameter.
-
-### Setup Jenkins creds
-
-In Jenkins, you should set those credentials and set the correct values in env
-
-* `GIT_AUTHOR_CREDS_ID` (username/password credential)  
-  Username / [GitHub token](https://github.com/settings/tokens) which has rights on `GIT_AUTHOR`
-* `BOT_AUTHOR_CREDS_ID` (username/password credential)  
-  Username / [GitHub token](https://github.com/settings/tokens) which has rights on `BOT_AUTHOR`
-* `GITHUB_TOKEN_CREDS_ID` (secret text credential)  
-  [GitHub token](https://github.com/settings/tokens) for Github CLI
-* `IMAGE_REGISTRY_CREDENTIALS` (username/password credential)  
-  Credential to push image to the container registry (should have rights to `IMAGE_NAMESPACE`)
-* `KOGITO_CI_EMAIL_TO` (secret text credential)  
-  Email for notifications. You can set your email for example
-
-### Use specific nexus for released artifacts
-
-In case staging and release repositories are the same for testing, you can uncomment the line `addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY)` in `Promote images` stage. This is made to make the called job aware of the release repository to update correctly the artifacts.
-
-### Launch release with minimal parameters for testing
-
-* `PROJECT_VERSION`
-* `ARTIFACTS_REPOSITORY` to set to the correct repository
-* (optional) `SKIP_TESTS` (usually you will want that)
-* (optional) `SKIP_*` to skip different phases
+    [branch][d for daily if occurs] Pipeline name
