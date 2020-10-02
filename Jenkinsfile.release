@@ -2,9 +2,11 @@
 
 CREATE_RELEASE_BRANCHES = 'create-release-branches'
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
+EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
 RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
+EXAMPLES_PROMOTE = 'kogito-examples-promote'
 IMAGES_PROMOTE = 'kogito-images-promote'
 OPERATOR_PROMOTE = 'kogito-operator-promote'
 
@@ -35,8 +37,8 @@ pipeline {
         string(name: 'EXAMPLES_URI', defaultValue: '', description: 'Override default. Git uri to the kogito-examples repository to use for tests.')
         string(name: 'EXAMPLES_REF', defaultValue: '', description: 'Override default. Git reference (branch/tag) to the kogito-examples repository to use for tests.')
 
-        booleanParam(name: 'SKIP_RUNTIMES_DEPLOY', defaultValue: false, description: 'To skip Runtimes Test & Deployment. If skipped, please provide `ARTIFACTS_REPOSITORY`')
-        booleanParam(name: 'SKIP_RUNTIMES_PROMOTE', defaultValue: false, description: 'To skip Runtimes Promote only. Automatically skipped if SKIP_RUNTIMES_DEPLOY is true.')
+        booleanParam(name: 'SKIP_ARTIFACTS_DEPLOY', defaultValue: false, description: 'To skip all artifacts (runtimes, examples) Test & Deployment. If skipped, please provide `ARTIFACTS_REPOSITORY`')
+        booleanParam(name: 'SKIP_ARTIFACTS_PROMOTE', defaultValue: false, description: 'To skip Runtimes Promote only. Automatically skipped if SKIP_ARTIFACTS_DEPLOY is true.')
         booleanParam(name: 'SKIP_IMAGES_DEPLOY', defaultValue: false, description: 'To skip Images Test & Deployment.')
         booleanParam(name: 'SKIP_IMAGES_PROMOTE', defaultValue: false, description: 'To skip Images Promote only. Automatically skipped if SKIP_IMAGES_DEPLOY is true')
         booleanParam(name: 'SKIP_OPERATOR_DEPLOY', defaultValue: false, description: 'To skip Operator Test & Deployment.')
@@ -85,6 +87,8 @@ pipeline {
                     echo "temporary tag is ${env.TEMP_TAG}"
 
                     env.IMAGE_PROMOTE_TAG = getProjectVersion()
+
+                    env.STAGING_REPOSITORY = params.ARTIFACTS_REPOSITORY ?: ''
                     
                     currentBuild.displayName = getDisplayName()
 
@@ -123,9 +127,9 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Runtimes') {
+        stage('Build & Deploy Kogito Runtimes') {
             when {
-                expression { return !isCreateReleaseBranchesOnly() && isRuntimesDeploy() }
+                expression { return !isCreateReleaseBranchesOnly() && isArtifactsDeploy() }
             }
             steps {
                 script {
@@ -143,23 +147,52 @@ pipeline {
             }
         }
 
-        stage('Retrieve Runtimes information'){
+        stage('Retrieve staging repository'){
             when {
-                expression { return !isCreateReleaseBranchesOnly() }
+                expression { return !isCreateReleaseBranchesOnly() && env.STAGING_REPOSITORY == '' }
             }
             steps {
                 script {
-                    String jobUrl = getJobUrl(RUNTIMES_DEPLOY)
-                    def deployProps = [:]
-                    if(jobUrl != "") {
-                        deployProps = readDeployProperties(jobUrl)
+                    // Ask for Staging repo url
+                    sendNotification("Kogito Runtimes deploy pipeline #${env.BUILD_NUMBER} => Artifacts with version ${getProjectVersion()} have been pushed to staging repository. Please retrieve the staging repository URL and provide it here: ${env.BUILD_URL}input")
+                    // Add `/` at the end of the given url if missing
+                    String stagingRepoUrl = input(message: 'Enter staging repository URL:', parameters: [string(name: 'STAGING_REPO_URL')])
+                    if(!stagingRepoUrl.endsWith('/')){
+                        stagingRepoUrl += '/'
+                    }
+                    env.STAGING_REPOSITORY = stagingRepoUrl
+
+                    echo "Got staging repository ${env.STAGING_REPOSITORY}"
+                }
+            }
+        }
+
+        stage('Build & Deploy Kogito Examples') {
+            when {
+                expression { return isArtifactsDeploy() }
+            }
+            steps {
+                script {
+                    echo "Call ${EXAMPLES_DEPLOY} job"
+
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
+                    if(params.ARTIFACTS_REPOSITORY != ''){
+                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', params.ARTIFACTS_REPOSITORY)
                     }
 
-                    env.STAGING_REPOSITORY = params.ARTIFACTS_REPOSITORY ?: (deployProps['staging-repo.url'] ?: '')
+                    buildJob(RUNTIMES_DEPLOY, buildParams)
+                }
+            }
+        }
+
+        stage('Retrieve Examples information'){
+            steps {
+                script {
                     env.EXAMPLES_URI = params.EXAMPLES_URI ?: (deployProps['kogito-examples.pr.source.uri'] ?: '')
                     env.EXAMPLES_REF = params.EXAMPLES_REF ?: (deployProps['kogito-examples.pr.source.ref'] ?: env.RELEASE_BRANCH)
 
-                    echo "Got staging repository ${env.STAGING_REPOSITORY}"
                     echo "Got examples uri ${env.EXAMPLES_URI}"
                     echo "Got examples ref ${env.EXAMPLES_REF}"
                 }
@@ -218,9 +251,24 @@ pipeline {
             }
         }
 
+        stage('Is staging repository promoted?') {
+            when {
+                expression { return params.ARTIFACTS_REPOSITORY == '' } // Execute only if artifacts repository was not given, which means the staging repository has been created
+            }
+            steps {
+                script {
+                    String body = "${getProjectVersion()} artifacts are ready for promotion.\n" +
+                                 "The staging repository can be found at: ${env.STAGING_REPOSITORY}\n" +
+                                 "Please promote the repository and then confirm the promotion here: ${env.BUILD_URL}input"
+                    sendNotification(body)
+                    input message: 'Has the staging repository been promoted?', ok: 'Yes'
+                }
+            }
+        }
+
         stage('Promote runtimes') {
             when {
-                expression { return !isCreateReleaseBranchesOnly() && isRuntimesPromote() }
+                expression { return !isCreateReleaseBranchesOnly() && isArtifactsPromote() }
             }
             steps {
                 script {
@@ -459,8 +507,8 @@ String getGitAuthorCredsId(){
     return env.GIT_AUTHOR_CREDS_ID
 }
 
-boolean isRuntimesDeploy(){
-    return !params.SKIP_RUNTIMES_DEPLOY
+boolean isArtifactsDeploy(){
+    return !params.SKIP_ARTIFACTS_DEPLOY
 }
 
 boolean isImagesDeploy(){
@@ -471,8 +519,8 @@ boolean isOperatorDeploy(){
     return !params.SKIP_OPERATOR_DEPLOY
 }
 
-boolean isRuntimesPromote(){
-    return !params.SKIP_RUNTIMES_DEPLOY && !params.SKIP_RUNTIMES_PROMOTE
+boolean isArtifactsPromote(){
+    return !params.SKIP_ARTIFACTS_DEPLOY && !params.SKIP_ARTIFACTS_PROMOTE
 }
 
 boolean isImagesPromote(){
