@@ -60,8 +60,12 @@ pipeline {
 
         // IMAGE_PROMOTE_TAG => will be set in Initialization phase
 
-        AUTHOR_CREDS_ID = 'kie-ci'
+        // Credentials
         GIT_AUTHOR='kiegroup'
+        GIT_AUTHOR_CREDS_ID = 'kie-ci'
+        BOT_AUTHOR='bsig-gh-bot'
+        BOT_AUTHOR_CREDS_ID='bsig-gh-bot'
+        GITHUB_TOKEN_CREDS_ID='kie-ci2-token'
     }
 
     stages {
@@ -121,6 +125,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addReleaseDeployGitParam(buildParams)
                     if(params.ARTIFACTS_REPOSITORY != ''){
                         addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', params.ARTIFACTS_REPOSITORY)
                     }
@@ -163,6 +168,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addReleaseDeployGitParam(buildParams)
                     addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
                     addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
                     addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
@@ -183,6 +189,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addReleaseDeployGitParam(buildParams)
                     addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
                     
                     // For BDD tests
@@ -214,6 +221,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(RUNTIMES_DEPLOY))
                     addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', params.DEPLOY_AS_LATEST)
+                    addReleasePromoteGitParam(buildParams)
 
                     buildJob(RUNTIMES_PROMOTE, buildParams)
                 }
@@ -232,6 +240,7 @@ pipeline {
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(IMAGES_DEPLOY))
                     addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
+                    addReleasePromoteGitParam(buildParams)
 
                     buildJob(IMAGES_PROMOTE, buildParams)
                 }
@@ -250,6 +259,7 @@ pipeline {
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(OPERATOR_DEPLOY))
                     addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
+                    addReleasePromoteGitParam(buildParams)
 
                     buildJob(OPERATOR_PROMOTE, buildParams)
                 }
@@ -372,6 +382,17 @@ void addDisplayNameParam(buildParams){
 
 void addSkipTestsParam(buildParams){
     addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
+}
+
+void addReleaseDeployGitParam(buildParams){
+    addStringParam(buildParams, 'GIT_AUTHOR_BOT', env.BOT_AUTHOR)
+    addStringParam(buildParams, 'BOT_CREDENTIALS_ID', env.BOT_AUTHOR_CREDS_ID)
+}
+
+void addReleasePromoteGitParam(buildParams){
+    addStringParam(buildParams, 'BOT_CREDENTIALS_ID', env.BOT_AUTHOR_CREDS_ID)
+    addStringParam(buildParams, 'AUTHOR_CREDS_ID', env.GIT_AUTHOR_CREDS_ID)
+    addStringParam(buildParams, 'GITHUB_TOKEN_CREDS_ID', env.GITHUB_TOKEN_CREDS_ID)
 }
 
 void addImageBuildParams(List buildParams = [], String paramsPrefix = '', String tag, boolean isRegistryIncluded = false, boolean isFinalImage = false){
