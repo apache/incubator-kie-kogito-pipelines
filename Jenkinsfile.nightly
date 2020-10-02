@@ -85,9 +85,6 @@ pipeline {
                 failure {
                     addFailedStage()
                 }
-                unstable {
-                    addUnstableStage()
-                }
             }
         }
 
@@ -107,9 +104,6 @@ pipeline {
             post {
                 failure {
                     addFailedStage()
-                }
-                unstable {
-                    addUnstableStage()
                 }
             }
         }
@@ -134,9 +128,6 @@ pipeline {
             post {
                 failure {
                     addFailedStage()
-                }
-                unstable {
-                    addUnstableStage()
                 }
             }
         }
@@ -168,9 +159,6 @@ pipeline {
                 failure {
                     addFailedStage()
                 }
-                unstable {
-                    addUnstableStage()
-                }
             }
         }
 
@@ -195,9 +183,6 @@ pipeline {
             post {
                 failure {
                     addFailedStage()
-                }
-                unstable {
-                    addUnstableStage()
                 }
             }
         }
@@ -224,9 +209,6 @@ pipeline {
                 failure {
                     addFailedStage()
                 }
-                unstable {
-                    addUnstableStage()
-                }
             }
         }
     }
@@ -245,6 +227,7 @@ def buildJob(String jobName, List buildParams, boolean propagate=true){
 
     // Set Unstable if we don't propagate and job failed
     if(!propagate && !isJobSucceeded(jobName)){
+        addUnstableStage()
         unstable("Job ${jobName} finished with result ${job.getResult()}")
     }
     return job
