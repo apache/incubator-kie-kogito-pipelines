@@ -89,6 +89,12 @@ pipeline {
                     currentBuild.displayName = getDisplayName()
 
                     sendNotification("Release Pipeline for version ${getProjectVersion()} has started...")
+
+                    // Safety measure to not publish to main JBoss
+                    if(getGitAuthor() != 'kiegroup'){
+                        sendNotification("Git Author is different from `kiegroup` and no `ARTIFACTS_REPOSITORY` parameter has been provided. Are you sure you want to continue ? => ${env.BUILD_URL}input")
+                        input message: 'Should the pipeline continue with no `ARTIFACTS_REPOSITORY` defined ?', ok: 'Yes'
+                    }
                 }
             }
         }
