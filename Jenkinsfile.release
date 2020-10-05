@@ -99,6 +99,8 @@ pipeline {
                     def buildParams = []
                     addDisplayNameParam(buildParams)
                     addStringParam(buildParams, 'RELEASE_BRANCH', getReleaseBranch())
+                    addStringParam(buildParams, 'GIT_AUTHOR', getGitAuthor())
+                    addStringParam(buildParams, 'GIT_AUTHOR_CREDS_ID', getGitAuthorCredsId())
 
                     def repositories = []
                     if(isRuntimesDeploy(){ repositories += RUNTIMES_REPOS }
@@ -370,7 +372,7 @@ List getDefaultBuildParams(){
     List buildParams = []
     addDisplayNameParam(buildParams)
     addStringParam(buildParams, 'BUILD_BRANCH_NAME', getReleaseBranch())
-    addStringParam(buildParams, 'GIT_AUTHOR', env.GIT_AUTHOR)
+    addStringParam(buildParams, 'GIT_AUTHOR', getGitAuthor())
     addBooleanParam(buildParams, 'RELEASE', true)
     addStringParam(buildParams, 'PROJECT_VERSION', getProjectVersion())
     return buildParams
@@ -391,7 +393,7 @@ void addReleaseDeployGitParam(buildParams){
 
 void addReleasePromoteGitParam(buildParams){
     addStringParam(buildParams, 'BOT_CREDENTIALS_ID', env.BOT_AUTHOR_CREDS_ID)
-    addStringParam(buildParams, 'AUTHOR_CREDS_ID', env.GIT_AUTHOR_CREDS_ID)
+    addStringParam(buildParams, 'AUTHOR_CREDS_ID', getGitAuthorCredsId())
     addStringParam(buildParams, 'GITHUB_TOKEN_CREDS_ID', env.GITHUB_TOKEN_CREDS_ID)
 }
 
@@ -438,6 +440,13 @@ String getReleaseBranch(){
 
 boolean isCreateReleaseBranchesOnly(){
     return params.CREATE_RELEASE_BRANCHES_ONLY
+}
+String getGitAuthor(){
+    return env.GIT_AUTHOR
+}
+
+String getGitAuthorCredsId(){
+    return env.GIT_AUTHOR_CREDS_ID
 }
 
 boolean isRuntimesDeploy(){
