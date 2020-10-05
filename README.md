@@ -82,6 +82,7 @@ In order to test the full release pipeline, and in order to avoid any problem, y
 
 * Have a specific author repository that you can test against
 * If you don't want to flood your main repository, you should use a "bot account", referred as `BOT_*`
+* For deploying runtimes artifacts, you will need to provide a nexus repository to deploy to (see [nexus-operator](https://github.com/m88i/nexus-operator))
 
 ### Change pipeline envs
 
@@ -119,4 +120,11 @@ In Jenkins, you should set those credentials and set the correct values in env
 * IMAGE_REGISTRY_CREDENTIALS (username/password credential)  
   Credential to push image to the container registry (should have rights to `IMAGE_NAMESPACE`)
 * KOGITO_CI_EMAIL_TO (secret text credential)  
-  Email for notifications. You can set your email for example.
+  Email for notifications. You can set your email for example
+
+### Launch release with minimal parameters for testing
+
+* `PROJECT_VERSION`
+* `ARTIFACTS_REPOSITORY` to set to the correct repository
+* (optional) `SKIP_TESTS` (usually you will want that)
+* (optional) `SKIP_*` to skip different phases
