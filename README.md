@@ -75,3 +75,48 @@ Here is the list of jobs and link to Jenkinsfiles:
 * [kogito-images-promote](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.promote)
 * [kogito-operator-deploy](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.deploy)
 * [kogito-operator-promote](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.promote)
+
+## Test release pipeline
+
+In order to test the full release pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.release](./Jenkinsfile.release), create jobs in Jenkins and setup some credentials.
+
+* Have a specific author repository that you can test against
+* If you don't want to flood your main repository, you should use a "bot account", referred as `BOT_*`
+
+### Change pipeline envs
+
+* **GIT_AUTHOR** (and `GIT_AUTHOR_CREDS_ID`, see [Setup Jenkins creds](#setup-jenkins-creds))
+* **BOT_AUTHOR** (and `BOT_AUTHOR_CREDS_ID`, see [Setup Jenkins creds](#setup-jenkins-creds))
+* **IMAGE_NAMESPACE** (and `IMAGE_REGISTRY_CREDENTIALS`, see [Setup Jenkins creds](#setup-jenkins-creds))
+
+### Setup Jenkins job
+
+You will need to create single pipeline jobs and let them run once to update the `parameters` part (you should stop them quickly as it makes no sense to let them run until the end. Just wait for the checkout of repo and the `node` command done).
+
+**NOTE:** You will need to access the correct branch for each !
+
+* [kogito-release](./Jenkinsfile.release)
+* [create-release-branches](./Jenkinsfile.create-release-branches)
+* [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
+* [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
+* [[kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
+* [kogito-images-promote](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.promote)
+* [kogito-operator-deploy](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.deploy)
+* [kogito-operator-promote](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.promote)
+
+**NOTE:** Deploy & Promote jobs of a specific repository can be ignored (and so not created for testing), but you will need to check the corresponding `SKIP_` parameter.
+
+### Setup Jenkins creds
+
+In Jenkins, you should set those credentials and set the correct values in env
+
+* GIT_AUTHOR_CREDS_ID (username/password credential)  
+  Username / [GitHub token](https://github.com/settings/tokens) which has rights on `GIT_AUTHOR`
+* BOT_AUTHOR_CREDS_ID (username/password credential)  
+  Username / [GitHub token](https://github.com/settings/tokens) which has rights on `BOT_AUTHOR`
+* GITHUB_TOKEN_CREDS_ID (secret text credential)  
+  [GitHub token](https://github.com/settings/tokens) for Github CLI
+* IMAGE_REGISTRY_CREDENTIALS (username/password credential)  
+  Credential to push image to the container registry (should have rights to `IMAGE_NAMESPACE`)
+* KOGITO_CI_EMAIL_TO (secret text credential)  
+  Email for notifications. You can set your email for example.
