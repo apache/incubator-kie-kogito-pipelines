@@ -2,10 +2,12 @@
 
 CREATE_RELEASE_BRANCHES = 'create-release-branches'
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
+OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
 EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
 RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
+OPTAPLANNER_PROMOTE = 'optaplanner-promote'
 EXAMPLES_PROMOTE = 'kogito-examples-promote'
 IMAGES_PROMOTE = 'kogito-images-promote'
 OPERATOR_PROMOTE = 'kogito-operator-promote'
@@ -29,6 +31,7 @@ pipeline {
         booleanParam(name: 'CREATE_RELEASE_BRANCHES_ONLY', defaultValue: 'false', description: 'Set to true if only the create release branches stage should be launched')
 
         string(name: 'PROJECT_VERSION', defaultValue: '', description: 'Project version to release as Major.minor.micro')
+        string(name: 'OPTAPLANNER_VERSION', defaultValue: '', description: 'Project version of OptaPlanner and its examples to release as Major.minor.micro')
         booleanParam(name: 'DEPLOY_AS_LATEST', defaultValue: 'false', description: 'Given project version is considered the latest version')
 
         booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip all tests')
@@ -77,13 +80,14 @@ pipeline {
                     echo 'Initialize'
 
                     assert getProjectVersion() != ''
+                    assert getOptaPlannerVersion() != ''
 
-                    currentBuild.displayName = getProjectVersion()
-                    
                     // Set release branch
-                    Integer[] versionSplit = util.parseVersion(getProjectVersion())
-                    env.RELEASE_BRANCH = "${versionSplit[0]}.${versionSplit[1]}.x"
-                    echo "Release Branch ${getReleaseBranch()}"
+                    env.RELEASE_BRANCH = getBranchForVersion(getProjectVersion())
+                    echo "Kogito Release Branch ${getReleaseBranch()}"
+
+                    env.OPTAPLANNER_RELEASE_BRANCH = getBranchForVersion(getOptaPlannerVersion())
+                    echo "OptaPlanner Release Branch ${getReleaseBranch()}"
 
                     env.TEMP_TAG = "${getProjectVersion()}-temp"
                     echo "temporary tag is ${env.TEMP_TAG}"
@@ -212,6 +216,30 @@ pipeline {
             }
         }
 
+        stage('Build & Deploy OptaPlanner') {
+            when {
+                expression { return !isCreateReleaseBranchesOnly() && isArtifactsDeploy() }
+            }
+            steps {
+                script {
+                    echo "Call ${OPTAPLANNER_DEPLOY} job"
+
+                    def buildParams = getDefaultBuildParams()
+                    addReleaseDeployGitParam(buildParams)
+                    addStringParam(buildParams, 'BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
+                    addStringParam(buildParams, 'PROJECT_VERSION', getOptaPlannerVersion())
+                    addStringParam(buildParams, 'KOGITO_VERSION', getProjectVersion())
+                    addSkipTestsParam(buildParams)
+                    if (params.ARTIFACTS_REPOSITORY != '') {
+                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', params.ARTIFACTS_REPOSITORY)
+                    }
+
+                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
+                    buildJob(OPTAPLANNER_DEPLOY, buildParams)
+                }
+            }
+        }
+
         stage('Build & Deploy Images') {
             when {
                 expression { return !isCreateReleaseBranchesOnly() && isImagesDeploy() }
@@ -296,6 +324,26 @@ pipeline {
                     }
 
                     buildJob(RUNTIMES_PROMOTE, buildParams)
+                }
+            }
+        }
+
+        stage('Promote OptaPlanner') {
+            when {
+                expression { return !isCreateReleaseBranchesOnly() && isArtifactsPromote() }
+            }
+            steps {
+                script {
+                    echo "Call ${OPTAPLANNER_PROMOTE} job"
+
+                    def buildParams = getDefaultBuildParams()
+                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(OPTAPLANNER_DEPLOY))
+                    addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', params.DEPLOY_AS_LATEST)
+                    addStringParam(buildParams, 'PROJECT_VERSION', getOptaPlannerVersion())
+                    addStringParam(buildParams, 'KOGITO_VERSION', getProjectVersion())
+                    addReleasePromoteGitParam(buildParams)
+
+                    buildJob(OPTAPLANNER_PROMOTE, buildParams)
                 }
             }
         }
@@ -530,6 +578,10 @@ String getProjectVersion(){
     return params.PROJECT_VERSION
 }
 
+String getOptaPlannerVersion() {
+    return params.OPTAPLANNER_VERSION
+}
+
 String getReleaseBranch(){
     return env.RELEASE_BRANCH
 }
@@ -544,6 +596,10 @@ String getGitAuthorCredsId(){
 
 String getArtifactsRepositoryParam(){
     return params.ARTIFACTS_REPOSITORY
+}
+
+String getOptaPlannerReleaseBranch() {
+    return env.OPTAPLANNER_RELEASE_BRANCH
 }
 
 boolean isArtifactsDeploy(){
@@ -572,4 +628,9 @@ boolean isImagesPromote(){
 
 boolean isOperatorPromote(){
     return isOperatorDeploy() && !params.SKIP_OPERATOR_PROMOTE
+}
+
+String getBranchForVersion(String version) {
+    Integer[] versionSplit = util.parseVersion(version)
+    return "${versionSplit[0]}.${versionSplit[1]}.x"
 }
