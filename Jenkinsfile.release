@@ -62,10 +62,10 @@ pipeline {
 
         // Credentials
         GIT_AUTHOR='kiegroup'
-        GIT_AUTHOR_CREDS_ID = 'kie-ci'
+        GIT_AUTHOR_CREDS_ID = 'kie-ci' // username/password creds
         BOT_AUTHOR='bsig-gh-bot'
-        BOT_AUTHOR_CREDS_ID='bsig-gh-bot'
-        GITHUB_TOKEN_CREDS_ID='kie-ci2-token'
+        BOT_AUTHOR_CREDS_ID='bsig-gh-bot' // username/password creds
+        GITHUB_TOKEN_CREDS_ID='kie-ci2-token' // secret text creds
     }
 
     stages {
