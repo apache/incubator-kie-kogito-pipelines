@@ -122,6 +122,10 @@ In Jenkins, you should set those credentials and set the correct values in env
 * KOGITO_CI_EMAIL_TO (secret text credential)  
   Email for notifications. You can set your email for example
 
+### Use specific nexus for released artifacts
+
+In case staging and release repositories are the same for testing, you can uncomment the line `addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY)` in `Promote images` stage. This is made to make the called job aware of the release repository to update correctly the artifacts.
+
 ### Launch release with minimal parameters for testing
 
 * `PROJECT_VERSION`

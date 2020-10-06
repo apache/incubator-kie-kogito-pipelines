@@ -248,6 +248,10 @@ pipeline {
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(IMAGES_DEPLOY))
                     addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
+                    
+                    // To be uncommented for testing if artifacts are released to same repository as the staging
+                    // addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY) // Get artifacts from staging repository
+
                     addReleasePromoteGitParam(buildParams)
 
                     buildJob(IMAGES_PROMOTE, buildParams)
