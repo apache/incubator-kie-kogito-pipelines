@@ -1,6 +1,6 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
-CREATE_RELEASE_BRANCH = 'create-release-branch'
+CREATE_RELEASE_BRANCHES = 'create-release-branches'
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
@@ -102,12 +102,9 @@ pipeline {
                     if(isOperatorDeploy()){ repositories += OPERATOR_REPOS }
                     repositories += PIPELINE_REPOS // Create branch to activate nightlies if needed
 
-                    for(String repo : repositories){
-                        echo "Call ${CREATE_RELEASE_BRANCH} job for repository ${repo}"
-
-                        addStringParam(buildParams, 'REPOSITORY_NAME', repo)
-                        buildJob(CREATE_RELEASE_BRANCH, buildParams)
-                    }
+                    echo "Call ${CREATE_RELEASE_BRANCHES} job with repositories ${repositories}"
+                    addStringParam(buildParams, 'REPOSITORIES', repositories.join(','))
+                    buildJob(CREATE_RELEASE_BRANCHES, buildParams)
 
                     sendNotification("${getReleaseBranch()} branches have been created for repositories: ${repositories}")
                 }
