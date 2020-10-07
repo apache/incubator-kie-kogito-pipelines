@@ -22,6 +22,7 @@ pipeline {
                     assert getReleaseBranch() != ''
 
                     currentBuild.displayName = "${getReleaseBranch()}"
+                    currentBuild.description = "${getRepositories()}"
                 }
             }
         }
