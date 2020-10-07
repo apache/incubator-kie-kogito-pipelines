@@ -211,9 +211,15 @@ See [release Jenkinsfile](./../Jenkinsfile.release) for the full list on paramet
 One other specificity of the release pipeline are the manual interventions.  
 They are currently 3 of them:
 
-* **Get staging repository** (happens in kogito-runtimes-deploy)
-* **Promote staging repository to Maven Central** (happens in kogito-runtimes-deploy)
+* **Get staging repository** (happens in kogito-runtimes-deploy)  
+  When asked, Staging repository can be retrived from [JBoss Nexus repository](https://repository.jboss.org/nexus/). For that, the user needs to have specific rights or ask someone who has those rights.  
+  Once retrieved, you can put the url to staging repository into the input asking for it on Jenkins.
+* **Promote staging repository to Maven Central** (happens in kogito-runtimes-deploy)  
+  Same as getting staging repository, you need the rights to promote the artifacts from [JBoss Nexus repository](https://repository.jboss.org/nexus/) to Maven Central, or ask someone with rights to do it.  
+  Once promoted, just confirm it is promoted on Jenkins.
 * **Check kogito-apps artifacts are set to correct url** (happens in kogito-images-promote)
+  Jenkins will ask you to review the logs of this job and check urls are correct in the different displayed `module.yaml` files.  
+  Review them and confirm if everything is ok.
 
 #### Retry/Skip/Abort manual intervention
 
