@@ -182,7 +182,7 @@ pipeline {
                         addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', params.ARTIFACTS_REPOSITORY)
                     }
 
-                    buildJob(RUNTIMES_DEPLOY, buildParams)
+                    buildJob(EXAMPLES_DEPLOY, buildParams)
                 }
             }
         }
@@ -276,10 +276,26 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(RUNTIMES_DEPLOY))
-                    addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', params.DEPLOY_AS_LATEST)
                     addReleasePromoteGitParam(buildParams)
 
                     buildJob(RUNTIMES_PROMOTE, buildParams)
+                }
+            }
+        }
+
+        stage('Promote examples') {
+            when {
+                expression { return isArtifactsPromote() }
+            }
+            steps {
+                script {
+                    echo "Call ${EXAMPLES_PROMOTE} job"
+
+                    def buildParams = getDefaultBuildParams()
+                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(RUNTIMES_DEPLOY))
+                    addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', params.DEPLOY_AS_LATEST)
+
+                    buildJob(EXAMPLES_PROMOTE, buildParams)
                 }
             }
         }
