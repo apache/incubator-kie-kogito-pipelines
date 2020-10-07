@@ -97,10 +97,10 @@ pipeline {
                     addStringParam(buildParams, 'RELEASE_BRANCH', getReleaseBranch())
 
                     def repositories = []
-                    repositories += PIPELINE_REPOS // Create branch to activate nightlies if needed
                     if(isRuntimesDeploy(){ repositories += RUNTIMES_REPOS }
                     if(isImagesDeploy()){ repositories += IMAGES_REPOS }
                     if(isOperatorDeploy()){ repositories += OPERATOR_REPOS }
+                    repositories += PIPELINE_REPOS // Create branch to activate nightlies if needed
 
                     for(String repo : repositories){
                         echo "Call ${CREATE_RELEASE_BRANCH} job for repository ${repo}"
