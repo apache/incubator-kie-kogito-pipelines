@@ -283,7 +283,13 @@ pipeline {
             cleanWs()
         }
         success {
-            sendNotification("Version ${getProjectVersion()} has been successfully released !!!!")
+            script {
+                if(isCreateReleaseBranchesOnly()){
+                    sendNotification("Branches ${getProjectVersion()} have been successfully created !!!!")
+                } else {
+                    sendNotification("Version ${getProjectVersion()} has been successfully released !!!!")
+                }
+            }
         }
         unsuccessful {
             sendErrorNotification()
