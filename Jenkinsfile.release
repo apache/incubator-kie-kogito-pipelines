@@ -190,6 +190,12 @@ pipeline {
         stage('Retrieve Examples information'){
             steps {
                 script {
+                    String jobUrl = getJobUrl(EXAMPLES_DEPLOY)
+                    def deployProps = [:]
+                    if(jobUrl != "") {
+                        deployProps = readDeployProperties(jobUrl)
+                    }
+
                     env.EXAMPLES_URI = params.EXAMPLES_URI ?: (deployProps['kogito-examples.pr.source.uri'] ?: '')
                     env.EXAMPLES_REF = params.EXAMPLES_REF ?: (deployProps['kogito-examples.pr.source.ref'] ?: env.RELEASE_BRANCH)
 
