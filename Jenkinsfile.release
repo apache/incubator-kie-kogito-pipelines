@@ -251,17 +251,17 @@ pipeline {
             }
         }
 
-        stage('Is staging repository promoted?') {
+        stage('Is staging repository released?') {
             when {
                 expression { return params.ARTIFACTS_REPOSITORY == '' } // Execute only if artifacts repository was not given, which means the staging repository has been created
             }
             steps {
                 script {
-                    String body = "${getProjectVersion()} artifacts are ready for promotion.\n" +
+                    String body = "${getProjectVersion()} artifacts are ready for release.\n" +
                                  "The staging repository can be found at: ${env.STAGING_REPOSITORY}\n" +
-                                 "Please promote the repository and then confirm the promotion here: ${env.BUILD_URL}input"
+                                 "Please release the repository and then confirm here: ${env.BUILD_URL}input"
                     sendNotification(body)
-                    input message: 'Has the staging repository been promoted?', ok: 'Yes'
+                    input message: 'Has the staging repository been released ?', ok: 'Yes'
                 }
             }
         }
