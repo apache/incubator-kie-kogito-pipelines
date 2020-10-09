@@ -14,6 +14,7 @@ OPERATOR_PROMOTE = 'kogito-operator-promote'
 
 PIPELINE_REPOS=['kogito-pipelines']
 RUNTIMES_REPOS=['kogito-runtimes','kogito-apps','kogito-examples']
+OPTAPLANNER_REPOS =['optaplanner']
 IMAGES_REPOS=['kogito-images']
 OPERATOR_REPOS=['kogito-cloud-operator']
 
@@ -107,7 +108,7 @@ pipeline {
             }
         }
 
-        stage('Create release branches') {
+        stage('Create Kogito release branches') {
             steps {
                 script {
                     echo "Call ${CREATE_RELEASE_BRANCHES} job"
@@ -119,10 +120,37 @@ pipeline {
                     addStringParam(buildParams, 'GIT_AUTHOR_CREDS_ID', getGitAuthorCredsId())
 
                     def repositories = []
-                    if(isArtifactsDeploy()){ repositories += RUNTIMES_REPOS }
-                    if(isImagesDeploy()){ repositories += IMAGES_REPOS }
-                    if(isOperatorDeploy()){ repositories += OPERATOR_REPOS }
+                    if(isArtifactsDeploy()) {
+                        repositories += RUNTIMES_REPOS
+                    }
+                    if(isImagesDeploy()) {
+                        repositories += IMAGES_REPOS
+                    }
+                    if(isOperatorDeploy()) {
+                        repositories += OPERATOR_REPOS
+                    }
                     repositories += PIPELINE_REPOS // Create branch to activate nightlies if needed
+
+                    echo "Call ${CREATE_RELEASE_BRANCHES} job with repositories ${repositories}"
+                    addStringParam(buildParams, 'REPOSITORIES', repositories.join(','))
+                    buildJob(CREATE_RELEASE_BRANCHES, buildParams)
+
+                    sendNotification("${getReleaseBranch()} branches have been created for repositories: ${repositories}")
+                }
+            }
+        }
+
+        stage('Create OptaPlanner release branches') {
+            steps {
+                script {
+                    def buildParams = []
+                    addDisplayNameParam(buildParams)
+                    addStringParam(buildParams, 'RELEASE_BRANCH', getOptaPlannerReleaseBranch())
+
+                    def repositories = []
+                    if(isArtifactsDeploy()) {
+                        repositories += OPTAPLANNER_REPOS
+                    }
 
                     echo "Call ${CREATE_RELEASE_BRANCHES} job with repositories ${repositories}"
                     addStringParam(buildParams, 'REPOSITORIES', repositories.join(','))
@@ -176,6 +204,30 @@ pipeline {
             }
         }
 
+        stage('Build & Deploy OptaPlanner') {
+            when {
+                expression { return !isCreateReleaseBranchesOnly() && isArtifactsDeploy() }
+            }
+            steps {
+                script {
+                    echo "Call ${OPTAPLANNER_DEPLOY} job"
+
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    addReleaseDeployGitParam(buildParams)
+                    addStringParam(buildParams, 'BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
+                    addStringParam(buildParams, 'PROJECT_VERSION', getOptaPlannerVersion())
+                    addStringParam(buildParams, 'KOGITO_VERSION', getProjectVersion())
+                    if (params.ARTIFACTS_REPOSITORY != '') {
+                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', params.ARTIFACTS_REPOSITORY)
+                    }
+
+                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
+                    buildJob(OPTAPLANNER_DEPLOY, buildParams)
+                }
+            }
+        }
+
         stage('Build & Deploy Kogito Examples') {
             when {
                 expression { return !isCreateReleaseBranchesOnly() && isArtifactsDeploy() }
@@ -187,6 +239,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
                     addReleaseDeployGitParam(buildParams)
+                    addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
                     addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
                     if(getArtifactsRepositoryParam()){
                         addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
@@ -212,30 +265,6 @@ pipeline {
 
                     echo "Got examples uri ${env.EXAMPLES_URI}"
                     echo "Got examples ref ${env.EXAMPLES_REF}"
-                }
-            }
-        }
-
-        stage('Build & Deploy OptaPlanner') {
-            when {
-                expression { return !isCreateReleaseBranchesOnly() && isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    echo "Call ${OPTAPLANNER_DEPLOY} job"
-
-                    def buildParams = getDefaultBuildParams()
-                    addReleaseDeployGitParam(buildParams)
-                    addStringParam(buildParams, 'BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
-                    addStringParam(buildParams, 'PROJECT_VERSION', getOptaPlannerVersion())
-                    addStringParam(buildParams, 'KOGITO_VERSION', getProjectVersion())
-                    addSkipTestsParam(buildParams)
-                    if (params.ARTIFACTS_REPOSITORY != '') {
-                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', params.ARTIFACTS_REPOSITORY)
-                    }
-
-                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
-                    buildJob(OPTAPLANNER_DEPLOY, buildParams)
                 }
             }
         }
