@@ -23,6 +23,9 @@
     * [Release pipeline Manual interventions](#release-pipeline-manual-interventions)
       * [Default manual interventions](#default-manual-interventions)
       * [Retry/Skip/Abort manual intervention](#retryskipabort-manual-intervention)
+    * [After the Release Pipeline is finished](#after-the-release-pipeline-is-finished)
+      * [Operator Crd/Csv files](#operator-crdcsv-files)
+      * [Update nightly jobs with new release branch](#update-nightly-jobs-with-new-release-branch)
     * [Release pipeline Troubleshooting](#release-pipeline-troubleshooting)
       * [Release pipeline is failing](#release-pipeline-is-failing)
       * [Release pipeline is reporting a called *-deploy job is failing](#release-pipeline-is-reporting-a-called--deploy-job-is-failing)
@@ -232,6 +235,31 @@ For each called jobs, in case of failure, there is retry/skip/abort manual inter
 * **Abort**  
   if any other problem.  
   As long as `promote` phase did not start, there will be no impact on the release.
+
+### After the Release Pipeline is finished
+
+Once the release pipeline is finished, there are some actions to be done:
+
+#### Operator Crd/Csv files
+
+Once the operator's release has been done, it created new csv and crd files under `deploy/olm-catalog/kogito-operator/{VERSION}` on the release branch.
+You will need to create, with those files, new OperatorHub PRs (one for Openshift and one for Kubernetes) or asked someone from Cloud part to do it.
+
+If there is any change to be done due to PRs, do it on the release branch.
+
+**After Operatorhub PRs are merged**, you will need to transfer those crd and csv files to the `master` branch, as we want all crd/csv files history on master, for future releases.  
+Do not panic, there is a simple [job](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito/job/tools/job/kogito-operator-copy-manifests-files/) for that, with an associated [Jenkinsfile](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.copy_csv_files).
+
+#### Update nightly jobs with new release branch
+
+In case a new release branch has been created, you will need to update the different jobs's configuration with the new branch name.  
+You will just need to update the `include` part of the Git configuration of the jobs.
+
+Here are some of the jobs to update (this is not exhaustive):
+
+* [kogito-nightly](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito/job/kogito-nightly/)
+* [kogito-runtimes-sonarcloud](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito/job/kogito-runtimes-sonarcloud/)
+* [kogito-apps-sonarcloud](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito/job/kogito-apps-sonarcloud/)
 
 ### Release pipeline Troubleshooting
 
