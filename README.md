@@ -86,9 +86,9 @@ In order to test the full release pipeline, and in order to avoid any problem, y
 
 ### Change pipeline envs
 
-* **GIT_AUTHOR** (and `GIT_AUTHOR_CREDS_ID`, see [Setup Jenkins creds](#setup-jenkins-creds))
-* **BOT_AUTHOR** (and `BOT_AUTHOR_CREDS_ID`, see [Setup Jenkins creds](#setup-jenkins-creds))
-* **IMAGE_NAMESPACE** (and `IMAGE_REGISTRY_CREDENTIALS`, see [Setup Jenkins creds](#setup-jenkins-creds))
+* `GIT_AUTHOR` (and `GIT_AUTHOR_CREDS_ID`, see [Setup Jenkins creds](#setup-jenkins-creds))
+* `BOT_AUTHOR` (and `BOT_AUTHOR_CREDS_ID`, see [Setup Jenkins creds](#setup-jenkins-creds))
+* `IMAGE_NAMESPACE` (and `IMAGE_REGISTRY_CREDENTIALS`, see [Setup Jenkins creds](#setup-jenkins-creds))
 
 ### Setup Jenkins job
 
@@ -111,15 +111,15 @@ You will need to create single pipeline jobs and let them run once to update the
 
 In Jenkins, you should set those credentials and set the correct values in env
 
-* GIT_AUTHOR_CREDS_ID (username/password credential)  
+* `GIT_AUTHOR_CREDS_ID` (username/password credential)  
   Username / [GitHub token](https://github.com/settings/tokens) which has rights on `GIT_AUTHOR`
-* BOT_AUTHOR_CREDS_ID (username/password credential)  
+* `BOT_AUTHOR_CREDS_ID` (username/password credential)  
   Username / [GitHub token](https://github.com/settings/tokens) which has rights on `BOT_AUTHOR`
-* GITHUB_TOKEN_CREDS_ID (secret text credential)  
+* `GITHUB_TOKEN_CREDS_ID` (secret text credential)  
   [GitHub token](https://github.com/settings/tokens) for Github CLI
-* IMAGE_REGISTRY_CREDENTIALS (username/password credential)  
+* `IMAGE_REGISTRY_CREDENTIALS` (username/password credential)  
   Credential to push image to the container registry (should have rights to `IMAGE_NAMESPACE`)
-* KOGITO_CI_EMAIL_TO (secret text credential)  
+* `KOGITO_CI_EMAIL_TO` (secret text credential)  
   Email for notifications. You can set your email for example
 
 ### Use specific nexus for released artifacts
