@@ -169,7 +169,7 @@ pipeline {
 
         stage('Build & Deploy Kogito Examples') {
             when {
-                expression { return isArtifactsDeploy() }
+                expression { return !isCreateReleaseBranchesOnly() && isArtifactsDeploy() }
             }
             steps {
                 script {
@@ -187,7 +187,10 @@ pipeline {
             }
         }
 
-        stage('Retrieve Examples information'){
+        stage('Retrieve Examples information'){\
+            when {
+                expression { return !isCreateReleaseBranchesOnly() }
+            }
             steps {
                 script {
                     String jobUrl = getJobUrl(EXAMPLES_DEPLOY)
@@ -259,7 +262,7 @@ pipeline {
 
         stage('Is staging repository released?') {
             when {
-                expression { return params.ARTIFACTS_REPOSITORY == '' } // Execute only if artifacts repository was not given, which means the staging repository has been created
+                expression { return !isCreateReleaseBranchesOnly() && params.ARTIFACTS_REPOSITORY == '' } // Execute only if artifacts repository was not given, which means the staging repository has been created
             }
             steps {
                 script {
