@@ -113,7 +113,7 @@ pipeline {
                     addStringParam(buildParams, 'GIT_AUTHOR_CREDS_ID', getGitAuthorCredsId())
 
                     def repositories = []
-                    if(isRuntimesDeploy(){ repositories += RUNTIMES_REPOS }
+                    if(isArtifactsDeploy()){ repositories += RUNTIMES_REPOS }
                     if(isImagesDeploy()){ repositories += IMAGES_REPOS }
                     if(isOperatorDeploy()){ repositories += OPERATOR_REPOS }
                     repositories += PIPELINE_REPOS // Create branch to activate nightlies if needed
@@ -147,7 +147,7 @@ pipeline {
             }
         }
 
-        stage('Retrieve staging repository'){
+        stage('Retrieve staging repository') {
             when {
                 expression { return !isCreateReleaseBranchesOnly() && env.STAGING_REPOSITORY == '' }
             }
@@ -177,6 +177,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addReleaseDeployGitParam(buildParams)
                     addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
                     if(params.ARTIFACTS_REPOSITORY != ''){
                         addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', params.ARTIFACTS_REPOSITORY)
@@ -187,7 +188,7 @@ pipeline {
             }
         }
 
-        stage('Retrieve Examples information'){\
+        stage('Retrieve Examples information'){
             when {
                 expression { return !isCreateReleaseBranchesOnly() }
             }
@@ -303,6 +304,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(EXAMPLES_DEPLOY))
                     addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', params.DEPLOY_AS_LATEST)
+                    addReleasePromoteGitParam(buildParams)
 
                     buildJob(EXAMPLES_PROMOTE, buildParams)
                 }
@@ -521,9 +523,6 @@ String getReleaseBranch(){
     return env.RELEASE_BRANCH
 }
 
-boolean isCreateReleaseBranchesOnly(){
-    return params.CREATE_RELEASE_BRANCHES_ONLY
-}
 String getGitAuthor(){
     return env.GIT_AUTHOR
 }
@@ -534,6 +533,10 @@ String getGitAuthorCredsId(){
 
 boolean isArtifactsDeploy(){
     return !params.SKIP_ARTIFACTS_DEPLOY
+}
+
+boolean isCreateReleaseBranchesOnly(){
+    return params.CREATE_RELEASE_BRANCHES_ONLY
 }
 
 boolean isImagesDeploy(){
