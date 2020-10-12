@@ -48,7 +48,7 @@
     * [Nightly pipeline Proposal](#nightly-pipeline-proposal)
     * [Release pipeline Proposal](#release-pipeline-proposal)
 
-In order to perform, Nightly and Release pipelines need to call deploy and promote jobs for runtimes, images and operator.  
+In order to perform, Nightly and Release pipelines need to call some deploy and promote jobs for runtimes, images and operator.  
 Those jobs should be present at the same level as the nightly and/or release job, so they can be found when called.
 
 Here is the list of jobs and link to Jenkinsfiles:
@@ -84,10 +84,12 @@ Note that for a particular part of the project (runtimes, images or operator), i
 
 Once a branch is created or another one should be deactivated, you just need to go the configuration of the [nightly job](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito/job/kogito-nightly/configure) and change the `include` or `exclude` configuration of Git.
 
+*TIP: just mention the branches you need in `include` part and leave the `exclude` part empty.*
+
 ### Nightly pipeline Parameters
 
 If needed, the Nightly pipeline can be restarted with `SKIP_TESTS` or `SKIP` specific part options.  
-See [nightly Jenkinsfile](./../Jenkinsfile.nightly) for more information on parameters.
+See the [Nightly Jenkinsfile](../Jenkinsfile.nightly) for more information on parameters.
 
 ### Nightly pipeline Troubleshooting
 
@@ -98,7 +100,7 @@ In the Zulip kogito-ci stream, there should be a link to the failing job. Open i
 #### Nightly pipeline is failing
 
 In case the main pipeline is failing, this will be most likely a Groovy error.  
-This can happen when changes have been made to the [nightly Jenkinsfile](./../Jenkinsfile.nightly).
+This can happen when changes have been made to the [Nightly Jenkinsfile](../Jenkinsfile.nightly).
 
 The problem will need to be corrected on the corresponding branch and the pipeline could be restarted.
 
@@ -130,7 +132,7 @@ Here are some problems which can occur on a `Promote` job:
 
 ### Testing the Nightly Pipeline
 
-In order to test the full nightly pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.nightly](./Jenkinsfile.nightly), create jobs in Jenkins and setup some credentials.
+In order to test the full nightly pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.nightly](../Jenkinsfile.nightly), create jobs in Jenkins and setup some credentials.
 
 * Have a specific container registry and credentials registered with `push` rights on it.
 * For deploying runtimes artifacts, and to avoid any conflict with main repository on snapshot artifacts, you will need to provide a nexus repository to deploy the artifacts (see [nexus-operator](https://github.com/m88i/nexus-operator)).
@@ -143,7 +145,7 @@ In order to test the full nightly pipeline, and in order to avoid any problem, y
 
 You will need to create single pipeline jobs and let them run once to update the `parameters` part (you should stop them quickly as it makes no sense to let them run until the end. Just wait for the checkout of repo and the `node` command done).
 
-**NOTE:** You will need to access the correct branch for each !
+**NOTE:** You will need to access the correct branch for each of them!
 
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
@@ -152,7 +154,7 @@ You will need to create single pipeline jobs and let them run once to update the
 * [kogito-operator-deploy](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.deploy)
 * [kogito-operator-promote](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.promote)
 
-**NOTE:** Deploy & Promote jobs of a specific repository can be ignored (and so not created for testing), but you will need to check the corresponding `SKIP_` parameter.
+**NOTE:** Deploy & Promote jobs of a specific repository can be ignored (and so job does not need to be created for testing), but you will need to check the corresponding `SKIP_` parameter.
 
 #### Setup Jenkins creds for nightly testing
 
@@ -165,7 +167,6 @@ In Jenkins, you should set those credentials and set the correct values in env:
 
 #### Launch release with minimal parameters for nightly testing
 
-* `PROJECT_VERSION`
 * `ARTIFACTS_REPOSITORY` to set to the correct repository
 * (optional) `SKIP_TESTS` (usually you will want that)
 * (optional) `SKIP_*` to skip different phases
@@ -222,7 +223,7 @@ The Release pipeline can be tweaked with some other parameters if needed.
 One option is the possibility to skip some stages, depending on which part you want to release.  
 **NOTE: If you decide to skip the runtimes part, please be careful on `ARTIFACTS_REPOSITORY`, `EXAMPLES_URI` and `EXAMPLES_REF` parameters**
 
-See [release Jenkinsfile](./../Jenkinsfile.release) for the full list on parameters.
+See [release Jenkinsfile](../Jenkinsfile.release) for the full list on parameters.
 
 ### Release pipeline Manual interventions
 
@@ -295,7 +296,7 @@ In the Zulip kogito-ci stream, there should be a link to the failing job. Open i
 #### Release pipeline is failing
 
 In case the main pipeline is failing, this will be most likely a Groovy error.  
-This can happen when changes have been made to the release [Jenkinsfile](./../Jenkinsfile.release).
+This can happen when changes have been made to the release [Jenkinsfile](../Jenkinsfile.release).
 
 The problem will need to be corrected on `master` and the pipeline could be restarted.
 
@@ -329,9 +330,9 @@ You can correct it, and then just retry the job (see [retry possibility](#retrys
 
 ### Testing the Release Pipeline
 
-In order to test the full release pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.release](./Jenkinsfile.release), create jobs in Jenkins and setup some credentials.
+In order to test the full release pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.release](../Jenkinsfile.release), create jobs in Jenkins and setup some credentials.
 
-* Have a specific container registry and credentials registered with `push` rights on it.
+* Have a specific container registry and credentials registered with `push` rights on it
 * Have a specific author repository that you can test against
 * If you don't want to flood your main repository, you should use a "bot account", referred as `BOT_*`
 * For deploying runtimes artifacts, and to avoid any conflict by creating a staging repository inadvertly, you will need to provide a nexus repository to deploy the artifacts (see [nexus-operator](https://github.com/m88i/nexus-operator)).
@@ -348,8 +349,8 @@ You will need to create single pipeline jobs and let them run once to update the
 
 **NOTE:** You will need to access the correct branch for each !
 
-* [kogito-release](./Jenkinsfile.release)
-* [create-release-branches](./Jenkinsfile.create-release-branches)
+* [kogito-release](../Jenkinsfile.release)
+* [create-release-branches](../Jenkinsfile.create-release-branches)
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
@@ -357,7 +358,7 @@ You will need to create single pipeline jobs and let them run once to update the
 * [kogito-operator-deploy](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.deploy)
 * [kogito-operator-promote](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.promote)
 
-**NOTE:** Deploy & Promote jobs of a specific repository can be ignored (and so not created for testing), but you will need to check the corresponding `SKIP_` parameter.
+**NOTE:** Deploy & Promote jobs of a specific repository can be ignored (and so job does not need to be created for testing), but you will need to check the corresponding `SKIP_` parameter.
 
 #### Setup Jenkins creds for release testing
 
@@ -429,7 +430,7 @@ The objectives are:
 
 ### Nightly pipeline Proposal
 
-The [nightly pipeline](./Jenkinsfile.nightly) for Kogito is responsible to build&test runtimes artifacts, images and operator.  
+The [nightly pipeline](../Jenkinsfile.nightly) for Kogito is responsible to build&test runtimes artifacts, images and operator.  
 For that, it will call different jobs for deployment and then for promote if all tests passed.  
 
 ![Nightly pipeline](./images/pipeline-nightly.png)
@@ -438,7 +439,7 @@ If the pipeline is failing or is unstable, then a notification is sent to Zulip.
 
 ### Release pipeline Proposal
 
-The [release pipeline](./Jenkinsfile.release) aims to enhance the nightly pipeline by providing added features like `set version`, `create/merge PRs`, `git tag`...
+The [release pipeline](../Jenkinsfile.release) aims to enhance the nightly pipeline by providing added features like `set version`, `create/merge PRs`, `git tag`...
 
 ![Release pipeline](./images/pipeline-release.png)
 

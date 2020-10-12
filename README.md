@@ -8,7 +8,7 @@ This repository contains some of the pipelines of Kogito project.
     * [Nightly & Release pipelines](#nightly--release-pipelines)
     * [Tools pipelines](#tools-pipelines)
     * [Repositories' specific pipelines](#repositories-specific-pipelines)
-      * [Runtimes other jobs](#runtimes-other-jobs)
+      * [Kogito Runtimes' other jobs](#kogito-runtimes-other-jobs)
       * [PR checks](#pr-checks)
       * [Sonar cloud](#sonar-cloud)
   * [Configuration of pipelines](#configuration-of-pipelines)
@@ -18,7 +18,7 @@ This repository contains some of the pipelines of Kogito project.
 
 ## Kogito Repositories
 
-Apart from this repository, pipelines are also conerning those repositories:
+Apart from this repository, pipelines are also concerning those repositories:
 
 * [kogito-runtimes](https://github.com/kiegroup/kogito-runtimes)
 * [kogito-apps](https://github.com/kiegroup/kogito-apps)
@@ -45,7 +45,7 @@ This is a set of cleanup utils jobs.
 
 ### Repositories' specific pipelines
 
-#### Runtimes other jobs
+#### Kogito Runtimes' other jobs
 
 Those jobs can be found into the `kogito-runtimes` repository.  
 They are daily run jobs:
