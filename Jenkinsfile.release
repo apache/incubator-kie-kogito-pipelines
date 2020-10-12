@@ -60,8 +60,12 @@ pipeline {
 
         // IMAGE_PROMOTE_TAG => will be set in Initialization phase
 
-        AUTHOR_CREDS_ID = 'kie-ci'
+        // Credentials
         GIT_AUTHOR='kiegroup'
+        GIT_AUTHOR_CREDS_ID = 'kie-ci' // username/password creds
+        BOT_AUTHOR='bsig-gh-bot'
+        BOT_AUTHOR_CREDS_ID='bsig-gh-bot' // username/password creds
+        GITHUB_TOKEN_CREDS_ID='kie-ci2-token' // secret text creds
     }
 
     stages {
@@ -85,6 +89,12 @@ pipeline {
                     currentBuild.displayName = getDisplayName()
 
                     sendNotification("Release Pipeline for version ${getProjectVersion()} has started...")
+
+                    // Safety measure to not publish to main JBoss
+                    if(getGitAuthor() != 'kiegroup' && params.ARTIFACTS_REPOSITORY == ''){
+                        sendNotification("Git Author is different from `kiegroup` and no `ARTIFACTS_REPOSITORY` parameter has been provided. Are you sure you want to continue ? => ${env.BUILD_URL}input")
+                        input message: 'Should the pipeline continue with no `ARTIFACTS_REPOSITORY` defined ?', ok: 'Yes'
+                    }
                 }
             }
         }
@@ -95,6 +105,8 @@ pipeline {
                     def buildParams = []
                     addDisplayNameParam(buildParams)
                     addStringParam(buildParams, 'RELEASE_BRANCH', getReleaseBranch())
+                    addStringParam(buildParams, 'GIT_AUTHOR', getGitAuthor())
+                    addStringParam(buildParams, 'GIT_AUTHOR_CREDS_ID', getGitAuthorCredsId())
 
                     def repositories = []
                     if(isRuntimesDeploy(){ repositories += RUNTIMES_REPOS }
@@ -121,6 +133,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addReleaseDeployGitParam(buildParams)
                     if(params.ARTIFACTS_REPOSITORY != ''){
                         addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', params.ARTIFACTS_REPOSITORY)
                     }
@@ -163,6 +176,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addReleaseDeployGitParam(buildParams)
                     addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
                     addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
                     addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
@@ -183,6 +197,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addReleaseDeployGitParam(buildParams)
                     addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
                     
                     // For BDD tests
@@ -214,6 +229,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(RUNTIMES_DEPLOY))
                     addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', params.DEPLOY_AS_LATEST)
+                    addReleasePromoteGitParam(buildParams)
 
                     buildJob(RUNTIMES_PROMOTE, buildParams)
                 }
@@ -232,6 +248,11 @@ pipeline {
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(IMAGES_DEPLOY))
                     addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
+                    
+                    // To be uncommented for testing if artifacts are released to same repository as the staging
+                    // addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY) // Get artifacts from staging repository
+
+                    addReleasePromoteGitParam(buildParams)
 
                     buildJob(IMAGES_PROMOTE, buildParams)
                 }
@@ -250,6 +271,7 @@ pipeline {
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(OPERATOR_DEPLOY))
                     addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
+                    addReleasePromoteGitParam(buildParams)
 
                     buildJob(OPERATOR_PROMOTE, buildParams)
                 }
@@ -360,7 +382,7 @@ List getDefaultBuildParams(){
     List buildParams = []
     addDisplayNameParam(buildParams)
     addStringParam(buildParams, 'BUILD_BRANCH_NAME', getReleaseBranch())
-    addStringParam(buildParams, 'GIT_AUTHOR', env.GIT_AUTHOR)
+    addStringParam(buildParams, 'GIT_AUTHOR', getGitAuthor())
     addBooleanParam(buildParams, 'RELEASE', true)
     addStringParam(buildParams, 'PROJECT_VERSION', getProjectVersion())
     return buildParams
@@ -372,6 +394,17 @@ void addDisplayNameParam(buildParams){
 
 void addSkipTestsParam(buildParams){
     addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
+}
+
+void addReleaseDeployGitParam(buildParams){
+    addStringParam(buildParams, 'GIT_AUTHOR_BOT', env.BOT_AUTHOR)
+    addStringParam(buildParams, 'BOT_CREDENTIALS_ID', env.BOT_AUTHOR_CREDS_ID)
+}
+
+void addReleasePromoteGitParam(buildParams){
+    addStringParam(buildParams, 'BOT_CREDENTIALS_ID', env.BOT_AUTHOR_CREDS_ID)
+    addStringParam(buildParams, 'AUTHOR_CREDS_ID', getGitAuthorCredsId())
+    addStringParam(buildParams, 'GITHUB_TOKEN_CREDS_ID', env.GITHUB_TOKEN_CREDS_ID)
 }
 
 void addImageBuildParams(List buildParams = [], String paramsPrefix = '', String tag, boolean isRegistryIncluded = false, boolean isFinalImage = false){
@@ -417,6 +450,13 @@ String getReleaseBranch(){
 
 boolean isCreateReleaseBranchesOnly(){
     return params.CREATE_RELEASE_BRANCHES_ONLY
+}
+String getGitAuthor(){
+    return env.GIT_AUTHOR
+}
+
+String getGitAuthorCredsId(){
+    return env.GIT_AUTHOR_CREDS_ID
 }
 
 boolean isRuntimesDeploy(){
