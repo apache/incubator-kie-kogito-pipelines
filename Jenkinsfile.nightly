@@ -71,7 +71,7 @@ pipeline {
 
         stage('Build & Deploy Kogito Runtimes') {
             when {
-                expression { return !params.SKIP_ARTIFACTS }
+                expression { return isArtifactsDeploy() }
             }
             steps {
                 script {
@@ -92,7 +92,7 @@ pipeline {
 
         stage('Build & Deploy OptaPlanner') {
             when {
-                expression { return !params.SKIP_ARTIFACTS }
+                expression { return isArtifactsDeploy() }
             }
             steps {
                 script {
@@ -112,7 +112,7 @@ pipeline {
 
         stage('Build & Deploy Kogito Examples') {
             when {
-                expression { return !params.SKIP_ARTIFACTS }
+                expression { return isArtifactsDeploy() }
             }
             steps {
                 script {
@@ -133,7 +133,7 @@ pipeline {
 
         stage('Build & Deploy Images') {
             when {
-                expression { return !params.SKIP_IMAGES }
+                expression { return isImagesDeploy() }
             }
             steps {
                 script {
@@ -157,7 +157,7 @@ pipeline {
 
         stage('Build & Deploy Operator') {
             when {
-                expression { return !params.SKIP_OPERATOR }
+                expression { return isOperatorDeploy() }
             }
             steps {
                 script {
@@ -187,7 +187,7 @@ pipeline {
 
         stage('Promote images') {
             when {
-                expression { return !params.SKIP_IMAGES && isJobSucceeded(IMAGES_DEPLOY) }
+                expression { return isImagesPromote() }
             }
             steps {
                 script {
@@ -212,7 +212,7 @@ pipeline {
 
         stage('Promote operator image') {
             when {
-                expression { return !params.SKIP_OPERATOR && isJobSucceeded(OPERATOR_DEPLOY) }
+                expression { return isOperatorPromote() }
             }
             steps {
                 script {
@@ -330,4 +330,24 @@ String getBuildBranch(){
 
 String getGitAuthor(){
     return 'kiegroup'
+}
+
+boolean isArtifactsDeploy(){
+    return !params.SKIP_ARTIFACTS
+}
+
+boolean isImagesDeploy(){
+    return !params.SKIP_IMAGES
+}
+
+boolean isOperatorDeploy(){
+    return !params.SKIP_OPERATOR
+}
+
+boolean isImagesPromote(){
+    return isImagesDeploy() && isJobSucceeded(IMAGES_DEPLOY)
+}
+
+boolean isOperatorPromote(){
+    return isOperatorDeploy() && isJobSucceeded(OPERATOR_DEPLOY)
 }

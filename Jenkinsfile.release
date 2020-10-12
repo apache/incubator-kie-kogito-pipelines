@@ -195,10 +195,7 @@ pipeline {
             steps {
                 script {
                     String jobUrl = getJobUrl(EXAMPLES_DEPLOY)
-                    def deployProps = [:]
-                    if(jobUrl != "") {
-                        deployProps = readDeployProperties(jobUrl)
-                    }
+                    def deployProps = jobUrl ? readDeployProperties(jobUrl) : [:]
 
                     env.EXAMPLES_URI = params.EXAMPLES_URI ?: (deployProps['kogito-examples.pr.source.uri'] ?: "https://github.com/${getGitAuthor()}/kogito-examples")
                     env.EXAMPLES_REF = params.EXAMPLES_REF ?: (deployProps['kogito-examples.pr.source.ref'] ?: env.RELEASE_BRANCH)
@@ -548,13 +545,13 @@ boolean isOperatorDeploy(){
 }
 
 boolean isArtifactsPromote(){
-    return !params.SKIP_ARTIFACTS_DEPLOY && !params.SKIP_ARTIFACTS_PROMOTE
+    return isArtifactsDeploy() && !params.SKIP_ARTIFACTS_PROMOTE
 }
 
 boolean isImagesPromote(){
-    return !params.SKIP_IMAGES_DEPLOY && !params.SKIP_IMAGES_PROMOTE
+    return isImagesDeploy() && !params.SKIP_IMAGES_PROMOTE
 }
 
 boolean isOperatorPromote(){
-    return !params.SKIP_OPERATOR_DEPLOY && !params.SKIP_OPERATOR_PROMOTE
+    return isOperatorDeploy() && !params.SKIP_OPERATOR_PROMOTE
 }
