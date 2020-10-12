@@ -8,14 +8,10 @@ RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
 IMAGES_PROMOTE = 'kogito-images-promote'
 OPERATOR_PROMOTE = 'kogito-operator-promote'
 
-KOGITO_REPOS = [
-    'kogito-runtimes',
-    'kogito-apps',
-    'kogito-examples',
-    'kogito-images',
-    'kogito-cloud-operator',
-    'kogito-pipelines' // Create branch to activate nightlies if needed
-]
+PIPELINE_REPOS=['kogito-pipelines']
+RUNTIMES_REPOS=['kogito-runtimes','kogito-apps','kogito-examples']
+IMAGES_REPOS=['kogito-images']
+OPERATOR_REPOS=['kogito-cloud-operator']
 
 // Map of executed jobs
 // See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
@@ -28,6 +24,8 @@ pipeline {
     }
 
     parameters {
+        booleanParam(name: 'CREATE_RELEASE_BRANCHES_ONLY', defaultValue: 'false', description: 'Set to true if only the create release branches stage should be launched')
+
         string(name: 'PROJECT_VERSION', defaultValue: '', description: 'Project version to release as Major.minor.micro')
         booleanParam(name: 'DEPLOY_AS_LATEST', defaultValue: 'false', description: 'Given project version is considered the latest version')
 
@@ -73,8 +71,6 @@ pipeline {
                     echo 'Initialize'
 
                     assert getProjectVersion() != ''
-
-                    currentBuild.displayName = getProjectVersion()
                     
                     // Set release branch
                     Integer[] versionSplit = util.parseVersion(getProjectVersion())
@@ -86,6 +82,8 @@ pipeline {
 
                     env.IMAGE_PROMOTE_TAG = getProjectVersion()
                     
+                    currentBuild.displayName = getDisplayName()
+
                     sendNotification("Release Pipeline for version ${getProjectVersion()} has started...")
                 }
             }
@@ -94,22 +92,28 @@ pipeline {
         stage('Create release branches') {
             steps {
                 script {
-                    echo "Call ${CREATE_RELEASE_BRANCHES} job"
-
                     def buildParams = []
                     addDisplayNameParam(buildParams)
                     addStringParam(buildParams, 'RELEASE_BRANCH', getReleaseBranch())
 
+                    def repositories = []
+                    if(isRuntimesDeploy(){ repositories += RUNTIMES_REPOS }
+                    if(isImagesDeploy()){ repositories += IMAGES_REPOS }
+                    if(isOperatorDeploy()){ repositories += OPERATOR_REPOS }
+                    repositories += PIPELINE_REPOS // Create branch to activate nightlies if needed
+
+                    echo "Call ${CREATE_RELEASE_BRANCHES} job with repositories ${repositories}"
+                    addStringParam(buildParams, 'REPOSITORIES', repositories.join(','))
                     buildJob(CREATE_RELEASE_BRANCHES, buildParams)
 
-                    sendNotification("${getReleaseBranch()} branches have been created on the different kogito repositories")
+                    sendNotification("${getReleaseBranch()} branches have been created for repositories: ${repositories}")
                 }
             }
         }
 
         stage('Build & Deploy Runtimes') {
             when {
-                expression { return isRuntimesDeploy() }
+                expression { return !isCreateReleaseBranchesOnly() && isRuntimesDeploy() }
             }
             steps {
                 script {
@@ -127,6 +131,9 @@ pipeline {
         }
 
         stage('Retrieve Runtimes information'){
+            when {
+                expression { return !isCreateReleaseBranchesOnly() }
+            }
             steps {
                 script {
                     String jobUrl = getJobUrl(RUNTIMES_DEPLOY)
@@ -148,7 +155,7 @@ pipeline {
 
         stage('Build & Deploy Images') {
             when {
-                expression { return isImagesDeploy() }
+                expression { return !isCreateReleaseBranchesOnly() && isImagesDeploy() }
             }
             steps {
                 script {
@@ -168,7 +175,7 @@ pipeline {
 
         stage('Build & Deploy Operator') {
             when {
-                expression { return isOperatorDeploy() }
+                expression { return !isCreateReleaseBranchesOnly() && isOperatorDeploy() }
             }
             steps {
                 script {
@@ -198,7 +205,7 @@ pipeline {
 
         stage('Promote runtimes') {
             when {
-                expression { return isRuntimesPromote() }
+                expression { return !isCreateReleaseBranchesOnly() && isRuntimesPromote() }
             }
             steps {
                 script {
@@ -215,7 +222,7 @@ pipeline {
 
         stage('Promote images') {
             when {
-                expression { return isImagesPromote() }
+                expression { return !isCreateReleaseBranchesOnly() && isImagesPromote() }
             }
             steps {
                 script {
@@ -233,7 +240,7 @@ pipeline {
 
         stage('Promote operator image') {
             when {
-                expression { return isOperatorPromote() }
+                expression { return !isCreateReleaseBranchesOnly() && isOperatorPromote() }
             }
             steps {
                 script {
@@ -276,7 +283,13 @@ pipeline {
             cleanWs()
         }
         success {
-            sendNotification("Version ${getProjectVersion()} has been successfully released !!!!")
+            script {
+                if(isCreateReleaseBranchesOnly()){
+                    sendNotification("Branches ${getProjectVersion()} have been successfully created !!!!")
+                } else {
+                    sendNotification("Version ${getProjectVersion()} has been successfully released !!!!")
+                }
+            }
         }
         unsuccessful {
             sendErrorNotification()
@@ -354,7 +367,7 @@ List getDefaultBuildParams(){
 }
 
 void addDisplayNameParam(buildParams){
-    addStringParam(buildParams, 'DISPLAY_NAME', "release-${getProjectVersion()}")
+    addStringParam(buildParams, 'DISPLAY_NAME', getDisplayName())
 }
 
 void addSkipTestsParam(buildParams){
@@ -387,12 +400,23 @@ String constructKey(String prefix, String paramId){
     return prefix == null || prefix == '' ? paramId : "${prefix}_${paramId}"
 }
 
+String getDisplayName(){
+    if(isCreateReleaseBranchesOnly()){
+        return "Cut-off ${getReleaseBranch()}"
+    } 
+    return "Release ${getProjectVersion()}"
+}
+
 String getProjectVersion(){
     return params.PROJECT_VERSION
 }
 
 String getReleaseBranch(){
     return env.RELEASE_BRANCH
+}
+
+boolean isCreateReleaseBranchesOnly(){
+    return params.CREATE_RELEASE_BRANCHES_ONLY
 }
 
 boolean isRuntimesDeploy(){
