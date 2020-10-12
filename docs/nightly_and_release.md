@@ -233,7 +233,7 @@ One other specificity of the Release Pipeline are the manual interventions.
 They are currently 3 of them:
 
 * **Get staging repository** (happens in kogito-runtimes-deploy)  
-  When asked, Staging repository can be retrived from [JBoss Nexus repository](https://repository.jboss.org/nexus/). For that, the user needs to have specific rights or ask someone who has those rights.  
+  When asked, Staging repository can be retrieved from [JBoss Nexus repository](https://repository.jboss.org/nexus/). For that, the user needs to have specific rights or ask someone who has those rights.  
   Once retrieved, you can put the url to staging repository into the input asking for it on Jenkins.
 * **Release staging repository to Maven Central** (happens in kogito-runtimes-deploy)  
   Same as getting staging repository, you need the rights to release the artifacts from the staging repository in [JBoss Nexus repository](https://repository.jboss.org/nexus/) to Maven Central, or ask someone with rights to do it.  
