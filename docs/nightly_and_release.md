@@ -14,14 +14,14 @@
       * [Change pipeline envs for nightly testing](#change-pipeline-envs-for-nightly-testing)
       * [Setup Jenkins job(s) for nightly testing](#setup-jenkins-jobs-for-nightly-testing)
       * [Setup Jenkins creds for nightly testing](#setup-jenkins-creds-for-nightly-testing)
-      * [Launch release with minimal parameters for nightly testing](#launch-release-with-minimal-parameters-for-nightly-testing)
+      * [Launch a nightly with minimal parameters for nightly testing](#launch-a-nightly-with-minimal-parameters-for-nightly-testing)
   * [Release pipeline](#release-pipeline)
     * [Architecture of the Release pipeline](#architecture-of-the-release-pipeline)
     * [Before the Release Pipeline is started](#before-the-release-pipeline-is-started)
       * [JIRA issues creation](#jira-issues-creation)
     * [Release pipeline parameters](#release-pipeline-parameters)
       * [Minimal parameters for the release](#minimal-parameters-for-the-release)
-      * [Start release pipeline with specific parameters](#start-release-pipeline-with-specific-parameters)
+      * [Start Release Pipeline with specific parameters](#start-release-pipeline-with-specific-parameters)
     * [Release pipeline Manual interventions](#release-pipeline-manual-interventions)
       * [Default manual interventions](#default-manual-interventions)
       * [Retry/Skip/Abort manual intervention](#retryskipabort-manual-intervention)
@@ -39,7 +39,7 @@
       * [Setup Jenkins job(s) for release testing](#setup-jenkins-jobs-for-release-testing)
       * [Setup Jenkins creds for release testing](#setup-jenkins-creds-for-release-testing)
       * [Use specific nexus for released artifacts](#use-specific-nexus-for-released-artifacts)
-      * [Launch release with minimal parameters for testing](#launch-release-with-minimal-parameters-for-testing)
+      * [Launch a release with minimal parameters for testing](#launch-a-release-with-minimal-parameters-for-testing)
   * [Explanation on architecture of those pipelines](#explanation-on-architecture-of-those-pipelines)
     * [Background & Objectives](#background--objectives)
     * [Problems / Solutions](#problems--solutions)
@@ -64,9 +64,9 @@ Here is the list of jobs and link to Jenkinsfiles:
 
 ### Nightly pipeline Architecture
 
-The nightly pipeline is composed of many steps, calling different other jobs to perform the build&test of runtimes/images/operator as well as the deployment of jar artifacts and nightly container images.
+The Nightly Pipeline is composed of many steps, calling different other jobs to perform the build&test of runtimes/images/operator as well as the deployment of jar artifacts and nightly container images.
 
-**NOTE:** The nightly pipeline is a multibranch pipeline job and runs on `master` and each active release branch (for example 0.15.x).
+**NOTE:** The Nightly Pipeline is a multibranch pipeline job and runs on `master` and each active release branch (for example 0.15.x).
 
 ![Flow](./images/nightly-flow.png)
 
@@ -112,7 +112,7 @@ By clicking the failing stage and accessing the failing job, you should be able 
 
 #### Nightly Build & Deploy job is failing
 
-In that case, identify the error (Groovy script error or test problem), correct it and relaunch the nightly pipeline if necessary.
+In that case, identify the error (Groovy script error or test problem), correct it and relaunch the Nightly Pipeline if necessary.
 
 Here are some problems which can occur on a `Build & Deploy` job:
 
@@ -132,7 +132,7 @@ Here are some problems which can occur on a `Promote` job:
 
 ### Testing the Nightly Pipeline
 
-In order to test the full nightly pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.nightly](../Jenkinsfile.nightly), create jobs in Jenkins and setup some credentials.
+In order to test the full Nightly Pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.nightly](../Jenkinsfile.nightly), create jobs in Jenkins and setup some credentials.
 
 * Have a specific container registry and credentials registered with `push` rights on it.
 * For deploying runtimes artifacts, and to avoid any conflict with main repository on snapshot artifacts, you will need to provide a nexus repository to deploy the artifacts (see [nexus-operator](https://github.com/m88i/nexus-operator)).
@@ -165,7 +165,7 @@ In Jenkins, you should set those credentials and set the correct values in env:
 * `KOGITO_CI_EMAIL_TO` (secret text credential)  
   Email for notifications. You can set your email for example
 
-#### Launch release with minimal parameters for nightly testing
+#### Launch a nightly with minimal parameters for nightly testing
 
 * `ARTIFACTS_REPOSITORY` to set to the correct repository
 * (optional) `SKIP_TESTS` (usually you will want that)
@@ -175,13 +175,13 @@ In Jenkins, you should set those credentials and set the correct values in env:
 
 ### Architecture of the Release pipeline
 
-The release pipeline is composed of many steps, calling different other jobs to set the correct version, perform the build&test of runtimes/images/operator and then promote released artifacts and container images as production ready.
+The Release Pipeline is composed of many steps, calling different other jobs to set the correct version, perform the build&test of runtimes/images/operator and then promote released artifacts and container images as production ready.
 
 ![Flow](./images/release-flow.png)
 
-Like the nightly pipeline, steps could be separated into 2 parts: `Build & Deploy` and `Promote`.
+Like the Nightly Pipeline, steps could be separated into 2 parts: `Build & Deploy` and `Promote`.
 
-The release pipeline is also adding extra functionalities to this:
+The Release Pipeline is also adding extra functionalities to this:
 
 * **[Create release branches](../Jenkinsfile.create-release-branches)**  
   Based on the given version, a new release branch (with `Major.minor.x`) is created if not already existing.
@@ -209,27 +209,27 @@ Before starting the pipeline, please create the issues for the different compone
 
 #### Minimal parameters for the release
 
-In order to start, here are the minimal parameters to the release pipeline:
+In order to start, here are the minimal parameters to the Release Pipeline:
 
 * **PROJECT_VERSION**  
   Corresponds to the Kogito version to be set during the release.
 * **DEPLOY_AS_LATEST**
   Should be set to true if we want the container images to be tagged as `latest`.
 
-#### Start release pipeline with specific parameters
+#### Start Release Pipeline with specific parameters
 
 The Release pipeline can be tweaked with some other parameters if needed.
 
 One option is the possibility to skip some stages, depending on which part you want to release.  
 **NOTE: If you decide to skip the runtimes part, please be careful on `ARTIFACTS_REPOSITORY`, `EXAMPLES_URI` and `EXAMPLES_REF` parameters**
 
-See [release Jenkinsfile](../Jenkinsfile.release) for the full list on parameters.
+See [Release Jenkinsfile](../Jenkinsfile.release) for the full list on parameters.
 
 ### Release pipeline Manual interventions
 
 #### Default manual interventions
 
-One other specificity of the release pipeline are the manual interventions.  
+One other specificity of the Release Pipeline are the manual interventions.  
 They are currently 3 of them:
 
 * **Get staging repository** (happens in kogito-runtimes-deploy)  
@@ -256,7 +256,7 @@ For each called jobs, in case of failure, there is retry/skip/abort manual inter
 
 ### After the Release Pipeline is finished
 
-Once the release pipeline is finished, there are some actions to be done:
+Once the Release Pipeline is finished, there are some actions to be done:
 
 #### Operator Crd/Csv files
 
@@ -296,13 +296,13 @@ In the Zulip kogito-ci stream, there should be a link to the failing job. Open i
 #### Release pipeline is failing
 
 In case the main pipeline is failing, this will be most likely a Groovy error.  
-This can happen when changes have been made to the release [Jenkinsfile](../Jenkinsfile.release).
+This can happen when changes have been made to the [Release Jenkinsfile](../Jenkinsfile.release).
 
 The problem will need to be corrected on `master` and the pipeline could be restarted.
 
 #### Release pipeline is reporting a called *-deploy job is failing
 
-In that case, identify the error (Groovy script error or test problem), correct it and relaunch the nightly pipeline if necessary.
+In that case, identify the error (Groovy script error or test problem), correct it and relaunch the Nightly pipeline if necessary.
 
 If the problem is a test error, check the errors and then decide to retry or skip the called job (see [retry possibility](#retryskipabort-manual-intervention)).
 
@@ -330,7 +330,7 @@ You can correct it, and then just retry the job (see [retry possibility](#retrys
 
 ### Testing the Release Pipeline
 
-In order to test the full release pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.release](../Jenkinsfile.release), create jobs in Jenkins and setup some credentials.
+In order to test the full Release Pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.release](../Jenkinsfile.release), create jobs in Jenkins and setup some credentials.
 
 * Have a specific container registry and credentials registered with `push` rights on it
 * Have a specific author repository that you can test against
@@ -379,7 +379,7 @@ In Jenkins, you should set those credentials and set the correct values in env:
 
 In case staging and release repositories are the same for testing, you can uncomment the line `addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY)` in `Promote images` stage. This is made to make the called job aware of the release repository to update correctly the artifacts.
 
-#### Launch release with minimal parameters for testing
+#### Launch a release with minimal parameters for testing
 
 * `PROJECT_VERSION`
 * `ARTIFACTS_REPOSITORY` to set to the correct repository
@@ -430,7 +430,7 @@ The objectives are:
 
 ### Nightly pipeline Proposal
 
-The [nightly pipeline](../Jenkinsfile.nightly) for Kogito is responsible to build&test runtimes artifacts, images and operator.  
+The [Nightly pipeline](../Jenkinsfile.nightly) for Kogito is responsible to build&test runtimes artifacts, images and operator.  
 For that, it will call different jobs for deployment and then for promote if all tests passed.  
 
 ![Nightly pipeline](./images/pipeline-nightly.png)
@@ -439,7 +439,7 @@ If the pipeline is failing or is unstable, then a notification is sent to Zulip.
 
 ### Release pipeline Proposal
 
-The [release pipeline](../Jenkinsfile.release) aims to enhance the nightly pipeline by providing added features like `set version`, `create/merge PRs`, `git tag`...
+The [Release Pipeline](../Jenkinsfile.release) aims to enhance the Nightly Pipeline by providing added features like `set version`, `create/merge PRs`, `git tag`...
 
 ![Release pipeline](./images/pipeline-release.png)
 
