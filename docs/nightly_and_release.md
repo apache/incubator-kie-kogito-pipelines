@@ -17,6 +17,8 @@
       * [Launch release with minimal parameters for nightly testing](#launch-release-with-minimal-parameters-for-nightly-testing)
   * [Release pipeline](#release-pipeline)
     * [Architecture of the Release pipeline](#architecture-of-the-release-pipeline)
+    * [Before the Release Pipeline is started](#before-the-release-pipeline-is-started)
+      * [JIRA issues creation](#jira-issues-creation)
     * [Release pipeline parameters](#release-pipeline-parameters)
       * [Minimal parameters for the release](#minimal-parameters-for-the-release)
       * [Start release pipeline with specific parameters](#start-release-pipeline-with-specific-parameters)
@@ -25,6 +27,8 @@
       * [Retry/Skip/Abort manual intervention](#retryskipabort-manual-intervention)
     * [After the Release Pipeline is finished](#after-the-release-pipeline-is-finished)
       * [Operator Crd/Csv files](#operator-crdcsv-files)
+      * [Docs release](#docs-release)
+      * [Update the JIRAs](#update-the-jiras)
       * [Update nightly jobs with new release branch](#update-nightly-jobs-with-new-release-branch)
     * [Release pipeline Troubleshooting](#release-pipeline-troubleshooting)
       * [Release pipeline is failing](#release-pipeline-is-failing)
@@ -187,6 +191,19 @@ The release pipeline is also adding extra functionalities to this:
 * **Set next snapshot**  
   For some of the repositories, it will also PR create&merge to update to the next "snapshot" on the release branch.
 
+### Before the Release Pipeline is started
+
+#### JIRA issues creation
+
+Before starting the pipeline, please create the issues for the different components of the pipeline:
+
+* Core
+* Image
+* Operator
+* Optaplanner
+
+**NOTE:** There is, for now, no automatic creation/update of JIRA issues into the pipeline. This has to be done manually...
+
 ### Release pipeline parameters
 
 #### Minimal parameters for the release
@@ -249,6 +266,14 @@ If there is any change to be done due to PRs, do it on the release branch.
 
 **After Operatorhub PRs are merged**, you will need to transfer those crd and csv files to the `master` branch, as we want all crd/csv files history on master, for future releases.  
 Do not panic, there is a simple [job](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito/job/tools/job/kogito-operator-copy-manifests-files/) for that, with an associated [Jenkinsfile](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.copy_csv_files).
+
+#### Docs release
+
+Once pipeline is finished, you need to release docs. For that, please ask on Zulip for anybody with rights to do it.
+
+#### Update the JIRAs
+
+You can now close the different JIRA issues regarding the release.
 
 #### Update nightly jobs with new release branch
 
