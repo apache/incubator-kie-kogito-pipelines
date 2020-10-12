@@ -11,6 +11,7 @@
       * [Nightly Build & Deploy job is failing](#nightly-build--deploy-job-is-failing)
       * [Nightly Promote job is failing](#nightly-promote-job-is-failing)
     * [Testing the Nightly Pipeline](#testing-the-nightly-pipeline)
+      * [Create specific Maven repository for nightly testing](#create-specific-maven-repository-for-nightly-testing)
       * [Change pipeline envs for nightly testing](#change-pipeline-envs-for-nightly-testing)
       * [Setup Jenkins job(s) for nightly testing](#setup-jenkins-jobs-for-nightly-testing)
       * [Setup Jenkins creds for nightly testing](#setup-jenkins-creds-for-nightly-testing)
@@ -35,6 +36,7 @@
       * [Release pipeline is reporting a called *-deploy job is failing](#release-pipeline-is-reporting-a-called--deploy-job-is-failing)
       * [Release pipeline is reporting a called *-promote job is failing](#release-pipeline-is-reporting-a-called--promote-job-is-failing)
     * [Testing the Release Pipeline](#testing-the-release-pipeline)
+      * [Create specific Maven repository for release testing](#create-specific-maven-repository-for-release-testing)
       * [Change pipeline envs for release testing](#change-pipeline-envs-for-release-testing)
       * [Setup Jenkins job(s) for release testing](#setup-jenkins-jobs-for-release-testing)
       * [Setup Jenkins creds for release testing](#setup-jenkins-creds-for-release-testing)
@@ -134,8 +136,16 @@ Here are some problems which can occur on a `Promote` job:
 
 In order to test the full Nightly Pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.nightly](../Jenkinsfile.nightly), create jobs in Jenkins and setup some credentials.
 
-* Have a specific container registry and credentials registered with `push` rights on it.
-* For deploying runtimes artifacts, and to avoid any conflict with main repository on snapshot artifacts, you will need to provide a nexus repository to deploy the artifacts (see [nexus-operator](https://github.com/m88i/nexus-operator)).
+* Have a specific container registry and credentials registered with `push` rights on it
+* Have a specific Maven repository to deploy jar artifacts
+
+#### Create specific Maven repository for nightly testing
+
+For deploying runtimes artifacts, and to avoid any conflict with main repository on snapshot artifacts, you will need to provide a nexus repository to deploy the artifacts.
+
+If don't have one already, you can create one with the [nexus-operator](https://github.com/m88i/nexus-operator).
+
+**IMPORTANT:** We don't support yet specific user's repository. Anonymous user needs to have push rights to it.
 
 #### Change pipeline envs for nightly testing
 
@@ -260,7 +270,7 @@ Once the Release Pipeline is finished, there are some actions to be done:
 
 #### Operator Crd/Csv files
 
-Once the operator's release has been done, it created new csv and crd files under `deploy/olm-catalog/kogito-operator/{VERSION}` on the release branch.
+Once the operator's release has been done, it created new csv and crd files under `deploy/olm-catalog/kogito-operator/{VERSION}` on the release branch in [kogito-cloud-operator](https://github.com/kiegroup/kogito-cloud-operator).
 You will need to create, with those files, new OperatorHub PRs (one for Openshift and one for Kubernetes) or asked someone from Cloud part to do it.
 
 If there is any change to be done due to PRs, do it on the release branch.
@@ -334,8 +344,16 @@ In order to test the full Release Pipeline, and in order to avoid any problem, y
 
 * Have a specific container registry and credentials registered with `push` rights on it
 * Have a specific author repository that you can test against
-* If you don't want to flood your main repository, you should use a "bot account", referred as `BOT_*`
-* For deploying runtimes artifacts, and to avoid any conflict by creating a staging repository inadvertly, you will need to provide a nexus repository to deploy the artifacts (see [nexus-operator](https://github.com/m88i/nexus-operator)).
+* If you don't want to flood your test author repository with temporary branches, you should use also another author, referred as "bot account", and that you can setup in environment variables `BOT_*`
+* Have a specific Maven repository to deploy jar artifacts
+
+#### Create specific Maven repository for release testing
+
+For deploying runtimes artifacts, and to avoid any conflict by creating a staging repository inadvertly, you will need to provide a nexus repository to deploy the artifacts.
+
+If don't have one already, you can create one with the [nexus-operator](https://github.com/m88i/nexus-operator).
+
+**IMPORTANT:** We don't support yet specific user's repository. Anonymous user needs to have push rights to it.
 
 #### Change pipeline envs for release testing
 
