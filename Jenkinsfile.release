@@ -87,15 +87,13 @@ pipeline {
                     echo "temporary tag is ${env.TEMP_TAG}"
 
                     env.IMAGE_PROMOTE_TAG = getProjectVersion()
-
-                    env.STAGING_REPOSITORY = params.ARTIFACTS_REPOSITORY ?: ''
                     
                     currentBuild.displayName = getDisplayName()
 
                     sendNotification("Release Pipeline for version ${getProjectVersion()} has started...")
 
                     // Safety measure to not publish to main JBoss
-                    if(getGitAuthor() != 'kiegroup' && params.ARTIFACTS_REPOSITORY == ''){
+                    if(getGitAuthor() != 'kiegroup' && !getArtifactsRepositoryParam()){
                         sendNotification("Git Author is different from `kiegroup` and no `ARTIFACTS_REPOSITORY` parameter has been provided. Are you sure you want to continue ? => ${env.BUILD_URL}input")
                         input message: 'Should the pipeline continue with no `ARTIFACTS_REPOSITORY` defined ?', ok: 'Yes'
                     }
@@ -138,8 +136,8 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
                     addReleaseDeployGitParam(buildParams)
-                    if(params.ARTIFACTS_REPOSITORY != ''){
-                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', params.ARTIFACTS_REPOSITORY)
+                    if(getArtifactsRepositoryParam()){
+                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
                     }
 
                     buildJob(RUNTIMES_DEPLOY, buildParams)
@@ -149,19 +147,22 @@ pipeline {
 
         stage('Retrieve staging repository') {
             when {
-                expression { return !isCreateReleaseBranchesOnly() && env.STAGING_REPOSITORY == '' }
+                expression { return !isCreateReleaseBranchesOnly() }
             }
             steps {
                 script {
-                    // Ask for Staging repo url
-                    sendNotification("Kogito Runtimes deploy pipeline #${env.BUILD_NUMBER} => Artifacts with version ${getProjectVersion()} have been pushed to staging repository. Please retrieve the staging repository URL and provide it here: ${env.BUILD_URL}input")
-                    // Add `/` at the end of the given url if missing
-                    String stagingRepoUrl = input(message: 'Enter staging repository URL:', parameters: [string(name: 'STAGING_REPO_URL')])
-                    if(!stagingRepoUrl.endsWith('/')){
-                        stagingRepoUrl += '/'
+                    if(!getArtifactsRepositoryParam()){
+                        // Ask for Staging repo url
+                        sendNotification("Kogito Runtimes deploy pipeline #${env.BUILD_NUMBER} => Artifacts with version ${getProjectVersion()} have been pushed to staging repository. Please retrieve the staging repository URL and provide it here: ${env.BUILD_URL}input")
+                        // Add `/` at the end of the given url if missing
+                        String stagingRepoUrl = input(message: 'Enter staging repository URL:', parameters: [string(name: 'STAGING_REPO_URL')])
+                        if(!stagingRepoUrl.endsWith('/')){
+                            stagingRepoUrl += '/'
+                        }
+                        env.STAGING_REPOSITORY = stagingRepoUrl
+                    } else {
+                        env.STAGING_REPOSITORY = getArtifactsRepositoryParam()
                     }
-                    env.STAGING_REPOSITORY = stagingRepoUrl
-
                     echo "Got staging repository ${env.STAGING_REPOSITORY}"
                 }
             }
@@ -179,8 +180,8 @@ pipeline {
                     addSkipTestsParam(buildParams)
                     addReleaseDeployGitParam(buildParams)
                     addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
-                    if(params.ARTIFACTS_REPOSITORY != ''){
-                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', params.ARTIFACTS_REPOSITORY)
+                    if(getArtifactsRepositoryParam()){
+                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
                     }
 
                     buildJob(EXAMPLES_DEPLOY, buildParams)
@@ -260,7 +261,7 @@ pipeline {
 
         stage('Is staging repository released?') {
             when {
-                expression { return !isCreateReleaseBranchesOnly() && params.ARTIFACTS_REPOSITORY == '' } // Execute only if artifacts repository was not given, which means the staging repository has been created
+                expression { return !isCreateReleaseBranchesOnly() && !getArtifactsRepositoryParam() } // Execute only if artifacts repository was not given, which means the staging repository has been created
             }
             steps {
                 script {
@@ -526,6 +527,10 @@ String getGitAuthor(){
 
 String getGitAuthorCredsId(){
     return env.GIT_AUTHOR_CREDS_ID
+}
+
+String getArtifactsRepositoryParam(){
+    return params.ARTIFACTS_REPOSITORY
 }
 
 boolean isArtifactsDeploy(){
