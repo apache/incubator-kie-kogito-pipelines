@@ -33,6 +33,7 @@ pipeline {
 
         string(name: 'PROJECT_VERSION', defaultValue: '', description: 'Project version to release as Major.minor.micro')
         string(name: 'OPTAPLANNER_VERSION', defaultValue: '', description: 'Project version of OptaPlanner and its examples to release as Major.minor.micro')
+        string(name: 'OPTAPLANNER_RELEASE_BRANCH', defaultValue: '', description: 'Use to override the release branch name deduced from the OPTAPLANNER_VERSION')
         booleanParam(name: 'DEPLOY_AS_LATEST', defaultValue: 'false', description: 'Given project version is considered the latest version')
 
         booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip all tests')
@@ -146,6 +147,8 @@ pipeline {
                     def buildParams = []
                     addDisplayNameParam(buildParams)
                     addStringParam(buildParams, 'RELEASE_BRANCH', getOptaPlannerReleaseBranch())
+                    addStringParam(buildParams, 'GIT_AUTHOR', getGitAuthor())
+                    addStringParam(buildParams, 'GIT_AUTHOR_CREDS_ID', getGitAuthorCredsId())
 
                     def repositories = []
                     if(isArtifactsDeploy()) {
@@ -366,8 +369,8 @@ pipeline {
                     echo "Call ${OPTAPLANNER_PROMOTE} job"
 
                     def buildParams = getDefaultBuildParams()
+                    addStringParam(buildParams, 'BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(OPTAPLANNER_DEPLOY))
-                    addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', params.DEPLOY_AS_LATEST)
                     addStringParam(buildParams, 'PROJECT_VERSION', getOptaPlannerVersion())
                     addStringParam(buildParams, 'KOGITO_VERSION', getProjectVersion())
                     addReleasePromoteGitParam(buildParams)
@@ -628,7 +631,7 @@ String getArtifactsRepositoryParam(){
 }
 
 String getOptaPlannerReleaseBranch() {
-    return env.OPTAPLANNER_RELEASE_BRANCH
+    return params.OPTAPLANNER_RELEASE_BRANCH ?: env.OPTAPLANNER_RELEASE_BRANCH
 }
 
 boolean isArtifactsDeploy(){
