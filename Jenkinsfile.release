@@ -53,13 +53,19 @@ pipeline {
     }
 
     environment {
-        KOGITO_CI_EMAIL_TO = credentials('KOGITO_CI_EMAIL_TO')
+        //KOGITO_CI_EMAIL_TO = credentials('KOGITO_CI_EMAIL_TO')
+        KOGITO_CI_EMAIL_TO = credentials('RSYNEK_EMAIL')
 
         // RELEASE_BRANCH => will be set in Initialization phase
 
         // We use quay as temporary registry for testing between the jobs instead of Openshift, due to https://issues.redhat.com/browse/KOGITO-2219
-        IMAGE_REGISTRY_CREDENTIALS = 'release_kogito'
-        IMAGE_REGISTRY = 'quay.io'
+
+       // IMAGE_REGISTRY_CREDENTIALS = 'release_kogito'
+       // IMAGE_REGISTRY = 'quay.io'
+
+        IMAGE_REGISTRY_CREDENTIALS = 'EMPTY_REGISTRY_CREDENTIALS'
+        IMAGE_REGISTRY = 'EMPTY_REGISTRY'
+
         IMAGE_NAMESPACE = 'kiegroup'
         // Use nightly for now with a different tag but we should find another solution
         IMAGE_NAME_SUFFIX = 'nightly'
@@ -68,11 +74,19 @@ pipeline {
         // IMAGE_PROMOTE_TAG => will be set in Initialization phase
 
         // Credentials
+        /*
         GIT_AUTHOR='kiegroup'
         GIT_AUTHOR_CREDS_ID = 'kie-ci' // username/password creds
         BOT_AUTHOR='bsig-gh-bot'
         BOT_AUTHOR_CREDS_ID='bsig-gh-bot' // username/password creds
         GITHUB_TOKEN_CREDS_ID='kie-ci2-token' // secret text creds
+         */
+
+        GIT_AUTHOR='rsynek'
+        GIT_AUTHOR_CREDS_ID = 'rsynek' // username/password creds
+        BOT_AUTHOR='rsynek-bot-account'
+        BOT_AUTHOR_CREDS_ID='rsynek-bot' // username/password creds
+        GITHUB_TOKEN_CREDS_ID='rsynek-gh-token' // secret text creds
     }
 
     stages {
