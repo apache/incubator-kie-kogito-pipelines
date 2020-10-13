@@ -103,7 +103,7 @@ pipeline {
                     echo "Kogito Release Branch ${getReleaseBranch()}"
 
                     env.OPTAPLANNER_RELEASE_BRANCH = getBranchForVersion(getOptaPlannerVersion())
-                    echo "OptaPlanner Release Branch ${getReleaseBranch()}"
+                    echo "OptaPlanner Release Branch ${getOptaPlannerReleaseBranch()}"
 
                     env.TEMP_TAG = "${getProjectVersion()}-temp"
                     echo "temporary tag is ${env.TEMP_TAG}"
@@ -677,6 +677,13 @@ boolean isOperatorPromote(){
 }
 
 String getBranchForVersion(String version) {
-    Integer[] versionSplit = util.parseVersion(version)
+    Integer[] versionSplit = majorMinorMicroOf(version)
     return "${versionSplit[0]}.${versionSplit[1]}.x"
+}
+
+// TODO: move to shared libraries
+Integer[] majorMinorMicroOf(String version) {
+    String[] versionParts = version.split("\\.")
+    return versionParts.length == 4 ? util.parseVersion("${versionParts[0]}.${versionParts[1]}.${versionParts[2]}")
+            : util.parseVersion(version)
 }
