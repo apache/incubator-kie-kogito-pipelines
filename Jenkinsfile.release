@@ -293,7 +293,7 @@ pipeline {
 
         stage('Promote examples') {
             when {
-                expression { return isArtifactsPromote() }
+                expression { return !isCreateReleaseBranchesOnly() && isArtifactsPromote() }
             }
             steps {
                 script {
