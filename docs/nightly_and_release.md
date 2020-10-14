@@ -50,13 +50,15 @@
     * [Nightly pipeline Proposal](#nightly-pipeline-proposal)
     * [Release pipeline Proposal](#release-pipeline-proposal)
 
-In order to perform, Nightly and Release pipelines need to call some deploy and promote jobs for runtimes, images and operator.  
+In order to perform, Nightly and Release pipelines need to call some deploy and promote jobs for runtimes, examples, images and operator.  
 Those jobs should be present at the same level as the nightly and/or release job, so they can be found when called.
 
 Here is the list of jobs and link to Jenkinsfiles:
 
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
+* [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.deploy)
+* [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
 * [kogito-images-promote](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.promote)
 * [kogito-operator-deploy](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.deploy)
@@ -66,7 +68,7 @@ Here is the list of jobs and link to Jenkinsfiles:
 
 ### Nightly pipeline Architecture
 
-The Nightly Pipeline is composed of many steps, calling different other jobs to perform the build&test of runtimes/images/operator as well as the deployment of jar artifacts and nightly container images.
+The Nightly Pipeline is composed of many steps, calling different other jobs to perform the build&test of runtimes/examples/images/operator as well as the deployment of jar artifacts and nightly container images.
 
 **NOTE:** The Nightly Pipeline is a multibranch pipeline job and runs on `master` and each active release branch (for example 0.15.x).
 
@@ -75,12 +77,12 @@ The Nightly Pipeline is composed of many steps, calling different other jobs to 
 Steps could be separated into 2 parts:
 
 * **Build & Deploy**  
-  Composed of calls to `*-deploy` jobs, is reponsible to runtimes, images and operator are ok.  
+  Composed of calls to `*-deploy` jobs, is reponsible to runtimes, examples, images and operator are ok.  
   Note that if any problem happens in a `deploy` job, then other deploy jobs are still run (they will take the previous stable artifacts/images) to run.
 * **Promote**  
   Composed of calls to `*-promote` jobs, is responsible to deploy snapshots artifacts/nightly images to repositories/registries.
 
-Note that for a particular part of the project (runtimes, images or operator), if the `Build & Deploy` failed, then the `Promote` part is skipped.
+Note that for a particular part of the project (runtimes, examples, images or operator), if the `Build & Deploy` failed, then the `Promote` part is skipped.
 
 ### Activate/Deactivate release branch
 
@@ -141,7 +143,7 @@ In order to test the full Nightly Pipeline, and in order to avoid any problem, y
 
 #### Create specific Maven repository for nightly testing
 
-For deploying runtimes artifacts, and to avoid any conflict with main repository on snapshot artifacts, you will need to provide a nexus repository to deploy the artifacts.
+For deploying runtimes and examples artifacts, and to avoid any conflict with main repository on snapshot artifacts, you will need to provide a nexus repository to deploy the artifacts.
 
 If don't have one already, you can create one with the [nexus-operator](https://github.com/m88i/nexus-operator).
 
@@ -159,6 +161,8 @@ You will need to create single pipeline jobs and let them run once to update the
 
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
+* [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.deploy)
+* [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
 * [kogito-images-promote](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.promote)
 * [kogito-operator-deploy](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.deploy)
@@ -185,7 +189,7 @@ In Jenkins, you should set those credentials and set the correct values in env:
 
 ### Architecture of the Release pipeline
 
-The Release Pipeline is composed of many steps, calling different other jobs to set the correct version, perform the build&test of runtimes/images/operator and then promote released artifacts and container images as production ready.
+The Release Pipeline is composed of many steps, calling different other jobs to set the correct version, perform the build&test of runtimes/examples/images/operator and then promote released artifacts and container images as production ready.
 
 ![Flow](./images/release-flow.png)
 
@@ -231,7 +235,7 @@ In order to start, here are the minimal parameters to the Release Pipeline:
 The Release pipeline can be tweaked with some other parameters if needed.
 
 One option is the possibility to skip some stages, depending on which part you want to release.  
-**NOTE: If you decide to skip the runtimes part, please be careful on `ARTIFACTS_REPOSITORY`, `EXAMPLES_URI` and `EXAMPLES_REF` parameters**
+**NOTE: If you decide to skip the runtimes/examples part, please be careful on `ARTIFACTS_REPOSITORY`, `EXAMPLES_URI` and `EXAMPLES_REF` parameters**
 
 See [Release Jenkinsfile](../Jenkinsfile.release) for the full list on parameters.
 
@@ -242,10 +246,10 @@ See [Release Jenkinsfile](../Jenkinsfile.release) for the full list on parameter
 One other specificity of the Release Pipeline are the manual interventions.  
 They are currently 3 of them:
 
-* **Get staging repository** (happens in kogito-runtimes-deploy)  
+* **Get staging repository** (happens in main release pipeline)  
   When asked, Staging repository can be retrieved from [JBoss Nexus repository](https://repository.jboss.org/nexus/). For that, the user needs to have specific rights or ask someone who has those rights.  
   Once retrieved, you can put the url to staging repository into the input asking for it on Jenkins.
-* **Release staging repository to Maven Central** (happens in kogito-runtimes-deploy)  
+* **Release staging repository to Maven Central** (happens in main release pipeline)
   Same as getting staging repository, you need the rights to release the artifacts from the staging repository in [JBoss Nexus repository](https://repository.jboss.org/nexus/) to Maven Central, or ask someone with rights to do it.  
   Once artifacts are released, just confirm it is released on Jenkins.
 * **Check kogito-apps artifacts are set to correct url** (happens in kogito-images-promote)
@@ -349,7 +353,7 @@ In order to test the full Release Pipeline, and in order to avoid any problem, y
 
 #### Create specific Maven repository for release testing
 
-For deploying runtimes artifacts, and to avoid any conflict by creating a staging repository inadvertly, you will need to provide a nexus repository to deploy the artifacts.
+For deploying runtimes/examples artifacts, and to avoid any conflict by creating a staging repository inadvertly, you will need to provide a nexus repository to deploy the artifacts.
 
 If don't have one already, you can create one with the [nexus-operator](https://github.com/m88i/nexus-operator).
 
@@ -371,6 +375,8 @@ You will need to create single pipeline jobs and let them run once to update the
 * [create-release-branches](../Jenkinsfile.create-release-branches)
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
+* [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.deploy)
+* [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
 * [kogito-images-promote](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.promote)
 * [kogito-operator-deploy](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.deploy)

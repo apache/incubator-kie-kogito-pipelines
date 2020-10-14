@@ -1,10 +1,12 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
+EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
 OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
 RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
+EXAMPLES_PROMOTE = 'kogito-examples-promote'
 IMAGES_PROMOTE = 'kogito-images-promote'
 OPERATOR_PROMOTE = 'kogito-operator-promote'
 
@@ -29,7 +31,7 @@ pipeline {
     parameters {
         booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip all tests')
 
-        booleanParam(name: 'SKIP_RUNTIMES', defaultValue: false, description: 'To skip Runtimes Deployment')
+        booleanParam(name: 'SKIP_ARTIFACTS', defaultValue: false, description: 'To skip Artifacts (runtimes, examples, optaplanner) Deployment')
         booleanParam(name: 'SKIP_IMAGES', defaultValue: false, description: 'To skip Images Deployment')
         booleanParam(name: 'SKIP_OPERATOR', defaultValue: false, description: 'To skip Operator Deployment')
 
@@ -67,9 +69,9 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Runtimes') {
+        stage('Build & Deploy Kogito Runtimes') {
             when {
-                expression { return !params.SKIP_RUNTIMES }
+                expression { return isArtifactsDeploy() }
             }
             steps {
                 script {
@@ -90,7 +92,7 @@ pipeline {
 
         stage('Build & Deploy OptaPlanner') {
             when {
-                expression { return !params.SKIP_RUNTIMES }
+                expression { return isArtifactsDeploy() }
             }
             steps {
                 script {
@@ -108,9 +110,30 @@ pipeline {
             }
         }
 
+        stage('Build & Deploy Kogito Examples') {
+            when {
+                expression { return isArtifactsDeploy() }
+            }
+            steps {
+                script {
+                    echo "Call ${EXAMPLES_DEPLOY} job"
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    
+                    // images and operator deploy testing will use older working artifacts if that one fails
+                    buildJob(EXAMPLES_DEPLOY, buildParams, false)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage()
+                }
+            }
+        }
+
         stage('Build & Deploy Images') {
             when {
-                expression { return !params.SKIP_IMAGES }
+                expression { return isImagesDeploy() }
             }
             steps {
                 script {
@@ -134,7 +157,7 @@ pipeline {
 
         stage('Build & Deploy Operator') {
             when {
-                expression { return !params.SKIP_OPERATOR }
+                expression { return isOperatorDeploy() }
             }
             steps {
                 script {
@@ -164,7 +187,7 @@ pipeline {
 
         stage('Promote images') {
             when {
-                expression { return !params.SKIP_IMAGES && isJobSucceeded(IMAGES_DEPLOY) }
+                expression { return isImagesPromote() }
             }
             steps {
                 script {
@@ -189,7 +212,7 @@ pipeline {
 
         stage('Promote operator image') {
             when {
-                expression { return !params.SKIP_OPERATOR && isJobSucceeded(OPERATOR_DEPLOY) }
+                expression { return isOperatorPromote() }
             }
             steps {
                 script {
@@ -307,4 +330,24 @@ String getBuildBranch(){
 
 String getGitAuthor(){
     return 'kiegroup'
+}
+
+boolean isArtifactsDeploy(){
+    return !params.SKIP_ARTIFACTS
+}
+
+boolean isImagesDeploy(){
+    return !params.SKIP_IMAGES
+}
+
+boolean isOperatorDeploy(){
+    return !params.SKIP_OPERATOR
+}
+
+boolean isImagesPromote(){
+    return isImagesDeploy() && isJobSucceeded(IMAGES_DEPLOY)
+}
+
+boolean isOperatorPromote(){
+    return isOperatorDeploy() && isJobSucceeded(OPERATOR_DEPLOY)
 }
