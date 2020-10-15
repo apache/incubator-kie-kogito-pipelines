@@ -678,13 +678,6 @@ boolean isOperatorPromote(){
 }
 
 String getBranchForVersion(String version) {
-    Integer[] versionSplit = majorMinorMicroOf(version)
+    Integer[] versionSplit = util.parseVersion(version)
     return "${versionSplit[0]}.${versionSplit[1]}.x"
-}
-
-// TODO: move to shared libraries
-Integer[] majorMinorMicroOf(String version) {
-    String[] versionParts = version.split("\\.")
-    return versionParts.length == 4 ? util.parseVersion("${versionParts[0]}.${versionParts[1]}.${versionParts[2]}")
-            : util.parseVersion(version)
 }
