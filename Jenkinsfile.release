@@ -508,6 +508,7 @@ def buildJob(String jobName, List buildParams) {
     def jobResult = job.getResult()
     def jobUrl = getJobUrl(jobName)
     if(jobResult != 'SUCCESS'){
+        echo "Sending a notification about an unsuccessful job build ${jobName}."
         sendNotification("`${jobName}` finished with status `${jobResult}`.\nSee: ${jobUrl}\n\nPlease provide which action should be done (retry ? skip ? abort ?): ${env.BUILD_URL}input")
 
         // abort is handled automatically by the pipeline in the input
