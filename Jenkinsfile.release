@@ -403,6 +403,7 @@ pipeline {
                     echo "Call ${EXAMPLES_PROMOTE} job"
 
                     def buildParams = getDefaultBuildParams()
+                    addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(EXAMPLES_DEPLOY))
                     addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', params.DEPLOY_AS_LATEST)
                     addReleasePromoteGitParam(buildParams)
