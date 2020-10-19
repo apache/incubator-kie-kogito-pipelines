@@ -102,7 +102,7 @@ pipeline {
                     env.RELEASE_BRANCH = getBranchForVersion(getProjectVersion())
                     echo "Kogito Release Branch ${getReleaseBranch()}"
 
-                    env.OPTAPLANNER_RELEASE_BRANCH = getBranchForVersion(getOptaPlannerVersion())
+                    env.OPTAPLANNER_RELEASE_BRANCH = params.OPTAPLANNER_RELEASE_BRANCH ?: getBranchForVersion(getOptaPlannerVersion())
                     echo "OptaPlanner Release Branch ${getOptaPlannerReleaseBranch()}"
 
                     env.TEMP_TAG = "${getProjectVersion()}-temp"
@@ -276,7 +276,6 @@ pipeline {
                     String jobUrl = getJobUrl(EXAMPLES_DEPLOY)
                     def deployProps = jobUrl ? readDeployProperties(jobUrl) : [:]
 
-                    env.STAGING_REPOSITORY = params.ARTIFACTS_REPOSITORY ?: (deployProps['staging-repo.url'] ?: '')
                     env.EXAMPLES_URI = params.EXAMPLES_URI ?: (deployProps['kogito-examples.pr.source.uri'] ?: '')
                     env.EXAMPLES_REF = params.EXAMPLES_REF ?: (deployProps['kogito-examples.pr.source.ref'] ?: env.RELEASE_BRANCH)
 
@@ -647,7 +646,7 @@ String getArtifactsRepositoryParam(){
 }
 
 String getOptaPlannerReleaseBranch() {
-    return params.OPTAPLANNER_RELEASE_BRANCH ?: env.OPTAPLANNER_RELEASE_BRANCH
+    return env.OPTAPLANNER_RELEASE_BRANCH
 }
 
 boolean isArtifactsDeploy(){
