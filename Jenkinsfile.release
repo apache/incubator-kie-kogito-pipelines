@@ -3,11 +3,13 @@
 CREATE_RELEASE_BRANCHES = 'create-release-branches'
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
 OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
+APPS_DEPLOY = 'kogito-apps-deploy'
 EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
 RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
 OPTAPLANNER_PROMOTE = 'optaplanner-promote'
+APPS_PROMOTE = 'kogito-apps-promote'
 EXAMPLES_PROMOTE = 'kogito-examples-promote'
 IMAGES_PROMOTE = 'kogito-images-promote'
 OPERATOR_PROMOTE = 'kogito-operator-promote'
@@ -175,10 +177,8 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
-                    addReleaseDeployGitParam(buildParams)
-                    if(getArtifactsRepositoryParam()){
-                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
-                    }
+                    addGitDeployParam(buildParams)
+                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(RUNTIMES_DEPLOY, buildParams)
                 }
@@ -208,6 +208,24 @@ pipeline {
             }
         }
 
+        stage('Build & Deploy Kogito Apps') {
+            when {
+                expression { return !isCreateReleaseBranchesOnly() && isArtifactsDeploy() }
+            }
+            steps {
+                script {
+                    echo "Call ${APPS_DEPLOY} job"
+
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    addGitDeployParam(buildParams)
+                    addArtifactsRepositoriesParam(buildParams)
+
+                    buildJob(APPS_DEPLOY, buildParams)
+                }
+            }
+        }
+
         stage('Build & Deploy OptaPlanner') {
             when {
                 expression { return !isCreateReleaseBranchesOnly() && isArtifactsDeploy() }
@@ -218,15 +236,12 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
-                    addReleaseDeployGitParam(buildParams)
+                    addGitDeployParam(buildParams)
                     addStringParam(buildParams, 'BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
                     addStringParam(buildParams, 'PROJECT_VERSION', getOptaPlannerVersion())
                     addStringParam(buildParams, 'KOGITO_VERSION', getProjectVersion())
-                    if (getArtifactsRepositoryParam()) {
-                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
-                    }
+                    addArtifactsRepositoriesParam(buildParams)
 
-                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
                     buildJob(OPTAPLANNER_DEPLOY, buildParams)
                 }
             }
@@ -242,12 +257,9 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
-                    addReleaseDeployGitParam(buildParams)
+                    addGitDeployParam(buildParams)
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
-                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
-                    if(getArtifactsRepositoryParam()){
-                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
-                    }
+                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(EXAMPLES_DEPLOY, buildParams)
                 }
@@ -282,11 +294,10 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
-                    addReleaseDeployGitParam(buildParams)
+                    addGitDeployParam(buildParams)
                     addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
-                    addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
-                    addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
-                    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY) // Get artifacts from staging repository
+                    addExamplesParam(buildParams)
+                    addCloudRepositoriesParam(buildParams)
 
                     buildJob(IMAGES_DEPLOY, buildParams)
                 }
@@ -303,7 +314,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
-                    addReleaseDeployGitParam(buildParams)
+                    addGitDeployParam(buildParams)
                     addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
                     
                     // For BDD tests
@@ -315,9 +326,8 @@ pipeline {
                         addStringParam(buildParams, 'KOGITO_IMAGES_NAME_SUFFIX', env.IMAGE_NAME_SUFFIX)
                         addStringParam(buildParams, 'KOGITO_IMAGES_TAG', env.TEMP_TAG)
                     }
-                    addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
-                    addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
-                    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY) // Get artifacts from staging repository
+                    addExamplesParam(buildParams)
+                    addCloudRepositoriesParam(buildParams)
 
                     buildJob(OPERATOR_DEPLOY, buildParams)
                 }
@@ -348,14 +358,29 @@ pipeline {
                     echo "Call ${RUNTIMES_PROMOTE} job"
 
                     def buildParams = getDefaultBuildParams()
-                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(RUNTIMES_DEPLOY))
-                    addReleasePromoteGitParam(buildParams)
-                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
-                    if(getArtifactsRepositoryParam()){
-                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
-                    }
+                    addDeployBuildUrlParam(buildParams, RUNTIMES_DEPLOY)
+                    addGitPromoteParam(buildParams)
+                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(RUNTIMES_PROMOTE, buildParams)
+                }
+            }
+        }
+
+        stage('Promote apps') {
+            when {
+                expression { return !isCreateReleaseBranchesOnly() && isArtifactsPromote() }
+            }
+            steps {
+                script {
+                    echo "Call ${APPS_PROMOTE} job"
+
+                    def buildParams = getDefaultBuildParams()
+                    addDeployBuildUrlParam(buildParams, APPS_DEPLOY)
+                    addGitPromoteParam(buildParams)
+                    addArtifactsRepositoriesParam(buildParams)
+
+                    buildJob(APPS_PROMOTE, buildParams)
                 }
             }
         }
@@ -369,15 +394,12 @@ pipeline {
                     echo "Call ${OPTAPLANNER_PROMOTE} job"
 
                     def buildParams = getDefaultBuildParams()
+                    addDeployBuildUrlParam(buildParams, OPTAPLANNER_DEPLOY)
                     addStringParam(buildParams, 'BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
-                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(OPTAPLANNER_DEPLOY))
                     addStringParam(buildParams, 'PROJECT_VERSION', getOptaPlannerVersion())
                     addStringParam(buildParams, 'KOGITO_VERSION', getProjectVersion())
-                    addReleasePromoteGitParam(buildParams)
-                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
-                    if(getArtifactsRepositoryParam()){
-                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
-                    }
+                    addGitPromoteParam(buildParams)
+                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(OPTAPLANNER_PROMOTE, buildParams)
                 }
@@ -394,13 +416,10 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
-                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(EXAMPLES_DEPLOY))
+                    addDeployBuildUrlParam(buildParams, EXAMPLES_DEPLOY)
                     addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', params.DEPLOY_AS_LATEST)
-                    addReleasePromoteGitParam(buildParams)
-                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
-                    if(getArtifactsRepositoryParam()){
-                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
-                    }
+                    addGitPromoteParam(buildParams)
+                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(EXAMPLES_PROMOTE, buildParams)
                 }
@@ -416,14 +435,14 @@ pipeline {
                     echo "Call ${IMAGES_PROMOTE} job"
                     
                     def buildParams = getDefaultBuildParams()
-                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(IMAGES_DEPLOY))
+                    addDeployBuildUrlParam(buildParams, IMAGES_DEPLOY)
                     addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
 
                     // To be uncommented for testing if artifacts are released to same repository as the staging
                     // addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY) // Get artifacts from staging repository
 
-                    addReleasePromoteGitParam(buildParams)
+                    addGitPromoteParam(buildParams)
 
                     buildJob(IMAGES_PROMOTE, buildParams)
                 }
@@ -439,10 +458,10 @@ pipeline {
                     echo "Call ${OPERATOR_PROMOTE} job"
 
                     def buildParams = getDefaultBuildParams()
-                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(OPERATOR_DEPLOY))
+                    addDeployBuildUrlParam(buildParams, OPERATOR_DEPLOY)
                     addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
-                    addReleasePromoteGitParam(buildParams)
+                    addGitPromoteParam(buildParams)
 
                     buildJob(OPERATOR_PROMOTE, buildParams)
                 }
@@ -564,16 +583,34 @@ void addDisplayNameParam(buildParams){
     addStringParam(buildParams, 'DISPLAY_NAME', getDisplayName())
 }
 
+void addDeployBuildUrlParam(buildParams, jobName){
+    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(jobName))
+}
+
 void addSkipTestsParam(buildParams){
     addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
 }
 
-void addReleaseDeployGitParam(buildParams){
+void addArtifactsRepositoriesParam(buildParams){
+    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
+    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
+}
+
+void addCloudRepositoriesParam(buildParams){
+    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY)
+}
+
+void addExamplesParam(buildParams){
+    addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
+    addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
+}
+
+void addGitDeployParam(buildParams){
     addStringParam(buildParams, 'GIT_AUTHOR_BOT', env.BOT_AUTHOR)
     addStringParam(buildParams, 'BOT_CREDENTIALS_ID', env.BOT_AUTHOR_CREDS_ID)
 }
 
-void addReleasePromoteGitParam(buildParams){
+void addGitPromoteParam(buildParams){
     addStringParam(buildParams, 'BOT_CREDENTIALS_ID', env.BOT_AUTHOR_CREDS_ID)
     addStringParam(buildParams, 'AUTHOR_CREDS_ID', getGitAuthorCredsId())
     addStringParam(buildParams, 'GITHUB_TOKEN_CREDS_ID', env.GITHUB_TOKEN_CREDS_ID)
