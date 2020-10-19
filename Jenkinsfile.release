@@ -4,11 +4,13 @@ import org.jenkinsci.plugins.workflow.libs.Library
 CREATE_RELEASE_BRANCHES = 'create-release-branches'
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
 OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
+APPS_DEPLOY = 'kogito-apps-deploy'
 EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
 RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
 OPTAPLANNER_PROMOTE = 'optaplanner-promote'
+APPS_PROMOTE = 'kogito-apps-promote'
 EXAMPLES_PROMOTE = 'kogito-examples-promote'
 IMAGES_PROMOTE = 'kogito-images-promote'
 OPERATOR_PROMOTE = 'kogito-operator-promote'
@@ -185,7 +187,7 @@ pipeline {
                     addMavenSettingsParam(buildParams)
                     addMavenNexusReleaseParams(buildParams)
                     addReleaseDeployGitParams(buildParams)
-                    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
+                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(RUNTIMES_DEPLOY, buildParams)
                 }
@@ -206,10 +208,27 @@ pipeline {
                     addMavenNexusReleaseParams(buildParams)
                     addReleaseDeployGitParams(buildParams)
                     addStringParam(buildParams, 'KOGITO_VERSION', getKogitoArtifactsVersion())
-                    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
-                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
+                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(OPTAPLANNER_DEPLOY, buildParams)
+                }
+            }
+        }
+
+        stage('Build & Deploy Kogito Apps') {
+            when {
+                expression { return !isCreateReleaseBranchesOnly() && isArtifactsDeploy() }
+            }
+            steps {
+                script {
+                    sendStageNotification()
+
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    addReleaseDeployGitParams(buildParams)
+                    addArtifactsRepositoriesParam(buildParams)
+
+                    buildJob(APPS_DEPLOY, buildParams)
                 }
             }
         }
@@ -228,8 +247,7 @@ pipeline {
                     addMavenNexusReleaseParams(buildParams)
                     addReleaseDeployGitParams(buildParams)
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
-                    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
-                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
+                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(EXAMPLES_DEPLOY, buildParams)
                 }
@@ -267,9 +285,8 @@ pipeline {
                     addSkipTestsParam(buildParams)
                     addReleaseDeployGitParams(buildParams)
                     addImageBuildParams(buildParams, '', getKogitoImagesTempTag(), true, false)
-                    addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
-                    addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
-                    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', getStagingRepository())
+                    addExamplesParam(buildParams)
+                    addCloudRepositoriesParam(buildParams)
 
                     buildJob(IMAGES_DEPLOY, buildParams)
                 }
@@ -298,9 +315,8 @@ pipeline {
                         addStringParam(buildParams, 'KOGITO_IMAGES_NAME_SUFFIX', env.IMAGE_NAME_SUFFIX)
                         addStringParam(buildParams, 'KOGITO_IMAGES_TAG', getKogitoImagesTempTag())
                     }
-                    addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
-                    addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
-                    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', getStagingRepository())
+                    addExamplesParam(buildParams)
+                    addCloudRepositoriesParam(buildParams)
 
                     buildJob(OPERATOR_DEPLOY, buildParams)
                 }
@@ -331,11 +347,10 @@ pipeline {
                     sendStageNotification()
 
                     def buildParams = getDefaultBuildParams()
-                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(RUNTIMES_DEPLOY))
+                    addDeployBuildUrlParam(buildParams, RUNTIMES_DEPLOY)
                     addMavenSettingsParam(buildParams)
                     addReleasePromoteGitParams(buildParams)
-                    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
-                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
+                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(RUNTIMES_PROMOTE, buildParams)
                 }
@@ -351,14 +366,31 @@ pipeline {
                     sendStageNotification()
 
                     def buildParams = getDefaultBuildParams(getOptaPlannerVersion(), getOptaPlannerReleaseBranch())
-                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(OPTAPLANNER_DEPLOY))
+                    addDeployBuildUrlParam(buildParams, OPTAPLANNER_DEPLOY)
                     addStringParam(buildParams, 'KOGITO_VERSION', getKogitoArtifactsVersion())
                     addMavenSettingsParam(buildParams)
                     addReleasePromoteGitParams(buildParams)
-                    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
-                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
+                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(OPTAPLANNER_PROMOTE, buildParams)
+                }
+            }
+        }
+
+        stage('Promote Kogito Apps') {
+            when {
+                expression { return !isCreateReleaseBranchesOnly() && isArtifactsPromote() }
+            }
+            steps {
+                script {
+                    sendStageNotification()
+
+                    def buildParams = getDefaultBuildParams()
+                    addDeployBuildUrlParam(buildParams, APPS_DEPLOY)
+                    addReleasePromoteGitParams(buildParams)
+                    addArtifactsRepositoriesParam(buildParams)
+
+                    buildJob(APPS_PROMOTE, buildParams)
                 }
             }
         }
@@ -373,12 +405,11 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
-                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(EXAMPLES_DEPLOY))
+                    addDeployBuildUrlParam(buildParams, EXAMPLES_DEPLOY)
                     addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', params.DEPLOY_AS_LATEST)
                     addMavenSettingsParam(buildParams)
                     addReleasePromoteGitParams(buildParams)
-                    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
-                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
+                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(EXAMPLES_PROMOTE, buildParams)
                 }
@@ -394,7 +425,7 @@ pipeline {
                     sendStageNotification()
 
                     def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
-                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(IMAGES_DEPLOY))
+                    addDeployBuildUrlParam(buildParams, IMAGES_DEPLOY)
                     addImageBuildParams(buildParams, 'PROMOTE', getKogitoImagesVersion(), true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
                     addReleasePromoteGitParams(buildParams)
@@ -416,7 +447,7 @@ pipeline {
                     sendStageNotification()
 
                     def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
-                    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(OPERATOR_DEPLOY))
+                    addDeployBuildUrlParam(buildParams, OPERATOR_DEPLOY)
                     addImageBuildParams(buildParams, 'PROMOTE', getKogitoOperatorVersion(), true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
                     addReleasePromoteGitParams(buildParams)
@@ -570,6 +601,10 @@ void addDisplayNameParam(buildParams, name = ''){
     addStringParam(buildParams, 'DISPLAY_NAME', name)
 }
 
+void addDeployBuildUrlParam(buildParams, jobName){
+    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(jobName))
+}
+
 void addSkipTestsParam(buildParams){
     addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
 }
@@ -583,6 +618,20 @@ void addMavenNexusReleaseParams(buildParams){
     addStringParam(buildParams, 'NEXUS_RELEASE_REPOSITORY_ID', env.NEXUS_RELEASE_REPOSITORY_ID)
     addStringParam(buildParams, 'NEXUS_STAGING_PROFILE_ID', env.NEXUS_STAGING_PROFILE_ID)
     addStringParam(buildParams, 'NEXUS_BUILD_PROMOTION_PROFILE_ID', env.NEXUS_BUILD_PROMOTION_PROFILE_ID)
+}
+
+void addArtifactsRepositoriesParam(buildParams){
+    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
+    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
+}
+
+void addCloudRepositoriesParam(buildParams){
+    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', getStagingRepository())
+}
+
+void addExamplesParam(buildParams){
+    addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
+    addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
 }
 
 void addReleaseDeployGitParams(buildParams){

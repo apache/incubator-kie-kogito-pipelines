@@ -4,6 +4,7 @@ import org.jenkinsci.plugins.workflow.libs.Library
 // Deploy jobs
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
 OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
+APPS_DEPLOY = 'kogito-apps-deploy'
 EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
@@ -87,7 +88,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
                     addMavenSettingsParam(buildParams)
-                    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
+                    addArtifactsRepositoriesParam(buildParams)
                     
                     // images and operator deploy testing will use older working artifacts if that one fails
                     buildJob(RUNTIMES_DEPLOY, buildParams, false)
@@ -123,10 +124,31 @@ pipeline {
                     def buildParams = getDefaultBuildParams(optaplannerBranch)
                     addSkipTestsParam(buildParams)
                     addMavenSettingsParam(buildParams)
-                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
-                    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
+                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(OPTAPLANNER_DEPLOY, buildParams, false)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage()
+                }
+            }
+        }
+
+        stage('Build & Deploy Kogito Apps') {
+            when {
+                expression { return isArtifactsDeploy() }
+            }
+            steps {
+                script {
+                    echo "Call ${APPS_DEPLOY} job"
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    addArtifactsRepositoriesParam(buildParams)
+                    
+                    // images and operator deploy testing will use older working artifacts if that one fails
+                    buildJob(APPS_DEPLOY, buildParams, false)
                 }
             }
             post {
@@ -146,8 +168,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
                     addMavenSettingsParam(buildParams)
-                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
-                    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
+                    addArtifactsRepositoriesParam(buildParams)
                     
                     // images and operator deploy testing will use older working artifacts if that one fails
                     buildJob(EXAMPLES_DEPLOY, buildParams, false)
@@ -171,9 +192,8 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
                     addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
-                    addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
-                    addStringParam(buildParams, 'EXAMPLES_REF', getBuildBranch())
-                    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', getArtifactsRepositoryParam()) // Get artifacts from specific repository if not empty
+                    addExamplesParam(buildParams)
+                    addCloudRepositoriesParam(buildParams)
 
                     buildJob(IMAGES_DEPLOY, buildParams, false)
                 }
@@ -202,9 +222,8 @@ pipeline {
                     addStringParam(buildParams, 'KOGITO_IMAGES_NAMESPACE', env.IMAGE_NAMESPACE)
                     addStringParam(buildParams, 'KOGITO_IMAGES_NAME_SUFFIX', env.IMAGE_NAME_SUFFIX)
                     addStringParam(buildParams, 'KOGITO_IMAGES_TAG', env.TEMP_TAG)
-                    addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
-                    addStringParam(buildParams, 'EXAMPLES_REF', getBuildBranch())
-                    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', getArtifactsRepositoryParam()) // Get artifacts from specific repository if not empty
+                    addExamplesParam(buildParams)
+                    addCloudRepositoriesParam(buildParams)
 
                     buildJob(OPERATOR_DEPLOY, buildParams, false)
                 }
@@ -330,6 +349,20 @@ void addSkipTestsParam(buildParams){
 
 void addMavenSettingsParam(buildParams){
     addStringParam(buildParams, 'MAVEN_SETTINGS_CONFIG_FILE_ID', params.MAVEN_SETTINGS_CONFIG_FILE_ID)
+}
+
+void addArtifactsRepositoriesParam(buildParams){
+    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
+    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
+}
+
+void addCloudRepositoriesParam(buildParams){
+    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', getArtifactsRepositoryParam())
+}
+
+void addExamplesParam(buildParams){
+    addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
+    addStringParam(buildParams, 'EXAMPLES_REF', getBuildBranch())
 }
 
 void addImageBuildParams(List buildParams = [], String paramsPrefix = '', String tag, boolean isRegistryIncluded = false, boolean isFinalImage = false){
