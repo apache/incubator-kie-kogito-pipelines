@@ -285,6 +285,10 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(RUNTIMES_DEPLOY))
                     addReleasePromoteGitParam(buildParams)
+                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
+                    if(getArtifactsRepositoryParam()){
+                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
+                    }
 
                     buildJob(RUNTIMES_PROMOTE, buildParams)
                 }
@@ -303,6 +307,10 @@ pipeline {
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(EXAMPLES_DEPLOY))
                     addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', params.DEPLOY_AS_LATEST)
                     addReleasePromoteGitParam(buildParams)
+                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
+                    if(getArtifactsRepositoryParam()){
+                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
+                    }
 
                     buildJob(EXAMPLES_PROMOTE, buildParams)
                 }
