@@ -102,7 +102,7 @@ pipeline {
 
                     // To remove/change once optaplanner-deploy has been released
                     // See https://issues.redhat.com/browse/KOGITO-3668
-                    addStringParam(params, 'BUILD_BRANCH_NAME', 'master')
+                    addStringParam(buildParams, 'BUILD_BRANCH_NAME', 'master')
 
                     buildJob(OPTAPLANNER_DEPLOY, buildParams, false)
                 }
