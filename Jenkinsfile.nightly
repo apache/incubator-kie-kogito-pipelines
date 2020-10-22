@@ -29,6 +29,10 @@ pipeline {
     }
 
     parameters {
+        string(name: 'ARTIFACTS_REPOSITORY', defaultValue: '', description: 'Provide a repository for artifacts to be deployed to')
+        string(name: 'BUILD_BRANCH_NAME', defaultValue: '', description: 'Which branch to build? Set if you are not on a multibranch pipeline.')
+        string(name: 'GIT_AUTHOR', defaultValue: 'kiegroup', description: 'Which Git author repository ?')
+
         booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip all tests')
 
         booleanParam(name: 'SKIP_ARTIFACTS', defaultValue: false, description: 'To skip Artifacts (runtimes, examples, optaplanner) Deployment')
@@ -78,6 +82,7 @@ pipeline {
                     echo "Call ${RUNTIMES_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
                     
                     // images and operator deploy testing will use older working artifacts if that one fails
                     buildJob(RUNTIMES_DEPLOY, buildParams, false)
@@ -99,6 +104,8 @@ pipeline {
                     echo "Call ${OPTAPLANNER_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
+                    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
 
                     // To remove/change once optaplanner-deploy has been released
                     // See https://issues.redhat.com/browse/KOGITO-3668
@@ -123,6 +130,8 @@ pipeline {
                     echo "Call ${EXAMPLES_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
+                    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
                     
                     // images and operator deploy testing will use older working artifacts if that one fails
                     buildJob(EXAMPLES_DEPLOY, buildParams, false)
@@ -148,6 +157,7 @@ pipeline {
                     addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
                     addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
                     addStringParam(buildParams, 'EXAMPLES_REF', getBuildBranch())
+                    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', getArtifactsRepositoryParam()) // Get artifacts from specific repository if not empty
 
                     buildJob(IMAGES_DEPLOY, buildParams, false)
                 }
@@ -178,6 +188,7 @@ pipeline {
                     addStringParam(buildParams, 'KOGITO_IMAGES_TAG', env.TEMP_TAG)
                     addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
                     addStringParam(buildParams, 'EXAMPLES_REF', getBuildBranch())
+                    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', getArtifactsRepositoryParam()) // Get artifacts from specific repository if not empty
 
                     buildJob(OPERATOR_DEPLOY, buildParams, false)
                 }
@@ -329,11 +340,11 @@ String constructKey(String prefix, String paramId){
 }
 
 String getBuildBranch(){
-    return env.BRANCH_NAME
+    return params.BUILD_BRANCH_NAME ?: env.BRANCH_NAME
 }
 
 String getGitAuthor(){
-    return 'kiegroup'
+    return params.GIT_AUTHOR
 }
 
 boolean isArtifactsDeploy(){
@@ -354,4 +365,8 @@ boolean isImagesPromote(){
 
 boolean isOperatorPromote(){
     return isOperatorDeploy() && isJobSucceeded(OPERATOR_DEPLOY)
+}
+
+String getArtifactsRepositoryParam(){
+    return params.ARTIFACTS_REPOSITORY
 }
