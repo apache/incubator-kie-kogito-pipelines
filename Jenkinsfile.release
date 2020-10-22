@@ -387,6 +387,10 @@ pipeline {
                     addStringParam(buildParams, 'PROJECT_VERSION', getOptaPlannerVersion())
                     addStringParam(buildParams, 'KOGITO_VERSION', getProjectVersion())
                     addReleasePromoteGitParam(buildParams)
+                    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
+                    if(getArtifactsRepositoryParam()){
+                        addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
+                    }
 
                     buildJob(OPTAPLANNER_PROMOTE, buildParams)
                 }
