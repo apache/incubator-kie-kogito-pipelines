@@ -592,7 +592,9 @@ void addSkipTestsParam(buildParams){
 }
 
 void addArtifactsRepositoriesParam(buildParams){
-    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
+    if(env.STAGING_REPOSITORY) {
+        addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
+    }
     addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
 }
 
