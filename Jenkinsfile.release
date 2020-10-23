@@ -263,7 +263,7 @@ pipeline {
                     String jobUrl = getJobUrl(EXAMPLES_DEPLOY)
                     def deployProps = jobUrl ? readDeployProperties(jobUrl) : [:]
 
-                    env.EXAMPLES_URI = params.EXAMPLES_URI ?: (deployProps['kogito-examples.pr.source.uri'] ?: '')
+                    env.EXAMPLES_URI = params.EXAMPLES_URI ?: (deployProps['kogito-examples.pr.source.uri'] ?: "https://github.com/${getGitAuthor()}/kogito-examples")
                     env.EXAMPLES_REF = params.EXAMPLES_REF ?: (deployProps['kogito-examples.pr.source.ref'] ?: env.RELEASE_BRANCH)
 
                     echo "Got examples uri ${env.EXAMPLES_URI}"
