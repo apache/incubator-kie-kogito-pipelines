@@ -107,9 +107,8 @@ pipeline {
                     addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
                     addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
 
-                    // To remove/change once optaplanner-deploy has been released
-                    // See https://issues.redhat.com/browse/KOGITO-3668
-                    addStringParam(buildParams, 'BUILD_BRANCH_NAME', 'master')
+                    // The 0.17.x branch of Kogito relates to the 8.0.0.beta1 of OptaPlanner.
+                    addStringParam(buildParams, 'BUILD_BRANCH_NAME', '8.0.0.beta1')
 
                     buildJob(OPTAPLANNER_DEPLOY, buildParams, false)
                 }
