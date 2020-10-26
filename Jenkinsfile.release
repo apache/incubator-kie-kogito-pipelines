@@ -160,7 +160,7 @@ pipeline {
                     addStringParam(buildParams, 'REPOSITORIES', repositories.join(','))
                     buildJob(CREATE_RELEASE_BRANCHES, buildParams)
 
-                    sendNotification("${getReleaseBranch()} branches have been created for repositories: ${repositories}")
+                    sendNotification("${getOptaPlannerReleaseBranch()} branches have been created for repositories: ${repositories}")
                 }
             }
         }
