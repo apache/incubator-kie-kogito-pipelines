@@ -192,7 +192,7 @@ pipeline {
                 script {
                     if(!getArtifactsRepositoryParam()){
                         // Ask for Staging repo url
-                        sendNotification("Kogito Runtimes deploy pipeline #${env.BUILD_NUMBER} => Artifacts with version ${getProjectVersion()} have been pushed to staging repository. Please retrieve the staging repository URL and provide it here: ${env.BUILD_URL}input")
+                        sendNotification("Kogito Runtimes deploy pipeline #${env.BUILD_NUMBER} => Artifacts with version ${getProjectVersion()} have been pushed to staging repository.\nPlease close that repository and promote it to Kogito Public staging profile.\nOnce done, please retrieve the Kogito Public staging profile URL and provide it here: ${env.BUILD_URL}input")
                         // Add `/` at the end of the given url if missing
                         String stagingRepoUrl = input(message: 'Enter staging repository URL:', parameters: [string(name: 'STAGING_REPO_URL')])
                         if(!stagingRepoUrl.endsWith('/')){
@@ -227,6 +227,12 @@ pipeline {
 
                     addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
                     buildJob(OPTAPLANNER_DEPLOY, buildParams)
+
+                    // Temp fix
+                    if(!getArtifactsRepositoryParam()){
+                        sendNotification("Optaplanner deploy pipeline #${env.BUILD_NUMBER} => Artifacts with version ${getOptaPlannerVersion()} have been pushed to a staging repository.\nPlease close that repository and promote it to Kogito Public staging profile.\nOnce done, please validate here: ${env.BUILD_URL}input")
+                        input message: 'Is Optaplanner staging repository closed and promoted to Kogito Public ?', ok: 'Yes'
+                    }
                 }
             }
         }
@@ -249,6 +255,12 @@ pipeline {
                     }
 
                     buildJob(EXAMPLES_DEPLOY, buildParams)
+
+                    // Temp fix
+                    if(!getArtifactsRepositoryParam()){
+                        sendNotification("Kogito Examples deploy pipeline #${env.BUILD_NUMBER} => Artifacts with version ${getProjectVersion()} have been pushed to a staging repository.\nPlease close that repository and promote it to Kogito Public staging profile.\nOnce done, please validate here: ${env.BUILD_URL}input")
+                        input message: 'Is Kogito Examples staging repository closed and promoted to Kogito Public ?', ok: 'Yes'
+                    }
                 }
             }
         }
@@ -532,6 +544,8 @@ void sendErrorNotification(){
 }
 
 void sendNotification(String body){
+    echo "Send Notification"
+    echo body
     emailext body: body, subject: "[${getReleaseBranch()}] Release Pipeline",
                 to: env.KOGITO_CI_EMAIL_TO
 }
