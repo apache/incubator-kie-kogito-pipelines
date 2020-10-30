@@ -80,8 +80,6 @@ pipeline {
         stage('Initialize') {
             steps {
                 script {
-                    echo 'Initialize'
-
                     assert getProjectVersion() != ''
                     assert getOptaPlannerVersion() != ''
 
@@ -99,7 +97,7 @@ pipeline {
 
                     currentBuild.displayName = getDisplayName()
 
-                    sendNotification("Release Pipeline for version ${getProjectVersion()} has started...")
+                    sendNotification("Release Pipeline for version ${getProjectVersion()} has started...\n=> ${env.BUILD_URL}")
 
                     // Safety measure to not publish to main JBoss
                     if(getGitAuthor() != 'kiegroup' && !getArtifactsRepositoryParam()){
@@ -113,8 +111,6 @@ pipeline {
         stage('Create Kogito release branches') {
             steps {
                 script {
-                    echo "Call ${CREATE_RELEASE_BRANCHES} job"
-
                     def buildParams = []
                     addDisplayNameParam(buildParams)
                     addStringParam(buildParams, 'RELEASE_BRANCH', getReleaseBranch())
@@ -171,7 +167,7 @@ pipeline {
             }
             steps {
                 script {
-                    echo "Call ${RUNTIMES_DEPLOY} job"
+                    sendStageNotification()
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
@@ -214,7 +210,7 @@ pipeline {
             }
             steps {
                 script {
-                    echo "Call ${OPTAPLANNER_DEPLOY} job"
+                    sendStageNotification()
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
@@ -244,7 +240,7 @@ pipeline {
             }
             steps {
                 script {
-                    echo "Call ${EXAMPLES_DEPLOY} job"
+                    sendStageNotification()
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
@@ -284,13 +280,13 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Images') {
+        stage('Build & Deploy Kogito Images') {
             when {
                 expression { return !isCreateReleaseBranchesOnly() && isImagesDeploy() }
             }
             steps {
                 script {
-                    echo "Call ${IMAGES_DEPLOY} job"
+                    sendStageNotification()
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
@@ -305,13 +301,13 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Operator') {
+        stage('Build & Deploy Kogito Operator') {
             when {
                 expression { return !isCreateReleaseBranchesOnly() && isOperatorDeploy() }
             }
             steps {
                 script {
-                    echo "Call ${OPERATOR_DEPLOY} job"
+                    sendStageNotification()
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
@@ -351,13 +347,13 @@ pipeline {
             }
         }
 
-        stage('Promote runtimes') {
+        stage('Promote Kogito Runtimes') {
             when {
                 expression { return !isCreateReleaseBranchesOnly() && isArtifactsPromote() }
             }
             steps {
                 script {
-                    echo "Call ${RUNTIMES_PROMOTE} job"
+                    sendStageNotification()
 
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(RUNTIMES_DEPLOY))
@@ -378,7 +374,7 @@ pipeline {
             }
             steps {
                 script {
-                    echo "Call ${OPTAPLANNER_PROMOTE} job"
+                    sendStageNotification()
 
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
@@ -396,13 +392,13 @@ pipeline {
             }
         }
 
-        stage('Promote examples') {
+        stage('Promote Kogito Examples') {
             when {
                 expression { return !isCreateReleaseBranchesOnly() && isArtifactsPromote() }
             }
             steps {
                 script {
-                    echo "Call ${EXAMPLES_PROMOTE} job"
+                    sendStageNotification()
 
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
@@ -419,13 +415,13 @@ pipeline {
             }
         }
 
-        stage('Promote images') {
+        stage('Promote Kogito Images') {
             when {
                 expression { return !isCreateReleaseBranchesOnly() && isImagesPromote() }
             }
             steps {
                 script {
-                    echo "Call ${IMAGES_PROMOTE} job"
+                    sendStageNotification()
                     
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(IMAGES_DEPLOY))
@@ -442,13 +438,13 @@ pipeline {
             }
         }
 
-        stage('Promote operator image') {
+        stage('Promote Kogito Operator') {
             when {
                 expression { return !isCreateReleaseBranchesOnly() && isOperatorPromote() }
             }
             steps {
                 script {
-                    echo "Call ${OPERATOR_PROMOTE} job"
+                    sendStageNotification()
 
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(OPERATOR_DEPLOY))
@@ -542,6 +538,10 @@ String getJobUrl(String jobName){
 
 void sendErrorNotification(){
     sendNotification("Kogito release job #${BUILD_NUMBER} was: ${currentBuild.currentResult}\nPlease look here: ${BUILD_URL}")
+}
+
+void sendStageNotification() {
+    sendNotification("${env.STAGE_NAME}")
 }
 
 void sendNotification(String body){
