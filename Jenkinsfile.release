@@ -32,6 +32,8 @@ pipeline {
         booleanParam(name: 'CREATE_RELEASE_BRANCHES_ONLY', defaultValue: 'false', description: 'Set to true if only the create release branches stage should be launched')
 
         string(name: 'PROJECT_VERSION', defaultValue: '', description: 'Project version to release as Major.minor.micro')
+        string(name: 'KOGITO_IMAGES_VERSION', defaultValue: '', description: 'To be set if different from PROJECT_VERSION. Should be only a bug fix update from PROJECT_VERSION.')
+        string(name: 'KOGITO_OPERATOR_VERSION', defaultValue: '', description: 'To be set if different from PROJECT_VERSION. Should be only a bug fix update from PROJECT_VERSION.')
         string(name: 'OPTAPLANNER_VERSION', defaultValue: '', description: 'Project version of OptaPlanner and its examples to release as Major.minor.micro')
         string(name: 'OPTAPLANNER_RELEASE_BRANCH', defaultValue: '', description: 'Use to override the release branch name deduced from the OPTAPLANNER_VERSION')
         booleanParam(name: 'DEPLOY_AS_LATEST', defaultValue: 'false', description: 'Given project version is considered the latest version')
@@ -64,9 +66,6 @@ pipeline {
         IMAGE_NAMESPACE = 'kiegroup'
         // Use nightly for now with a different tag but we should find another solution
         IMAGE_NAME_SUFFIX = 'nightly'
-        // TEMP_TAG => will be set in Initialization phase
-
-        // IMAGE_PROMOTE_TAG => will be set in Initialization phase
 
         // Credentials
         GIT_AUTHOR='kiegroup'
@@ -80,24 +79,21 @@ pipeline {
         stage('Initialize') {
             steps {
                 script {
-                    assert getProjectVersion() != ''
-                    assert getOptaPlannerVersion() != ''
+                    assert getKogitoArtifactsVersion() != ''
 
                     // Set release branch
-                    env.RELEASE_BRANCH = getBranchForVersion(getProjectVersion())
+                    env.RELEASE_BRANCH = getBranchForVersion(getKogitoArtifactsVersion())
                     echo "Kogito Release Branch ${getReleaseBranch()}"
 
-                    env.OPTAPLANNER_RELEASE_BRANCH = params.OPTAPLANNER_RELEASE_BRANCH ?: getBranchForVersion(getOptaPlannerVersion())
-                    echo "OptaPlanner Release Branch ${getOptaPlannerReleaseBranch()}"
-
-                    env.TEMP_TAG = "${getProjectVersion()}-temp"
-                    echo "temporary tag is ${env.TEMP_TAG}"
-
-                    env.IMAGE_PROMOTE_TAG = getProjectVersion()
+                    if(isArtifactsDeploy() || isArtifactsPromote()){
+                        assert getOptaPlannerVersion() != ''
+                        env.OPTAPLANNER_RELEASE_BRANCH = params.OPTAPLANNER_RELEASE_BRANCH ?: getBranchForVersion(getOptaPlannerVersion())
+                        echo "OptaPlanner Release Branch ${getOptaPlannerReleaseBranch()}"
+                    }
 
                     currentBuild.displayName = getDisplayName()
 
-                    sendNotification("Release Pipeline for version ${getProjectVersion()} has started...\n=> ${env.BUILD_URL}")
+                    sendNotification("Release Pipeline on branch ${getReleaseBranch()} has started...\n=> ${env.BUILD_URL}")
 
                     // Safety measure to not publish to main JBoss
                     if(getGitAuthor() != 'kiegroup' && !getArtifactsRepositoryParam()){
@@ -139,10 +135,13 @@ pipeline {
         }
 
         stage('Create OptaPlanner release branches') {
+            when {
+                expression { return isArtifactsDeploy() }
+            }
             steps {
                 script {
                     def buildParams = []
-                    addDisplayNameParam(buildParams)
+                    addDisplayNameParam(buildParams, getDisplayName(getOptaPlannerReleaseBranch()))
                     addStringParam(buildParams, 'RELEASE_BRANCH', getOptaPlannerReleaseBranch())
                     addStringParam(buildParams, 'GIT_AUTHOR', getGitAuthor())
                     addStringParam(buildParams, 'GIT_AUTHOR_CREDS_ID', getGitAuthorCredsId())
@@ -189,7 +188,7 @@ pipeline {
                 script {
                     if(!getArtifactsRepositoryParam()){
                         // Ask for Staging repo url
-                        sendNotification("Kogito Runtimes deploy pipeline #${env.BUILD_NUMBER} => Artifacts with version ${getProjectVersion()} have been pushed to staging repository.\nPlease close that repository and promote it to Kogito Public staging profile.\nOnce done, please retrieve the Kogito Public staging profile URL and provide it here: ${env.BUILD_URL}input")
+                        sendNotification("Kogito Runtimes deploy pipeline #${env.BUILD_NUMBER} => Artifacts with version ${getKogitoArtifactsVersion()} have been pushed to staging repository.\nPlease close that repository and promote it to Kogito Public staging profile.\nOnce done, please retrieve the Kogito Public staging profile URL and provide it here: ${env.BUILD_URL}input")
                         // Add `/` at the end of the given url if missing
                         String stagingRepoUrl = input(message: 'Enter staging repository URL:', parameters: [string(name: 'STAGING_REPO_URL')])
                         if(!stagingRepoUrl.endsWith('/')){
@@ -212,16 +211,13 @@ pipeline {
                 script {
                     sendStageNotification()
 
-                    def buildParams = getDefaultBuildParams()
+                    def buildParams = getDefaultBuildParams(getOptaPlannerVersion(), getOptaPlannerReleaseBranch())
                     addSkipTestsParam(buildParams)
                     addReleaseDeployGitParam(buildParams)
-                    addStringParam(buildParams, 'BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
-                    addStringParam(buildParams, 'PROJECT_VERSION', getOptaPlannerVersion())
-                    addStringParam(buildParams, 'KOGITO_VERSION', getProjectVersion())
+                    addStringParam(buildParams, 'KOGITO_VERSION', getKogitoArtifactsVersion())
                     if (getArtifactsRepositoryParam()) {
                         addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
                     }
-
                     addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
                     buildJob(OPTAPLANNER_DEPLOY, buildParams)
 
@@ -255,7 +251,7 @@ pipeline {
 
                     // Temp fix
                     if(!getArtifactsRepositoryParam()){
-                        sendNotification("Kogito Examples deploy pipeline #${env.BUILD_NUMBER} => Artifacts with version ${getProjectVersion()} have been pushed to a staging repository.\nPlease close that repository and promote it to Kogito Public staging profile.\nOnce done, please validate here: ${env.BUILD_URL}input")
+                        sendNotification("Kogito Examples deploy pipeline #${env.BUILD_NUMBER} => Artifacts with version ${getKogitoArtifactsVersion()} have been pushed to a staging repository.\nPlease close that repository and promote it to Kogito Public staging profile.\nOnce done, please validate here: ${env.BUILD_URL}input")
                         input message: 'Is Kogito Examples staging repository closed and promoted to Kogito Public ?', ok: 'Yes'
                     }
                 }
@@ -288,10 +284,11 @@ pipeline {
                 script {
                     sendStageNotification()
 
-                    def buildParams = getDefaultBuildParams()
+                    def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
+                    addStringParam(buildParams, 'KOGITO_ARTIFACTS_VERSION', getKogitoArtifactsVersion())
                     addSkipTestsParam(buildParams)
                     addReleaseDeployGitParam(buildParams)
-                    addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
+                    addImageBuildParams(buildParams, '', getKogitoImagesTempTag(), true, false)
                     addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
                     addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
                     addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY) // Get artifacts from staging repository
@@ -308,11 +305,11 @@ pipeline {
             steps {
                 script {
                     sendStageNotification()
-
-                    def buildParams = getDefaultBuildParams()
+                    
+                    def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
                     addSkipTestsParam(buildParams)
                     addReleaseDeployGitParam(buildParams)
-                    addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
+                    addImageBuildParams(buildParams, '', getKogitoOperatorTempTag(), true, false)
                     
                     // For BDD tests
                     // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
@@ -321,7 +318,7 @@ pipeline {
                         addStringParam(buildParams, 'KOGITO_IMAGES_REGISTRY', env.IMAGE_REGISTRY)
                         addStringParam(buildParams, 'KOGITO_IMAGES_NAMESPACE', env.IMAGE_NAMESPACE)
                         addStringParam(buildParams, 'KOGITO_IMAGES_NAME_SUFFIX', env.IMAGE_NAME_SUFFIX)
-                        addStringParam(buildParams, 'KOGITO_IMAGES_TAG', env.TEMP_TAG)
+                        addStringParam(buildParams, 'KOGITO_IMAGES_TAG', getKogitoImagesTempTag())
                     }
                     addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
                     addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
@@ -338,7 +335,7 @@ pipeline {
             }
             steps {
                 script {
-                    String body = "${getProjectVersion()} artifacts are ready for release.\n" +
+                    String body = "${getKogitoArtifactsVersion()} artifacts are ready for release.\n" +
                                  "The staging repository can be found at: ${env.STAGING_REPOSITORY}\n" +
                                  "Please release the repository and then confirm here: ${env.BUILD_URL}input"
                     sendNotification(body)
@@ -376,11 +373,9 @@ pipeline {
                 script {
                     sendStageNotification()
 
-                    def buildParams = getDefaultBuildParams()
-                    addStringParam(buildParams, 'BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
+                    def buildParams = getDefaultBuildParams(getOptaPlannerVersion(), getOptaPlannerReleaseBranch())
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(OPTAPLANNER_DEPLOY))
-                    addStringParam(buildParams, 'PROJECT_VERSION', getOptaPlannerVersion())
-                    addStringParam(buildParams, 'KOGITO_VERSION', getProjectVersion())
+                    addStringParam(buildParams, 'KOGITO_VERSION', getKogitoArtifactsVersion())
                     addReleasePromoteGitParam(buildParams)
                     addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', env.STAGING_REPOSITORY)
                     if(getArtifactsRepositoryParam()){
@@ -423,9 +418,9 @@ pipeline {
                 script {
                     sendStageNotification()
                     
-                    def buildParams = getDefaultBuildParams()
+                    def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(IMAGES_DEPLOY))
-                    addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
+                    addImageBuildParams(buildParams, 'PROMOTE', getKogitoImagesVersion(), true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
 
                     // To be uncommented for testing if artifacts are released to same repository as the staging
@@ -446,9 +441,9 @@ pipeline {
                 script {
                     sendStageNotification()
 
-                    def buildParams = getDefaultBuildParams()
+                    def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(OPERATOR_DEPLOY))
-                    addImageBuildParams(buildParams, 'PROMOTE', env.IMAGE_PROMOTE_TAG, true, true)
+                    addImageBuildParams(buildParams, 'PROMOTE', getKogitoOperatorVersion(), true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
                     addReleasePromoteGitParam(buildParams)
 
@@ -469,8 +464,8 @@ pipeline {
         //             def buildParams = [:]
         //             // TODO how to set oldVersion ?
         //             addStringParam(buildParams, "oldVersion", "???")
-        //             addStringParam(buildParams, "newVersion", getProjectVersion())
-        //             addStringParam(buildParams, "tagName", "${getProjectVersion()}-kogito")
+        //             addStringParam(buildParams, "newVersion", getKogitoArtifactsVersion())
+        //             addStringParam(buildParams, "tagName", "${getKogitoArtifactsVersion()}-kogito")
         //             // TODO how to set nextSnapshot ?
         //             addStringParam(buildParams, "nextSnapshot", "???")
 
@@ -486,9 +481,9 @@ pipeline {
         success {
             script {
                 if(isCreateReleaseBranchesOnly()){
-                    sendNotification("Branches ${getProjectVersion()} have been successfully created !!!!")
+                    sendNotification("Branches have been successfully created !!!!")
                 } else {
-                    sendNotification("Version ${getProjectVersion()} has been successfully released !!!!")
+                    sendNotification("Version ${getKogitoArtifactsVersion()} has been successfully released !!!!")
                 }
             }
         }
@@ -564,18 +559,22 @@ def readDeployProperties(String buildUrl){
     return deployProperties
 }
 
-List getDefaultBuildParams(){
+List getDefaultBuildParams(String version = '', String buildBranchName = ''){
+    version = version ?: getKogitoArtifactsVersion()
+    buildBranchName = buildBranchName ?: getReleaseBranch()
+
     List buildParams = []
-    addDisplayNameParam(buildParams)
-    addStringParam(buildParams, 'BUILD_BRANCH_NAME', getReleaseBranch())
+    addDisplayNameParam(buildParams, getDisplayName(buildBranchName))
+    addStringParam(buildParams, 'BUILD_BRANCH_NAME', buildBranchName)
     addStringParam(buildParams, 'GIT_AUTHOR', getGitAuthor())
     addBooleanParam(buildParams, 'RELEASE', true)
-    addStringParam(buildParams, 'PROJECT_VERSION', getProjectVersion())
+    addStringParam(buildParams, 'PROJECT_VERSION', version)
     return buildParams
 }
 
-void addDisplayNameParam(buildParams){
-    addStringParam(buildParams, 'DISPLAY_NAME', getDisplayName())
+void addDisplayNameParam(buildParams, name = ''){
+    name = name ?: getDisplayName()
+    addStringParam(buildParams, 'DISPLAY_NAME', name)
 }
 
 void addSkipTestsParam(buildParams){
@@ -619,15 +618,24 @@ String constructKey(String prefix, String paramId){
     return prefix == null || prefix == '' ? paramId : "${prefix}_${paramId}"
 }
 
-String getDisplayName(){
+String getDisplayName(branch = ''){
+    branch = branch ?: getReleaseBranch()
     if(isCreateReleaseBranchesOnly()){
-        return "Cut-off ${getReleaseBranch()}"
+        return "Cut-off ${branch}"
     }
-    return "Release ${getProjectVersion()}"
+    return "Release ${branch}"
 }
 
-String getProjectVersion(){
+String getKogitoArtifactsVersion(){
     return params.PROJECT_VERSION
+}
+
+String getKogitoImagesVersion(){
+    return params.KOGITO_IMAGES_VERSION ?: getKogitoArtifactsVersion()
+}
+
+String getKogitoOperatorVersion(){
+    return params.KOGITO_OPERATOR_VERSION ?: getKogitoArtifactsVersion()
 }
 
 String getOptaPlannerVersion() {
@@ -685,4 +693,12 @@ boolean isOperatorPromote(){
 String getBranchForVersion(String version) {
     Integer[] versionSplit = util.parseVersion(version)
     return "${versionSplit[0]}.${versionSplit[1]}.x"
+}
+
+String getKogitoImagesTempTag(){
+    return "${getKogitoImagesVersion()}-temp"
+}
+
+String getKogitoOperatorTempTag(){
+    return "${getKogitoOperatorVersion()}-temp"
 }
