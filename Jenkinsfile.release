@@ -191,7 +191,7 @@ pipeline {
                         sendNotification("Kogito Runtimes deploy pipeline #${env.BUILD_NUMBER} => Artifacts with version ${getKogitoArtifactsVersion()} have been pushed to staging repository.\nPlease close that repository and promote it to Kogito Public staging profile.\nOnce done, please retrieve the Kogito Public staging profile URL and provide it here: ${env.BUILD_URL}input")
                         // Add `/` at the end of the given url if missing
                         String stagingRepoUrl = input(message: 'Enter staging repository URL:', parameters: [string(name: 'STAGING_REPO_URL')])
-                        if(!stagingRepoUrl.endsWith('/')){
+                        if(stagingRepoUrl != '' && !stagingRepoUrl.endsWith('/')){
                             stagingRepoUrl += '/'
                         }
                         env.STAGING_REPOSITORY = stagingRepoUrl
