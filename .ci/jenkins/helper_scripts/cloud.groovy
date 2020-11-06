@@ -16,24 +16,25 @@ void loginContainerRegistry(String paramsPrefix) {
 
 void loginOpenshift(String openshiftApi, String openshiftCredsKey) {
     withCredentials([usernamePassword(credentialsId: getDeployImageOpenshiftCredentials(), usernameVariable: 'OC_USER', passwordVariable: 'OC_PWD')]) {
-        sh "oc login --username=${OC_USER} --password=${OC_PWD} --server=${openshiftApi} --insecure-skip-tls-verify"
+        echo "oc login --username=${OC_USER} --password=${OC_PWD} --server=${openshiftApi} --insecure-skip-tls-verify"
     }
 }
 
 void loginOpenshiftRegistry(String openshiftApi, String openshiftCredsKey) {
     loginOpenshift(openshiftApi, openshiftCredsKey)
     // username can be anything. See https://docs.openshift.com/container-platform/4.4/registry/accessing-the-registry.html#registry-accessing-directly_accessing-the-registry
-    sh "set +x && ${env.CONTAINER_ENGINE} login -u anything -p \$(oc whoami -t) ${env.CONTAINER_TLS_OPTIONS} ${getOpenshiftRegistry()}"
+    echo "set +x && ${env.CONTAINER_ENGINE} login -u anything -p \$(oc whoami -t) ${env.CONTAINER_TLS_OPTIONS} ${getOpenshiftRegistry()}"
 }
 
 void loginContainerRegistry(String registry, String credsId) {
     withCredentials([usernamePassword(credentialsId: credsId, usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PWD')]) {
-        sh "${env.CONTAINER_ENGINE} login -u ${REGISTRY_USER} -p ${REGISTRY_PWD} ${env.CONTAINER_TLS_OPTIONS} ${registry}"
+        echo "${env.CONTAINER_ENGINE} login -u ${REGISTRY_USER} -p ${REGISTRY_PWD} ${env.CONTAINER_TLS_OPTIONS} ${registry}"
     }
 }
 
 String getOpenshiftRegistry() {
-    return sh(returnStdout: true, script: 'oc get routes -n openshift-image-registry | tail -1 | awk \'{print $2}\'').trim()
+    // return sh(returnStdout: true, script: 'oc get routes -n openshift-image-registry | tail -1 | awk \'{print $2}\'').trim()
+    return 'openshift_registry.simulated.com'
 }
 
 List pullImages(List imageNames, String paramsPrefix, String imageTag) {
@@ -52,7 +53,7 @@ List pullImages(List imageNames, String paramsPrefix, String imageTag) {
 
 void pullImage(String fullImageName) {
     retry(env.MAX_REGISTRY_RETRIES ?: 1) {
-        sh "${env.CONTAINER_ENGINE} pull ${env.CONTAINER_TLS_OPTIONS} ${fullImageName}"
+        echo "${env.CONTAINER_ENGINE} pull ${env.CONTAINER_TLS_OPTIONS} ${fullImageName}"
     }
 }
 
@@ -72,7 +73,7 @@ List pushImages(List imageNames, String paramsPrefix, String imageTag) {
 
 void pushImage(String fullImageName) {
     retry(env.MAX_REGISTRY_RETRIES ?: 1) {
-        sh "${env.CONTAINER_ENGINE} push ${env.CONTAINER_TLS_OPTIONS} ${fullImageName}"
+        echo "${env.CONTAINER_ENGINE} push ${env.CONTAINER_TLS_OPTIONS} ${fullImageName}"
     }
 }
 
@@ -83,7 +84,7 @@ void tagImages(List imageNames, String oldParamsPrefix, String oldImageTag, Stri
 }
 
 void tagImage(String oldImageName, String newImageName) {
-    sh "${env.CONTAINER_ENGINE} tag ${oldImageName} ${newImageName}"
+    echo "${env.CONTAINER_ENGINE} tag ${oldImageName} ${newImageName}"
 }
 
 String getReducedTag(String version) {
@@ -115,8 +116,8 @@ void makeQuayNewImagesPublic(List images, String paramsPrefix) {
 }
 
 void cleanImages() {
-    sh "${env.CONTAINER_ENGINE} rm -f \$(${env.CONTAINER_ENGINE} ps -a -q) || date"
-    sh "${env.CONTAINER_ENGINE} rmi -f \$(${env.CONTAINER_ENGINE} images -q) || date"
+    echo "${env.CONTAINER_ENGINE} rm -f \$(${env.CONTAINER_ENGINE} ps -a -q) || date"
+    echo "${env.CONTAINER_ENGINE} rmi -f \$(${env.CONTAINER_ENGINE} images -q) || date"
 }
 
 ////////////////////////////////////////////////////////////////////////

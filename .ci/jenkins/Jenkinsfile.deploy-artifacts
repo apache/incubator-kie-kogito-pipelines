@@ -77,7 +77,7 @@ pipeline {
             steps {
                 script {
                     // Deploy to specific repository with credentials
-                    maven.uploadLocalArtifacts(env.MAVEN_REPO_CREDS_ID, getLocalDeploymentFolder(), getMavenRepoZipUrl())
+                    echo "maven.uploadLocalArtifacts(env.MAVEN_REPO_CREDS_ID, getLocalDeploymentFolder(), getMavenRepoZipUrl())"
                 }
             }
         }
@@ -162,7 +162,7 @@ void runMavenDeploy(boolean localDeployment = false) {
         mvnCmd.withDeployRepository(env.MAVEN_DEPLOY_REPOSITORY)
     }
 
-    mvnCmd.skipTests(skipTests()).run('clean deploy')
+    echo "${mvnCmd.skipTests(skipTests()).getFullRunCommand('clean deploy')}"
 }
 
 String getMavenRepoZipUrl() {
@@ -172,7 +172,7 @@ String getMavenRepoZipUrl() {
 void runMavenStage() {
     MavenStagingHelper stagingHelper = getStagingHelper()
     deployProperties.putAll(stagingHelper.stageLocalArtifacts(env.NEXUS_STAGING_PROFILE_ID, getLocalDeploymentFolder()))
-    stagingHelper.promoteStagingRepository(env.NEXUS_BUILD_PROMOTION_PROFILE_ID)
+    echo "stagingHelper.promoteStagingRepository(env.NEXUS_BUILD_PROMOTION_PROFILE_ID)"
 }
 
 MavenStagingHelper getStagingHelper() {
