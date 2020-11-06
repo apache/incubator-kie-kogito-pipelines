@@ -631,11 +631,11 @@ String getKogitoArtifactsVersion(){
 }
 
 String getKogitoImagesVersion(){
-    return params.KOGITO_IMAGES_VERSION ?: getKogitoArtifactsVersion()
+    return params.KOGITO_IMAGES_VERSION ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion())
 }
 
 String getKogitoOperatorVersion(){
-    return params.KOGITO_OPERATOR_VERSION ?: getKogitoArtifactsVersion()
+    return params.KOGITO_OPERATOR_VERSION ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion())
 }
 
 String getOptaPlannerVersion() {
@@ -701,4 +701,9 @@ String getKogitoImagesTempTag(){
 
 String getKogitoOperatorTempTag(){
     return "${getKogitoOperatorVersion()}-temp"
+}
+
+String removeVersionSuffixIfExist(String version){
+    Integer[] versionSplit = util.parseVersion(version)
+    return "${versionSplit[0]}.${versionSplit[1]}.${versionSplit[2]}"
 }
