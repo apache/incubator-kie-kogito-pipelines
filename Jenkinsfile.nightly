@@ -102,7 +102,20 @@ pipeline {
             steps {
                 script {
                     echo "Call ${OPTAPLANNER_DEPLOY} job"
-                    def buildParams = getDefaultBuildParams()
+
+                    String optaplannerBranch = ''
+                    if (getBuildBranch() != 'master') {
+
+                        /* The OptaPlanner major version is shifted by 7 from the Kogito major version:
+                           Kogito 1.x.y -> OptaPlanner 8.x.y. */
+                        int majorVersionShift = 7
+                        String [] buildBranchSplit = getBuildBranch().split("\\.")
+                        assert buildBranchSplit.length == 3
+                        Integer optaplannerMajorVersion = Integer.parseInt(buildBranchSplit[0]) + majorVersionShift
+                        optaplannerBranch = "${optaplannerMajorVersion}.${buildBranchSplit[1]}.${buildBranchSplit[2]}"
+                    }
+
+                    def buildParams = getDefaultBuildParams(optaplannerBranch)
                     addSkipTestsParam(buildParams)
                     addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
                     addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
@@ -298,10 +311,11 @@ void sendPipelineErrorNotification(){
                 to: env.KOGITO_CI_EMAIL_TO
 }
 
-List getDefaultBuildParams(){
+List getDefaultBuildParams(String buildBranchName = ''){
+    buildBranchName = buildBranchName ?: getBuildBranch()
     List params = []
     addStringParam(params, 'DISPLAY_NAME', env.NIGHTLY_TAG)
-    addStringParam(params, 'BUILD_BRANCH_NAME', getBuildBranch())
+    addStringParam(params, 'BUILD_BRANCH_NAME', buildBranchName)
     addStringParam(params, 'GIT_AUTHOR', getGitAuthor())
 
     return params
