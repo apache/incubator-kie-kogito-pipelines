@@ -191,7 +191,7 @@ pipeline {
                         sendNotification("Kogito Runtimes deploy pipeline #${env.BUILD_NUMBER} => Artifacts with version ${getKogitoArtifactsVersion()} have been pushed to staging repository.\nPlease close that repository and promote it to Kogito Public staging profile.\nOnce done, please retrieve the Kogito Public staging profile URL and provide it here: ${env.BUILD_URL}input")
                         // Add `/` at the end of the given url if missing
                         String stagingRepoUrl = input(message: 'Enter staging repository URL:', parameters: [string(name: 'STAGING_REPO_URL')])
-                        if(!stagingRepoUrl.endsWith('/')){
+                        if(stagingRepoUrl != '' && !stagingRepoUrl.endsWith('/')){
                             stagingRepoUrl += '/'
                         }
                         env.STAGING_REPOSITORY = stagingRepoUrl
@@ -631,11 +631,11 @@ String getKogitoArtifactsVersion(){
 }
 
 String getKogitoImagesVersion(){
-    return params.KOGITO_IMAGES_VERSION ?: getKogitoArtifactsVersion()
+    return params.KOGITO_IMAGES_VERSION ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion())
 }
 
 String getKogitoOperatorVersion(){
-    return params.KOGITO_OPERATOR_VERSION ?: getKogitoArtifactsVersion()
+    return params.KOGITO_OPERATOR_VERSION ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion())
 }
 
 String getOptaPlannerVersion() {
@@ -701,4 +701,9 @@ String getKogitoImagesTempTag(){
 
 String getKogitoOperatorTempTag(){
     return "${getKogitoOperatorVersion()}-temp"
+}
+
+String removeVersionSuffixIfExist(String version){
+    Integer[] versionSplit = util.parseVersion(version)
+    return "${versionSplit[0]}.${versionSplit[1]}.${versionSplit[2]}"
 }
