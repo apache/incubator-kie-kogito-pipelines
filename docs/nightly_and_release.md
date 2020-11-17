@@ -12,14 +12,15 @@
       * [Nightly Promote job is failing](#nightly-promote-job-is-failing)
     * [Testing the Nightly Pipeline](#testing-the-nightly-pipeline)
       * [Create specific Maven repository for nightly testing](#create-specific-maven-repository-for-nightly-testing)
-      * [Change pipeline envs for nightly testing](#change-pipeline-envs-for-nightly-testing)
-      * [Setup Jenkins job(s) for nightly testing](#setup-jenkins-jobs-for-nightly-testing)
-      * [Setup Jenkins creds for nightly testing](#setup-jenkins-creds-for-nightly-testing)
+      * [Create the different Jenkins jobs for nightly testing](#create-the-different-jenkins-jobs-for-nightly-testing)
       * [Launch a nightly with minimal parameters for nightly testing](#launch-a-nightly-with-minimal-parameters-for-nightly-testing)
   * [Release pipeline](#release-pipeline)
+    * [Prepare the release branch(es)](#prepare-the-release-branches)
+      * [How to prepare a new release branch ?](#how-to-prepare-a-new-release-branch-)
     * [Architecture of the Release pipeline](#architecture-of-the-release-pipeline)
     * [Before the Release Pipeline is started](#before-the-release-pipeline-is-started)
       * [JIRA issues creation](#jira-issues-creation)
+    * [Where is the main release pipeline job](#where-is-the-main-release-pipeline-job)
     * [Release pipeline parameters](#release-pipeline-parameters)
       * [Minimal parameters for the release](#minimal-parameters-for-the-release)
       * [Start Release Pipeline with specific parameters](#start-release-pipeline-with-specific-parameters)
@@ -30,17 +31,14 @@
       * [Operator Crd/Csv files](#operator-crdcsv-files)
       * [Docs release](#docs-release)
       * [Update the JIRAs](#update-the-jiras)
-      * [Update nightly jobs with new release branch](#update-nightly-jobs-with-new-release-branch)
+      * [Update master config jobs with new release branch](#update-master-config-jobs-with-new-release-branch)
     * [Release pipeline Troubleshooting](#release-pipeline-troubleshooting)
       * [Release pipeline is failing](#release-pipeline-is-failing)
       * [Release pipeline is reporting a called *-deploy job is failing](#release-pipeline-is-reporting-a-called--deploy-job-is-failing)
       * [Release pipeline is reporting a called *-promote job is failing](#release-pipeline-is-reporting-a-called--promote-job-is-failing)
     * [Testing the Release Pipeline](#testing-the-release-pipeline)
       * [Create specific Maven repository for release testing](#create-specific-maven-repository-for-release-testing)
-      * [Change pipeline envs for release testing](#change-pipeline-envs-for-release-testing)
-      * [Setup Jenkins job(s) for release testing](#setup-jenkins-jobs-for-release-testing)
-      * [Setup Jenkins creds for release testing](#setup-jenkins-creds-for-release-testing)
-      * [Use specific nexus for released artifacts](#use-specific-nexus-for-released-artifacts)
+      * [Create the different Jenkins jobs for release testing](#create-the-different-jenkins-jobs-for-release-testing)
       * [Launch a release with minimal parameters for testing](#launch-a-release-with-minimal-parameters-for-testing)
   * [Explanation on architecture of those pipelines](#explanation-on-architecture-of-those-pipelines)
     * [Background & Objectives](#background--objectives)
@@ -142,6 +140,7 @@ In order to test the full Nightly Pipeline, and in order to avoid any problem, y
 
 * Have a specific container registry and credentials registered with `push` rights on it
 * Have a specific Maven repository to deploy jar artifacts
+* Create your own seed job which will create all the needed other jobs for you
 
 #### Create specific Maven repository for nightly testing
 
@@ -149,51 +148,48 @@ For deploying runtimes and examples artifacts, and to avoid any conflict with ma
 
 If don't have one already, you can create one with the [nexus-operator](https://github.com/m88i/nexus-operator).
 
-**IMPORTANT:** We don't support yet specific user's repository. Anonymous user needs to have push rights to it.
+**IMPORTANT:** We don't support yet specific user's credentials. Anonymous user needs to have push rights to it.
 
-#### Change pipeline envs for nightly testing
+#### Create the different Jenkins jobs for nightly testing
 
-* `IMAGE_NAMESPACE` (and `IMAGE_REGISTRY_CREDENTIALS`, see [Setup Jenkins creds](#setup-jenkins-creds-for-nightly-testing))
+See [Jenkins documentation](./jenkins.md) to create the different jobs for the testing and adapt the configuration with correct `maven.artifacts_repository` and `cloud.*` properties.
 
-#### Setup Jenkins job(s) for nightly testing
-
-You will need to create single pipeline jobs and let them run once to update the `parameters` part (you should stop them quickly as it makes no sense to let them run until the end. Just wait for the checkout of repo and the `node` command done).
-
-**NOTE:** You will need to access the correct branch for each of them!
-
-* [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
-* [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
-* [optaplanner-deploy](https://github.com/kiegroup/optaplanner/blob/master/Jenkinsfile.deploy)
-* [optaplanner-promote](https://github.com/kiegroup/optaplanner/blob/master/Jenkinsfile.promote)
-* [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.deploy)
-* [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.promote)
-* [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
-* [kogito-images-promote](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.promote)
-* [kogito-operator-deploy](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.deploy)
-* [kogito-operator-promote](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.promote)
-
-**NOTE:** Deploy & Promote jobs of a specific repository can be ignored (and so job does not need to be created for testing), but you will need to check the corresponding `SKIP_` parameter.
-
-#### Setup Jenkins creds for nightly testing
-
-In Jenkins, you should set those credentials and set the correct values in env:
-
-* `IMAGE_REGISTRY_CREDENTIALS` (username/password credential)  
-  Credential to push image to the container registry (should have rights to `IMAGE_NAMESPACE`)
-* `KOGITO_CI_EMAIL_TO` (secret text credential)  
-  Email for notifications. You can set your email for example
+**IMPORTANT: The different credentials IDs you are setting into the configuration should be available in Jenkins/Credentials.**
 
 #### Launch a nightly with minimal parameters for nightly testing
 
-* `ARTIFACTS_REPOSITORY` to set to the correct repository
+Just Build with default parameters.
+
 * (optional) `SKIP_TESTS` (usually you will want that)
 * (optional) `SKIP_*` to skip different phases
 
+**NOTE:** Deploy & Promote jobs of a specific repository can be ignored (and so job does not need to be created for testing), but you will need to check the corresponding `SKIP_` parameter.
+
 ## Release pipeline
+
+### Prepare the release branch(es)
+
+In the Kogito release folder on Jenkins, you should find 2 jobs:
+
+* **[Create release branches](../Jenkinsfile.release.create-branches)**  
+  Based on the given version and repositories, a new release branch (with `Major.minor.x`) is created if not already existing on given repositories.
+* **[Prepare Release](../Jenkinsfile.release.prepare)**  
+  Prepare the GH/Jenkins environment for a release.  
+  This should create the different release branches for the whole projects as well as updating the seed configuration to be able generate the new Jenkins job.
+
+#### How to prepare a new release branch ?
+
+You just need to call the **[Prepare Release](../Jenkinsfile.release.prepare)** job with the correct Kogito and Optaplanner versions.
+
+This will create the release branches and will update the Jenkins seed configuration for generating the correct jobs.
+
+After that, if the seed job (`0-seed-job`, at the root of the Jenkins folder) has not been launched automatically, you should start it.
+
+Once the seed job has run, you should be able to see the new release branch in the Jenkins `release/{RELEASE_BRANCH}` folder. From there, you can start the release.
 
 ### Architecture of the Release pipeline
 
-The Release Pipeline is composed of many steps, calling different other jobs to set the correct version, perform the build&test of runtimes/examples/images/operator and then promote released artifacts and container images as production ready.
+The Release Pipeline is composed of many steps, calling different other jobs to set the correct version, perform the build&test of runtimes/optaplanner/apps/examples/images/operator and then promote released artifacts and container images as production ready.
 
 ![Flow](./images/release-flow.png)
 
@@ -201,8 +197,6 @@ Like the Nightly Pipeline, steps could be separated into 2 parts: `Build & Deplo
 
 The Release Pipeline is also adding extra functionalities to this:
 
-* **[Create release branches](../Jenkinsfile.create-release-branches)**  
-  Based on the given version, a new release branch (with `Major.minor.x`) is created if not already existing.
 * **Create PRs**  
   In the `Build & Deploy` phase, the different `Build & Deploy` jobs will create PR(s) with version changes on the release branch of the different repositories.
 * **Merge PRs**  
@@ -223,6 +217,10 @@ Before starting the pipeline, please create the issues for the different compone
 
 **NOTE:** There is, for now, no automatic creation/update of JIRA issues into the pipeline. This has to be done manually...
 
+### Where is the main release pipeline job
+
+You can find the release pipeline job in `release/{RELEASE_BRANCH}/kogito-release`.
+
 ### Release pipeline parameters
 
 #### Minimal parameters for the release
@@ -231,6 +229,8 @@ In order to start, here are the minimal parameters to the Release Pipeline:
 
 * **PROJECT_VERSION**  
   Corresponds to the Kogito version to be set during the release.
+* **OPTAPLANNER_VERSION**  
+  Corresponds to the Optaplanner version to be set during the release (usually it is `Kogito Major + 7`)
 * **DEPLOY_AS_LATEST**
   Should be set to true if we want the container images to be tagged as `latest`.
 
@@ -239,7 +239,7 @@ In order to start, here are the minimal parameters to the Release Pipeline:
 The Release pipeline can be tweaked with some other parameters if needed.
 
 One option is the possibility to skip some stages, depending on which part you want to release.  
-**NOTE: If you decide to skip the runtimes/examples part, please be careful on `ARTIFACTS_REPOSITORY`, `EXAMPLES_URI` and `EXAMPLES_REF` parameters**
+**NOTE: If you decide to skip the runtimes/examples part, please be careful on `EXAMPLES_URI` and `EXAMPLES_REF` parameters**
 
 See [Release Jenkinsfile](../Jenkinsfile.release) for the full list on parameters.
 
@@ -254,9 +254,6 @@ They are currently 2 of them:
   When asked, Staging repositories can be retrieved from [JBoss Nexus repository](https://repository.jboss.org/nexus/). You need the rights to release the artifacts.  
   You should see some repositories named `kogito-public-XXX`. Select them all and click on `Release`.  
   Once artifacts are released, just confirm it on Jenkins.
-* **Check kogito-apps artifacts are set to correct url** (happens in kogito-images-promote)
-  Jenkins will ask you to review the logs of this job and check urls are correct in the different displayed `module.yaml` files.  
-  Review them and confirm if everything is ok.
 
 #### Retry/Continue/Skip/Abort manual intervention
 
@@ -285,9 +282,6 @@ You will need to create, with those files, new OperatorHub PRs (one for Openshif
 
 If there is any change to be done due to PRs, do it on the release branch.
 
-**After Operatorhub PRs are merged**, you will need to transfer those crd and csv files to the `master` branch, as we want all crd/csv files history on master, for future releases.  
-Do not panic, there is a simple [job](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito/job/tools/job/kogito-operator-copy-manifests-files/) for that, with an associated [Jenkinsfile](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.copy_csv_files).
-
 #### Docs release
 
 Once pipeline is finished, you need to release docs. For that, please ask on Zulip for anybody with rights to do it.
@@ -296,16 +290,16 @@ Once pipeline is finished, you need to release docs. For that, please ask on Zul
 
 You can now close the different JIRA issues regarding the release.
 
-#### Update nightly jobs with new release branch
+#### Update master config jobs with new release branch
 
-In case a new release branch has been created, you will need to update the different jobs's configuration with the new branch name.  
-You will just need to update the `include` part of the Git configuration of the jobs.
+In case a new release branch has been created, you will need to update the seed job configuration to take that branch into account.  
+And also, you may need to update the release branch dsl configuration.
 
-Here are some of the jobs to update (this is not exhaustive):
+First, **on release branch**, go to [branch configuration](../dsl/branch_config.yaml) and setup any specific configuration (for example the correct optaplanner branch).
 
-* [kogito-nightly](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito/job/kogito-nightly/)
-* [kogito-runtimes-sonarcloud](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito/job/kogito-runtimes-sonarcloud/)
-* [kogito-apps-sonarcloud](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito/job/kogito-apps-sonarcloud/)
+Second, **on master branch**, go to [main configuration](../dsl/seed/config.yaml) and add the new release branch to `git.branches` array.
+
+Once the second step is done and merged (please merge the first step before), new jobs will be generated accordingly and nightly/sonarcloud jobs should be activated.
 
 ### Release pipeline Troubleshooting
 
@@ -350,12 +344,13 @@ You can correct it, and then just retry the job (see [retry possibility](#retrys
 
 ### Testing the Release Pipeline
 
-In order to test the full Release Pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.release](../Jenkinsfile.release), create jobs in Jenkins and setup some credentials.
+In order to test the full Release Pipeline, and in order to avoid any problem, you will need to create Jenkins jobs with sepcific environment and some credentials.
 
 * Have a specific container registry and credentials registered with `push` rights on it
 * Have a specific author repository that you can test against
 * If you don't want to flood your test author repository with temporary branches, you should use also another author, referred as "bot account", and that you can setup in environment variables `BOT_*`
 * Have a specific Maven repository to deploy jar artifacts
+* Create all the required Jenkins jobs
 
 #### Create specific Maven repository for release testing
 
@@ -365,63 +360,25 @@ If don't have one already, you can create one with the [nexus-operator](https://
 
 **IMPORTANT:** We don't support yet specific user's repository. Anonymous user needs to have push rights to it.
 
-#### Change pipeline envs for release testing
+#### Create the different Jenkins jobs for release testing
 
-* `GIT_AUTHOR` (and `GIT_AUTHOR_CREDS_ID`, see [Setup Jenkins creds](#setup-jenkins-creds-for-release-testing))
-* `BOT_AUTHOR` (and `BOT_AUTHOR_CREDS_ID`, see [Setup Jenkins creds](#setup-jenkins-creds-for-release-testing))
-* `IMAGE_NAMESPACE` (and `IMAGE_REGISTRY_CREDENTIALS`, see [Setup Jenkins creds](#setup-jenkins-creds-for-release-testing))
+See [Jenkins documentation](./jenkins.md) to create the different jobs for the testing and adapt the configuration with correct `maven.artifacts_repository` and `cloud.*` properties.
 
-#### Setup Jenkins job(s) for release testing
-
-You will need to create single pipeline jobs and let them run once to update the `parameters` part (you should stop them quickly as it makes no sense to let them run until the end. Just wait for the checkout of repo and the `node` command done).
-
-**NOTE:** You will need to access the correct branch for each !
-
-* [kogito-release](../Jenkinsfile.release)
-* [create-release-branches](../Jenkinsfile.create-release-branches)
-* [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
-* [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
-* [optaplanner-deploy](https://github.com/kiegroup/optaplanner/blob/master/Jenkinsfile.deploy)
-* [optaplanner-promote](https://github.com/kiegroup/optaplanner/blob/master/Jenkinsfile.promote)
-* [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.deploy)
-* [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.promote)
-* [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
-* [kogito-images-promote](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.promote)
-* [kogito-operator-deploy](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.deploy)
-* [kogito-operator-promote](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.promote)
-
-**NOTE:** Deploy & Promote jobs of a specific repository can be ignored (and so job does not need to be created for testing), but you will need to check the corresponding `SKIP_` parameter.
+**IMPORTANT: The different credentials IDs you are setting into the configuration should be available in Jenkins/Credentials.**
 
 **IMPORTANT:**
 
 * When using `Optaplanner Promote` job, please also create a specific branch to be executed and comment the content of the `uploadDistribution` method.
 * When deploying artifacts for runtimes/apps/examples/optaplanner, make sure the branch you deploy is up to date to avoid any conflict with current deployed artifacts !
 
-#### Setup Jenkins creds for release testing
-
-In Jenkins, you should set those credentials and set the correct values in env:
-
-* `GIT_AUTHOR_CREDS_ID` (username/password credential)  
-  Username / [GitHub token](https://github.com/settings/tokens) which has rights on `GIT_AUTHOR`
-* `BOT_AUTHOR_CREDS_ID` (username/password credential)  
-  Username / [GitHub token](https://github.com/settings/tokens) which has rights on `BOT_AUTHOR`
-* `GITHUB_TOKEN_CREDS_ID` (secret text credential)  
-  [GitHub token](https://github.com/settings/tokens) for Github CLI
-* `IMAGE_REGISTRY_CREDENTIALS` (username/password credential)  
-  Credential to push image to the container registry (should have rights to `IMAGE_NAMESPACE`)
-* `KOGITO_CI_EMAIL_TO` (secret text credential)  
-  Email for notifications. You can set your email for example
-
-#### Use specific nexus for released artifacts
-
-In case staging and release repositories are the same for testing, you can uncomment the line `addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', env.STAGING_REPOSITORY)` in `Promote images` stage. This is made to make the called job aware of the release repository to update correctly the artifacts.
-
 #### Launch a release with minimal parameters for testing
 
 * `PROJECT_VERSION`
-* `ARTIFACTS_REPOSITORY` to set to the correct repository
+* `OPTAPLANNER_VERSION`
 * (optional) `SKIP_TESTS` (usually you will want that)
 * (optional) `SKIP_*` to skip different phases
+
+**NOTE:** Deploy & Promote jobs of a specific repository can be ignored (and so job does not need to be created for testing), but you will need to check the corresponding `SKIP_` parameter.
 
 ## Explanation on architecture of those pipelines
 

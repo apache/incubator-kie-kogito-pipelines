@@ -293,6 +293,12 @@
                     <include>Jenkinsfile.*</include>
                 </includes>
             </testResource>
+            <testResource>
+                <directory>${project.basedir}/../../dsl/seed</directory>
+                <includes>
+                    <include>Jenkinsfile.seed</include>
+                </includes>
+            </testResource>
         </testResources>
     </build>
 </project>

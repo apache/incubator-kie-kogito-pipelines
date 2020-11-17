@@ -1,0 +1,253 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+CREATE_RELEASE_BRANCHES = 'create-release-branches'
+
+PIPELINE_REPO = 'kogito-pipelines'
+OPTAPLANNER_REPO = 'optaplanner'
+
+PIPELINE_REPOS = ["${PIPELINE_REPO}"]
+RUNTIMES_REPOS = ['kogito-runtimes', 'kogito-apps', 'kogito-examples']
+OPTAPLANNER_REPOS = ["${OPTAPLANNER_REPO}", 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'optaplanner-quickstarts:development']
+IMAGES_REPOS = ['kogito-images']
+OPERATOR_REPOS = ['kogito-cloud-operator']
+
+JOBS = [:]
+
+pipeline {
+    agent {
+        label 'kie-rhel7 && !master'
+    }
+
+    // parameters {
+    // For parameters, check into .jenkins/dsl/jobs.groovy file
+    // }
+
+    environment {
+        // Some generated env is also defined into .jenkins/dsl/jobs.groovy file
+
+        KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+    }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    assert getKogitoVersion() != ''
+                    assert getOptaPlannerVersion() != ''
+
+                    // Set release branch
+                    env.RELEASE_BRANCH = util.getReleaseBranchFromVersion(getKogitoVersion())
+                    echo "Kogito Release Branch ${getKogitoReleaseBranch()}"
+
+                    env.OPTAPLANNER_RELEASE_BRANCH = params.OPTAPLANNER_RELEASE_BRANCH ?: util.getReleaseBranchFromVersion(getOptaPlannerVersion())
+                    echo "OptaPlanner Release Branch ${getOptaPlannerReleaseBranch()}"
+
+                    currentBuild.displayName = getDisplayName("${getKogitoReleaseBranch()}/${getOptaPlannerReleaseBranch()}")
+
+                    sendNotification("Cut-off for Kogito branch ${getKogitoReleaseBranch()} and Optaplanner branch ${getOptaPlannerReleaseBranch()} has started...\n=> ${env.BUILD_URL}")
+                }
+            }
+        }
+
+        stage('Create Kogito release branches') {
+            steps {
+                script {
+                    def buildParams = []
+                    addDisplayNameParam(buildParams)
+                    addStringParam(buildParams, 'RELEASE_BRANCH', getKogitoReleaseBranch())
+
+                    def repositories = []
+                    repositories += RUNTIMES_REPOS
+                    repositories += IMAGES_REPOS
+                    repositories += OPERATOR_REPOS
+                    repositories += PIPELINE_REPOS // Create branch to activate nightlies if needed
+
+                    echo "Call ${CREATE_RELEASE_BRANCHES} job with repositories ${repositories}"
+                    addStringParam(buildParams, 'REPOSITORIES', repositories.join(','))
+                    buildJob(CREATE_RELEASE_BRANCHES, buildParams)
+
+                    sendNotification("${getKogitoReleaseBranch()} branches have been created for repositories: ${repositories}")
+                }
+            }
+        }
+
+        stage('Create OptaPlanner release branches') {
+            steps {
+                script {
+                    def buildParams = []
+                    addDisplayNameParam(buildParams, getDisplayName(getOptaPlannerReleaseBranch()))
+                    addStringParam(buildParams, 'RELEASE_BRANCH', getOptaPlannerReleaseBranch())
+
+                    def repositories = OPTAPLANNER_REPOS
+
+                    echo "Call ${CREATE_RELEASE_BRANCHES} job with repositories ${repositories}"
+                    addStringParam(buildParams, 'REPOSITORIES', repositories.join(','))
+                    buildJob(CREATE_RELEASE_BRANCHES, buildParams)
+
+                    sendNotification("${getOptaPlannerReleaseBranch()} branches have been created for repositories: ${repositories}")
+                }
+            }
+        }
+
+        stage('Update kogito-pipelines branch config') {
+            steps {
+                script {
+                    dir('pipelines-branch') {
+                        deleteDir()
+                        checkout(githubscm.resolveRepository(PIPELINE_REPO, getGitAuthor(), getKogitoReleaseBranch(), false))
+                        sh "git checkout ${getKogitoReleaseBranch()}"
+
+                        repositories = []
+                        repositories.addAll(collectRepos(RUNTIMES_REPOS, getKogitoReleaseBranch()))
+                        repositories.addAll(collectRepos(IMAGES_REPOS, getKogitoReleaseBranch()))
+                        repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
+                        repositories.addAll(collectRepos([OPTAPLANNER_REPO], getOptaPlannerReleaseBranch()))
+
+                        def branchConfig = [ dependent_repositories : repositories]
+
+                        echo "Write dsl branch_config => ${branchConfig}"
+                        sh 'rm dsl/branch_config.yaml'
+                        writeYaml file: 'dsl/branch_config.yaml', data: branchConfig, overwrite: true
+
+                        if (githubscm.isThereAnyChanges()) {
+                            githubscm.commitChanges('Update DSL branch config after cut-off')
+                            githubscm.pushObject('origin', getKogitoReleaseBranch(), getGitAuthorCredsId())
+
+                            sendNotification("kogito-pipelines ${getKogitoReleaseBranch()} `dsl/branch_config.yaml` has been updated with correct configuration")
+                        } else {
+                            println '[WARN] No changes to commit'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Update seed config') {
+            steps {
+                script {
+                    String botBranch = "${getKogitoReleaseBranch()}-${util.generateHash(10)}"
+                    String seedConfigFile = 'dsl/seed/config.yaml'
+
+                    dir('pipelines-seed') {
+                        deleteDir()
+                        checkout(githubscm.resolveRepository(PIPELINE_REPO, getGitAuthor(), env.PIPELINE_MAIN_BRANCH, false))
+                        sh "git checkout ${env.PIPELINE_MAIN_BRANCH}"
+
+                        githubscm.forkRepo(getBotAuthorCredsID())
+                        githubscm.createBranch(botBranch)
+
+                        def seedConfig = readYaml file: seedConfigFile
+
+                        if (!seedConfig.git.branches.find { it == getKogitoReleaseBranch() }) {
+                            seedConfig.git.branches.add(getKogitoReleaseBranch())
+                        }
+
+                        echo "Write seed config => ${seedConfig}"
+                        sh "rm ${seedConfigFile}"
+                        writeYaml file: seedConfigFile, data: seedConfig, overwrite: true
+
+                        if (githubscm.isThereAnyChanges()) {
+                            // Never push directly to master, always create a PR
+                            commitMsg = "Add release branch ${getKogitoReleaseBranch()} after cut-off"
+                            prBody = "Generated by build ${BUILD_TAG}: ${BUILD_URL}.\nPlease review and merge."
+                            githubscm.commitChanges(commitMsg)
+                            githubscm.pushObject('origin', botBranch, getBotAuthorCredsID())
+                            prLink = githubscm.createPR(commitMsg, prBody, env.PIPELINE_MAIN_BRANCH, getBotAuthorCredsID())
+
+                            echo "PR ${prLink} has been created to update seed job"
+
+                            sendNotification("PR ${prLink} has been created to update the seed job config on `${env.PIPELINE_MAIN_BRANCH}` branch.\nPlease review and merge.")
+                        } else {
+                            println '[WARN] No changes to PR'
+                        }
+
+                // ideally there is a push action to seed job on master so that the seed jobs is started automatically to rebuild the DSL jobs when PR is merged
+                }
+            }
+        }
+    }
+}
+}
+
+void buildJob(String jobName, List buildParams) {
+    echo "Build ${jobName} with params ${buildParams}"
+
+    build(job: "${jobName}", wait: true, parameters: buildParams, propagate: true)
+}
+
+def getJob(String jobName) {
+    return JOBS[jobName]
+}
+
+String getJobUrl(String jobName) {
+    echo "getJobUrl for ${jobName}"
+    def job = getJob(jobName)
+    return job ? job.getAbsoluteUrl() : ''
+}
+
+void sendErrorNotification() {
+    sendNotification("Kogito release job #${BUILD_NUMBER} was: ${currentBuild.currentResult}\nPlease look here: ${BUILD_URL}")
+}
+
+void sendNotification(String body) {
+    echo 'Send Notification'
+    echo body
+    emailext body: body, subject: "[${getKogitoReleaseBranch()}] Cut-off Pipeline",
+                to: env.KOGITO_CI_EMAIL_TO
+}
+
+void addDisplayNameParam(buildParams, name = '') {
+    addStringParam(buildParams, 'DISPLAY_NAME', name ?: getDisplayName())
+}
+
+void addStringParam(List params, String key, String value) {
+    params.add(string(name: key, value: value))
+}
+
+String getDisplayName(branch = '') {
+    return "Cut-off ${branch ?: getKogitoReleaseBranch()}"
+}
+
+String getKogitoVersion() {
+    return params.KOGITO_VERSION
+}
+
+String getOptaPlannerVersion() {
+    return params.OPTAPLANNER_VERSION
+}
+
+String getKogitoReleaseBranch() {
+    return env.RELEASE_BRANCH
+}
+
+String getGitAuthor() {
+    return env.GIT_AUTHOR
+}
+
+String getGitAuthorCredsId() {
+    return env.GIT_AUTHOR_CREDS_ID
+}
+
+String getBotAuthorCredsID() {
+    return env.GIT_BOT_AUTHOR_CREDS_ID
+}
+
+String getOptaPlannerReleaseBranch() {
+    return env.OPTAPLANNER_RELEASE_BRANCH
+}
+
+String getRepoName(String repo) {
+    return (repo.find(':')) ? repo.split(':')[0] : repo
+}
+
+List collectRepos(List repos, String branch) {
+    return repos.collect { repoBranch ->
+        String repo = getRepoName(repoBranch)
+        return [
+            name : repo,
+            branch : branch
+        ]
+    }
+}

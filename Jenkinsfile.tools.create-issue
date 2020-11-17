@@ -1,0 +1,37 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+pipeline {
+    agent {
+        label 'kie-rhel7 && !master'
+    }
+
+    options {
+        timeout(time: 60, unit: 'MINUTES')
+    }
+
+    // environment {
+    // Some generated env is also defined into .jenkins/dsl/jobs.groovy file
+    // }
+
+    stages {
+        stage('Checkout repo') {
+            steps {
+                script {
+                    deleteDir()
+                    checkout(githubscm.resolveRepository(params.REPOSITORY, params.AUTHOR, params.BRANCH, false))
+                }
+            }
+        }
+        stage('Create issue') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'kie-ci', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')]) {
+                        sh "${GITHUB_CLI_PATH} issue create --title '${params.ISSUE_TITLE}' --body '${params.ISSUE_BODY}'"
+                    }
+                }
+            }
+        }
+    }
+}

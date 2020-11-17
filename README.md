@@ -13,6 +13,7 @@ This repository contains some of the pipelines of Kogito project.
       * [Sonar cloud](#sonar-cloud)
   * [Configuration of pipelines](#configuration-of-pipelines)
     * [Jenkins](#jenkins)
+      * [Jenkins jobs generation](#jenkins-jobs-generation)
     * [Zulip notifications](#zulip-notifications)
       * [Format](#format)
 
@@ -62,7 +63,7 @@ They are daily run jobs:
 
 Each repository has a `Jenkinsfile` for the PR check.
 
-The jobs are located into the `ghrpb-webhooks` folder in Jenkins.  
+The jobs are located into the `pullrequest` folder in Jenkins.  
 Only the Operator PR check is not yet in this folder as it is still on another Jenkins
 
 #### Sonar cloud
@@ -74,6 +75,10 @@ Only the Operator PR check is not yet in this folder as it is still on another J
 ### Jenkins
 
 All pipelines can be found in [kogito Jenkins folder](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito).
+
+#### Jenkins jobs generation
+
+More information can be found [here](./docs/jenkins.md).
 
 ### Zulip notifications
 
