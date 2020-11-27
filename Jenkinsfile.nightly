@@ -1,12 +1,14 @@
+import org.jenkinsci.plugins.workflow.libs.Library
 @Library('jenkins-pipeline-shared-libraries')_
 
+// Deploy jobs
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
+OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
 EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
-OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
-RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
-EXAMPLES_PROMOTE = 'kogito-examples-promote'
+
+// Promote jobs
 IMAGES_PROMOTE = 'kogito-images-promote'
 OPERATOR_PROMOTE = 'kogito-operator-promote'
 
@@ -29,9 +31,11 @@ pipeline {
     }
 
     parameters {
-        string(name: 'ARTIFACTS_REPOSITORY', defaultValue: '', description: 'Provide a repository for artifacts to be deployed to')
         string(name: 'BUILD_BRANCH_NAME', defaultValue: '', description: 'Which branch to build? Set if you are not on a multibranch pipeline.')
         string(name: 'GIT_AUTHOR', defaultValue: 'kiegroup', description: 'Which Git author repository ?')
+
+        string(name: 'ARTIFACTS_REPOSITORY', defaultValue: '', description: 'Provide a repository for artifacts to be deployed to')
+        string(name: 'MAVEN_SETTINGS_CONFIG_FILE_ID', defaultValue: '2bd418aa-56fa-4403-9232-8c77a50fc528', description: 'Maven settings file to use for Maven config/deployment')
 
         booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip all tests')
 
@@ -82,6 +86,7 @@ pipeline {
                     echo "Call ${RUNTIMES_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addMavenSettingsParam(buildParams)
                     addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
                     
                     // images and operator deploy testing will use older working artifacts if that one fails
@@ -117,6 +122,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams(optaplannerBranch)
                     addSkipTestsParam(buildParams)
+                    addMavenSettingsParam(buildParams)
                     addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
                     addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
 
@@ -139,6 +145,7 @@ pipeline {
                     echo "Call ${EXAMPLES_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addMavenSettingsParam(buildParams)
                     addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
                     addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
                     
@@ -220,9 +227,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addImageBuildParams(buildParams, 'BASE', env.TEMP_TAG, true, false)
                     addImageBuildParams(buildParams, 'PROMOTE', env.NIGHTLY_TAG, true, true)
-                    if(getBuildBranch() == env.BRANCH_FOR_LATEST){
-                        addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', true)
-                    }
+                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
 
                     buildJob(IMAGES_PROMOTE, buildParams)
                 }
@@ -245,9 +250,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addImageBuildParams(buildParams, 'BASE', env.TEMP_TAG, true, false)
                     addImageBuildParams(buildParams, 'PROMOTE', env.NIGHTLY_TAG, true, true)
-                    if(getBuildBranch() == env.BRANCH_FOR_LATEST){
-                        addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', true)
-                    }
+                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
 
                     buildJob(OPERATOR_PROMOTE, buildParams)
                 }
@@ -325,6 +328,10 @@ void addSkipTestsParam(buildParams){
     addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
 }
 
+void addMavenSettingsParam(buildParams){
+    addStringParam(buildParams, 'MAVEN_SETTINGS_CONFIG_FILE_ID', params.MAVEN_SETTINGS_CONFIG_FILE_ID)
+}
+
 void addImageBuildParams(List buildParams = [], String paramsPrefix = '', String tag, boolean isRegistryIncluded = false, boolean isFinalImage = false){
     if (!isFinalImage && params.USE_TEMP_OPENSHIFT_REGISTRY) {
         addBooleanParam(buildParams, constructKey(paramsPrefix, 'IMAGE_USE_OPENSHIFT_REGISTRY'), true)
@@ -355,6 +362,10 @@ String getBuildBranch(){
 
 String getGitAuthor(){
     return params.GIT_AUTHOR
+}
+
+boolean isDeployImagesLatestTag(){
+    return getBuildBranch() == env.BRANCH_FOR_LATEST
 }
 
 boolean isArtifactsDeploy(){
