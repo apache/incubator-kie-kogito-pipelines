@@ -57,6 +57,8 @@ Here is the list of jobs and link to Jenkinsfiles:
 
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
+* [optaplanner-deploy](https://github.com/kiegroup/optaplanner/blob/master/Jenkinsfile.deploy)
+* [optaplanner-promote](https://github.com/kiegroup/optaplanner/blob/master/Jenkinsfile.promote)
 * [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.deploy)
 * [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
@@ -161,6 +163,8 @@ You will need to create single pipeline jobs and let them run once to update the
 
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
+* [optaplanner-deploy](https://github.com/kiegroup/optaplanner/blob/master/Jenkinsfile.deploy)
+* [optaplanner-promote](https://github.com/kiegroup/optaplanner/blob/master/Jenkinsfile.promote)
 * [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.deploy)
 * [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
@@ -244,14 +248,12 @@ See [Release Jenkinsfile](../Jenkinsfile.release) for the full list on parameter
 #### Default manual interventions
 
 One other specificity of the Release Pipeline are the manual interventions.  
-They are currently 3 of them:
+They are currently 2 of them:
 
-* **Get staging repository** (happens in main release pipeline)  
-  When asked, Staging repository can be retrieved from [JBoss Nexus repository](https://repository.jboss.org/nexus/). For that, the user needs to have specific rights or ask someone who has those rights.  
-  Once retrieved, you can put the url to staging repository into the input asking for it on Jenkins.
 * **Release staging repository to Maven Central** (happens in main release pipeline)
-  Same as getting staging repository, you need the rights to release the artifacts from the staging repository in [JBoss Nexus repository](https://repository.jboss.org/nexus/) to Maven Central, or ask someone with rights to do it.  
-  Once artifacts are released, just confirm it is released on Jenkins.
+  When asked, Staging repositories can be retrieved from [JBoss Nexus repository](https://repository.jboss.org/nexus/). You need the rights to release the artifacts.  
+  You should see some repositories named `kogito-public-XXX`. Select them all and click on `Release`.  
+  Once artifacts are released, just confirm it on Jenkins.
 * **Check kogito-apps artifacts are set to correct url** (happens in kogito-images-promote)
   Jenkins will ask you to review the logs of this job and check urls are correct in the different displayed `module.yaml` files.  
   Review them and confirm if everything is ok.
@@ -375,6 +377,8 @@ You will need to create single pipeline jobs and let them run once to update the
 * [create-release-branches](../Jenkinsfile.create-release-branches)
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
+* [optaplanner-deploy](https://github.com/kiegroup/optaplanner/blob/master/Jenkinsfile.deploy)
+* [optaplanner-promote](https://github.com/kiegroup/optaplanner/blob/master/Jenkinsfile.promote)
 * [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.deploy)
 * [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
@@ -383,6 +387,11 @@ You will need to create single pipeline jobs and let them run once to update the
 * [kogito-operator-promote](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.promote)
 
 **NOTE:** Deploy & Promote jobs of a specific repository can be ignored (and so job does not need to be created for testing), but you will need to check the corresponding `SKIP_` parameter.
+
+**IMPORTANT:**
+
+* When using `Optaplanner Promote` job, please also create a specific branch to be executed and comment the content of the `uploadDistribution` method.
+* When deploying artifacts for runtimes/apps/examples/optaplanner, make sure the branch you deploy is up to date to avoid any conflict with current deployed artifacts !
 
 #### Setup Jenkins creds for release testing
 

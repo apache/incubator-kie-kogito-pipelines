@@ -22,6 +22,7 @@ Apart from this repository, pipelines are also concerning those repositories:
 
 * [kogito-runtimes](https://github.com/kiegroup/kogito-runtimes)
 * [kogito-apps](https://github.com/kiegroup/kogito-apps)
+* [optaplanner](https://github.com/kiegroup/optaplanner)
 * [kogito-examples](https://github.com/kiegroup/kogito-examples)
 * [kogito-images](https://github.com/kiegroup/kogito-images)
 * [kogito-cloud-operator](https://github.com/kiegroup/kogito-cloud-operator)
