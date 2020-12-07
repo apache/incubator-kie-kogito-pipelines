@@ -457,7 +457,7 @@ pipeline {
                 if(isCreateReleaseBranchesOnly()){
                     sendNotification("Branches have been successfully created !!!!")
                 } else {
-                    sendNotification("Version ${getKogitoArtifactsVersion()} has been successfully released !!!!")
+                    sendSuccessfulReleaseNotification()
                 }
             }
         }
@@ -475,7 +475,7 @@ def buildJob(String jobName, List buildParams) {
     def jobUrl = job.getAbsoluteUrl()
     if(jobResult != 'SUCCESS'){
         echo "Sending a notification about an unsuccessful job build ${jobName}."
-        sendNotification("`${jobName}` finished with status `${jobResult}`.\nSee: ${jobUrl}\n\nPlease provide which action should be done (retry ? skip ? continue ? abort ?): ${env.BUILD_URL}input")
+        sendNotification("`${jobName}` finished with status `${jobResult}`.\nSee: ${jobUrl}\n\nPlease provide which action should be done (retry ? continue ? skip ? abort ?): ${env.BUILD_URL}input")
 
         // abort is handled automatically by the pipeline in the input
         def result = input message: "Job `${jobName}` is in status ${jobResult}. What do you want to do ?\nBeware that skipping a deploy job will not launch the promote part.", parameters: [choice(name: 'ACTION', choices: ['retry', 'continue', 'skip'].join('\n')), string(name: 'MESSAGE', description: 'If you want to add information to your action...')]
@@ -511,6 +511,15 @@ String getJobUrl(String jobName){
     echo "getJobUrl for ${jobName}"
     def job = getJob(jobName)
     return job ? job.getAbsoluteUrl() : ''
+}
+
+void sendSuccessfulReleaseNotification(){
+    String bodyMsg = "Release is successful with those jobs:\n"
+    JOBS.each {
+        bodyMsg += "- ${it.key}\n"
+    }
+    bodyMsg += "\nPlease look here: ${BUILD_URL} for more information"
+    sendNotification(bodyMsg)
 }
 
 void sendErrorNotification(){
