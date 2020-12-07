@@ -324,7 +324,7 @@ pipeline {
 
         stage('Promote Kogito Runtimes') {
             when {
-                expression { return !isCreateReleaseBranchesOnly() && isArtifactsPromote() }
+                expression { return !isCreateReleaseBranchesOnly() && getJobUrl(RUNTIMES_DEPLOY) }
             }
             steps {
                 script {
@@ -344,7 +344,7 @@ pipeline {
 
         stage('Promote OptaPlanner') {
             when {
-                expression { return !isCreateReleaseBranchesOnly() && isArtifactsPromote() }
+                expression { return !isCreateReleaseBranchesOnly() && getJobUrl(OPTAPLANNER_DEPLOY) }
             }
             steps {
                 script {
@@ -365,7 +365,7 @@ pipeline {
 
         stage('Promote Kogito Examples') {
             when {
-                expression { return !isCreateReleaseBranchesOnly() && isArtifactsPromote() }
+                expression { return !isCreateReleaseBranchesOnly() && getJobUrl(EXAMPLES_DEPLOY) }
             }
             steps {
                 script {
@@ -387,7 +387,7 @@ pipeline {
 
         stage('Promote Kogito Images') {
             when {
-                expression { return !isCreateReleaseBranchesOnly() && isImagesPromote() }
+                expression { return !isCreateReleaseBranchesOnly() && getJobUrl(IMAGES_DEPLOY) }
             }
             steps {
                 script {
@@ -409,7 +409,7 @@ pipeline {
 
         stage('Promote Kogito Operator') {
             when {
-                expression { return !isCreateReleaseBranchesOnly() && isOperatorPromote() }
+                expression { return !isCreateReleaseBranchesOnly() && getJobUrl(OPERATOR_DEPLOY) }
             }
             steps {
                 script {
@@ -471,16 +471,14 @@ def buildJob(String jobName, List buildParams) {
     echo "Build ${jobName} with params ${buildParams}"
     
     def job = build(job: "./${jobName}", wait: true, parameters: buildParams, propagate: false)
-    JOBS[jobName] = job
-
     def jobResult = job.getResult()
-    def jobUrl = getJobUrl(jobName)
+    def jobUrl = job.getAbsoluteUrl()
     if(jobResult != 'SUCCESS'){
         echo "Sending a notification about an unsuccessful job build ${jobName}."
-        sendNotification("`${jobName}` finished with status `${jobResult}`.\nSee: ${jobUrl}\n\nPlease provide which action should be done (retry ? skip ? abort ?): ${env.BUILD_URL}input")
+        sendNotification("`${jobName}` finished with status `${jobResult}`.\nSee: ${jobUrl}\n\nPlease provide which action should be done (retry ? skip ? continue ? abort ?): ${env.BUILD_URL}input")
 
         // abort is handled automatically by the pipeline in the input
-        def result = input message: "Job `${jobName}` is in status ${jobResult}. What do you want to do ?", parameters: [choice(name: 'ACTION', choices: ['retry', 'skip'].join('\n')), string(name: 'MESSAGE', description: 'If you want to add information to your action...')]
+        def result = input message: "Job `${jobName}` is in status ${jobResult}. What do you want to do ?\nBeware that skipping a deploy job will not launch the promote part.", parameters: [choice(name: 'ACTION', choices: ['retry', 'continue', 'skip'].join('\n')), string(name: 'MESSAGE', description: 'If you want to add information to your action...')]
         String resultStr = "Decision was made to ${result['ACTION']} the job `${jobName}`."
         if(result['MESSAGE'] != ''){
             resultStr += "Additional Information: `${result['MESSAGE']}`"
@@ -490,9 +488,19 @@ def buildJob(String jobName, List buildParams) {
         
         if(result['ACTION'] == 'retry') {
             return buildJob(jobName, buildParams)
+        } else if(result['ACTION'] == 'continue') {
+            registerJob(job)
         }
+        // If skip, do not register the job
+    } else {
+        registerJob(job)
     }
+
     return job
+}
+
+def registerJob(def job){
+    JOBS[jobName] = job
 }
 
 def getJob(String jobName){
