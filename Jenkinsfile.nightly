@@ -35,7 +35,7 @@ pipeline {
         string(name: 'GIT_AUTHOR', defaultValue: 'kiegroup', description: 'Which Git author repository ?')
 
         string(name: 'ARTIFACTS_REPOSITORY', defaultValue: '', description: 'Provide a repository for artifacts to be deployed to')
-        string(name: 'MAVEN_SETTINGS_CONFIG_FILE_ID', defaultValue: '2bd418aa-56fa-4403-9232-8c77a50fc528', description: 'Maven settings file to use for Maven config/deployment')
+        string(name: 'MAVEN_SETTINGS_CONFIG_FILE_ID', defaultValue: 'kogito_release_settings', description: 'Maven settings file to use for Maven config/deployment')
 
         booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip all tests')
 
