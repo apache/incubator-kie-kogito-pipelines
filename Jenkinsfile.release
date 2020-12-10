@@ -486,20 +486,21 @@ def buildJob(String jobName, List buildParams) {
         echo resultStr
         sendNotification(resultStr)
         
+        // If skip, do not do anything (no registration)
         if(result['ACTION'] == 'retry') {
             return buildJob(jobName, buildParams)
         } else if(result['ACTION'] == 'continue') {
-            registerJob(job)
+            registerJob(jobName, job)
         }
-        // If skip, do not register the job
     } else {
-        registerJob(job)
+        // Succeeded
+        registerJob(jobName, job)
     }
 
     return job
 }
 
-def registerJob(def job){
+def registerJob(String jobName, def job){
     JOBS[jobName] = job
 }
 
