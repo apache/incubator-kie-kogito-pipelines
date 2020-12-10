@@ -479,7 +479,7 @@ def buildJob(String jobName, List buildParams) {
 
         // abort is handled automatically by the pipeline in the input
         def result = input message: "Job `${jobName}` is in status ${jobResult}. What do you want to do ?\nBeware that skipping a deploy job will not launch the promote part.", parameters: [choice(name: 'ACTION', choices: ['retry', 'continue', 'skip'].join('\n')), string(name: 'MESSAGE', description: 'If you want to add information to your action...')]
-        String resultStr = "Decision was made to ${result['ACTION']} the job `${jobName}`."
+        String resultStr = "`${jobName}` failure => Decision was made to ${result['ACTION']}."
         if(result['MESSAGE'] != ''){
             resultStr += "Additional Information: `${result['MESSAGE']}`"
         }
