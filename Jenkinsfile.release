@@ -15,9 +15,10 @@ OPERATOR_PROMOTE = 'kogito-operator-promote'
 
 PIPELINE_REPOS=['kogito-pipelines']
 RUNTIMES_REPOS=['kogito-runtimes','kogito-apps','kogito-examples']
-OPTAPLANNER_REPOS =['optaplanner', 'optaweb-vehicle-routing', 'optaweb-employee-rostering']
+OPTAPLANNER_REPOS =['optaplanner', 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'optaplanner-quickstarts']
 IMAGES_REPOS=['kogito-images']
 OPERATOR_REPOS=['kogito-cloud-operator']
+NON_MASTER_BASES=['optaplanner-quickstarts':'development']
 
 // Map of executed jobs
 // See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
@@ -60,24 +61,36 @@ pipeline {
     }
 
     environment {
-        KOGITO_CI_EMAIL_TO = credentials('KOGITO_CI_EMAIL_TO')
-
+        //TODO
+        //KOGITO_CI_EMAIL_TO = credentials('KOGITO_CI_EMAIL_TO')
+        KOGITO_CI_EMAIL_TO = "adupliak@redhat.com"
         // RELEASE_BRANCH => will be set in Initialization phase
 
         // We use quay as temporary registry for testing between the jobs instead of Openshift, due to https://issues.redhat.com/browse/KOGITO-2219
 
+        //TODO
         IMAGE_REGISTRY_CREDENTIALS = 'release_kogito'
         IMAGE_REGISTRY = 'quay.io'
+
+//        IMAGE_REGISTRY_CREDENTIALS = 'EMPTY_REGISTRY_CREDENTIALS'
+//        IMAGE_REGISTRY = 'EMPTY_REGISTRY'
+
         IMAGE_NAMESPACE = 'kiegroup'
         // Use nightly for now with a different tag but we should find another solution
         IMAGE_NAME_SUFFIX = 'nightly'
 
         // Credentials
-        GIT_AUTHOR='kiegroup'
-        GIT_AUTHOR_CREDS_ID = 'kie-ci' // username/password creds
-        BOT_AUTHOR='bsig-gh-bot'
-        BOT_AUTHOR_CREDS_ID='bsig-gh-bot' // username/password creds
-        GITHUB_TOKEN_CREDS_ID='kie-ci2-token' // secret text creds
+//        GIT_AUTHOR='kiegroup'
+//        GIT_AUTHOR_CREDS_ID = 'kie-ci' // username/password creds
+//        BOT_AUTHOR='bsig-gh-bot'
+//        BOT_AUTHOR_CREDS_ID='bsig-gh-bot' // username/password creds
+//        GITHUB_TOKEN_CREDS_ID='kie-ci2-token' // secret text creds
+
+        GIT_AUTHOR='dupliaka'
+        GIT_AUTHOR_CREDS_ID ='dupliaka' // username/password creds
+        BOT_AUTHOR='dupliaka-gh-bot'
+        BOT_AUTHOR_CREDS_ID='dupliaka-gh-bot' // username/password creds
+        GITHUB_TOKEN_CREDS_ID='dupliaka_gh_token' // secret text creds
 
         // Maven Nexus release parameters
         DEFAULT_STAGING_REPOSITORY = 'https://repository.jboss.org/nexus/content/groups/kogito-public/'
@@ -157,6 +170,7 @@ pipeline {
                     addStringParam(buildParams, 'RELEASE_BRANCH', getOptaPlannerReleaseBranch())
                     addStringParam(buildParams, 'GIT_AUTHOR', getGitAuthor())
                     addStringParam(buildParams, 'GIT_AUTHOR_CREDS_ID', getGitAuthorCredsId())
+                    addStringParam(buildParams, 'NON_MASTER_BASES', getCustomBases())
 
                     def repositories = []
                     if(isArtifactsDeploy()) {
@@ -171,7 +185,7 @@ pipeline {
                 }
             }
         }
-
+        /*
         stage('Build & Deploy Kogito Runtimes') {
             when {
                 expression { return !isCreateReleaseBranchesOnly() && isArtifactsDeploy() }
@@ -283,12 +297,12 @@ pipeline {
             steps {
                 script {
                     sendStageNotification()
-                    
+
                     def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
                     addSkipTestsParam(buildParams)
                     addReleaseDeployGitParams(buildParams)
                     addImageBuildParams(buildParams, '', getKogitoOperatorTempTag(), true, false)
-                    
+
                     // For BDD tests
                     // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
                     if(isImagesDeploy()){
@@ -392,7 +406,7 @@ pipeline {
             steps {
                 script {
                     sendStageNotification()
-                    
+
                     def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(IMAGES_DEPLOY))
                     addImageBuildParams(buildParams, 'PROMOTE', getKogitoImagesVersion(), true, true)
@@ -425,6 +439,7 @@ pipeline {
                 }
             }
         }
+         */
 
         // To be enabled later
         // stage("Deploy docs") {
@@ -713,4 +728,7 @@ String getKogitoOperatorTempTag(){
 String removeVersionSuffixIfExist(String version){
     Integer[] versionSplit = util.parseVersion(version)
     return "${versionSplit[0]}.${versionSplit[1]}.${versionSplit[2]}"
+}
+String getCustomBases(){
+    return NON_MASTER_BASES.toMapString()[1..-2]
 }

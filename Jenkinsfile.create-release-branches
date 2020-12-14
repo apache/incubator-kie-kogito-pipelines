@@ -1,5 +1,7 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
+CUSTOM_BASES=[:]
+
 pipeline {
     agent {
         label 'kie-rhel7 && !master'
@@ -11,6 +13,11 @@ pipeline {
         
         string(name: 'GIT_AUTHOR', defaultValue: 'kiegroup', description: 'Which Git author repository ?')
         string(name: 'GIT_AUTHOR_CREDS_ID', defaultValue: 'kie-ci', description: 'Git author credentials id')
+
+        string(name: 'NON_MASTER_BASES', defaultValue: '', description: 'Comma-separated list of custom bases in format repo:base')
+    }
+    environment {
+        DEFAULT_BASE_BRANCH = 'master'
     }
 
     stages {
@@ -23,6 +30,7 @@ pipeline {
 
                     currentBuild.displayName = "${getReleaseBranch()}"
                     currentBuild.description = "${getRepositories()}"
+                    CUSTOM_BASES = getCustomBasesMap()
                 }
             }
         }
@@ -36,7 +44,7 @@ pipeline {
                         echo "Checkout repo ${repo}"
                         dir(repo){
                             deleteDir()
-                            checkout(githubscm.resolveRepository(repo, getGitAuthor(), 'master', false))
+                            checkout(githubscm.resolveRepository(repo, getGitAuthor(), getBaseBranch(repo), false))
                             sh 'git fetch origin'
                             String branchRemoteResult = sh(script: "git ls-remote origin ${getReleaseBranch()} | wc -l", returnStdout: true).trim()
                             if(Integer.parseInt(branchRemoteResult) > 0){
@@ -73,4 +81,17 @@ String getGitAuthorCredsId(){
 
 String[] getRepositories(){
     return params.REPOSITORIES.split(',')
+}
+
+String getBaseBranch(String repo) {
+    return (CUSTOM_BASES && CUSTOM_BASES.containsKey(repo))?CUSTOM_BASES.get(repo):env.DEFAULT_BASE_BRANCH;
+}
+
+def getCustomBasesMap() {
+    return params.NON_MASTER_BASES
+            .split(', ')
+            .collectEntries { entry ->
+                def pair = entry.split(':')
+                [(pair.first()): pair.last()]
+            }
 }
