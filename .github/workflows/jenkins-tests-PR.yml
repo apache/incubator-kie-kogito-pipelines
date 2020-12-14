@@ -6,7 +6,8 @@ name: Jenkins Pipeline Tests
 on:
   pull_request:
     paths: 
-    - '.jenkins/**'
+    - 'jenkins/**'
+    - 'Jenkinsfile.*'
 
 jobs:
   build:

@@ -25,7 +25,7 @@
       * [Start Release Pipeline with specific parameters](#start-release-pipeline-with-specific-parameters)
     * [Release pipeline Manual interventions](#release-pipeline-manual-interventions)
       * [Default manual interventions](#default-manual-interventions)
-      * [Retry/Skip/Abort manual intervention](#retryskipabort-manual-intervention)
+      * [Retry/Continue/Skip/Abort manual intervention](#retrycontinueskipabort-manual-intervention)
     * [After the Release Pipeline is finished](#after-the-release-pipeline-is-finished)
       * [Operator Crd/Csv files](#operator-crdcsv-files)
       * [Docs release](#docs-release)
@@ -258,16 +258,20 @@ They are currently 2 of them:
   Jenkins will ask you to review the logs of this job and check urls are correct in the different displayed `module.yaml` files.  
   Review them and confirm if everything is ok.
 
-#### Retry/Skip/Abort manual intervention
+#### Retry/Continue/Skip/Abort manual intervention
 
 For each called jobs, in case of failure, there is retry/skip/abort manual intervention.
 
 * **Retry**  
-  will completely relaunch the job, taking latest changes on the branch (test or groovy correction).
+  Will completely relaunch the job, taking latest changes on the branch (test or groovy correction).
+* **Continue**  
+  Will ignore the failing result, store the job reference and continue the pipeline.  
+  It can happen if you think the test failed because of random error but it is ok (can happen for BDD tests where trying again will pass the test, due to instability of Openshift ...).
 * **Skip**  
-  if you think the test failed because of random error but it is ok (can happen for BDD tests where trying again will pass the test, due to instability of Openshift ...).
+  Will skip the current failing job and do not store any reference to it.  
+  That means that if a deploy job fail, the corresponding promote job will not be executed.
 * **Abort**  
-  if any other problem.  
+  If any other problem.  
   As long as `promote` phase did not start, there will be no impact on the release.
 
 ### After the Release Pipeline is finished
