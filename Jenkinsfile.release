@@ -15,10 +15,9 @@ OPERATOR_PROMOTE = 'kogito-operator-promote'
 
 PIPELINE_REPOS=['kogito-pipelines']
 RUNTIMES_REPOS=['kogito-runtimes','kogito-apps','kogito-examples']
-OPTAPLANNER_REPOS =['optaplanner', 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'optaplanner-quickstarts']
+OPTAPLANNER_REPOS =['optaplanner', 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'optaplanner-quickstarts:development']
 IMAGES_REPOS=['kogito-images']
 OPERATOR_REPOS=['kogito-cloud-operator']
-NON_MASTER_BASES=['optaplanner-quickstarts':'development']
 
 // Map of executed jobs
 // See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
@@ -158,7 +157,6 @@ pipeline {
                     addStringParam(buildParams, 'RELEASE_BRANCH', getOptaPlannerReleaseBranch())
                     addStringParam(buildParams, 'GIT_AUTHOR', getGitAuthor())
                     addStringParam(buildParams, 'GIT_AUTHOR_CREDS_ID', getGitAuthorCredsId())
-                    addStringParam(buildParams, 'NON_MASTER_BASES', getCustomBases())
 
                     def repositories = []
                     if(isArtifactsDeploy()) {

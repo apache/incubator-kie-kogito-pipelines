@@ -8,13 +8,12 @@ pipeline {
     }
 
     parameters {
-        string(name: 'REPOSITORIES', defaultValue: '', description: 'Comma-separated list of repositories to update')
+        string(name: 'REPOSITORIES', defaultValue: '', description: 'Comma-separated list of repositories to update. Add branch name after semicolon to customize base')
         string(name: 'RELEASE_BRANCH', defaultValue: '', description: 'Release branch to create')
         
         string(name: 'GIT_AUTHOR', defaultValue: 'kiegroup', description: 'Which Git author repository ?')
         string(name: 'GIT_AUTHOR_CREDS_ID', defaultValue: 'kie-ci', description: 'Git author credentials id')
 
-        string(name: 'NON_MASTER_BASES', defaultValue: '', description: 'Comma-separated list of custom bases in format repo:base')
     }
     environment {
         DEFAULT_BASE_BRANCH = 'master'
@@ -30,7 +29,6 @@ pipeline {
 
                     currentBuild.displayName = "${getReleaseBranch()}"
                     currentBuild.description = "${getRepositories()}"
-                    CUSTOM_BASES = getCustomBasesMap()
                 }
             }
         }
@@ -44,7 +42,7 @@ pipeline {
                         echo "Checkout repo ${repo}"
                         dir(repo){
                             deleteDir()
-                            checkout(githubscm.resolveRepository(repo, getGitAuthor(), getBaseBranch(repo), false))
+                            checkout(githubscm.resolveRepository(getUrl(repo), getGitAuthor(), getBase(repo), false))
                             sh 'git fetch origin'
                             String branchRemoteResult = sh(script: "git ls-remote origin ${getReleaseBranch()} | wc -l", returnStdout: true).trim()
                             if(Integer.parseInt(branchRemoteResult) > 0){
@@ -83,15 +81,10 @@ String[] getRepositories(){
     return params.REPOSITORIES.split(',')
 }
 
-String getBaseBranch(String repo) {
-    return (CUSTOM_BASES && CUSTOM_BASES.containsKey(repo))?CUSTOM_BASES.get(repo):env.DEFAULT_BASE_BRANCH;
+String getUrl(String repo){
+    return repo.split(":")[0]
 }
 
-def getCustomBasesMap() {
-    return params.NON_MASTER_BASES
-            .split(', ')
-            .collectEntries { entry ->
-                def pair = entry.split(':')
-                [(pair.first()): pair.last()]
-            }
+String getBase(String repo){
+    return (repo.find(":"))?repo.split(":")[1]:env.DEFAULT_BASE_BRANCH
 }
