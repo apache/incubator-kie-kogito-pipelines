@@ -61,13 +61,13 @@ pipeline {
 
     environment {
         KOGITO_CI_EMAIL_TO = credentials('KOGITO_CI_EMAIL_TO')
+
         // RELEASE_BRANCH => will be set in Initialization phase
 
         // We use quay as temporary registry for testing between the jobs instead of Openshift, due to https://issues.redhat.com/browse/KOGITO-2219
 
-        IMAGE_REGISTRY_CREDENTIALS = 'EMPTY_REGISTRY_CREDENTIALS'
-        IMAGE_REGISTRY = 'EMPTY_REGISTRY'
-
+        IMAGE_REGISTRY_CREDENTIALS = 'release_kogito'
+        IMAGE_REGISTRY = 'quay.io'
         IMAGE_NAMESPACE = 'kiegroup'
         // Use nightly for now with a different tag but we should find another solution
         IMAGE_NAME_SUFFIX = 'nightly'
