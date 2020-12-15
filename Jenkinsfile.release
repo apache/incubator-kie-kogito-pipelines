@@ -715,6 +715,3 @@ String removeVersionSuffixIfExist(String version){
     Integer[] versionSplit = util.parseVersion(version)
     return "${versionSplit[0]}.${versionSplit[1]}.${versionSplit[2]}"
 }
-String getCustomBases(){
-    return NON_MASTER_BASES.toMapString()[1..-2]
-}
