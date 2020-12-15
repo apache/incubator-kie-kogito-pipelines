@@ -6,11 +6,15 @@ pipeline {
     }
 
     parameters {
-        string(name: 'REPOSITORIES', defaultValue: '', description: 'Comma-separated list of repositories to update')
+        string(name: 'REPOSITORIES', defaultValue: '', description: 'Comma-separated list of repository[:base branch] to update. The default base branch for every repository is the \'master\' branch.
         string(name: 'RELEASE_BRANCH', defaultValue: '', description: 'Release branch to create')
         
         string(name: 'GIT_AUTHOR', defaultValue: 'kiegroup', description: 'Which Git author repository ?')
         string(name: 'GIT_AUTHOR_CREDS_ID', defaultValue: 'kie-ci', description: 'Git author credentials id')
+
+    }
+    environment {
+        DEFAULT_BASE_BRANCH = 'master'
     }
 
     stages {
@@ -36,7 +40,7 @@ pipeline {
                         echo "Checkout repo ${repo}"
                         dir(repo){
                             deleteDir()
-                            checkout(githubscm.resolveRepository(repo, getGitAuthor(), 'master', false))
+                            checkout(githubscm.resolveRepository(getUrl(repo), getGitAuthor(), getBase(repo), false))
                             sh 'git fetch origin'
                             String branchRemoteResult = sh(script: "git ls-remote origin ${getReleaseBranch()} | wc -l", returnStdout: true).trim()
                             if(Integer.parseInt(branchRemoteResult) > 0){
@@ -73,4 +77,12 @@ String getGitAuthorCredsId(){
 
 String[] getRepositories(){
     return params.REPOSITORIES.split(',')
+}
+
+String getUrl(String repo){
+    return repo.split(":")[0]
+}
+
+String getBase(String repo){
+    return (repo.find(":"))?repo.split(":")[1]:env.DEFAULT_BASE_BRANCH
 }

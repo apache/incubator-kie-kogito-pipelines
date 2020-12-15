@@ -15,7 +15,7 @@ OPERATOR_PROMOTE = 'kogito-operator-promote'
 
 PIPELINE_REPOS=['kogito-pipelines']
 RUNTIMES_REPOS=['kogito-runtimes','kogito-apps','kogito-examples']
-OPTAPLANNER_REPOS =['optaplanner', 'optaweb-vehicle-routing', 'optaweb-employee-rostering']
+OPTAPLANNER_REPOS =['optaplanner', 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'optaplanner-quickstarts:development']
 IMAGES_REPOS=['kogito-images']
 OPERATOR_REPOS=['kogito-cloud-operator']
 
@@ -283,12 +283,12 @@ pipeline {
             steps {
                 script {
                     sendStageNotification()
-                    
+
                     def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
                     addSkipTestsParam(buildParams)
                     addReleaseDeployGitParams(buildParams)
                     addImageBuildParams(buildParams, '', getKogitoOperatorTempTag(), true, false)
-                    
+
                     // For BDD tests
                     // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
                     if(isImagesDeploy()){
@@ -392,7 +392,7 @@ pipeline {
             steps {
                 script {
                     sendStageNotification()
-                    
+
                     def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
                     addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(IMAGES_DEPLOY))
                     addImageBuildParams(buildParams, 'PROMOTE', getKogitoImagesVersion(), true, true)
@@ -425,6 +425,7 @@ pipeline {
                 }
             }
         }
+
 
         // To be enabled later
         // stage("Deploy docs") {
