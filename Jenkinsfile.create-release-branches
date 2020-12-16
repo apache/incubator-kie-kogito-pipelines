@@ -6,7 +6,7 @@ pipeline {
     }
 
     parameters {
-        string(name: 'REPOSITORIES', defaultValue: '', description: 'Comma-separated list of repository[:base branch] to update. The default base branch for every repository is the \'master\' branch.
+        string(name: 'REPOSITORIES', defaultValue: '', description: 'Comma-separated list of repository[:base branch] to update. The default base branch for every repository is the \'master\' branch.')
         string(name: 'RELEASE_BRANCH', defaultValue: '', description: 'Release branch to create')
         
         string(name: 'GIT_AUTHOR', defaultValue: 'kiegroup', description: 'Which Git author repository ?')
