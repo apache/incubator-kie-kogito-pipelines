@@ -145,6 +145,7 @@ pipeline {
                     echo "Call ${APPS_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addMavenSettingsParam(buildParams)
                     addArtifactsRepositoriesParam(buildParams)
                     
                     // images and operator deploy testing will use older working artifacts if that one fails

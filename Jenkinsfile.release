@@ -225,6 +225,8 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addMavenSettingsParam(buildParams)
+                    addMavenNexusReleaseParams(buildParams)
                     addReleaseDeployGitParams(buildParams)
                     addArtifactsRepositoriesParam(buildParams)
 
@@ -387,6 +389,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addDeployBuildUrlParam(buildParams, APPS_DEPLOY)
+                    addMavenSettingsParam(buildParams)
                     addReleasePromoteGitParams(buildParams)
                     addArtifactsRepositoriesParam(buildParams)
 
