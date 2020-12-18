@@ -31,6 +31,11 @@ pipeline {
         cron ('H 0 * * *')
     }
 
+    options {
+        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '30')
+        timeout(time: 720, unit: 'MINUTES')
+    }
+
     parameters {
         string(name: 'BUILD_BRANCH_NAME', defaultValue: '', description: 'Which branch to build? Set if you are not on a multibranch pipeline.')
         string(name: 'GIT_AUTHOR', defaultValue: 'kiegroup', description: 'Which Git author repository ?')

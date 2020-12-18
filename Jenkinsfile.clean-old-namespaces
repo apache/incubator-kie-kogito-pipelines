@@ -1,24 +1,28 @@
-pipeline{
-    agent {label 'kogito-cloud && !master'}
+pipeline {
+    agent { label 'kogito-cloud && !master' }
     triggers {
         cron('@midnight')
     }
-    environment {
-        OPENSHIFT_API = credentials("OPENSHIFT_API")
-        // OPENSHIFT_CREDS => Credentials to access the Openshift cluster. Use in `loginOpenshift()`
+    options {
+        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')
+        timeout(time: 120, unit: 'MINUTES')
     }
-    stages{
-        stage('Clean Old Namespaces'){
-            steps{
+    environment {
+        OPENSHIFT_API = credentials('OPENSHIFT_API')
+    // OPENSHIFT_CREDS => Credentials to access the Openshift cluster. Use in `loginOpenshift()`
+    }
+    stages {
+        stage('Clean Old Namespaces') {
+            steps {
                 loginOpenshift()
-                sh "tools/clean-old-namespaces.sh" 
+                sh 'tools/clean-old-namespaces.sh'
             }
         }
     }
 }
 
-void loginOpenshift(){
-    withCredentials([usernamePassword(credentialsId: "OPENSHIFT_CREDS", usernameVariable: 'OC_USER', passwordVariable: 'OC_PWD')]){
+void loginOpenshift() {
+    withCredentials([usernamePassword(credentialsId: 'OPENSHIFT_CREDS', usernameVariable: 'OC_USER', passwordVariable: 'OC_PWD')]) {
         sh "oc login --username=${OC_USER} --password=${OC_PWD} --server=${OPENSHIFT_API} --insecure-skip-tls-verify"
     }
 }
