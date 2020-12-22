@@ -69,6 +69,10 @@ pipeline {
             ).trim()}"""
 
         BRANCH_FOR_LATEST='master'
+
+        // Credentials for PR creation
+        BOT_AUTHOR='bsig-gh-bot'
+        BOT_AUTHOR_CREDS_ID='bsig-gh-bot' // username/password creds
     }
 
     stages {
@@ -201,6 +205,10 @@ pipeline {
                     addExamplesParam(buildParams)
                     addCloudRepositoriesParam(buildParams)
 
+                    // Ask to create the PR with changes occuring in this
+                    addDeployGitParams(buildParams)
+                    addBooleanParam(buildParams, 'CREATE_CHANGES_PR', true)
+
                     buildJob(IMAGES_DEPLOY, buildParams, false)
                 }
             }
@@ -330,10 +338,12 @@ void sendPipelineErrorNotification(){
         bodyMsg += "\nFailed stages: \n- "
         bodyMsg += FAILED_STAGES.join("\n- ")
     }
+    bodyMsg += "\n"
     if(UNSTABLE_STAGES.size() > 0){
         bodyMsg += "\nUnstable stages: \n- "
         bodyMsg += UNSTABLE_STAGES.join("\n- ")
     }
+    bodyMsg += "\n"
     bodyMsg += "\nPlease look here: ${BUILD_URL}"
     emailext body: bodyMsg, subject: "[${getBuildBranch()}][d] Full Pipeline",
                 to: env.KOGITO_CI_EMAIL_TO
@@ -369,6 +379,11 @@ void addCloudRepositoriesParam(buildParams){
 void addExamplesParam(buildParams){
     addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
     addStringParam(buildParams, 'EXAMPLES_REF', getBuildBranch())
+}
+
+void addDeployGitParams(buildParams){
+    addStringParam(buildParams, 'GIT_AUTHOR_BOT', env.BOT_AUTHOR)
+    addStringParam(buildParams, 'BOT_CREDENTIALS_ID', env.BOT_AUTHOR_CREDS_ID)
 }
 
 void addImageBuildParams(List buildParams = [], String paramsPrefix = '', String tag, boolean isRegistryIncluded = false, boolean isFinalImage = false){
