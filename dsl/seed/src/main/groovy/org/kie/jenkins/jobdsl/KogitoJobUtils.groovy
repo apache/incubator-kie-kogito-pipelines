@@ -36,11 +36,9 @@ class KogitoJobUtils {
                     '.*\\.md',
                     '.*\\.adoc',
                     '.*\\.txt',
-                    '\\.github/.*',
-                    '\\.ci/jenkins/.*',
                     'docsimg/.*',
                 ],
-                ignore_for_labels: [ 'skip-ci', 'dsl-test' ],
+                ignore_for_labels: [ 'skip-ci' ],
             ]
         ]
     }

@@ -307,7 +307,19 @@ class KogitoJobTemplate {
                 jobParams.jenkinsfile = jobCfg.jenkinsfile
             }
 
-            jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
+            // TODO remove after testing
+            jobParams.pr.putAll([
+                run_only_for_labels: ['dsl-test'],
+                run_only_for_branches: [ jobParams.git.repository == 'optaplanner-quickstarts' ? 'development' : 'main' ],
+                authorized_users: [ 'kiegroup' ],
+                authorized_groups: [ 'kiegroup' ],
+            ])
+            // TODO remove after testing
+
+            // TODO set back after testing
+            // jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
+            jobParams.git.project_url = "https://github.com/kiegroup/${jobParams.git.repository}/"
+            // TODO set back after testing
 
             boolean downstream = jobCfg.repository && jobCfg.repository != jobParams.git.repository
 
@@ -338,10 +350,11 @@ class KogitoJobTemplate {
             if (useBuildChain) {
                 // Buildchain uses centralized configuration for Jenkinsfile.buildchain to checkout
                 // Overrides configuration already done
-                String buildChainCheckoutBranch = Utils.getSeedBranch(script)
+                String buildChainCheckoutBranch = 'optaplanner_pr_jenkins_label_upstream'
+                // TODO Test -> to change back
                 jobParams.pr.checkout_branch = buildChainCheckoutBranch
                 jobParams.git.author = Utils.getSeedAuthor(script)
-                jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository ?: jobParams.git.repository}")
+                jobParams.env.put('BUILDCHAIN_PROJECT', "kiegroup/${jobCfg.repository ?: jobParams.git.repository}")
                 jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
                 jobParams.env.put('BUILDCHAIN_CONFIG_REPO', Utils.getSeedRepo(script))
                 jobParams.env.put('BUILDCHAIN_CONFIG_AUTHOR', Utils.getSeedAuthor(script))

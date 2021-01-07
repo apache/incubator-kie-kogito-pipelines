@@ -13,7 +13,7 @@ ecosystem:
     - kie-tools.*
 git:
   branches:
-  - name: test-setup
+  - name: optaplanner_pr_jenkins_label_upstream
   main_branch:
     default: main
 seed:
@@ -23,7 +23,7 @@ seed:
       author:
         name: radtriste
         credentials_id: radtriste
-      branch: test-setup
+      branch: optaplanner_pr_jenkins_label_upstream
     path: dsl/config/branch.yaml
   jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
 jenkins:
