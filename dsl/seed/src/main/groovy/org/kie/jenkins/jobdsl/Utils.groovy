@@ -119,8 +119,10 @@ class Utils {
     static String getSeedBranch(def script) {
         return getBindingValue(script, 'SEED_BRANCH')
     }
-    
+
     static boolean isNewFolderStructure(def script) {
+        script.println("Got binding value NEW_FOLDER_STRUCTURE=${getBindingValue(script, 'NEW_FOLDER_STRUCTURE')}")
+        script.println("Got binding value NEW_FOLDER_STRUCTURE=${getBindingValue(script, 'NEW_FOLDER_STRUCTURE').toBoolean()}")
         return getBindingValue(script, 'NEW_FOLDER_STRUCTURE').toBoolean()
     }
 

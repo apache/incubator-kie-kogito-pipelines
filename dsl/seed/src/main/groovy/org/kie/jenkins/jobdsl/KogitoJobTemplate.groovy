@@ -302,7 +302,19 @@ class KogitoJobTemplate {
                 jobParams.jenkinsfile = jobCfg.jenkinsfile
             }
 
-            jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
+            // TODO remove after testing
+            jobParams.pr.putAll([
+                run_only_for_labels: ['dsl-test'],
+                run_only_for_branches: [ jobParams.git.repository == 'optaplanner-quickstarts' ? 'development' : 'main' ],
+                authorized_users: [ 'kiegroup' ],
+                authorized_groups: [ 'kiegroup' ],
+            ])
+            // TODO remove after testing
+
+            // TODO set back after testing
+            // jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
+            jobParams.git.project_url = "https://github.com/kiegroup/${jobParams.git.repository}/"
+            // TODO set back after testing
 
             boolean downstream = jobCfg.repository && jobCfg.repository != jobParams.git.repository
 
@@ -333,9 +345,10 @@ class KogitoJobTemplate {
             if (useBuildChain) {
                 // Buildchain uses centralized configuration for Jenkinsfile.buildchain to checkout
                 // Overrides configuration already done
-                String buildChainCheckoutBranch = VersionUtils.getProjectTargetBranch(KogitoConstants.KOGITO_PIPELINES_REPOSITORY, jobParams.git.branch, jobParams.git.repository)
+                String buildChainCheckoutBranch = 'kogito-6962'
+                // TODO Test -> to change back
                 jobParams.pr.checkout_branch = buildChainCheckoutBranch
-                jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository ?: jobParams.git.repository}")
+                jobParams.env.put('BUILDCHAIN_PROJECT', "kiegroup/${jobCfg.repository ?: jobParams.git.repository}")
                 jobParams.env.put('BUILDCHAIN_TYPE', 'pr')
                 jobParams.env.put('BUILDCHAIN_CONFIG_BRANCH', buildChainCheckoutBranch)
                 jobParams.env.put('NOTIFICATION_JOB_NAME', "(${testTypeId}) - ${jobCfg.repository ?: jobParams.git.repository}")

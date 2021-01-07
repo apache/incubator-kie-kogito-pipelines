@@ -64,7 +64,7 @@ class TestJenkinsfileBuildchain extends SingleFileDeclarativePipelineTest {
         assertEnvironmentVariableEqual('BUILD_MVN_OPTS_CURRENT', '-Prun-code-coverage')
         assertConfigFileCall('kogito_pr_settings', 'MAVEN_SETTINGS_FILE')
         assertWithCredentialsStringCall('kie-ci1-token', 'GITHUB_TOKEN')
-        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
+        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
         assertJunitCall('**/target/surefire-reports/**/*.xml,**/target/failsafe-reports/**/*.xml')
         assertArchiveArtifactsCall('**/cypress/screenshots/**,**/cypress/videos/**')
         assertTestCallstackDoesNotContain('util.archiveConsoleLog')
@@ -82,7 +82,7 @@ class TestJenkinsfileBuildchain extends SingleFileDeclarativePipelineTest {
 
         runJenkinsfileAndAssertSuccess()
 
-        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -sp=newgroup/new-project-name -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
+        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -sp=newgroup/new-project-name -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
         assertDirCall('bc/kiegroup_new_project_name/new-project-name')
     }
 
@@ -129,13 +129,13 @@ class TestJenkinsfileBuildchain extends SingleFileDeclarativePipelineTest {
         runJenkinsfileAndAssertSuccess()
 
         assertConfigFileCall('kogito_pr_settings', 'MAVEN_SETTINGS_FILE')
-        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
+        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
     }
 
     @Test
     void pr_build_chain_type_failure() throws Exception {
         binding.getVariable('env').BUILDCHAIN_TYPE = 'pr'
-        helper.addShMock("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'", '', 1)
+        helper.addShMock("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'", '', 1)
         thrown.expect(Exception)
 
         runJenkinsfileAndAssertFailure()
@@ -154,7 +154,7 @@ class TestJenkinsfileBuildchain extends SingleFileDeclarativePipelineTest {
         runJenkinsfileAndAssertSuccess()
 
         assertConfigFileCall('kogito_release_settings', 'MAVEN_SETTINGS_FILE')
-        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build branch -sp=newgroup/new-project-name -p=newgroup/new-project-name -b=branch_to_test -g=owner --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
+        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build branch -sp=newgroup/new-project-name -p=newgroup/new-project-name -b=branch_to_test -g=owner --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
         assertSonarCloudDisabled()
         assertNoNotification()
     }
@@ -166,7 +166,7 @@ class TestJenkinsfileBuildchain extends SingleFileDeclarativePipelineTest {
         binding.getVariable('env').GIT_AUTHOR = 'owner'
         binding.getVariable('env').BUILDCHAIN_PROJECT = 'newgroup/new-project-name'
         mockSharedLibVarsCall('util', 'getProjectGroupName', { [ 'newgroup', 'new-project-name'] })
-        helper.addShMock("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build branch -sp=newgroup/new-project-name -p=newgroup/new-project-name -b=branch_to_test -g=owner --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'", '', 1)
+        helper.addShMock("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build branch -sp=newgroup/new-project-name -p=newgroup/new-project-name -b=branch_to_test -g=owner --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'", '', 1)
         thrown.expect(Exception)
 
         runJenkinsfileAndAssertFailure()
@@ -181,14 +181,14 @@ class TestJenkinsfileBuildchain extends SingleFileDeclarativePipelineTest {
         runJenkinsfileAndAssertSuccess()
 
         assertConfigFileCall('kogito_pr_settings', 'MAVEN_SETTINGS_FILE')
-        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build fdb -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
+        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build fdb -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
         assertSonarCloudDisabled()
     }
 
     @Test
     void fdb_build_chain_type_failure() throws Exception {
         binding.getVariable('env').BUILDCHAIN_TYPE = 'fdb'
-        helper.addShMock("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build fdb -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'", '', 1)
+        helper.addShMock("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build fdb -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'", '', 1)
         thrown.expect(Exception)
 
         runJenkinsfileAndAssertFailure()
@@ -201,7 +201,7 @@ class TestJenkinsfileBuildchain extends SingleFileDeclarativePipelineTest {
         binding.getVariable('env').QUARKUS_BRANCH = '999.9'
 
         runJenkinsfileAndAssertSuccess()
-        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-quarkus-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
+        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-quarkus-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
     }
 
     @Test
@@ -210,7 +210,7 @@ class TestJenkinsfileBuildchain extends SingleFileDeclarativePipelineTest {
 
         runJenkinsfileAndAssertSuccess()
 
-        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
+        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
         assertEnvironmentVariableEqual('BUILD_MVN_OPTS_CURRENT', '-Prun-code-coverage -Dquarkus.native.container-build=true -Dnative -Pnative')
     }
 
@@ -221,7 +221,7 @@ class TestJenkinsfileBuildchain extends SingleFileDeclarativePipelineTest {
 
         runJenkinsfileAndAssertSuccess()
 
-        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
+        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
         assertEnvironmentVariableEqual('BUILD_MVN_OPTS_CURRENT', '-Prun-code-coverage -Dquarkus.native.container-build=true -Dnative -Pnative -Dquarkus.native.builder-image=builder_image_env')
     }
 
@@ -231,7 +231,7 @@ class TestJenkinsfileBuildchain extends SingleFileDeclarativePipelineTest {
 
         runJenkinsfileAndAssertSuccess()
 
-        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
+        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
         assertEnvironmentVariableEqual('BUILD_MVN_OPTS_CURRENT', '-Prun-code-coverage -DskipTests')
     }
 
@@ -241,7 +241,7 @@ class TestJenkinsfileBuildchain extends SingleFileDeclarativePipelineTest {
 
         runJenkinsfileAndAssertSuccess()
 
-        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
+        assertShCall("build-chain-action -token=GITHUB_TOKEN -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/\${BRANCH:main}/.ci/pull-request-config.yaml' -folder='bc' build pr -url=ghprbPullLink --skipParallelCheckout -cct '(^mvn .*)||\$1 -s MAVEN_SETTINGS_FILE -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'")
         assertEnvironmentVariableEqual('BUILD_MVN_OPTS_CURRENT', '-Prun-code-coverage -DskipITs')
     }
 

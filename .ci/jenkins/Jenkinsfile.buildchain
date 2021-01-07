@@ -9,7 +9,7 @@ buildChainType = env.BUILDCHAIN_PR_TYPE?.trim() ?: 'pr'
 buildChainProject = env.BUILDCHAIN_PROJECT?.trim()
 settingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kogito_pr_settings' : 'kogito_release_settings'
 
-disableSonarCloudAnalysis = env.DISABLE_SONARCLOUD ? env.DISABLE_SONARCLOUD.toBoolean() : false
+enableSonarCloudAnalysis = env.ENABLE_SONARCLOUD ? env.ENABLE_SONARCLOUD.toBoolean() : false
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
 native_build = env.NATIVE ? env.NATIVE.toBoolean() : false
 native_builder_image = env.NATIVE_BUILDER_IMAGE ?: ''
@@ -90,7 +90,7 @@ pipeline {
 
                     configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
                         withCredentials([string(credentialsId: 'kie-ci1-token', variable: 'GITHUB_TOKEN')]) {
-                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/${buildChainConfigBranch}/.ci/${buildChainDefinitionFile}' -folder='bc' build ${buildChainAction} ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'"
+                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/radtriste/kogito-pipelines/${buildChainConfigBranch}/.ci/${buildChainDefinitionFile}' -folder='bc' build ${buildChainAction} ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'"
                         }
                     }
                 }
@@ -109,7 +109,7 @@ pipeline {
         }
         stage('Sonar analysis') {
             when {
-                expression { return isSonarCloudAnalysis() }
+                expression { return enableSonarCloudAnalysis }
             }
             tools {
                 jdk jdkTool
@@ -163,19 +163,9 @@ boolean isBranchBuildChainType() {
     return buildChainType == 'branch'
 }
 
-boolean isSonarCloudAnalysis() {
-    if (disableSonarCloudAnalysis) {
-        return false
-    }
-    if (isPRBuildChainType()) {
-        return !downstreamBuild
-    }
-    return false
-}
-
 String getBuildMavenOptsCurrent() {
     List opts_current = env.BUILD_MVN_OPTS_CURRENT ? [ env.BUILD_MVN_OPTS_CURRENT ] : []
-    isSonarCloudAnalysis() ? opts_current.add('-Prun-code-coverage') : null
+    enableSonarCloudAnalysis ? opts_current.add('-Prun-code-coverage') : null
     native_build ? opts_current.add('-Dquarkus.native.container-build=true -Dnative -Pnative') : null
     native_builder_image ? opts_current.add("-Dquarkus.native.builder-image=${native_builder_image}") : null
     skipTests ? opts_current.add('-DskipTests') : null
