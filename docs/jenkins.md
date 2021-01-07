@@ -186,7 +186,7 @@ To generate the jobs you need for testing, you will need to create the main seed
 
 * **You should never used the production seed job for testing as you may overwrite some production configuration by doing so ...**
 
-* **If you plan to test nightly and/or release pipelines, you need to have a special branch on a fork with your own [branch seed configuration](../dsl/seed/config/branch.yaml), because you will need specific Jenkins credentials (Git, Registry), Maven repository (see annex), Container registry namespace, so that you are not altering the production artifacts/images. An example of a branch with a special configuration can be found here: https://github.com/radtriste/kogito-pipelines/tree/test-setup**
+* **If you plan to test nightly and/or release pipelines, you need to have a special branch on a fork with your own [branch seed configuration](../dsl/seed/config/branch.yaml), because you will need specific Jenkins credentials (Git, Registry), Maven repository (see annex), Container registry namespace, so that you are not altering the production artifacts/images. An example of a branch with a special configuration can be found here: https://github.com/radtriste/kogito-pipelines/tree/test_seed_trigger**
 
 #### Generate only specific repositories
 

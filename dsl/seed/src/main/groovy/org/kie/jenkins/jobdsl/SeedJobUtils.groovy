@@ -1,11 +1,6 @@
 package org.kie.jenkins.jobdsl
 
-import groovy.json.JsonOutput
-
-import org.kie.jenkins.jobdsl.templates.KogitoJobTemplate
-import org.kie.jenkins.jobdsl.KogitoConstants
 import org.kie.jenkins.jobdsl.Utils
-import org.kie.jenkins.jobdsl.VersionUtils
 
 /**
 * Seed Job utils
