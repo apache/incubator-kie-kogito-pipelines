@@ -30,8 +30,8 @@ pipelineJob('0-seed-job') {
         stringParam('CUSTOM_AUTHOR', '', 'To generate only some custom repos... Define from from which author the custom repositories are checked out. If none given, then `SEED_AUTHOR` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
         stringParam('CUSTOM_MAIN_BRANCH', '', 'To generate only some custom repos... If no main_branch is given, then DSL config `git.main_branch` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
 
-        stringParam('SEED_AUTHOR', 'kiegroup', 'If different from the default')
-        stringParam('SEED_BRANCH', 'main', 'If different from the default')
+        stringParam('SEED_AUTHOR', 'radtriste', 'If different from the default')
+        stringParam('SEED_BRANCH', 'test-setup', 'If different from the default')
 
         booleanParam('FORCE_REBUILD', false, 'Default, the job will scan for modified files and do the update in case some files are modified. In case you want to force the DSL generation')
     }
