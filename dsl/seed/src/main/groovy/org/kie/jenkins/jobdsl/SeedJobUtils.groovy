@@ -46,7 +46,7 @@ class SeedJobUtils {
                     scm {
                         git {
                             remote {
-                                url("https://github.com/${gitAuthor}/${repository}.git")
+                                url("https://github.com/kiegroup/${repository}.git")
                                 credentials('kie-ci')
                             }
                             branch(gitBranch)
@@ -64,17 +64,17 @@ class SeedJobUtils {
             }
 
             properties {
-                githubProjectUrl("https://github.com/${gitAuthor}/${repository}/")
+                githubProjectUrl("https://github.com/kiegroup/${repository}/")
 
-                pipelineTriggers {
-                    triggers {
-                        gitHubPushTrigger()
-                    }
-                }
+                // pipelineTriggers {
+                //     triggers {
+                //         gitHubPushTrigger()
+                //     }
+                // }
             }
         }
         // Trigger jobs need to be executed once for the hook to work ...
-        jenkinsScript.queue(jobName)
+        // jenkinsScript.queue(jobName)
         return job
     }
 }

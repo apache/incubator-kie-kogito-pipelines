@@ -48,8 +48,8 @@ pipelineJob('0-seed-job') {
         stringParam('CUSTOM_AUTHOR', '', 'To generate only some custom repos... Define from from which author the custom repositories are checked out. If none given, then `SEED_AUTHOR` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
         stringParam('CUSTOM_MAIN_BRANCH', '', 'To generate only some custom repos... If no main_branch is given, then DSL config `git.main_branch` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
 
-        stringParam('SEED_AUTHOR', getSeedAuthor(), 'If different from the default')
-        stringParam('SEED_BRANCH', getSeedBranch(), 'If different from the default')
+        stringParam('SEED_AUTHOR', 'radtriste', 'If different from the default')
+        stringParam('SEED_BRANCH', 'kogito-7110', 'If different from the default')
     }
 
     definition {
