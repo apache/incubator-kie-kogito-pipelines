@@ -5,6 +5,55 @@ import org.kie.jenkins.jobdsl.Utils
 
 JENKINSFILE_PATH = '.ci/jenkins'
 
+////////////////////////////
+// Test purpose
+// TODO to remove
+// Map getMultijobPRConfig(Folder jobFolder) {
+//     return [
+//         parallel: true,
+//         buildchain: true,
+//         jobs : [
+//             [
+//                 id: 'kogito-runtimes',
+//                 primary: true,
+//                 env : [
+//                     // Sonarcloud analysis only on main branch
+//                     // As we have only Community edition
+//                     ENABLE_SONARCLOUD: Utils.isMainBranch(this),
+//                 ]
+//             ], [
+//                 id: 'kogito-apps',
+//                 dependsOn: 'kogito-runtimes',
+//                 repository: 'kogito-apps',
+//                 env : [
+//                     ADDITIONAL_TIMEOUT: jobFolder.isNative() || jobFolder.isMandrel() ? '360' : '210',
+//                 ]
+//             ], [
+//                 id: 'kogito-examples',
+//                 dependsOn: 'kogito-runtimes',
+//                 repository: 'kogito-examples'
+//             ]
+//         ],
+//     ]
+// }
+
+// // PR checks
+// KogitoJobUtils.createAllEnvsPerRepoPRJobs(this) { jobFolder -> getMultijobPRConfig(jobFolder) }
+
+// // Nightly jobs
+// KogitoJobUtils.createAllJobsForMavenArtifactsRepository(this)
+
+// KogitoJobUtils.applyInAllCloudNightlyFolders(this) { jobFolder ->
+//     setupBuildAndTestJob(jobFolder)
+// }
+// KogitoJobUtils.createAllEnvsCloudPromoteImagesJobs(this)
+
+// void setupBuildAndTestJob(Folder jobFolder) {
+//     println 'hello'
+// }
+//////////////////////////
+
+
 // PRs
 setupKogitoRuntimesBDDPrJob()
 
