@@ -13,7 +13,7 @@ ecosystem:
     - kie-tools.*
 git:
   branches:
-  - name: test-setup
+  - name: test-pr
   main_branch:
     default: main
 seed:
@@ -23,7 +23,7 @@ seed:
       author:
         name: radtriste
         credentials_id: radtriste
-      branch: test-setup
+      branch: test-pr
     path: dsl/config/branch.yaml
   jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
 jenkins:
