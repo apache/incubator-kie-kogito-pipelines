@@ -286,7 +286,7 @@ pipeline {
                     addStringParam(buildParams, 'KOGITO_ARTIFACTS_VERSION', getKogitoArtifactsVersion())
                     addSkipTestsParam(buildParams)
                     addReleaseDeployGitParams(buildParams)
-                    addImageBuildParams(buildParams, '', getKogitoImagesTempTag(), true, false)
+                    addImageBuildParams(buildParams, getKogitoImagesTempTag(), '', true, false)
                     addExamplesParam(buildParams)
                     addCloudRepositoriesParam(buildParams)
 
@@ -306,7 +306,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
                     addSkipTestsParam(buildParams)
                     addReleaseDeployGitParams(buildParams)
-                    addImageBuildParams(buildParams, '', getKogitoOperatorTempTag(), true, false)
+                    addImageBuildParams(buildParams, getKogitoOperatorTempTag(), '', true, false)
 
                     // For BDD tests
                     // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
@@ -429,7 +429,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
                     addDeployBuildUrlParam(buildParams, IMAGES_DEPLOY)
-                    addImageBuildParams(buildParams, 'PROMOTE', getKogitoImagesVersion(), true, true)
+                    addImageBuildParams(buildParams, getKogitoImagesVersion(), 'PROMOTE', true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
                     addReleasePromoteGitParams(buildParams)
 
@@ -451,7 +451,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
                     addDeployBuildUrlParam(buildParams, OPERATOR_DEPLOY)
-                    addImageBuildParams(buildParams, 'PROMOTE', getKogitoOperatorVersion(), true, true)
+                    addImageBuildParams(buildParams, getKogitoOperatorVersion(), 'PROMOTE', true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
                     addReleasePromoteGitParams(buildParams)
 
@@ -648,7 +648,7 @@ void addReleasePromoteGitParams(buildParams){
     addStringParam(buildParams, 'GITHUB_TOKEN_CREDS_ID', env.GITHUB_TOKEN_CREDS_ID)
 }
 
-void addImageBuildParams(List buildParams = [], String paramsPrefix = '', String tag, boolean isRegistryIncluded = false, boolean isFinalImage = false){
+void addImageBuildParams(List buildParams, String tag, String paramsPrefix = '', boolean isRegistryIncluded = false, boolean isFinalImage = false){
     if (!isFinalImage && params.USE_TEMP_OPENSHIFT_REGISTRY) {
         addBooleanParam(buildParams, constructKey(paramsPrefix, 'IMAGE_USE_OPENSHIFT_REGISTRY'), true)
     } else if(isRegistryIncluded) {
@@ -671,7 +671,7 @@ void addBooleanParam(List params, String key, boolean value){
 }
 
 String constructKey(String prefix, String paramId){
-    return prefix == null || prefix == '' ? paramId : "${prefix}_${paramId}"
+    return prefix ? "${prefix}_${paramId}" : paramId
 }
 
 String getDisplayName(branch = ''){
