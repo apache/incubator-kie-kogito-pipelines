@@ -228,6 +228,7 @@ pipeline {
                     addMavenSettingsParam(buildParams)
                     addMavenNexusReleaseParams(buildParams)
                     addReleaseDeployGitParams(buildParams)
+                    addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
                     addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(APPS_DEPLOY, buildParams)
@@ -390,6 +391,7 @@ pipeline {
                     sendStageNotification()
 
                     def buildParams = getDefaultBuildParams()
+                    addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
                     addDeployBuildUrlParam(buildParams, APPS_DEPLOY)
                     addMavenSettingsParam(buildParams)
                     addReleasePromoteGitParams(buildParams)
