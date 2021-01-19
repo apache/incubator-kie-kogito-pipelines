@@ -201,7 +201,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
-                    addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
+                    addImageBuildParams(buildParams, env.TEMP_TAG, '', true, false)
                     addExamplesParam(buildParams)
                     addCloudRepositoriesParam(buildParams)
 
@@ -228,7 +228,7 @@ pipeline {
                     echo "Call ${OPERATOR_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
-                    addImageBuildParams(buildParams, '', env.TEMP_TAG, true, false)
+                    addImageBuildParams(buildParams, env.TEMP_TAG, '', true, false)
 
                     // For BDD tests
                     addBooleanParam(buildParams, 'KOGITO_IMAGES_IN_OPENSHIFT_REGISTRY', params.USE_TEMP_OPENSHIFT_REGISTRY)
@@ -258,8 +258,8 @@ pipeline {
                     echo "Call ${IMAGES_PROMOTE} job"
 
                     def buildParams = getDefaultBuildParams()
-                    addImageBuildParams(buildParams, 'BASE', env.TEMP_TAG, true, false)
-                    addImageBuildParams(buildParams, 'PROMOTE', env.NIGHTLY_TAG, true, true)
+                    addImageBuildParams(buildParams, env.TEMP_TAG, 'BASE', true, false)
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, 'PROMOTE', true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
 
                     buildJob(IMAGES_PROMOTE, buildParams)
@@ -281,8 +281,8 @@ pipeline {
                     echo "Call ${OPERATOR_PROMOTE} job"
 
                     def buildParams = getDefaultBuildParams()
-                    addImageBuildParams(buildParams, 'BASE', env.TEMP_TAG, true, false)
-                    addImageBuildParams(buildParams, 'PROMOTE', env.NIGHTLY_TAG, true, true)
+                    addImageBuildParams(buildParams, env.TEMP_TAG, 'BASE', true, false)
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, 'PROMOTE', true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
 
                     buildJob(OPERATOR_PROMOTE, buildParams)
@@ -386,7 +386,7 @@ void addDeployGitParams(buildParams){
     addStringParam(buildParams, 'BOT_CREDENTIALS_ID', env.BOT_AUTHOR_CREDS_ID)
 }
 
-void addImageBuildParams(List buildParams = [], String paramsPrefix = '', String tag, boolean isRegistryIncluded = false, boolean isFinalImage = false){
+void addImageBuildParams(List buildParams, String tag, String paramsPrefix = '', boolean isRegistryIncluded = false, boolean isFinalImage = false){
     if (!isFinalImage && params.USE_TEMP_OPENSHIFT_REGISTRY) {
         addBooleanParam(buildParams, constructKey(paramsPrefix, 'IMAGE_USE_OPENSHIFT_REGISTRY'), true)
     } else if(isRegistryIncluded) {
@@ -407,7 +407,7 @@ void addBooleanParam(List params, String key, boolean value){
 }
 
 String constructKey(String prefix, String paramId){
-    return prefix == null || prefix == '' ? paramId : "${prefix}_${paramId}"
+    return prefix ? "${prefix}_${paramId}" : paramId
 }
 
 String getBuildBranch(){
