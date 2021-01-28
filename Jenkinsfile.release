@@ -263,7 +263,7 @@ pipeline {
             }
             steps {
                 script {
-                    sendNotification("All artifacts have been staged. You can find them here: ${getStagingRepository}")
+                    sendNotification("All artifacts have been staged. You can find them here: ${getStagingRepository()}")
 
                     String jobUrl = getJobUrl(EXAMPLES_DEPLOY)
                     def deployProps = jobUrl ? readDeployProperties(jobUrl) : [:]
