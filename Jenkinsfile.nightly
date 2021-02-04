@@ -61,6 +61,7 @@ pipeline {
         IMAGE_NAMESPACE = 'kiegroup'
         IMAGE_NAME_SUFFIX = 'nightly'
         TEMP_TAG = "temp-${getBuildBranch()}-tests"
+        QUAY_TOKEN_CREDENTIALS = 'nightly_quay_token'
         
         // Use branch name in nightly tag as we may have parallel master and release branch builds
         NIGHTLY_TAG = """${getBuildBranch()}-${sh(
@@ -201,7 +202,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
-                    addImageBuildParams(buildParams, env.TEMP_TAG, '', true, false)
+                    addImageBuildParams(buildParams, env.TEMP_TAG, '', true, false, true)
                     addExamplesParam(buildParams)
                     addCloudRepositoriesParam(buildParams)
 
@@ -259,7 +260,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addImageBuildParams(buildParams, env.TEMP_TAG, 'BASE', true, false)
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, 'PROMOTE', true, true)
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, 'PROMOTE', true, true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
 
                     buildJob(IMAGES_PROMOTE, buildParams)
@@ -386,13 +387,16 @@ void addDeployGitParams(buildParams){
     addStringParam(buildParams, 'BOT_CREDENTIALS_ID', env.BOT_AUTHOR_CREDS_ID)
 }
 
-void addImageBuildParams(List buildParams, String tag, String paramsPrefix = '', boolean isRegistryIncluded = false, boolean isFinalImage = false){
+void addImageBuildParams(List buildParams, String tag, String paramsPrefix = '', boolean isRegistryIncluded = false, boolean isFinalImage = false, boolean isQuayTokenIncluded = false){
     if (!isFinalImage && params.USE_TEMP_OPENSHIFT_REGISTRY) {
         addBooleanParam(buildParams, constructKey(paramsPrefix, 'IMAGE_USE_OPENSHIFT_REGISTRY'), true)
     } else if(isRegistryIncluded) {
         addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
         addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_REGISTRY'), env.IMAGE_REGISTRY)
         addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_NAMESPACE'), env.IMAGE_NAMESPACE)
+    }
+    if(isQuayTokenIncluded) {
+        addStringParam(buildParams, constructKey(paramsPrefix, 'QUAY_TOKEN_CREDENTIALS'), env.QUAY_TOKEN_CREDENTIALS)
     }
     addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_NAME_SUFFIX'), env.IMAGE_NAME_SUFFIX)
     addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_TAG'), tag)
