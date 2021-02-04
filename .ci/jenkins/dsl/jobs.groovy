@@ -95,6 +95,8 @@ void setupNightlyJob(String jobFolder) {
     jobParams.triggers = [cron : '@midnight']
     KogitoJobTemplate.createPipelineJob(this, jobParams).with {
         parameters {
+            stringParam('JOB_RETRY_NB', '1', 'How many times should a called job be retried if it fails ?')
+
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
             booleanParam('SKIP_ARTIFACTS', false, 'To skip Artifacts (runtimes, examples, optaplanner) Deployment')
@@ -103,6 +105,10 @@ void setupNightlyJob(String jobFolder) {
             booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
 
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
+
+            booleanParam('UPDATE_VERSIONS', false, 'Set to true if you want to update the version of the project on the pipeline branch. All version parameters must be set ...')
+            stringParam('KOGITO_VERSION', '', 'Kogito version to set if `UPDATE_VERSIONS` is true.')
+            stringParam('OPTAPLANNER_VERSION', '', 'Kogito version to set if `UPDATE_VERSIONS` is true.')
         }
 
         environmentVariables {

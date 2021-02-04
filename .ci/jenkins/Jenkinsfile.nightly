@@ -70,7 +70,6 @@ pipeline {
             steps {
                 script {
                     def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
 
                     // images and operator deploy testing will use older working artifacts if that one fails
                     buildJob(RUNTIMES_DEPLOY, buildParams)
@@ -101,7 +100,6 @@ pipeline {
                     }
 
                     def buildParams = getDefaultBuildParams(optaplannerBranch)
-                    addSkipTestsParam(buildParams)
                     addSkipIntegrationTestsParam(buildParams)
                     def quickstartsBranch = optaplannerBranch == 'main' ? 'development' : optaplannerBranch
                     addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', quickstartsBranch)
@@ -123,7 +121,6 @@ pipeline {
             steps {
                 script {
                     def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
 
                     // images and operator deploy testing will use older working artifacts if that one fails
                     buildJob(APPS_DEPLOY, buildParams)
@@ -143,7 +140,6 @@ pipeline {
             steps {
                 script {
                     def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
                     addBooleanParam(buildParams, 'UPDATE_NIGHTLY_BRANCH', true)
 
                     // images and operator deploy testing will use older working artifacts if that one fails
@@ -168,7 +164,6 @@ pipeline {
                     addDeployImageWithLatestTagParam(buildParams)
 
                     // For testing
-                    addSkipTestsParam(buildParams)
                     addExamplesParam(buildParams)
 
                     // Ask to create the PR with changes occuring in this
@@ -195,7 +190,6 @@ pipeline {
                             steps {
                                 script {
                                     def buildParams = getDefaultBuildParams()
-                                    addSkipTestsParam(buildParams)
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG)
                                     addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
                                     addDeployImageWithLatestTagParam(buildParams)
@@ -220,7 +214,6 @@ pipeline {
                             steps {
                                 script {
                                     def buildParams = getDefaultBuildParams()
-                                    addSkipTestsParam(buildParams)
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG)
                                     addDeployImageWithLatestTagParam(buildParams)
 
@@ -244,7 +237,7 @@ pipeline {
                 }
                 stage('LTS Build examples images & BDD testing') {
                     when {
-                        expression { return getLTSNativeBuilderImage() }
+                        expression { return isLTSEnabled() }
                     }
                     stages {
                         stage('Build & Deploy Examples Images LTS') {
@@ -254,7 +247,6 @@ pipeline {
                             steps {
                                 script {
                                     def buildParams = getDefaultBuildParams()
-                                    addSkipTestsParam(buildParams)
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG, defaultImageParamsPrefix, 'lts')
                                     addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
                                     addDeployImageWithLatestTagParam(buildParams)
@@ -276,12 +268,11 @@ pipeline {
                         }
                         stage('Build & Deploy Operator LTS') {
                             when {
-                                expression { return getLTSNativeBuilderImage() && isOperatorDeploy() }
+                                expression { return isLTSEnabled() && isOperatorDeploy() }
                             }
                             steps {
                                 script {
                                     def buildParams = getDefaultBuildParams()
-                                    addSkipTestsParam(buildParams)
                                     addBooleanParam(buildParams, 'SKIP_DEPLOY', true)
 
                                     // For BDD tests
@@ -317,7 +308,10 @@ pipeline {
 def buildJob(String jobName, List buildParams, String jobKey = jobName) {
     echo "[${jobKey}] Build ${jobName} with params ${buildParams}"
 
-    def job = build(job: "${jobName}", wait: true, parameters: buildParams, propagate: false)
+    def job = null
+    retry(params.JOB_RETRY_NB.toInteger()) {
+        job = build(job: "${jobName}", wait: true, parameters: buildParams, propagate: false)
+    }
     JOBS[jobKey] = job
 
     // Set Unstable if job did not succeed
@@ -391,11 +385,20 @@ List getDefaultBuildParams(String buildBranchName = '', String key = '') {
     addStringParam(params, 'DISPLAY_NAME', "${key ? "${key}-" : ''}${env.NIGHTLY_TAG}")
     addBooleanParam(params, 'SEND_NOTIFICATION', true)
 
-    return params
-}
+    boolean skipTests = params.SKIP_TESTS
+    if (params.UPDATE_VERSIONS) {
+        addBooleanParam(params, 'CREATE_PR', true)
+        addStringParam(params, 'KOGITO_VERSION', params.KOGITO_VERSION)
+        addStringParam(params, 'OPTAPLANNER_VERSION', params.OPTAPLANNER_VERSION)
+        if (getBuildBranch() != 'master') {
+            addBooleanParam(params, 'MERGE_PR_AUTOMATICALLY', true)
+        }
+        // Always skip tests for an update of version
+        skipTests = true
+    }
+    addBooleanParam(params, 'SKIP_TESTS', skipTests)
 
-void addSkipTestsParam(buildParams) {
-    addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
+    return params
 }
 
 void addSkipIntegrationTestsParam(buildParams) {
@@ -457,6 +460,14 @@ boolean isExamplesImagesDeploy() {
 
 boolean isOperatorDeploy() {
     return !params.SKIP_OPERATOR
+}
+
+boolean isUpdateVersions() {
+    return params.UPDATE_VERSIONS
+}
+
+boolean isLTSEnabled() {
+    return getLTSNativeBuilderImage() && !isUpdateVersions()
 }
 
 String getLTSNativeBuilderImage() {
