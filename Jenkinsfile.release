@@ -73,6 +73,7 @@ pipeline {
         IMAGE_NAMESPACE = 'kiegroup'
         // Use nightly for now with a different tag but we should find another solution
         IMAGE_NAME_SUFFIX = 'nightly'
+        QUAY_TOKEN_CREDENTIALS = 'release_quay_token'
 
         // Credentials
         GIT_AUTHOR='kiegroup'
@@ -289,7 +290,7 @@ pipeline {
                     addStringParam(buildParams, 'KOGITO_ARTIFACTS_VERSION', getKogitoArtifactsVersion())
                     addSkipTestsParam(buildParams)
                     addReleaseDeployGitParams(buildParams)
-                    addImageBuildParams(buildParams, getKogitoImagesTempTag(), '', true, false)
+                    addImageBuildParams(buildParams, getKogitoImagesTempTag(), '', true, false, true)
                     addExamplesParam(buildParams)
                     addCloudRepositoriesParam(buildParams)
 
@@ -433,7 +434,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
                     addDeployBuildUrlParam(buildParams, IMAGES_DEPLOY)
-                    addImageBuildParams(buildParams, getKogitoImagesVersion(), 'PROMOTE', true, true)
+                    addImageBuildParams(buildParams, getKogitoImagesVersion(), 'PROMOTE', true, true, true)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
                     addReleasePromoteGitParams(buildParams)
 
@@ -652,13 +653,16 @@ void addReleasePromoteGitParams(buildParams){
     addStringParam(buildParams, 'GITHUB_TOKEN_CREDS_ID', env.GITHUB_TOKEN_CREDS_ID)
 }
 
-void addImageBuildParams(List buildParams, String tag, String paramsPrefix = '', boolean isRegistryIncluded = false, boolean isFinalImage = false){
+void addImageBuildParams(List buildParams, String tag, String paramsPrefix = '', boolean isRegistryIncluded = false, boolean isFinalImage = false, boolean isQuayTokenIncluded = false){
     if (!isFinalImage && params.USE_TEMP_OPENSHIFT_REGISTRY) {
         addBooleanParam(buildParams, constructKey(paramsPrefix, 'IMAGE_USE_OPENSHIFT_REGISTRY'), true)
     } else if(isRegistryIncluded) {
         addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
         addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_REGISTRY'), env.IMAGE_REGISTRY)
         addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_NAMESPACE'), env.IMAGE_NAMESPACE)
+    }
+    if(isQuayTokenIncluded) {
+        addStringParam(buildParams, constructKey(paramsPrefix, 'QUAY_TOKEN_CREDENTIALS'), env.QUAY_TOKEN_CREDENTIALS)
     }
     if(!isFinalImage){
         addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_NAME_SUFFIX'), env.IMAGE_NAME_SUFFIX)
