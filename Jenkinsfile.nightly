@@ -133,7 +133,8 @@ pipeline {
                     addSkipTestsParam(buildParams)
                     addMavenSettingsParam(buildParams)
                     addArtifactsRepositoriesParam(buildParams)
-
+                    def quickstartsBranch = optaplannerBranch == 'master' ? 'development' : optaplannerBranch
+                    addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', quickstartsBranch)
                     buildJob(OPTAPLANNER_DEPLOY, buildParams, false)
                 }
             }
