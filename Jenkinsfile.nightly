@@ -18,8 +18,8 @@ OPERATOR_PROMOTE = 'kogito-operator-promote'
 // for more options on built job entity
 JOBS = [:]
 
-FAILED_STAGES=[]
-UNSTABLE_STAGES=[]
+FAILED_STAGES=[:]
+UNSTABLE_STAGES=[:]
 
 // Should be multibranch pipeline
 pipeline {
@@ -105,7 +105,7 @@ pipeline {
             }
             post {
                 failure {
-                    addFailedStage()
+                    addFailedStage(RUNTIMES_DEPLOY)
                 }
             }
         }
@@ -118,14 +118,13 @@ pipeline {
                 script {
                     echo "Call ${OPTAPLANNER_DEPLOY} job"
 
-                    String optaplannerBranch = ''
-                    if (getBuildBranch() != 'master') {
-
+                    String optaplannerBranch = getBuildBranch()
+                    String [] buildBranchSplit = optaplannerBranch.split("\\.")
+                    if(buildBranchSplit.length == 3) {
                         /* The OptaPlanner major version is shifted by 7 from the Kogito major version:
                            Kogito 1.x.y -> OptaPlanner 8.x.y. */
+                           
                         int majorVersionShift = 7
-                        String [] buildBranchSplit = getBuildBranch().split("\\.")
-                        assert buildBranchSplit.length == 3
                         Integer optaplannerMajorVersion = Integer.parseInt(buildBranchSplit[0]) + majorVersionShift
                         optaplannerBranch = "${optaplannerMajorVersion}.${buildBranchSplit[1]}.${buildBranchSplit[2]}"
                     }
@@ -140,7 +139,7 @@ pipeline {
             }
             post {
                 failure {
-                    addFailedStage()
+                    addFailedStage(OPTAPLANNER_DEPLOY)
                 }
             }
         }
@@ -163,7 +162,7 @@ pipeline {
             }
             post {
                 failure {
-                    addFailedStage()
+                    addFailedStage(APPS_DEPLOY)
                 }
             }
         }
@@ -186,7 +185,7 @@ pipeline {
             }
             post {
                 failure {
-                    addFailedStage()
+                    addFailedStage(EXAMPLES_DEPLOY)
                 }
             }
         }
@@ -214,7 +213,7 @@ pipeline {
             }
             post {
                 failure {
-                    addFailedStage()
+                    addFailedStage(IMAGES_DEPLOY)
                 }
             }
         }
@@ -244,7 +243,7 @@ pipeline {
             }
             post {
                 failure {
-                    addFailedStage()
+                    addFailedStage(OPERATOR_DEPLOY)
                 }
             }
         }
@@ -267,7 +266,7 @@ pipeline {
             }
             post {
                 failure {
-                    addFailedStage()
+                    addFailedStage(IMAGES_PROMOTE)
                 }
             }
         }
@@ -290,7 +289,7 @@ pipeline {
             }
             post {
                 failure {
-                    addFailedStage()
+                    addFailedStage(OPERATOR_PROMOTE)
                 }
             }
         }
@@ -310,7 +309,7 @@ def buildJob(String jobName, List buildParams, boolean propagate=true){
 
     // Set Unstable if we don't propagate and job failed
     if(!propagate && !isJobSucceeded(jobName)){
-        addUnstableStage()
+        addUnstableStage(jobName)
         unstable("Job ${jobName} finished with result ${job.getResult()}")
     }
     return job
@@ -320,28 +319,50 @@ def getJob(String jobName){
     return JOBS[jobName]
 }
 
+String getJobUrl(String jobName){
+    echo "getJobUrl for ${jobName}"
+    def job = getJob(jobName)
+    return job ? job.getAbsoluteUrl() : ''
+}
+
 boolean isJobSucceeded(String jobName){
     def job = getJob(jobName)
     return job ? job.getResult() == 'SUCCESS' : false
 }
 
-void addFailedStage(){
-    FAILED_STAGES.add("${STAGE_NAME}")
+void addFailedStage(String jobName = ''){
+    FAILED_STAGES.put("${STAGE_NAME}", jobName)
 }
-void addUnstableStage(){
-    UNSTABLE_STAGES.add("${STAGE_NAME}")
+void addUnstableStage(String jobName = ''){
+    UNSTABLE_STAGES.put("${STAGE_NAME}", jobName)
 }
 
 void sendPipelineErrorNotification(){
     String bodyMsg = "Kogito nightly job #${BUILD_NUMBER} was: ${currentBuild.currentResult}"
+    
+    paramsStr = ''
+    if(params.SKIP_TESTS) {
+        paramsStr += '\n- Tests skipped'
+    }
+    if(params.SKIP_ARTIFACTS) {
+        paramsStr += '\n- Artifacts skipped'
+    }
+    if(params.SKIP_IMAGES) {
+        paramsStr += '\n- Images skipped'
+    }
+    if(params.SKIP_OPERATOR) {
+        paramsStr += '\n- Operator skipped'
+    }
+    bodyMsg += paramsStr ? "\n\nConfiguration:${paramsStr}" : '\n'
+
     if(FAILED_STAGES.size() > 0){
         bodyMsg += "\nFailed stages: \n- "
-        bodyMsg += FAILED_STAGES.join("\n- ")
+        bodyMsg += FAILED_STAGES.collect{ "${it.key} => ${getJobUrl(it.value)}" }.join("\n- ")
     }
     bodyMsg += "\n"
     if(UNSTABLE_STAGES.size() > 0){
         bodyMsg += "\nUnstable stages: \n- "
-        bodyMsg += UNSTABLE_STAGES.join("\n- ")
+        bodyMsg += UNSTABLE_STAGES.collect{ "${it.key} => ${getJobUrl(it.value)}" }.join("\n- ")
     }
     bodyMsg += "\n"
     bodyMsg += "\nPlease look here: ${BUILD_URL}"
