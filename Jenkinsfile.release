@@ -209,7 +209,7 @@ pipeline {
                     addReleaseDeployGitParams(buildParams)
                     addStringParam(buildParams, 'KOGITO_VERSION', getKogitoArtifactsVersion())
                     addArtifactsRepositoriesParam(buildParams)
-
+                    addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
                     buildJob(OPTAPLANNER_DEPLOY, buildParams)
                 }
             }
