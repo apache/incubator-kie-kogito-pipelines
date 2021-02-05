@@ -82,11 +82,13 @@ pipeline {
                 script {
                     echo "Call ${OPTAPLANNER_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
-                    def targetBranch = (changeTarget != 'master') ? getOptaPlannerBranch() : ''
                     addMavenSettingsParam(buildParams)
+                    addArtifactsRepositoriesParam(buildParams)
+                    
+                    def targetBranch = (changeTarget != 'master') ? getOptaPlannerBranch() : ''
                     addAuthorBranchParamsIfExist(buildParams, 'optaplanner', targetBranch)
                     addStringParam(buildParams, 'PR_TARGET_BRANCH', targetBranch)
-                    addArtifactsRepositoriesParam(buildParams)
+                    addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', targetBranch)
 
                     buildJob(OPTAPLANNER_DEPLOY, buildParams, false)
                 }
@@ -245,9 +247,11 @@ String getOptaPlannerBranch() {
        Kogito 1.x.y -> OptaPlanner 8.x.y. */
     int majorVersionShift = 7
     String [] changeTargetSplit = changeTarget.split("\\.")
-    assert changeTargetSplit.length == 3
-    Integer optaplannerMajorVersion = Integer.parseInt(changeTargetSplit[0]) + majorVersionShift
-    return "${optaplannerMajorVersion}.${changeTargetSplit[1]}.${changeTargetSplit[2]}"
+    if(changeTargetSplit.length == 3) {
+        Integer optaplannerMajorVersion = Integer.parseInt(changeTargetSplit[0]) + majorVersionShift
+        return "${optaplannerMajorVersion}.${changeTargetSplit[1]}.${changeTargetSplit[2]}"
+    }
+    return changeTarget
 }
 
 void addArtifactsRepositoriesParam(List buildParams){
