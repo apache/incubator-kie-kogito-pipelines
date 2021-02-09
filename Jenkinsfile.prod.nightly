@@ -107,7 +107,7 @@ pipeline {
             emailext body: 'Kogito ${PRODUCT_VERSION}:nightly-build #${BUILD_NUMBER} was: ' + "${currentBuild.currentResult}" +  '\n' +
                     'Please look here: ${BUILD_URL} \n' +
                     ' \n' +
-                    '${BUILD_LOG, maxLines=750}', subject: '${PRODUCT_VERSION}:nightly-build #${BUILD_NUMBER}: ' + "${currentBuild.currentResult}", to: 'kie-jenkins-builds@redhat.com'
+                    '${BUILD_LOG, maxLines=750}', subject: 'Kogito ${PRODUCT_VERSION}:nightly-build #${BUILD_NUMBER}: ' + "${currentBuild.currentResult}", to: 'kie-jenkins-builds@redhat.com'
         }
         unstable {
             emailext body: 'Kogito ${PRODUCT_VERSION}:nightly-build #${BUILD_NUMBER} was: ' + "${currentBuild.currentResult}" +  '\n' +
@@ -115,11 +115,11 @@ pipeline {
                     ' \n' +
                     'Failed tests: ${BUILD_URL}/testReport \n' +
                     ' \n' +
-                    '${BUILD_LOG, maxLines=750}', subject: '${PRODUCT_VERSION}:nightly-build #${BUILD_NUMBER}: ' + "${currentBuild.currentResult}", to: 'kie-jenkins-builds@redhat.com'
+                    '${BUILD_LOG, maxLines=750}', subject: 'Kogito ${PRODUCT_VERSION}:nightly-build #${BUILD_NUMBER}: ' + "${currentBuild.currentResult}", to: 'kie-jenkins-builds@redhat.com'
         }
         fixed {
             emailext body: 'Kogito ${PRODUCT_VERSION}:nightly-build #${BUILD_NUMBER} was: ' + "${currentBuild.currentResult}" +  '\n' +
-                    'Please look here: ${BUILD_URL}', subject: '${PRODUCT_VERSION}:nightly-build #${BUILD_NUMBER}: ' + "${currentBuild.currentResult}", to: 'kie-jenkins-builds@redhat.com'
+                    'Please look here: ${BUILD_URL}', subject: 'Kogito ${PRODUCT_VERSION}:nightly-build #${BUILD_NUMBER}: ' + "${currentBuild.currentResult}", to: 'kie-jenkins-builds@redhat.com'
         }
         always {
             archiveArtifacts artifacts: '**/*.maven.log', fingerprint: false, defaultExcludes: true, caseSensitive: true, allowEmptyArchive: true
