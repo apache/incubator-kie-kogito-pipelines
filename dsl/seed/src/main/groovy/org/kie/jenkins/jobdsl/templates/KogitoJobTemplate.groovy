@@ -89,7 +89,7 @@ class KogitoJobTemplate {
             triggers {
                 ghprbTrigger {
                     // Ordered by appearence in Jenkins UI
-                    gitHubAuthId(jobParams.git.token_credentials)
+                    gitHubAuthId(jobParams.git.credentials)
                     adminlist('')
                     useGitHubHooks(true)
                     triggerPhrase(jobParams.pr.trigger_phrase ?: '.*[j|J]enkins,?.*(retest|test) this.*')
