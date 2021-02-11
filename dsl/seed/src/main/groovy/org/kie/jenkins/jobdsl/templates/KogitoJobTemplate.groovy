@@ -123,7 +123,7 @@ class KogitoJobTemplate {
                     excludedRegions('')
                     extensions {
                         ghprbSimpleStatus {
-                            commitStatusContext(jobParams.pr.commitContext ?: 'Build&Test')
+                            commitStatusContext(jobParams.pr.commitContext ?: 'Linux')
                             addTestResults(true)
                             showMatrixStatus(false)
                             statusUrl('${BUILD_URL}display/redirect')
@@ -134,11 +134,11 @@ class KogitoJobTemplate {
                             messages {
                                 ghprbBuildResultMessage {
                                     result('ERROR')
-                                    message("The ${jobParams.pr.commitContext ?: 'Build&Test'} check has **an error**. Please check [the logs](" + '${BUILD_URL}' + 'console).')
+                                    message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **an error**. Please check [the logs](" + '${BUILD_URL}' + 'console).')
                                 }
                                 ghprbBuildResultMessage {
                                     result('FAILURE')
-                                    message("The ${jobParams.pr.commitContext ?: 'Build&Test'} check has **failed**. Please check [the logs](" + '${BUILD_URL}' + 'console).')
+                                    message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **failed**. Please check [the logs](" + '${BUILD_URL}' + 'console).')
                                 }
                             }
                         }
