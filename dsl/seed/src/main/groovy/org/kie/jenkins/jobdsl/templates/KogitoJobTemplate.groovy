@@ -98,7 +98,7 @@ class KogitoJobTemplate {
                     adminlist('')
                     useGitHubHooks(true)
                     triggerPhrase(jobParams.pr.trigger_phrase ?: '.*[j|J]enkins,?.*(retest|test) this.*')
-                    onlyTriggerPhrase(false)
+                    onlyTriggerPhrase(jobParams.pr.trigger_phrase_only ?: false)
                     autoCloseFailedPullRequests(false)
                     skipBuildPhrase(".*\\[skip\\W+ci\\].*")
                     displayBuildErrorsOnDownstreamBuilds(false)
