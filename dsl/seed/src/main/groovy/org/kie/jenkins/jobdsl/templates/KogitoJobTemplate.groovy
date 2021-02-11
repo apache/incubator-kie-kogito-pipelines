@@ -63,6 +63,11 @@ class KogitoJobTemplate {
         jobParams.pr = jobParams.pr ?: [:] // Setup default config for pr to avoid NullPointerException
 
         return createPipelineJob(steps, jobParams).with {
+            // Redefine to keep days instead of number of builds
+            logRotator {
+                daysToKeep(10)
+            }
+
             // Redefine author and branch in git
             definition {
                 cpsScm {
@@ -89,11 +94,11 @@ class KogitoJobTemplate {
             triggers {
                 ghprbTrigger {
                     // Ordered by appearence in Jenkins UI
-                    gitHubAuthId(jobParams.git.token_credentials)
+                    gitHubAuthId(jobParams.git.credentials)
                     adminlist('')
                     useGitHubHooks(true)
                     triggerPhrase(jobParams.pr.trigger_phrase ?: '.*[j|J]enkins,?.*(retest|test) this.*')
-                    onlyTriggerPhrase(false)
+                    onlyTriggerPhrase(jobParams.pr.trigger_phrase_only ?: false)
                     autoCloseFailedPullRequests(false)
                     skipBuildPhrase(".*\\[skip\\W+ci\\].*")
                     displayBuildErrorsOnDownstreamBuilds(false)

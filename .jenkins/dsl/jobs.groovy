@@ -79,6 +79,7 @@ void setupKogitoRuntimesBDDPrJob(String jobFolder) {
     jobParams.pr = [
         checkout_branch : '${ghprbTargetBranch}',
         trigger_phrase : '.*[j|J]enkins,? run BDD tests.*',
+        trigger_phrase_only: true,
         commitContext: 'BDD tests'
     ]
     jobParams.disable_concurrent = true
