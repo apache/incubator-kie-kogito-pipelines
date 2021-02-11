@@ -63,6 +63,11 @@ class KogitoJobTemplate {
         jobParams.pr = jobParams.pr ?: [:] // Setup default config for pr to avoid NullPointerException
 
         return createPipelineJob(steps, jobParams).with {
+            // Redefine to keep days instead of number of builds
+            logRotator {
+                daysToKeep(10)
+            }
+
             // Redefine author and branch in git
             definition {
                 cpsScm {
