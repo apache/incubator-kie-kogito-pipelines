@@ -73,7 +73,7 @@ if (isMainBranch()) {
 /////////////////////////////////////////////////////////////////
 
 void setupKogitoRuntimesBDDPrJob(String jobFolder) {
-    def jobParams = getJobParams('0-pr-job', jobFolder, 'Jenkinsfile.pr.bdd-tests', 'Run on demand BDD tests from runtimes repository')
+    def jobParams = getJobParams('0-runtimes-bdd-testing', jobFolder, 'Jenkinsfile.pr.bdd-tests', 'Run on demand BDD tests from runtimes repository')
     jobParams.git.project_url = "https://github.com/${GIT_AUTHOR_NAME}/kogito-runtimes/"
     jobParams.git.repo_url = "https://github.com/${GIT_AUTHOR_NAME}/${jobParams.git.repository}/"
     jobParams.pr = [
