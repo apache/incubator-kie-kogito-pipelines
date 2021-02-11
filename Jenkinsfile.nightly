@@ -1,4 +1,5 @@
 import org.jenkinsci.plugins.workflow.libs.Library
+
 @Library('jenkins-pipeline-shared-libraries')_
 
 // Deploy jobs
@@ -27,52 +28,27 @@ pipeline {
         label 'kie-rhel7 && !master'
     }
 
-    triggers {
-        cron ('H 0 * * *')
-    }
-
     options {
-        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '30')
         timeout(time: 720, unit: 'MINUTES')
     }
 
-    parameters {
-        string(name: 'BUILD_BRANCH_NAME', defaultValue: '', description: 'Which branch to build? Set if you are not on a multibranch pipeline.')
-        string(name: 'GIT_AUTHOR', defaultValue: 'kiegroup', description: 'Which Git author repository ?')
-
-        string(name: 'ARTIFACTS_REPOSITORY', defaultValue: '', description: 'Provide a repository for artifacts to be deployed to')
-        string(name: 'MAVEN_SETTINGS_CONFIG_FILE_ID', defaultValue: 'kogito_release_settings', description: 'Maven settings file to use for Maven config/deployment')
-
-        booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip all tests')
-
-        booleanParam(name: 'SKIP_ARTIFACTS', defaultValue: false, description: 'To skip Artifacts (runtimes, examples, optaplanner) Deployment')
-        booleanParam(name: 'SKIP_IMAGES', defaultValue: false, description: 'To skip Images Deployment')
-        booleanParam(name: 'SKIP_OPERATOR', defaultValue: false, description: 'To skip Operator Deployment')
-
-        booleanParam(name: 'USE_TEMP_OPENSHIFT_REGISTRY', defaultValue: false, description: 'If enabled, use Openshift registry to push temporary images')
-    }
+    // parameters {
+    // For parameters, check into .jenkins/dsl/jobs.groovy file
+    // }
 
     environment {
-        KOGITO_CI_EMAIL_TO = credentials('KOGITO_CI_EMAIL_TO')
+        // Some generated env is also defined into .jenkins/dsl/jobs.groovy file
 
-        // We use quay as temporary registry for testing between the jobs instead of Openshift, due to https://issues.redhat.com/browse/KOGITO-2219
-        IMAGE_REGISTRY_CREDENTIALS = 'nightly_kogito'
-        IMAGE_REGISTRY = 'quay.io'
-        IMAGE_NAMESPACE = 'kiegroup'
-        IMAGE_NAME_SUFFIX = 'nightly'
+        KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+
+        IMAGE_NAME_NIGHTLY_SUFFIX = 'nightly'
+
         TEMP_TAG = "temp-${getBuildBranch()}-tests"
-        
         // Use branch name in nightly tag as we may have parallel master and release branch builds
         NIGHTLY_TAG = """${getBuildBranch()}-${sh(
                 returnStdout: true,
                 script: 'date -u "+%Y-%m-%d"'
             ).trim()}"""
-
-        BRANCH_FOR_LATEST='master'
-
-        // Credentials for PR creation
-        BOT_AUTHOR='bsig-gh-bot'
-        BOT_AUTHOR_CREDS_ID='bsig-gh-bot' // username/password creds
     }
 
     stages {
@@ -96,9 +72,7 @@ pipeline {
                     echo "Call ${RUNTIMES_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
-                    addMavenSettingsParam(buildParams)
-                    addArtifactsRepositoriesParam(buildParams)
-                    
+
                     // images and operator deploy testing will use older working artifacts if that one fails
                     buildJob(RUNTIMES_DEPLOY, buildParams, false)
                 }
@@ -131,10 +105,9 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams(optaplannerBranch)
                     addSkipTestsParam(buildParams)
-                    addMavenSettingsParam(buildParams)
-                    addArtifactsRepositoriesParam(buildParams)
                     def quickstartsBranch = optaplannerBranch == 'master' ? 'development' : optaplannerBranch
                     addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', quickstartsBranch)
+
                     buildJob(OPTAPLANNER_DEPLOY, buildParams, false)
                 }
             }
@@ -154,9 +127,7 @@ pipeline {
                     echo "Call ${APPS_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
-                    addMavenSettingsParam(buildParams)
-                    addArtifactsRepositoriesParam(buildParams)
-                    
+
                     // images and operator deploy testing will use older working artifacts if that one fails
                     buildJob(APPS_DEPLOY, buildParams, false)
                 }
@@ -177,9 +148,7 @@ pipeline {
                     echo "Call ${EXAMPLES_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
-                    addMavenSettingsParam(buildParams)
-                    addArtifactsRepositoriesParam(buildParams)
-                    
+
                     // images and operator deploy testing will use older working artifacts if that one fails
                     buildJob(EXAMPLES_DEPLOY, buildParams, false)
                 }
@@ -200,13 +169,12 @@ pipeline {
                     echo "Call ${IMAGES_DEPLOY} job"
 
                     def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
                     addImageBuildParams(buildParams, env.TEMP_TAG, '', true, false)
+                    // For testing
+                    addSkipTestsParam(buildParams)
                     addExamplesParam(buildParams)
-                    addCloudRepositoriesParam(buildParams)
 
                     // Ask to create the PR with changes occuring in this
-                    addDeployGitParams(buildParams)
                     addBooleanParam(buildParams, 'CREATE_CHANGES_PR', true)
 
                     buildJob(IMAGES_DEPLOY, buildParams, false)
@@ -234,10 +202,9 @@ pipeline {
                     addBooleanParam(buildParams, 'KOGITO_IMAGES_IN_OPENSHIFT_REGISTRY', params.USE_TEMP_OPENSHIFT_REGISTRY)
                     addStringParam(buildParams, 'KOGITO_IMAGES_REGISTRY', env.IMAGE_REGISTRY)
                     addStringParam(buildParams, 'KOGITO_IMAGES_NAMESPACE', env.IMAGE_NAMESPACE)
-                    addStringParam(buildParams, 'KOGITO_IMAGES_NAME_SUFFIX', env.IMAGE_NAME_SUFFIX)
+                    addStringParam(buildParams, 'KOGITO_IMAGES_NAME_SUFFIX', env.IMAGE_NAME_NIGHTLY_SUFFIX)
                     addStringParam(buildParams, 'KOGITO_IMAGES_TAG', env.TEMP_TAG)
                     addExamplesParam(buildParams)
-                    addCloudRepositoriesParam(buildParams)
 
                     buildJob(OPERATOR_DEPLOY, buildParams, false)
                 }
@@ -302,10 +269,10 @@ pipeline {
     }
 }
 
-def buildJob(String jobName, List buildParams, boolean propagate=true){
+def buildJob(String jobName, List buildParams, boolean propagate=true) {
     echo "Build ${jobName} with params ${buildParams} and propagate = ${propagate}"
 
-    def job = build(job: "../${jobName}", wait: true, parameters: buildParams, propagate: propagate)
+    def job = build(job: "${jobName}", wait: true, parameters: buildParams, propagate: propagate)
     JOBS[jobName] = job
 
     // Set Unstable if we don't propagate and job failed
@@ -316,7 +283,7 @@ def buildJob(String jobName, List buildParams, boolean propagate=true){
     return job
 }
 
-def getJob(String jobName){
+def getJob(String jobName) {
     return JOBS[jobName]
 }
 
@@ -338,7 +305,7 @@ void addUnstableStage(String jobName = ''){
     UNSTABLE_STAGES.put("${STAGE_NAME}", jobName)
 }
 
-void sendPipelineErrorNotification(){
+void sendPipelineErrorNotification() {
     String bodyMsg = "Kogito nightly job #${BUILD_NUMBER} was: ${currentBuild.currentResult}"
     
     paramsStr = ''
@@ -371,99 +338,79 @@ void sendPipelineErrorNotification(){
                 to: env.KOGITO_CI_EMAIL_TO
 }
 
-List getDefaultBuildParams(String buildBranchName = ''){
+List getDefaultBuildParams(String buildBranchName = '') {
     buildBranchName = buildBranchName ?: getBuildBranch()
     List params = []
     addStringParam(params, 'DISPLAY_NAME', env.NIGHTLY_TAG)
-    addStringParam(params, 'BUILD_BRANCH_NAME', buildBranchName)
-    addStringParam(params, 'GIT_AUTHOR', getGitAuthor())
 
     return params
 }
 
-void addSkipTestsParam(buildParams){
+void addSkipTestsParam(buildParams) {
     addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
 }
 
-void addMavenSettingsParam(buildParams){
-    addStringParam(buildParams, 'MAVEN_SETTINGS_CONFIG_FILE_ID', params.MAVEN_SETTINGS_CONFIG_FILE_ID)
-}
-
-void addArtifactsRepositoriesParam(buildParams){
-    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
-    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
-}
-
-void addCloudRepositoriesParam(buildParams){
-    addStringParam(buildParams, 'MAVEN_ARTIFACT_REPOSITORY', getArtifactsRepositoryParam())
-}
-
-void addExamplesParam(buildParams){
+void addExamplesParam(buildParams) {
     addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
     addStringParam(buildParams, 'EXAMPLES_REF', getBuildBranch())
-}
-
-void addDeployGitParams(buildParams){
-    addStringParam(buildParams, 'GIT_AUTHOR_BOT', env.BOT_AUTHOR)
-    addStringParam(buildParams, 'BOT_CREDENTIALS_ID', env.BOT_AUTHOR_CREDS_ID)
 }
 
 void addImageBuildParams(List buildParams, String tag, String paramsPrefix = '', boolean isRegistryIncluded = false, boolean isFinalImage = false){
     if (!isFinalImage && params.USE_TEMP_OPENSHIFT_REGISTRY) {
         addBooleanParam(buildParams, constructKey(paramsPrefix, 'IMAGE_USE_OPENSHIFT_REGISTRY'), true)
-    } else if(isRegistryIncluded) {
+    } else if (isRegistryIncluded) {
         addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
         addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_REGISTRY'), env.IMAGE_REGISTRY)
         addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_NAMESPACE'), env.IMAGE_NAMESPACE)
     }
-    addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_NAME_SUFFIX'), env.IMAGE_NAME_SUFFIX)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_NAME_SUFFIX'), env.IMAGE_NAME_NIGHTLY_SUFFIX)
     addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_TAG'), tag)
 }
 
-void addStringParam(List params, String key, String value){
+void addStringParam(List params, String key, String value) {
     params.add(string(name: key, value: value))
 }
 
-void addBooleanParam(List params, String key, boolean value){
+void addBooleanParam(List params, String key, boolean value) {
     params.add(booleanParam(name: key, value: value))
 }
 
-String constructKey(String prefix, String paramId){
+String constructKey(String prefix, String paramId) {
     return prefix ? "${prefix}_${paramId}" : paramId
 }
 
-String getBuildBranch(){
-    return params.BUILD_BRANCH_NAME ?: env.BRANCH_NAME
+String getBuildBranch() {
+    return env.GIT_BRANCH_NAME
 }
 
-String getGitAuthor(){
-    return params.GIT_AUTHOR
+String getGitAuthor() {
+    return env.GIT_AUTHOR
 }
 
-boolean isDeployImagesLatestTag(){
+boolean isDeployImagesLatestTag() {
     return getBuildBranch() == env.BRANCH_FOR_LATEST
 }
 
-boolean isArtifactsDeploy(){
+boolean isArtifactsDeploy() {
     return !params.SKIP_ARTIFACTS
 }
 
-boolean isImagesDeploy(){
+boolean isImagesDeploy() {
     return !params.SKIP_IMAGES
 }
 
-boolean isOperatorDeploy(){
+boolean isOperatorDeploy() {
     return !params.SKIP_OPERATOR
 }
 
-boolean isImagesPromote(){
+boolean isImagesPromote() {
     return isImagesDeploy() && isJobSucceeded(IMAGES_DEPLOY)
 }
 
-boolean isOperatorPromote(){
+boolean isOperatorPromote() {
     return isOperatorDeploy() && isJobSucceeded(OPERATOR_DEPLOY)
 }
 
-String getArtifactsRepositoryParam(){
-    return params.ARTIFACTS_REPOSITORY
+String getArtifactsRepositoryParam() {
+    return env['ARTIFACTS_REPOSITORY'] ?: ''
 }

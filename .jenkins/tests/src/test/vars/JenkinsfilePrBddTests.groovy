@@ -10,7 +10,7 @@ class JenkinsfilePrBddTests extends JenkinsPipelineSpecification {
     def changeTarget = 'user-target'
 
     def setup() {
-        Jenkinsfile = loadPipelineScriptForTest('Jenkinsfile.pr-bdd-tests')
+        Jenkinsfile = loadPipelineScriptForTest('Jenkinsfile.pr.bdd-tests')
 
         explicitlyMockPipelineVariable('githubscm')
         Jenkinsfile.getBinding().setVariable('params', params)

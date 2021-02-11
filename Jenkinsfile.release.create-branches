@@ -6,21 +6,16 @@ pipeline {
     }
 
     options {
-        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')
         timeout(time: 120, unit: 'MINUTES')
     }
 
-    parameters {
-        string(name: 'REPOSITORIES', defaultValue: '', description: 'Comma-separated list of repository[:base branch] to update. The default base branch for every repository is the \'master\' branch.')
-        string(name: 'RELEASE_BRANCH', defaultValue: '', description: 'Release branch to create')
-        
-        string(name: 'GIT_AUTHOR', defaultValue: 'kiegroup', description: 'Which Git author repository ?')
-        string(name: 'GIT_AUTHOR_CREDS_ID', defaultValue: 'kie-ci', description: 'Git author credentials id')
+    // parameters {
+    // For parameters, check into .jenkins/dsl/jobs.groovy file
+    // }
 
-    }
-    environment {
-        DEFAULT_BASE_BRANCH = 'master'
-    }
+    // environment {
+    // Some generated env is also defined into .jenkins/dsl/jobs.groovy file
+    // }
 
     stages {
         stage('Initialize') {
@@ -41,14 +36,14 @@ pipeline {
                 script {
                     echo 'Create release branches'
 
-                    for(String repo : getRepositories()){
+                    for (String repo : getRepositories()) {
                         echo "Checkout repo ${repo}"
-                        dir(repo){
+                        dir(repo) {
                             deleteDir()
                             checkout(githubscm.resolveRepository(getUrl(repo), getGitAuthor(), getBase(repo), false))
                             sh 'git fetch origin'
                             String branchRemoteResult = sh(script: "git ls-remote origin ${getReleaseBranch()} | wc -l", returnStdout: true).trim()
-                            if(Integer.parseInt(branchRemoteResult) > 0){
+                            if (Integer.parseInt(branchRemoteResult) > 0) {
                                 echo 'Release branch already exist ... will not create it'
                             } else {
                                 echo "Release branch ${getReleaseBranch()} does not exist ... gonna create it"
@@ -68,26 +63,26 @@ pipeline {
     }
 }
 
-String getReleaseBranch(){
+String getReleaseBranch() {
     return params.RELEASE_BRANCH
 }
 
-String getGitAuthor(){
-    return params.GIT_AUTHOR
+String getGitAuthor() {
+    return env.GIT_AUTHOR
 }
 
-String getGitAuthorCredsId(){
-    return params.GIT_AUTHOR_CREDS_ID
+String getGitAuthorCredsId() {
+    return env.GIT_AUTHOR_CREDS_ID
 }
 
-String[] getRepositories(){
+String[] getRepositories() {
     return params.REPOSITORIES.split(',')
 }
 
-String getUrl(String repo){
-    return repo.split(":")[0]
+String getUrl(String repo) {
+    return repo.split(':')[0]
 }
 
-String getBase(String repo){
-    return (repo.find(":"))?repo.split(":")[1]:env.DEFAULT_BASE_BRANCH
+String getBase(String repo) {
+    return (repo.find(':')) ? repo.split(':')[1] : env.DEFAULT_BASE_BRANCH
 }
