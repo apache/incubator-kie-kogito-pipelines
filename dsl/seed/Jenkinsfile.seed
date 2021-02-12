@@ -45,7 +45,21 @@ pipeline {
                     }
                     seedConfig = readYaml(file: "${DSL_SEED_FOLDER}/config.yaml")
 
-                    branchConfigs = seedConfig.git.branches.collectEntries { [it, [:]] }
+                    branchConfigs = [:]
+                    if (getCustomBranchKey()) {
+                        currentBuild.displayName = getCustomBranchKey()
+
+                        assert getCustomRepositories()
+                        branchConfigs = [ "${getCustomBranchKey()}" : [:] ]
+                        if (getCustomMainBranch()) {
+                            seedConfig.git.main_branch = [ "default" : getCustomMainBranch() ]
+                        }
+                    } else {
+                        branchConfigs = seedConfig.git.branches.collectEntries { [it, [:]] }
+
+                        currentBuild.displayName = 'Global build'
+                        currentBuild.description = "${branchConfigs.collect { it.key }}"
+                    }
                 }
             }
         }
@@ -56,30 +70,47 @@ pipeline {
                     iterateReposForEachBranch('Checkout repositories') { seedBranch, branchConfig ->
                         deleteDir()
 
-                        // Get pipelines and get dependent repositories from there
-                        dir(PIPELINES_REPO) {
-                            deleteDir()
-                            String author = seedConfig.git.author.name
-                            println "[INFO] Checkout repository ${author}/${PIPELINES_REPO} on branch ${seedBranch}"
-                            checkout(githubscm.resolveRepository(PIPELINES_REPO, author, seedBranch, false))
-                            try {
-                                Map branchDslConfig = readYaml file: "${DSL_BRANCH_CONFIG_FILE}"
-                                branchDslConfig['dependent_repositories'].each { repoConfig ->
-                                    branchConfig.put(repoConfig.name, createBranchRepoConfig(seedBranch, repoConfig))
+                        if (!getCustomBranchKey()) {
+                            // Get pipelines and get dependent repositories from there
+                            dir(PIPELINES_REPO) {
+                                deleteDir()
+                                String author = seedConfig.git.author.name
+                                println "[INFO] Checkout repository ${author}/${PIPELINES_REPO} on branch ${seedBranch}"
+                                checkout(githubscm.resolveRepository(PIPELINES_REPO, author, seedBranch, false))
+                                try {
+                                    Map branchDslConfig = readYaml file: "${DSL_BRANCH_CONFIG_FILE}"
+                                    branchDslConfig['dependent_repositories'].each { repoConfig ->
+                                        branchConfig.put(repoConfig.name, createBranchRepoConfig(seedBranch, repoConfig))
+                                    }
+                                    println "[INFO] Branch ${seedBranch} => Dependent repositories are ${branchConfig.keySet()}"
+                                } catch (err) {
+                                    println "[ERROR] Cannot get repositories on branch ${seedBranch} => ${err}"
                                 }
-                                println "[INFO] Branch ${seedBranch} => Dependent repositories are ${branchConfig.keySet()}"
-                            } catch (err) {
-                                println "[ERROR] Cannot get repositories on branch ${seedBranch} => ${err}"
+                            }
+                        } else {
+                            getCustomRepositories().each { repoName, branch ->
+                                repoConfig = [
+                                    name : repoName,
+                                    branch : branch,
+                                    author : [
+                                        name : getCustomAuthor() ?: getSeedAuthor()
+                                    ]
+                                ]
+                                branchConfig.put(repoName, createBranchRepoConfig(seedBranch, repoConfig))
+                            }
+
+                            if(isDebug()) {
+                                echo "[DEBUG] Got branch config: ${branchConfig}"
                             }
                         }
 
                         branchConfig.each { repoName, repoConfig ->
                             dir(repoName) {
                                 deleteDir()
+                                String branch = repoConfig.git.branch
+                                String author = repoConfig.git.author.name
+                                println "[INFO] Checkout repository ${author}/${repoName} on branch ${branch}"
                                 try {
-                                    String branch = repoConfig.git.branch
-                                    String author = repoConfig.git.author.name
-                                    println "[INFO] Checkout repository ${author}/${repoName} on branch ${branch}"
                                     checkout(githubscm.resolveRepository(repoName, author, branch, false))
                                 } catch (err) {
                                     println "[ERROR] Cannot Checkout repository ${author}/${repoName} on branch ${branch}"
@@ -89,7 +120,9 @@ pipeline {
                         }
 
                         // After checkout add pipelines repo to the list of repo to test/generate
-                        branchConfig.put(PIPELINES_REPO, createBranchRepoConfig(seedBranch, [ name : PIPELINES_REPO]))
+                        if (!getCustomBranchKey()) {
+                            branchConfig.put(PIPELINES_REPO, createBranchRepoConfig(seedBranch, [ name : PIPELINES_REPO]))
+                        }
                     }
                 }
             }
@@ -123,7 +156,7 @@ pipeline {
                     iterateReposForEachBranchAndEachRepo('Copy jobs file') { seedBranch, repoName, repoConfig ->
                         dir("${REPOSITORY_DSL_FOLDER}") {
                             sh "mkdir -p ${getSeedFolder(seedBranch)}/jobs/${repoName}/"
-                            if (fileExists("jobs.groovy")) {
+                            if (fileExists('jobs.groovy')) {
                                 sh "cp jobs.groovy ${getSeedFolder(seedBranch)}/jobs/${repoName}/"
                             }
                         }
@@ -170,7 +203,7 @@ pipeline {
                                     ignoreExisting: false,
                                     ignoreMissingFiles: false,
                                     removedJobAction: 'IGNORE',
-                                    removedViewAction: 'DELETE',
+                                    removedViewAction: 'IGNORE',
                                     //removedConfigFilesAction: 'IGNORE',
                                     lookupStrategy: 'SEED_JOB',
                                     additionalClasspath: 'src/main/groovy',
@@ -188,8 +221,8 @@ pipeline {
                                 sandbox: false,
                                 ignoreExisting: false,
                                 ignoreMissingFiles: false,
-                                removedJobAction: 'DELETE',
-                                removedViewAction: 'DELETE',
+                                removedJobAction: getCustomBranchKey() ? 'IGNORE' : 'DELETE',
+                                removedViewAction: getCustomBranchKey() ? 'IGNORE' : 'DELETE',
                                 //removedConfigFilesAction: 'IGNORE',
                                 lookupStrategy: 'SEED_JOB'
                     }
@@ -302,4 +335,38 @@ void addFileIfExists(List files, String filePath) {
 
 boolean isDebug() {
     return params.DEBUG
+}
+
+String getCustomBranchKey() {
+    return params.CUSTOM_BRANCH_KEY
+}
+
+String getCustomMainBranch() {
+    return params.CUSTOM_MAIN_BRANCH
+}
+
+Map getCustomRepositories() {
+    List repoBranches =  params.CUSTOM_REPOSITORIES.split(',') as List
+    return repoBranches.collectEntries { repoBranch ->
+        repoBranchSplit = repoBranch.split(':') as List
+        String repo = ''
+        String branch = ''
+        if (repoBranchSplit.size() > 2) {
+            error "Repository should be in the format of `repo[:branch]` and got value ${repoBranch}"
+        } else {
+            repo = repoBranchSplit[0]
+            if (repoBranchSplit.size() == 2) {
+                branch = repoBranchSplit[1]
+            }
+        }
+        return [ (repo), branch ]
+    }
+}
+
+String getCustomAuthor() {
+    return params.CUSTOM_AUTHOR
+}
+
+String getSeedAuthor() {
+    return params.SEED_AUTHOR
 }

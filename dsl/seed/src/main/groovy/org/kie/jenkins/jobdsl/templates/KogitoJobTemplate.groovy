@@ -90,6 +90,14 @@ class KogitoJobTemplate {
                 }
             }
 
+            if(jobParams.env) {
+                environmentVariables {
+                    jobParams.env.each {
+                        env(it.key, it.value)
+                    }
+                }
+            }
+
             // Add ghprbTrigger
             triggers {
                 ghprbTrigger {
