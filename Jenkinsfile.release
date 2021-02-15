@@ -418,7 +418,7 @@ pipeline {
     }
 }
 
-def buildJob(String jobName, List buildParams) {
+def buildJob(String jobName, List buildParams, boolean propagate=true) {
     echo "Build ${jobName} with params ${buildParams}"
 
     def job = build(job: "./${jobName}", wait: true, parameters: buildParams, propagate: false)

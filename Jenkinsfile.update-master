@@ -6,26 +6,30 @@ OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
 APPS_DEPLOY = 'kogito-apps-deploy'
 EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 
+// Map of executed jobs
+// See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
+// for more options on built job entity
+JOBS = [:]
+
+FAILED_STAGES = [:]
+UNSTABLE_STAGES = [:]
+
 pipeline {
     agent {
         label 'kie-rhel7 && !master'
     }
 
+    options {
+        timeout(time: 720, unit: 'MINUTES')
+    }
+
     parameters {
         string(name: 'KOGITO_VERSION', defaultValue: '', description: 'Kogito version to be set as Major.minor.micro')
         string(name: 'OPTAPLANNER_VERSION', defaultValue: '', description: 'Optaplanner version of OptaPlanner as Major.minor.micro')
-
-        string(name: 'ARTIFACTS_REPOSITORY', defaultValue: '', description: 'Override default. Provide a staging repository for artifacts to be deployed to')
-        string(name: 'MAVEN_SETTINGS_CONFIG_FILE_ID', defaultValue: 'kogito_release_settings', description: 'Maven settings file to use for Maven config/deployment')
     }
 
     environment {
         KOGITO_CI_EMAIL_TO = credentials('KOGITO_CI_EMAIL_TO')
-
-        // Credentials
-        GIT_AUTHOR = 'kiegroup'
-        BOT_AUTHOR = 'bsig-gh-bot'
-        BOT_AUTHOR_CREDS_ID = 'bsig-gh-bot' // username/password creds
     }
 
     stages {
@@ -33,6 +37,7 @@ pipeline {
             steps {
                 script {
                     currentBuild.displayName = getDisplayName()
+                    currentBuild.description = getDescription()
 
                     assert getKogitoVersion()
                     assert getOptaPlannerVersion()
@@ -55,9 +60,6 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams(getOptaPlannerVersion())
                     addStringParam(buildParams, 'KOGITO_VERSION', getKogitoVersion())
-                    addMavenSettingsParam(buildParams)
-                    addGitBotParams(buildParams)
-                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(OPTAPLANNER_DEPLOY, buildParams)
                 }
@@ -74,9 +76,6 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
-                    addMavenSettingsParam(buildParams)
-                    addGitBotParams(buildParams)
-                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(APPS_DEPLOY, buildParams)
                 }
@@ -93,9 +92,6 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
-                    addMavenSettingsParam(buildParams)
-                    addGitBotParams(buildParams)
-                    addArtifactsRepositoriesParam(buildParams)
 
                     buildJob(EXAMPLES_DEPLOY, buildParams)
                 }
@@ -108,7 +104,7 @@ pipeline {
         }
         success {
             script {
-                sendSuccessfulReleaseNotification()
+                sendSuccessfulNotification()
             }
         }
         unsuccessful {
@@ -120,33 +116,14 @@ pipeline {
 def buildJob(String jobName, List buildParams) {
     echo "Build ${jobName} with params ${buildParams}"
 
-    def job = build(job: "./${jobName}", wait: true, parameters: buildParams, propagate: false)
-    def jobResult = job.getResult()
-    def jobUrl = job.getAbsoluteUrl()
-    if (jobResult != 'SUCCESS') {
-        echo "Sending a notification about an unsuccessful job build ${jobName}."
-        sendNotification("`${jobName}` finished with status `${jobResult}`.\nSee: ${jobUrl}\n\nPlease provide which action should be done (retry ? continue ? skip ? abort ?): ${env.BUILD_URL}input")
+    def job = build(job: "${jobName}", wait: true, parameters: buildParams, propagate: false)
+    registerJob(jobName, job)
 
-        // abort is handled automatically by the pipeline in the input
-        def result = input message: "Job `${jobName}` is in status ${jobResult}. What do you want to do ?\nBeware that skipping a deploy job will not launch the promote part.", parameters: [choice(name: 'ACTION', choices: ['retry', 'continue', 'skip'].join('\n')), string(name: 'MESSAGE', description: 'If you want to add information to your action...')]
-        String resultStr = "`${jobName}` failure => Decision was made to ${result['ACTION']}."
-        if (result['MESSAGE'] != '') {
-            resultStr += "Additional Information: `${result['MESSAGE']}`"
-        }
-        echo resultStr
-        sendNotification(resultStr)
-
-        // If skip, do not do anything (no registration)
-        if (result['ACTION'] == 'retry') {
-            return buildJob(jobName, buildParams)
-        } else if (result['ACTION'] == 'continue') {
-            registerJob(jobName, job)
-        }
-    } else {
-        // Succeeded
-        registerJob(jobName, job)
+    // Set Unstable if we don't propagate and job failed
+    if (!propagate && !isJobSucceeded(jobName)) {
+        addUnstableStage(jobName)
+        unstable("Job ${jobName} finished with result ${job.getResult()}")
     }
-
     return job
 }
 
@@ -164,17 +141,43 @@ String getJobUrl(String jobName) {
     return job ? job.getAbsoluteUrl() : ''
 }
 
-void sendSuccessfulReleaseNotification() {
-    String bodyMsg = 'Release is successful with those jobs:\n'
-    JOBS.each {
-        bodyMsg += "- ${it.key}\n"
-    }
-    bodyMsg += "\nPlease look here: ${BUILD_URL} for more information"
+boolean isJobSucceeded(String jobName) {
+    def job = getJob(jobName)
+    return job ? job.getResult() == 'SUCCESS' : false
+}
+
+void addFailedStage(String jobName = '') {
+    FAILED_STAGES.put("${STAGE_NAME}", jobName)
+}
+
+void addUnstableStage(String jobName = '') {
+    UNSTABLE_STAGES.put("${STAGE_NAME}", jobName)
+}
+
+void sendSuccessfulNotification() {
+    String bodyMsg = 'Update versions is successful\nPlease review the successful PRs:'
     sendNotification(bodyMsg)
 }
 
 void sendErrorNotification() {
-    sendNotification("Kogito release job #${BUILD_NUMBER} was: ${currentBuild.currentResult}\nPlease look here: ${BUILD_URL}")
+    String bodyMsg = "Update master version(s) job #${BUILD_NUMBER} was: ${currentBuild.currentResult}\nPlease look here: ${BUILD_URL}"
+    bodyMsg += '\n\nConfiguration:'
+    bodyMsg += "\n- Kogito version = ${getKogitoVersion()}"
+    bodyMsg += "\n- Optaplanner version = ${getOptaplannerVersion()}"
+    bodyMsg += '\n'
+
+    if (FAILED_STAGES.size() > 0) {
+        bodyMsg += '\nFailed stages: \n- '
+        bodyMsg += FAILED_STAGES.collect { "${it.key} => ${getJobUrl(it.value)}" }.join('\n- ')
+    }
+    bodyMsg += '\n'
+    if (UNSTABLE_STAGES.size() > 0) {
+        bodyMsg += '\nUnstable stages: \n- '
+        bodyMsg += UNSTABLE_STAGES.collect { "${it.key} => ${getJobUrl(it.value)}" }.join('\n- ')
+    }
+    bodyMsg += '\n'
+    bodyMsg += "\nPlease look here: ${BUILD_URL}"
+    sendNotification(bodyMsg)
 }
 
 void sendStageNotification() {
@@ -184,7 +187,7 @@ void sendStageNotification() {
 void sendNotification(String body) {
     echo 'Send Notification'
     echo body
-    emailext body: body, subject: "[${getReleaseBranch()}] Release Pipeline",
+    emailext body: body, subject: '[master] Update versions',
                 to: env.KOGITO_CI_EMAIL_TO
 }
 
@@ -207,25 +210,10 @@ List getDefaultBuildParams(String version = '') {
     List buildParams = []
     addStringParam(buildParams, 'DISPLAY_NAME', getDisplayName(version))
     addStringParam(buildParams, 'BUILD_BRANCH_NAME', 'master')
-    addStringParam(buildParams, 'GIT_AUTHOR', getGitAuthor())
     addBooleanParam(buildParams, 'CREATE_PR', true)
     addStringParam(buildParams, 'PROJECT_VERSION', version)
     addBooleanParam(buildParams, 'SKIP_TESTS', true)
     return buildParams
-}
-
-void addMavenSettingsParam(buildParams) {
-    addStringParam(buildParams, 'MAVEN_SETTINGS_CONFIG_FILE_ID', params.MAVEN_SETTINGS_CONFIG_FILE_ID)
-}
-
-void addArtifactsRepositoriesParam(buildParams) {
-    addStringParam(buildParams, 'MAVEN_DEPENDENCIES_REPOSITORY', getArtifactsRepositoryParam())
-    addStringParam(buildParams, 'MAVEN_DEPLOY_REPOSITORY', getArtifactsRepositoryParam())
-}
-
-void addGitBotParams(buildParams) {
-    addStringParam(buildParams, 'GIT_AUTHOR_BOT', env.BOT_AUTHOR)
-    addStringParam(buildParams, 'BOT_CREDENTIALS_ID', env.BOT_AUTHOR_CREDS_ID)
 }
 
 void addStringParam(List params, String key, String value) {
@@ -235,12 +223,16 @@ void addStringParam(List params, String key, String value) {
 void addBooleanParam(List params, String key, boolean value) {
     params.add(booleanParam(name: key, value: value))
 }
-String getDisplayName(branch = '') {
-    branch = branch ?: getReleaseBranch()
-    if (isCreateReleaseBranchesOnly()) {
-        return "Cut-off ${branch}"
-    }
-    return "Release ${branch}"
+
+String getDisplayName() {
+    return "Update master with Kogito version ${getKogitoVersion()} and Optp"
+}
+
+String getDescription() {
+    return """
+        Kogito = ${getKogitoVersion()}
+        Optplanner = ${getOptaplannerVersion()}
+    """
 }
 
 String getKogitoVersion() {
@@ -256,5 +248,5 @@ String getGitAuthor() {
 }
 
 String getArtifactsRepositoryParam() {
-    return params.ARTIFACTS_REPOSITORY
+    return env.ARTIFACTS_REPOSITORY
 }
