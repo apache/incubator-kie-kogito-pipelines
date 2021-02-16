@@ -7,8 +7,10 @@
     * [Main configuration](#main-configuration)
       * [Branch configuration](#branch-configuration)
     * [Seed job testing](#seed-job-testing)
-    * [Generate jobs for testing](#generate-jobs-for-testing)
   * [Jobs configuration in a repository](#jobs-configuration-in-a-repository)
+  * [Test specific jobs](#test-specific-jobs)
+    * [Generate only specific repositories](#generate-only-specific-repositories)
+    * [Generate all](#generate-all)
 
 ## Folder Structure
 
@@ -70,13 +72,6 @@ For each of them, you can override the global Git information (author name, cred
 $ cd dsl/seed && ./gradlew test
 ```
 
-### Generate jobs for testing
-
-1. Fork this repository
-2. Create your branch
-3. Update the [main configuration](../dsl/seed/config.yaml) with your data
-4. Create the Jenkins job
-
 ## Jobs configuration in a repository
 
 As shown in `.jenkins` folder, groovy scripts to generate jobs should be in `.jenkins/dsl/jobs` directory.  
@@ -105,7 +100,7 @@ echo '----- Launching seed tests'
 ${TEMP_DIR}/dsl/seed/scripts/seed_test.sh ${TEMP_DIR}
 ```
 
-The script clones the `kogito-pipelines` repository and then call the `seed_test.sh` which should copy the jobs and 
+The script clones the `kogito-pipelines` repository and then call the `seed_test.sh` which should copy the jobs and run the tests.
 
 Then you can call the script:
 
@@ -114,4 +109,34 @@ $ chmod u+x .jenkins/dsl/test.sh
 $ cd .jenkins/dsl && ./scripts/test.sh
 ```
 
-*NOTE: Your Jenkinsfiles should be in `.jenkins` folder but can be anywhere. The reference is anyway done in the job script, so you can put whatever you want if needed.*
+*NOTE: Your Jenkinsfiles can be stored anywhere in the repository. The reference is anyway done in the job script, so you can put whatever you want if needed. One good practise would be to store it at the root of the project or in the `.jenkins` folder.*
+
+## Test specific jobs
+
+**WARNING: If you plan to test nightly and/or release pipelines, you need to have a special branch on a fork with your own [seed configuration](../dsl/seed/config.yaml), because you will need specific credentials, maven repository, container registry namespace, so that you are not altering the production artifacts/images. An example of a branch with a special configuration can be found here: https://github.com/radtriste/kogito-pipelines/tree/test-setup**
+
+To generate the jobs you need for testing, you will need to create a seed job with the configuration that you can find in the [seed job definition](../dsl/seed/jobs/seed_job.groovy).
+
+### Generate only specific repositories
+
+Once that job is created, just execute the seed job with the correct `CUSTOM` parameters.
+
+For example, if you are working with `kogito-images` and `kogito-cloud-operator` pipelines on branch `kogito-998756`:
+
+* CUSTOM_BRANCH_KEY=kogito-998756
+* CUSTOM_REPOSITORIES=kogito-images:kogito-998756,kogito-cloud-operator:kogito-998756
+* CUSTOM_AUTHOR=<YOUR_GITHUB_AUTHOR>
+* CUSTOM_MAIN_BRANCH=kogito-998756  
+  => This will allow to generate pull requests, else it considers the main branch to be the one defined into the seed config (most of the time `master`) and does not generate those.
+
+By default, in `CUSTOM_REPOSITORIES`, if you don't define any branch, `master` is taken.
+
+*NOTE: If you are testing nightly/release pipelines, you will need to set the correct `SEED_AUTHOR` and `SEED_BRANCH` because you will need specific credentials for your test. Else you can use directly the `kiegroup/master` repository.*
+
+### Generate all
+
+Just run the created seed job with no `CUSTOM_XXX` parameters. It will generate all jobs.
+
+This is useful if you want to test the full nightly and/or release pipeline(s).
+
+**Again, please make sure in that case that you setup your own configuration !**
