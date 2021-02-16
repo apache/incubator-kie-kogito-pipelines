@@ -100,7 +100,7 @@ echo '----- Launching seed tests'
 ${TEMP_DIR}/dsl/seed/scripts/seed_test.sh ${TEMP_DIR}
 ```
 
-The script clones the `kogito-pipelines` repository and then call the `seed_test.sh` which should copy the jobs and 
+The script clones the `kogito-pipelines` repository and then call the `seed_test.sh` which should copy the jobs and run the tests.
 
 Then you can call the script:
 
@@ -109,7 +109,7 @@ $ chmod u+x .jenkins/dsl/test.sh
 $ cd .jenkins/dsl && ./scripts/test.sh
 ```
 
-*NOTE: Your Jenkinsfiles should be in `.jenkins` folder but can be anywhere. The reference is anyway done in the job script, so you can put whatever you want if needed.*
+*NOTE: Your Jenkinsfiles can be stored anywhere in the repository. The reference is anyway done in the job script, so you can put whatever you want if needed. One good practise would be to store it at the root of the project or in the `.jenkins` folder.*
 
 ## Test specific jobs
 
