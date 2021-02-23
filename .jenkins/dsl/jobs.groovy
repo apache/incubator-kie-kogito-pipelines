@@ -123,6 +123,7 @@ void setupNightlyJob(String jobFolder) {
 
             booleanParam('SKIP_ARTIFACTS', false, 'To skip Artifacts (runtimes, examples, optaplanner) Deployment')
             booleanParam('SKIP_IMAGES', false, 'To skip Images Deployment')
+            booleanParam('SKIP_EXAMPLES_IMAGES', false, 'To skip Examples Images Deployment')
             booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
 
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
@@ -164,6 +165,8 @@ void setupReleaseJob(String jobFolder) {
             booleanParam('SKIP_ARTIFACTS_PROMOTE', false, 'To skip Runtimes Promote only. Automatically skipped if SKIP_ARTIFACTS_DEPLOY is true.')
             booleanParam('SKIP_IMAGES_DEPLOY', false, 'To skip Images Test & Deployment.')
             booleanParam('SKIP_IMAGES_PROMOTE', false, 'To skip Images Promote only. Automatically skipped if SKIP_IMAGES_DEPLOY is true')
+            booleanParam('SKIP_EXAMPLES_IMAGES_DEPLOY', false, 'To skip Examples Images Deployment')
+            booleanParam('SKIP_EXAMPLES_IMAGES_PROMOTE', false, 'To skip Examples Images Promote. Automatically skipped if SKIP_EXAMPLES_IMAGES_DEPLOY is true.')
             booleanParam('SKIP_OPERATOR_DEPLOY', false, 'To skip Operator Test & Deployment.')
             booleanParam('SKIP_OPERATOR_PROMOTE', false, 'To skip Operator Promote only. Automatically skipped if SKIP_OPERATOR_DEPLOY is true.')
 

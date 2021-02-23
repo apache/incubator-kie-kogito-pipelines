@@ -19,8 +19,12 @@ OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
 // for more options on built job entity
 JOBS = [:]
 
-FAILED_STAGES = []
-UNSTABLE_STAGES = []
+FAILED_STAGES = [:]
+UNSTABLE_STAGES = [:]
+
+defaultImageParamsPrefix = 'IMAGE'
+kogitoImagesParamsPrefix = 'KOGITO_IMAGES'
+examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
 
 // Should be multibranch pipeline
 pipeline {
@@ -68,7 +72,7 @@ pipeline {
                 script {
                     echo "Call ${OPTAPLANNER_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
-                    
+
                     def targetBranch = (changeTarget != 'master') ? getOptaPlannerBranch() : ''
                     addAuthorBranchParamsIfExist(buildParams, 'optaplanner', targetBranch)
                     addStringParam(buildParams, 'PR_TARGET_BRANCH', targetBranch)
@@ -138,6 +142,8 @@ pipeline {
             }
         }
 
+        // We don't build separately the examples images for this pipeline, that will be done as part of the
+
         stage('Build & Deploy Operator') {
             steps {
                 script {
@@ -145,13 +151,14 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addAuthorBranchParamsIfExist(buildParams, 'kogito-cloud-operator')
                     addImageBuildParams(buildParams)
+                    addBooleanParam(buildParams, 'SKIP_NATIVE_TESTS', true) // No native tests for PR BDD tests
 
                     // For BDD tests
-                    addBooleanParam(buildParams, 'KOGITO_IMAGES_IN_OPENSHIFT_REGISTRY', true)
-                    addStringParam(buildParams, 'KOGITO_IMAGES_REGISTRY', env.IMAGE_REGISTRY)
-                    addStringParam(buildParams, 'KOGITO_IMAGES_NAMESPACE', env.IMAGE_NAMESPACE)
-                    addStringParam(buildParams, 'KOGITO_IMAGES_NAME_SUFFIX', env.IMAGE_NAME_SUFFIX)
-                    addStringParam(buildParams, 'KOGITO_IMAGES_TAG', env.TEMP_TAG)
+                    addImageBuildParams(buildParams, kogitoImagesParamsPrefix)
+                    addImageBuildParams(buildParams, examplesImagesParamsPrefix)
+                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), 'never')
+                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
+
                     addExamplesParams(buildParams)
 
                     buildJob(OPERATOR_DEPLOY, buildParams, false)
@@ -189,11 +196,11 @@ boolean isJobSucceeded(String jobName) {
     return job ? job.getResult() == 'SUCCESS' : false
 }
 
-void addFailedStage() {
-    FAILED_STAGES.add("${STAGE_NAME}")
+void addFailedStage(String jobName = '') {
+    FAILED_STAGES.put("${STAGE_NAME}", jobName)
 }
-void addUnstableStage() {
-    UNSTABLE_STAGES.add("${STAGE_NAME}")
+void addUnstableStage(String jobName = '') {
+    UNSTABLE_STAGES.put("${STAGE_NAME}", jobName)
 }
 
 List getDefaultBuildParams() {
@@ -222,7 +229,7 @@ String getOptaPlannerBranch() {
        Kogito 1.x.y -> OptaPlanner 8.x.y. */
     int majorVersionShift = 7
     String [] changeTargetSplit = changeTarget.split("\\.")
-    if(changeTargetSplit.length == 3) {
+    if (changeTargetSplit.length == 3) {
         Integer optaplannerMajorVersion = Integer.parseInt(changeTargetSplit[0]) + majorVersionShift
         return "${optaplannerMajorVersion}.${changeTargetSplit[1]}.${changeTargetSplit[2]}"
     }
@@ -246,13 +253,13 @@ void addExamplesParams(List buildParams) {
     addStringParam(buildParams, 'EXAMPLES_REF', branch)
 }
 
-void addImageBuildParams(List buildParams) {
-    addBooleanParam(buildParams, 'IMAGE_USE_OPENSHIFT_REGISTRY', true)
-    addStringParam(buildParams, 'IMAGE_REGISTRY_CREDENTIALS', env.IMAGE_REGISTRY_CREDENTIALS)
-    addStringParam(buildParams, 'IMAGE_REGISTRY', env.IMAGE_REGISTRY)
-    addStringParam(buildParams, 'IMAGE_NAMESPACE', env.IMAGE_NAMESPACE)
-    addStringParam(buildParams, 'IMAGE_NAME_SUFFIX', env.IMAGE_NAME_SUFFIX)
-    addStringParam(buildParams, 'IMAGE_TAG', env.TEMP_TAG)
+void addImageBuildParams(List buildParams, String paramsPrefix = defaultImageParamsPrefix) {
+    addBooleanParam(buildParams, constructKey(paramsPrefix, 'USE_OPENSHIFT_REGISTRY'), true)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'NAME_SUFFIX'), env.IMAGE_NAME_NIGHTLY_SUFFIX)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), env.TEMP_TAG)
 }
 
 void addStringParam(List params, String key, String value) {
@@ -267,3 +274,6 @@ String getPRRepoName() {
     return env.ghprbGhRepository.split('/')[1]
 }
 
+String constructKey(String prefix, String paramId) {
+    return prefix ? "${prefix}_${paramId}" : paramId
+}
