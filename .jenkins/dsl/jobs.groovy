@@ -183,6 +183,7 @@ void setupReleaseJob(String jobFolder) {
 
             env('DEFAULT_STAGING_REPOSITORY', "${MAVEN_NEXUS_STAGING_PROFILE_URL}")
             env('ARTIFACTS_REPOSITORY', "${MAVEN_ARTIFACTS_REPOSITORY}")
+            env('GITHUB_TOKEN_CREDS_ID', "${GIT_AUTHOR_CREDENTIALS_ID}")
         }
     }
 }
