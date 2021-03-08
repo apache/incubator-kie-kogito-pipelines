@@ -175,7 +175,7 @@ pipeline {
                     addExamplesParam(buildParams)
 
                     // Ask to create the PR with changes occuring in this
-                    addBooleanParam(buildParams, 'CREATE_CHANGES_PR', true)
+                    addBooleanParam(buildParams, 'CREATE_PR', true)
 
                     buildJob(IMAGES_DEPLOY, buildParams, false)
                 }
