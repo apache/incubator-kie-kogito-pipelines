@@ -1,7 +1,5 @@
 # The configuration present here will be available as uppercase env vars for job generation
 
-##### MISC
-jenkins_email_creds_id: KOGITO_CI_EMAIL_TO
 ##### GIT
 git:
   # Each branch will be accessible as `GIT_BRANCH` env var
@@ -17,6 +15,7 @@ git:
   # Each main branch will be accessible as `GIT_MAIN_BRANCH` env var
   main_branch:
     default: master
+
 ##### MAVEN
 maven:
   settings_file_id: 2bd418aa-56fa-4403-9232-8c77a50fc528
@@ -32,6 +31,7 @@ maven:
     repository: 
       url: 'https://bxms-qe.rhev-ci-vms.eng.rdu2.redhat.com:8443/nexus/content/repositories/kogito-runtimes-pr-full-testing/'
       creds_id: 'unpacks-zip-on-qa-nexus'
+
 ##### CLOUD
 cloud:
   image:
@@ -40,3 +40,11 @@ cloud:
     registry: quay.io
     namespace: kiegroup
     latest_git_branch: master
+
+##### MISC
+jenkins:
+  email_creds_id: KOGITO_CI_EMAIL_TO
+quarkus:
+  lts_version: '1.11'
+disable:
+  triggers: false

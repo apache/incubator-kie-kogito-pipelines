@@ -1,5 +1,3 @@
-jenkins_email_creds_id: KOGITO_CI_EMAIL_TO
-quarkus_lts_version: '1.11'
 git:
   branches:
   - master
@@ -33,3 +31,9 @@ cloud:
     registry: quay.io
     namespace: kiegroup
     latest_git_branch: master
+jenkins:
+  email_creds_id: KOGITO_CI_EMAIL_TO
+quarkus:
+  lts_version: '1.11'
+disable:
+  triggers: false
