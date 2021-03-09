@@ -90,7 +90,7 @@ class KogitoJobTemplate {
                 }
             }
 
-            if(jobParams.env) {
+            if (jobParams.env) {
                 environmentVariables {
                     jobParams.env.each {
                         env(it.key, it.value)
@@ -178,9 +178,22 @@ class KogitoJobTemplate {
         jobParams.pr = [
             trigger_phrase : '.*[j|J]enkins,? run LTS[ tests]?.*',
             trigger_phrase_only: true,
-            commitContext: "LTS (${quarkusLtsVersion}) tests"
+            commitContext: "LTS (${quarkusLtsVersion})"
         ]
         jobParams.env = [ QUARKUS_BRANCH: quarkusLtsVersion ]
+
+        return createPRJob(script, jobParams)
+    }
+
+    static def createNativePRJob(def script, Map jobParams = [:]) {
+        jobParams.job.description = "Run on demand native tests from ${jobParams.job.name} repository"
+        jobParams.job.name += '.native'
+        jobParams.pr = [
+            trigger_phrase : '.*[j|J]enkins,? run native[ tests]?.*',
+            trigger_phrase_only: true,
+            commitContext: 'Native'
+        ]
+        jobParams.env = [ NATIVE: true ]
 
         return createPRJob(script, jobParams)
     }

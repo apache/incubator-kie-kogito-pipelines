@@ -78,9 +78,9 @@ void setupKogitoRuntimesBDDPrJob(String jobFolder) {
     jobParams.git.repo_url = "https://github.com/${GIT_AUTHOR_NAME}/${jobParams.git.repository}/"
     jobParams.pr = [
         checkout_branch : '${ghprbTargetBranch}',
-        trigger_phrase : '.*[j|J]enkins,? run BDD tests.*',
+        trigger_phrase : '.*[j|J]enkins,? run BDD[ tests]?.*',
         trigger_phrase_only: true,
-        commitContext: 'BDD tests'
+        commitContext: 'BDD'
     ]
     jobParams.disable_concurrent = true
     KogitoJobTemplate.createPRJob(this, jobParams)
