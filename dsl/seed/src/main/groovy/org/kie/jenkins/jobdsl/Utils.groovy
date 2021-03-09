@@ -18,4 +18,8 @@ class Utils {
         return "https://github.com/${author}/${repositoryName}/"
     }
 
+    static def getBindingValue(def script, String key){
+        return script.getBinding()[key]
+    }
+
 }

@@ -7,8 +7,8 @@ import org.kie.jenkins.jobdsl.Utils
 **/
 class KogitoJobTemplate {
 
-    static def createPipelineJob(def steps, Map jobParams = [:]) {
-        return steps.pipelineJob("${jobParams.job.folder}/${jobParams.job.name}") {
+    static def createPipelineJob(def script, Map jobParams = [:]) {
+        return script.pipelineJob("${jobParams.job.folder}/${jobParams.job.name}") {
             description("""
                         ${jobParams.job.description ?: jobParams.job.name} on branch ${jobParams.git.branch}\n
                         Created automatically by Jenkins job DSL plugin. Do not edit manually! The changes will be lost next time the job is generated.\n
@@ -58,11 +58,11 @@ class KogitoJobTemplate {
         }
     }
 
-    static def createPRJob(def steps, Map jobParams = [:]) {
+    static def createPRJob(def script, Map jobParams = [:]) {
         jobParams.triggers = [:] // Reset triggers
         jobParams.pr = jobParams.pr ?: [:] // Setup default config for pr to avoid NullPointerException
 
-        return createPipelineJob(steps, jobParams).with {
+        return createPipelineJob(script, jobParams).with {
             // Redefine to keep days instead of number of builds
             logRotator {
                 daysToKeep(10)
@@ -168,6 +168,21 @@ class KogitoJobTemplate {
                 }
             }
         }
+    }
+
+    static def createQuarkusLTSPRJob(def script, Map jobParams = [:]) {
+        def quarkusLtsVersion = Utils.getBindingValue(script, 'QUARKUS_LTS_VERSION')
+
+        jobParams.job.description = "Run on demand tests from ${jobParams.job.name} repository against quarkus LTS"
+        jobParams.job.name += '.quarkus-lts'
+        jobParams.pr = [
+            trigger_phrase : '.*[j|J]enkins,? run LTS[ tests]?.*',
+            trigger_phrase_only: true,
+            commitContext: "LTS (${quarkusLtsVersion}) tests"
+        ]
+        jobParams.env = [ QUARKUS_BRANCH: quarkusLtsVersion ]
+
+        return createPRJob(script, jobParams)
     }
 
 }
