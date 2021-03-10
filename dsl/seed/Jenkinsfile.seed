@@ -291,7 +291,9 @@ def createBranchRepoConfig(String seedBranch, def branchConfig, def repoConfig) 
     }
     if(branchConfig.disable) {
         cfg.disable = cfg.disable ?: [:]
-        cfg.disable.putAll(branchConfig.disable)
+        branchConfig.disable.each { key, value -> 
+            cfg.disable[key] = cfg.disable[key] ? (cfg.disable[key] || value) : value
+        }
     }
     return cfg
 }
