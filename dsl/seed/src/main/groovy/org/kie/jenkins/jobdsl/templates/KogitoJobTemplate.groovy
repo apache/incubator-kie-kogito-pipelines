@@ -19,7 +19,7 @@ class KogitoJobTemplate {
                 numToKeep(10)
             }
 
-            if (jobParams.triggers && jobParams.triggers.cron) {
+            if (!Utils.areTriggersDisabled(script) && jobParams.triggers && jobParams.triggers.cron) {
                 triggers {
                     cron (jobParams.triggers.cron)
                 }
@@ -171,7 +171,7 @@ class KogitoJobTemplate {
     }
 
     static def createQuarkusLTSPRJob(def script, Map jobParams = [:]) {
-        def quarkusLtsVersion = Utils.getBindingValue(script, 'QUARKUS_LTS_VERSION')
+        def quarkusLtsVersion = Utils.getQuarkusLTSVersion(script)
 
         jobParams.job.description = "Run on demand tests from ${jobParams.job.name} repository against quarkus LTS"
         jobParams.job.name += '.quarkus-lts'

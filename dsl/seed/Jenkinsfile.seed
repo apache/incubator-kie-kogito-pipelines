@@ -5,6 +5,7 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 seedConfig = [:]
 seedEnvProperties = [:]
+customBranchConfig = [:] // Used for the custom configuration
 
 // Map<branch, Map<repo, config>>
 branchConfigs = [:]
@@ -44,6 +45,7 @@ pipeline {
                         sh "cat ${DSL_SEED_FOLDER}/config.yaml"
                     }
                     seedConfig = readYaml(file: "${DSL_SEED_FOLDER}/config.yaml")
+                    customBranchConfig = readYaml(file: "${DSL_BRANCH_CONFIG_FILE}")
 
                     branchConfigs = [:]
                     if (getCustomBranchKey()) {
@@ -70,6 +72,8 @@ pipeline {
                     iterateReposForEachBranch('Checkout repositories') { seedBranch, branchConfig ->
                         deleteDir()
 
+                        pipelinesRepoConfig = [:]
+
                         if (!getCustomBranchKey()) {
                             // Get pipelines and get dependent repositories from there
                             dir(PIPELINES_REPO) {
@@ -80,8 +84,10 @@ pipeline {
                                 try {
                                     Map branchDslConfig = readYaml file: "${DSL_BRANCH_CONFIG_FILE}"
                                     branchDslConfig['dependent_repositories'].each { repoConfig ->
-                                        branchConfig.put(repoConfig.name, createBranchRepoConfig(seedBranch, repoConfig))
+                                        branchConfig.put(repoConfig.name, createBranchRepoConfig(seedBranch, branchDslConfig, repoConfig))
                                     }
+
+                                    pipelinesRepoConfig = createBranchRepoConfig(seedBranch, branchDslConfig, [ name : PIPELINES_REPO])
                                     println "[INFO] Branch ${seedBranch} => Dependent repositories are ${branchConfig.keySet()}"
                                 } catch (err) {
                                     println "[ERROR] Cannot get repositories on branch ${seedBranch} => ${err}"
@@ -96,7 +102,7 @@ pipeline {
                                         name : getCustomAuthor() ?: getSeedAuthor()
                                     ]
                                 ]
-                                branchConfig.put(repoName, createBranchRepoConfig(seedBranch, repoConfig))
+                                branchConfig.put(repoName, createBranchRepoConfig(seedBranch, customBranchConfig, repoConfig))
                             }
 
                             if(isDebug()) {
@@ -120,8 +126,8 @@ pipeline {
                         }
 
                         // After checkout add pipelines repo to the list of repo to test/generate
-                        if (!getCustomBranchKey()) {
-                            branchConfig.put(PIPELINES_REPO, createBranchRepoConfig(seedBranch, [ name : PIPELINES_REPO]))
+                        if (pipelinesRepoConfig) {
+                            branchConfig.put(PIPELINES_REPO, pipelinesRepoConfig)
                         }
                     }
                 }
@@ -271,7 +277,7 @@ String getSeedFolder(String seedBranch) {
     return "${getKeyBranchFolder(seedBranch)}/${SEED_FOLDER}"
 }
 
-def createBranchRepoConfig(String seedBranch, def repoConfig) {
+def createBranchRepoConfig(String seedBranch, def branchConfig, def repoConfig) {
     def cfg = getRepoBasicConfig(seedBranch, repoConfig.name)
     cfg.git.branch = repoConfig.branch ?: cfg.git.branch
     if (repoConfig.author) {
@@ -282,6 +288,12 @@ def createBranchRepoConfig(String seedBranch, def repoConfig) {
     if (repoConfig.bot_author) {
         cfg.git.bot_author.name = repoConfig.bot_author.name ?: cfg.git.bot_author.name
         cfg.git.bot_author.credentials_id = repoConfig.bot_author.credentials_id ?: cfg.git.bot_author.credentials_id
+    }
+    if(branchConfig.disable) {
+        cfg.disable = cfg.disable ?: [:]
+        branchConfig.disable.each { key, value -> 
+            cfg.disable[key] = cfg.disable[key] ? (cfg.disable[key] || value) : value
+        }
     }
     return cfg
 }

@@ -22,4 +22,12 @@ class Utils {
         return script.getBinding()[key]
     }
 
+
+    static String getQuarkusLTSVersion(def script) {
+        return getBindingValue(script, 'QUARKUS_LTS_VERSION')
+    }
+
+    static boolean areTriggersDisabled(def script) {
+        return getBindingValue(script, 'DISABLE_TRIGGERS').toBoolean()
+    }
 }
