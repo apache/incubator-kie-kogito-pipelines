@@ -116,7 +116,7 @@ void setupCreateIssueToolsJob(String jobFolder) {
 
 void setupNightlyJob(String jobFolder) {
     def jobParams = getJobParams('kogito-nightly', jobFolder, 'Jenkinsfile.nightly', 'Kogito Nightly')
-    jobParams.triggers = [cron : '@daily']
+    jobParams.triggers = [cron : '@midnight']
     KogitoJobTemplate.createPipelineJob(this, jobParams).with {
         parameters {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
