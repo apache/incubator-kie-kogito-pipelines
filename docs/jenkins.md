@@ -121,10 +121,10 @@ To generate the jobs you need for testing, you will need to create a seed job wi
 
 Once that job is created, just execute the seed job with the correct `CUSTOM` parameters.
 
-For example, if you are working with `kogito-images` and `kogito-cloud-operator` pipelines on branch `kogito-998756`:
+For example, if you are working with `kogito-images` and `kogito-operator` pipelines on branch `kogito-998756`:
 
 * CUSTOM_BRANCH_KEY=kogito-998756
-* CUSTOM_REPOSITORIES=kogito-images:kogito-998756,kogito-cloud-operator:kogito-998756
+* CUSTOM_REPOSITORIES=kogito-images:kogito-998756,kogito-operator:kogito-998756
 * CUSTOM_AUTHOR=<YOUR_GITHUB_AUTHOR>
 * CUSTOM_MAIN_BRANCH=kogito-998756  
   => This will allow to generate pull requests, else it considers the main branch to be the one defined into the seed config (most of the time `master`) and does not generate those.

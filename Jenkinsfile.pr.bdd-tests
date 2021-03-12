@@ -143,7 +143,7 @@ pipeline {
                 script {
                     echo "Call ${OPERATOR_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
-                    addAuthorBranchParamsIfExist(buildParams, 'kogito-cloud-operator')
+                    addAuthorBranchParamsIfExist(buildParams, 'kogito-operator')
                     addImageBuildParams(buildParams)
 
                     // For BDD tests
