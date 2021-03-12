@@ -61,8 +61,8 @@ Here is the list of jobs and link to Jenkinsfiles:
 * [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
 * [kogito-images-promote](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.promote)
-* [kogito-operator-deploy](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.deploy)
-* [kogito-operator-promote](https://github.com/kiegroup/kogito-cloud-operator/blob/master/Jenkinsfile.promote)
+* [kogito-operator-deploy](https://github.com/kiegroup/kogito-operator/blob/master/Jenkinsfile.deploy)
+* [kogito-operator-promote](https://github.com/kiegroup/kogito-operator/blob/master/Jenkinsfile.promote)
 
 ## Nightly pipeline
 
@@ -277,7 +277,7 @@ Once the Release Pipeline is finished, there are some actions to be done:
 
 #### Operator Crd/Csv files
 
-Once the operator's release has been done, it created new csv and crd files under `deploy/olm-catalog/kogito-operator/{VERSION}` on the release branch in [kogito-cloud-operator](https://github.com/kiegroup/kogito-cloud-operator).
+Once the operator's release has been done, it created new csv and crd files under `deploy/olm-catalog/kogito-operator/{VERSION}` on the release branch in [kogito-operator](https://github.com/kiegroup/kogito-operator).
 You will need to create, with those files, new OperatorHub PRs (one for Openshift and one for Kubernetes) or asked someone from Cloud part to do it.
 
 If there is any change to be done due to PRs, do it on the release branch.
@@ -396,7 +396,7 @@ The Kogito project is composed of 3 parts:
   * Cekit (docker) build
   * Deployed to Quay
 
-* Operator (kogito-cloud-operator)
+* Operator (kogito-operator)
 
   * Go / OperatorSDK
   * Deployed to Quay
