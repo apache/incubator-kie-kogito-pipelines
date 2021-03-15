@@ -7,18 +7,26 @@ OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
 APPS_DEPLOY = 'kogito-apps-deploy'
 EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
+EXAMPLES_IMAGES_DEPLOY = 'kogito-examples-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
 RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
 OPTAPLANNER_PROMOTE = 'optaplanner-promote'
 APPS_PROMOTE = 'kogito-apps-promote'
 EXAMPLES_PROMOTE = 'kogito-examples-promote'
 IMAGES_PROMOTE = 'kogito-images-promote'
+EXAMPLES_IMAGES_PROMOTE = 'kogito-examples-images-promote'
 OPERATOR_PROMOTE = 'kogito-operator-promote'
 
 // Map of executed jobs
 // See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
 // for more options on built job entity
 JOBS = [:]
+
+defaultImageParamsPrefix = 'IMAGE'
+kogitoImagesParamsPrefix = 'KOGITO_IMAGES'
+examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
+baseImageParamsPrefix = 'BASE_IMAGE'
+promoteImageParamsPrefix = 'PROMOTE_IMAGE'
 
 pipeline {
     agent {
@@ -153,11 +161,33 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
                     addStringParam(buildParams, 'KOGITO_ARTIFACTS_VERSION', getKogitoArtifactsVersion())
+                    addImageBuildParams(buildParams, getKogitoImagesTempTag())
                     addSkipTestsParam(buildParams)
-                    addImageBuildParams(buildParams, getKogitoImagesTempTag(), '', true, false)
                     addExamplesParam(buildParams)
 
                     buildJob(IMAGES_DEPLOY, buildParams)
+                }
+            }
+        }
+
+        stage('Build & Deploy Examples Images') {
+            when {
+                expression { return isExamplesImagesDeploy() }
+            }
+            steps {
+                script {
+                    sendStageNotification()
+
+                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
+                    addSkipTestsParam(buildParams)
+                    addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag())
+                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+
+                    // For BDD tests
+                    addImageBuildParams(buildParams, getKogitoImagesTempTag(), false, kogitoImagesParamsPrefix)
+                    addExamplesParam(buildParams)
+
+                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams)
                 }
             }
         }
@@ -172,17 +202,26 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
                     addSkipTestsParam(buildParams)
-                    addImageBuildParams(buildParams, getKogitoOperatorTempTag(), '', true, false)
+                    addImageBuildParams(buildParams, getKogitoOperatorTempTag())
 
                     // For BDD tests
                     // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
                     if (isImagesDeploy()) {
-                        addBooleanParam(buildParams, 'KOGITO_IMAGES_IN_OPENSHIFT_REGISTRY', params.USE_TEMP_OPENSHIFT_REGISTRY)
-                        addStringParam(buildParams, 'KOGITO_IMAGES_REGISTRY', env.IMAGE_REGISTRY)
-                        addStringParam(buildParams, 'KOGITO_IMAGES_NAMESPACE', env.IMAGE_NAMESPACE)
-                        addStringParam(buildParams, 'KOGITO_IMAGES_NAME_SUFFIX', env.IMAGE_NAME_NIGHTLY_SUFFIX)
-                        addStringParam(buildParams, 'KOGITO_IMAGES_TAG', getKogitoImagesTempTag())
+                        addImageBuildParams(buildParams, getKogitoImagesTempTag(), false, kogitoImagesParamsPrefix)
+                    } else {
+                        // If we are in that case, we suppose images have been released ...
+                        addImageBuildParams(buildParams, getKogitoImagesFinalTag(), true, kogitoImagesParamsPrefix)
                     }
+
+                    if (isExamplesImagesDeploy()) {
+                        addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag(), false, examplesImagesParamsPrefix)
+                    } else {
+                        // If we are in that case, we suppose images have been released ...
+                        addImageBuildParams(buildParams, getKogitoExamplesImagesFinalTag(), true, examplesImagesParamsPrefix)
+                    }
+                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), 'always')
+                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
+
                     addExamplesParam(buildParams)
 
                     buildJob(OPERATOR_DEPLOY, buildParams)
@@ -202,7 +241,7 @@ pipeline {
                     sendNotification(body)
                     input message: 'Has the staging repository been released ?', ok: 'Yes'
 
-                    sendNotification("Artifacts have been released. Finalizing now the release ...")
+                    sendNotification('Artifacts have been released. Finalizing now the release ...')
                 }
             }
         }
@@ -284,11 +323,37 @@ pipeline {
                     sendStageNotification()
 
                     def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
-                    addDeployBuildUrlParam(buildParams, IMAGES_DEPLOY)
-                    addImageBuildParams(buildParams, getKogitoImagesVersion(), 'PROMOTE', true, true)
+                    addDeployBuildUrlParamOrClosure(buildParams, IMAGES_DEPLOY) {
+                        addImageBuildParams(buildParams, getKogitoImagesTempTag(), false, baseImageParamsPrefix)
+                    }
+                    addImageBuildParams(buildParams, getKogitoImagesFinalTag(), true, promoteImageParamsPrefix)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
 
                     buildJob(IMAGES_PROMOTE, buildParams)
+                }
+            }
+        }
+
+        stage('Promote Examples Images') {
+            when {
+                expression { return isExamplesImagesPromote() }
+            }
+            steps {
+                script {
+                    sendStageNotification()
+
+                    def buildParams = getDefaultBuildParams()
+                    
+                    addDeployBuildUrlParamOrClosure(buildParams, EXAMPLES_IMAGES_DEPLOY)  {
+                        addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag(), false, baseImageParamsPrefix)
+                        addStringParam(buildParams, constructKey(baseImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+                    }
+
+                    addImageBuildParams(buildParams, getKogitoExamplesImagesFinalTag(), true, promoteImageParamsPrefix)
+                    addStringParam(buildParams, constructKey(promoteImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
+
+                    buildJob(EXAMPLES_IMAGES_PROMOTE, buildParams)
                 }
             }
         }
@@ -302,8 +367,12 @@ pipeline {
                     sendStageNotification()
 
                     def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
-                    addDeployBuildUrlParam(buildParams, OPERATOR_DEPLOY)
-                    addImageBuildParams(buildParams, getKogitoOperatorVersion(), 'PROMOTE', true, true)
+                    addDeployBuildUrlParamOrClosure(buildParams, OPERATOR_DEPLOY)  {
+                        addImageBuildParams(buildParams, getKogitoOperatorTempTag(), false, baseImageParamsPrefix)
+                    }
+
+                    // Base image information is given by the deploy URL
+                    addImageBuildParams(buildParams, getKogitoOperatorFinalTag(), true, promoteImageParamsPrefix)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
 
                     buildJob(OPERATOR_PROMOTE, buildParams)
@@ -437,7 +506,6 @@ List getDefaultBuildParams(String version = '') {
 
     List buildParams = []
     addDisplayNameParam(buildParams, getDisplayName(version))
-    addBooleanParam(buildParams, 'RELEASE', true)
     addStringParam(buildParams, 'PROJECT_VERSION', version)
     return buildParams
 }
@@ -448,7 +516,16 @@ void addDisplayNameParam(buildParams, name = '') {
 }
 
 void addDeployBuildUrlParam(buildParams, jobName) {
-    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(jobName))
+    addDeployBuildUrlParamOrClosure(buildParams, jobName)
+}
+
+void addDeployBuildUrlParamOrClosure(buildParams, jobName, closure = null) {
+    String url = getJobUrl(jobName)
+    if(url) {
+        addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(jobName))
+    } else if(closure){
+        closure()
+    }
 }
 
 void addSkipTestsParam(buildParams) {
@@ -460,18 +537,15 @@ void addExamplesParam(buildParams) {
     addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
 }
 
-void addImageBuildParams(List buildParams, String tag, String paramsPrefix = '', boolean isRegistryIncluded = false, boolean isFinalImage = false) {
-    if (!isFinalImage && params.USE_TEMP_OPENSHIFT_REGISTRY) {
-        addBooleanParam(buildParams, constructKey(paramsPrefix, 'IMAGE_USE_OPENSHIFT_REGISTRY'), true)
-    } else if (isRegistryIncluded) {
-        addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
-        addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_REGISTRY'), env.IMAGE_REGISTRY)
-        addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_NAMESPACE'), env.IMAGE_NAMESPACE)
-    }
+void addImageBuildParams(List buildParams, String tag, boolean isFinalImage = false, String paramsPrefix = defaultImageParamsPrefix) {
+    addBooleanParam(buildParams, constructKey(paramsPrefix, 'USE_OPENSHIFT_REGISTRY'), !isFinalImage && params.USE_TEMP_OPENSHIFT_REGISTRY)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
     if (!isFinalImage) {
-        addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_NAME_SUFFIX'), env.IMAGE_NAME_NIGHTLY_SUFFIX)
+        addStringParam(buildParams, constructKey(paramsPrefix, 'NAME_SUFFIX'), env.IMAGE_NAME_NIGHTLY_SUFFIX)
     }
-    addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_TAG'), tag)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)
 }
 
 void addStringParam(List params, String key, String value) {
@@ -531,6 +605,10 @@ boolean isImagesDeploy() {
     return !params.SKIP_IMAGES_DEPLOY
 }
 
+boolean isExamplesImagesDeploy() {
+    return !params.SKIP_EXAMPLES_IMAGES_DEPLOY
+}
+
 boolean isOperatorDeploy() {
     return !params.SKIP_OPERATOR_DEPLOY
 }
@@ -543,16 +621,36 @@ boolean isImagesPromote() {
     return isImagesDeploy() && !params.SKIP_IMAGES_PROMOTE
 }
 
+boolean isExamplesImagesPromote() {
+    return isExamplesImagesDeploy() && !params.SKIP_EXAMPLES_IMAGES_PROMOTE
+}
+
 boolean isOperatorPromote() {
     return isOperatorDeploy() && !params.SKIP_OPERATOR_PROMOTE
 }
 
 String getKogitoImagesTempTag() {
-    return "${getKogitoImagesVersion()}-temp"
+    return "${getKogitoImagesVersion()}-temp".toLowerCase()
+}
+
+String getKogitoImagesFinalTag() {
+    return "${getKogitoImagesVersion()}".toLowerCase()
+}
+
+String getKogitoExamplesImagesTempTag() {
+    return "${getKogitoArtifactsVersion()}-temp".toLowerCase()
+}
+
+String getKogitoExamplesImagesFinalTag() {
+    return "${getKogitoArtifactsVersion()}".toLowerCase()
 }
 
 String getKogitoOperatorTempTag() {
-    return "${getKogitoOperatorVersion()}-temp"
+    return "${getKogitoOperatorVersion()}-temp".toLowerCase()
+}
+
+String getKogitoOperatorFinalTag() {
+    return "${getKogitoOperatorVersion()}".toLowerCase()
 }
 
 String removeVersionSuffixIfExist(String version) {
