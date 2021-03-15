@@ -346,6 +346,7 @@ pipeline {
                     
                     addDeployBuildUrlParamOrClosure(buildParams, EXAMPLES_IMAGES_DEPLOY)  {
                         addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag(), false, baseImageParamsPrefix)
+                        addStringParam(buildParams, constructKey(baseImageParamsPrefix, 'NAME_PREFIX'), 'examples')
                     }
 
                     addImageBuildParams(buildParams, getKogitoExamplesImagesFinalTag(), true, promoteImageParamsPrefix)
@@ -542,7 +543,7 @@ void addImageBuildParams(List buildParams, String tag, boolean isFinalImage = fa
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
     addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
     if (!isFinalImage) {
-        addStringParam(buildParams, constructKey(paramsPrefix, 'IMAGE_NAME_SUFFIX'), env.IMAGE_NAME_NIGHTLY_SUFFIX)
+        addStringParam(buildParams, constructKey(paramsPrefix, 'NAME_SUFFIX'), env.IMAGE_NAME_NIGHTLY_SUFFIX)
     }
     addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)
 }
