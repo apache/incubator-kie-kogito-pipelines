@@ -113,9 +113,12 @@ $ cd .jenkins/dsl && ./scripts/test.sh
 
 ## Test specific jobs
 
-**WARNING: If you plan to test nightly and/or release pipelines, you need to have a special branch on a fork with your own [seed configuration](../dsl/seed/config.yaml), because you will need specific credentials, maven repository, container registry namespace, so that you are not altering the production artifacts/images. An example of a branch with a special configuration can be found here: https://github.com/radtriste/kogito-pipelines/tree/test-setup**
+To generate the jobs you need for testing, you will need to create a seed job with the configuration that you can find in the [seed job definition](../dsl/seed/jobs/seed_job.groovy).  
 
-To generate the jobs you need for testing, you will need to create a seed job with the configuration that you can find in the [seed job definition](../dsl/seed/jobs/seed_job.groovy).
+**WARNINGS**  
+* **You should never used the production seed job for testing as you may overwrite some production configuration by doing so ...**
+
+* **If you plan to test nightly and/or release pipelines, you need to have a special branch on a fork with your own [seed configuration](../dsl/seed/config.yaml), because you will need specific credentials, maven repository, container registry namespace, so that you are not altering the production artifacts/images. An example of a branch with a special configuration can be found here: https://github.com/radtriste/kogito-pipelines/tree/test-setup**
 
 ### Generate only specific repositories
 
