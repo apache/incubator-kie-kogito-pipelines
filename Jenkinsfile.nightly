@@ -113,6 +113,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams(optaplannerBranch)
                     addSkipTestsParam(buildParams)
+                    addSkipIntegrationTestsParam(buildParams)
                     def quickstartsBranch = optaplannerBranch == 'master' ? 'development' : optaplannerBranch
                     addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', quickstartsBranch)
 
@@ -408,6 +409,10 @@ List getDefaultBuildParams(String buildBranchName = '') {
 
 void addSkipTestsParam(buildParams) {
     addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
+}
+
+void addSkipIntegrationTestsParam(buildParams) {
+    addBooleanParam(buildParams, 'SKIP_INTEGRATION_TESTS', params.SKIP_TESTS)
 }
 
 void addExamplesParam(buildParams) {
