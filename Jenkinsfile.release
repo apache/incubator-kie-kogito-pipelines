@@ -93,6 +93,7 @@ pipeline {
 
                     def buildParams = getDefaultBuildParams(getOptaPlannerVersion())
                     addSkipTestsParam(buildParams)
+                    addSkipIntegrationTestsParam(buildParams)
                     addStringParam(buildParams, 'KOGITO_VERSION', getKogitoArtifactsVersion())
                     addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
                     buildJob(OPTAPLANNER_DEPLOY, buildParams)
@@ -530,6 +531,10 @@ void addDeployBuildUrlParamOrClosure(buildParams, jobName, closure = null) {
 
 void addSkipTestsParam(buildParams) {
     addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
+}
+
+void addSkipIntegrationTestsParam(buildParams) {
+    addBooleanParam(buildParams, 'SKIP_INTEGRATION_TESTS', true)
 }
 
 void addExamplesParam(buildParams) {
