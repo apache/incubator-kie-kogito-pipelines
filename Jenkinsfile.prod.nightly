@@ -67,7 +67,7 @@ pipeline {
                         [$class: 'StringParameterValue', name: 'KOGITO_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['productVersion']],
                         [$class: 'StringParameterValue', name: 'OPTAPLANNER_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['optaplannerProductVersion']],
                         [$class: 'StringParameterValue', name: 'TIME_STAMP', value: "${PME_BUILD_VARIABLES['datetimeSuffix']}"],
-                        [$class: 'StringParameterValue', name: 'GIT_INFORMATION_HASHES', value: "${env.GIT_INFORMATION_HASHES.replace(';', '\n')}"]
+                        [$class: 'StringParameterValue', name: 'GIT_INFORMATION_HASHES', value: "${treatGitHashes(env.GIT_INFORMATION_HASHES)}"]
                     ]
                 }
             }
@@ -145,4 +145,8 @@ def getMessageBody(String propertiesFileUrl, String alreadyBuiltProjects) {
 	"propertiesFileUrl": "${propertiesFileUrl}",
 	"builtProjects": ${new groovy.json.JsonBuilder(alreadyBuiltProjectsArray).toString()}
 }"""    
+}
+
+def treatGitHashes(String gitInformationHashes) {
+    return gitInformationHashes.replace('-', '.').replaceAll(/([\w\d\-\_\.]*\/)([\w\d\-\_\.]*)/,'$2.scm.hash').replace(';', '\n')
 }
