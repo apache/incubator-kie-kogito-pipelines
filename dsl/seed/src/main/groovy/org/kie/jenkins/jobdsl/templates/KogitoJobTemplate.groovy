@@ -180,7 +180,8 @@ class KogitoJobTemplate {
             trigger_phrase_only: true,
             commitContext: "LTS (${quarkusLtsVersion})"
         ]
-        jobParams.env = [ QUARKUS_BRANCH: quarkusLtsVersion ]
+        jobParams.env = jobParams.env ?: [:]
+        jobParams.env.put('QUARKUS_BRANCH', quarkusLtsVersion)
 
         return createPRJob(script, jobParams)
     }
@@ -193,7 +194,8 @@ class KogitoJobTemplate {
             trigger_phrase_only: true,
             commitContext: 'Native'
         ]
-        jobParams.env = [ NATIVE: true ]
+        jobParams.env = jobParams.env ?: [:]
+        jobParams.env.put('NATIVE', true)
 
         return createPRJob(script, jobParams)
     }
