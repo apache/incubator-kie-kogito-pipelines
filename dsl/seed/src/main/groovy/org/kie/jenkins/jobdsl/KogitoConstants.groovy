@@ -7,4 +7,10 @@ class KogitoConstants {
   static String KOGITO_DSL_PULLREQUEST_FOLDER = 'pullrequest'
   static String KOGITO_DSL_OTHER_FOLDER = 'other'
   static String KOGITO_DSL_RUNTIMES_BDD_FOLDER = 'kogito-runtimes.bdd'
+
+  static String KOGITO_PR_MULTIJOB_LABEL = 'multijob-pr'
+
+  static String KOGITO_DEFAULT_PR_TRIGGER_PHRASE = '.*[j|J]enkins,?.*(retest|test) this.*'
+  static String KOGITO_LTS_PR_TRIGGER_PHRASE = '.*[j|J]enkins,? run LTS[ tests]?.*'
+  static String KOGITO_NATIVE_PR_TRIGGER_PHRASE = '.*[j|J]enkins,? run native[ tests]?.*'
 }
