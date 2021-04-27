@@ -211,6 +211,8 @@ void setupPrepareReleaseJob(String jobFolder) {
             stringParam('KOGITO_VERSION', '', 'Project version to release as Major.minor.micro')
             stringParam('OPTAPLANNER_VERSION', '', 'Project version of OptaPlanner and its examples to release as Major.minor.micro')
             stringParam('OPTAPLANNER_RELEASE_BRANCH', '', 'Use to override the release branch name deduced from the OPTAPLANNER_VERSION')
+
+            booleanParam('BRANCH_PRODUCT_REPOSITORIES', false, 'Set to true to create branch also on Product repositories')
         }
 
         environmentVariables {

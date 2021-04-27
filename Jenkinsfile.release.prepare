@@ -13,6 +13,8 @@ OPTAPLANNER_REPOS = ["${OPTAPLANNER_REPO}", 'optaweb-vehicle-routing', 'optaweb-
 IMAGES_REPOS = ['kogito-images']
 OPERATOR_REPOS = ['kogito-operator']
 
+KOGITO_PRODUCT_REPOS = ['rhpam-kogito-operator']
+
 JOBS = [:]
 
 pipeline {
@@ -64,6 +66,10 @@ pipeline {
                     repositories += OPERATOR_REPOS
                     repositories += PIPELINE_REPOS // Create branch to activate nightlies if needed
 
+                    if(params.BRANCH_PRODUCT_REPOSITORIES) {
+                        repositories += KOGITO_PRODUCT_REPOS
+                    }
+
                     echo "Call ${CREATE_RELEASE_BRANCHES} job with repositories ${repositories}"
                     addStringParam(buildParams, 'REPOSITORIES', repositories.join(','))
                     buildJob(CREATE_RELEASE_BRANCHES, buildParams)
@@ -104,6 +110,10 @@ pipeline {
                         repositories.addAll(collectRepos(IMAGES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos([OPTAPLANNER_REPO], getOptaPlannerReleaseBranch()))
+
+                        if(params.BRANCH_PRODUCT_REPOSITORIES) {
+                            repositories.addAll(collectRepos(KOGITO_PRODUCT_REPOS, getKogitoReleaseBranch()))
+                        }
 
                         def branchConfig = [ dependent_repositories : repositories]
 
