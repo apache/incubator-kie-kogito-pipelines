@@ -10,6 +10,7 @@ pipeline {
     }
     parameters {
         string(description: 'The RHBA Maven Repo URL', name: 'RHBA_MAVEN_REPO_URL')
+        string(description: 'The RHBA version prefix, something like 7.52.0.Final-redhat', name: 'RHBA_VERSION_PREFIX')
         string(description: 'The deployment URL', name: 'KOGITO_DEPLOYMENT_REPO_URL')
         booleanParam(description: 'Skip Tests? True as default', name: 'SKIP_TESTS', defaultValue: true)
         string(description: 'The UMB message version', name: 'UMB_VERSION', defaultValue: 'master')
@@ -40,8 +41,8 @@ pipeline {
         stage('Get latest RHBA product version') {
             steps {
                 script {
-                    env.RHBA_LASTEST_PRODUCT_VERSION = maven.getLatestArtifactFromRepository(RHBA_MAVEN_REPO_URL, 'org.kie', 'kie-api')
-                    println "[INFO] RHBA latest product version ${env.RHBA_LASTEST_PRODUCT_VERSION}"
+                    env.RHBA_LASTEST_PRODUCT_VERSION = maven.getLatestArtifactVersionPrefixFromRepository(RHBA_MAVEN_REPO_URL, 'org.kie', 'kie-api', RHBA_VERSION_PREFIX)
+                    println "[INFO] RHBA latest product version ${env.RHBA_LASTEST_PRODUCT_VERSION} from ${RHBA_MAVEN_REPO_URL}. Filtered by ${RHBA_VERSION_PREFIX}"
                 }
             }
         }
