@@ -111,6 +111,10 @@ pipeline {
                         repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos([OPTAPLANNER_REPO], getOptaPlannerReleaseBranch()))
 
+                        if(params.BRANCH_PRODUCT_REPOSITORIES) {
+                            repositories.addAll(collectRepos(KOGITO_PRODUCT_REPOS, getKogitoReleaseBranch()))
+                        }
+
                         def branchConfig = [ dependent_repositories : repositories]
 
                         echo "Write dsl branch_config => ${branchConfig}"
