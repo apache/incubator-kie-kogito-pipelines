@@ -41,7 +41,7 @@ pipeline {
         stage('Get latest RHBA product version') {
             steps {
                 script {
-                    env.RHBA_LASTEST_PRODUCT_VERSION = maven.getLatestArtifactVersionPrefixFromRepository(RHBA_MAVEN_REPO_URL, 'org.kie', 'kie-api', RHBA_VERSION_PREFIX)
+                    env.RHBA_LASTEST_PRODUCT_VERSION = maven.getLatestArtifactVersionPrefixFromRepository(RHBA_MAVEN_REPO_URL, 'org.drools', 'drools', RHBA_VERSION_PREFIX)
                     println "[INFO] RHBA latest product version ${env.RHBA_LASTEST_PRODUCT_VERSION} from ${RHBA_MAVEN_REPO_URL}. Filtered by ${RHBA_VERSION_PREFIX}"
                 }
             }
@@ -54,7 +54,7 @@ pipeline {
                         def pipelineHelper = new PipelineHelper(this)
                         pipelineHelper.retry(
                         {
-                            def SETTINGS_XML_ID = '5d9884a1-178a-4d67-a3ac-9735d2df2cef'
+                            def SETTINGS_XML_ID = 'kogito-nightly-711'
                             def projectCollection = ['kogito-runtimes', 'optaplanner', 'kogito-examples', 'optaplanner-quickstarts', 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'jboss-integration/kogito-rhba']
                             def projectVariableMap = [:]
                             def additionalVariables = ['optaplannerProductVersion': env.OPTAPLANNER_PRODUCT_VERSION, 'optaplanner-quickstarts-scmRevision': 'stable', 'rhbaProductVersion': env.RHBA_LASTEST_PRODUCT_VERSION]
