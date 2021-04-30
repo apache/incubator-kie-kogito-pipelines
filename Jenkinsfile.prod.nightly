@@ -69,30 +69,38 @@ pipeline {
         stage('Generate Properties Files') {
             steps {
                 script {
-                    def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
+                    if(env.ALREADY_BUILT_PROJECTS?.trim()) {
+                        def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
 
-                    build job: env.KOGITO_PROPERTIES_GENERATOR_PATH, parameters: [
-                        [$class: 'BooleanParameterValue', name: 'IS_PROD', value: false],
-                        [$class: 'StringParameterValue', name: 'BRANCH_NAME', value: env.BRANCH_NAME],
-                        [$class: 'StringParameterValue', name: 'KOGITO_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['productVersion']],
-                        [$class: 'StringParameterValue', name: 'OPTAPLANNER_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['optaplannerProductVersion']],
-                        [$class: 'StringParameterValue', name: 'TIME_STAMP', value: "${PME_BUILD_VARIABLES['datetimeSuffix']}"],
-                        [$class: 'StringParameterValue', name: 'GIT_INFORMATION_HASHES', value: "${treatGitHashes(env.GIT_INFORMATION_HASHES)}"]
-                    ]
+                        build job: env.KOGITO_PROPERTIES_GENERATOR_PATH, parameters: [
+                            [$class: 'BooleanParameterValue', name: 'IS_PROD', value: false],
+                            [$class: 'StringParameterValue', name: 'BRANCH_NAME', value: env.BRANCH_NAME],
+                            [$class: 'StringParameterValue', name: 'KOGITO_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['productVersion']],
+                            [$class: 'StringParameterValue', name: 'OPTAPLANNER_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['optaplannerProductVersion']],
+                            [$class: 'StringParameterValue', name: 'TIME_STAMP', value: "${PME_BUILD_VARIABLES['datetimeSuffix']}"],
+                            [$class: 'StringParameterValue', name: 'GIT_INFORMATION_HASHES', value: "${treatGitHashes(env.GIT_INFORMATION_HASHES)}"]
+                        ]
+                    } else {
+                        println "[WARNING] No property file to generate. None project has been built."
+                    }
                 }
             }
         }
         stage('Upload Files to repository') {
             steps {
                 script {
-                    echo "[INFO] Start uploading ${env.WORKSPACE}/deployDirectory"
-                    if(fileExists("${env.WORKSPACE}/deployDirectory")){
-                        dir("${env.WORKSPACE}/deployDirectory") {
-                            withCredentials([usernameColonPassword(credentialsId: "${env.NIGHTLY_DEPLOYMENT_CREDENTIAL}", variable: 'deploymentCredentials')]) {
-                                sh 'zip -r kogito .'
-                                sh "curl --upload-file kogito.zip -u $deploymentCredentials -v ${KOGITO_DEPLOYMENT_REPO_URL}"
+                    if(env.ALREADY_BUILT_PROJECTS?.trim()) {
+                        echo "[INFO] Start uploading ${env.WORKSPACE}/deployDirectory"
+                        if(fileExists("${env.WORKSPACE}/deployDirectory")){
+                            dir("${env.WORKSPACE}/deployDirectory") {
+                                withCredentials([usernameColonPassword(credentialsId: "${env.NIGHTLY_DEPLOYMENT_CREDENTIAL}", variable: 'deploymentCredentials')]) {
+                                    sh 'zip -r kogito .'
+                                    sh "curl --upload-file kogito.zip -u $deploymentCredentials -v ${KOGITO_DEPLOYMENT_REPO_URL}"
+                                }
                             }
                         }
+                    } else {
+                        println "[WARNING] No artifacts to upload. None project has been built."
                     }
                 }
             }
@@ -100,22 +108,26 @@ pipeline {
         stage ('Send UMB Message to QE.') {
             steps {
                 script {
-                    echo '[INFO] Sending KOGITO UMB message to QE.'
-                    def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
+                    if(env.ALREADY_BUILT_PROJECTS?.trim()) {
+                        echo '[INFO] Sending KOGITO UMB message to QE.'
+                        def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
 
-                    def propertiesFileUrl = "${env.STAGING_SERVER_URL}/kogito/KOGITO-${PME_BUILD_VARIABLES['productVersion']}.${PME_BUILD_VARIABLES['milestone']}/kogito-${PME_BUILD_VARIABLES['datetimeSuffix']}.properties"
-                    def topic = "VirtualTopic.qe.ci.ba.kogito.${env.UMB_VERSION}.nightly.trigger"
-                    def eventType = "kogito-${env.UMB_VERSION}-nightly-qe-trigger"
-                    def messageBody = getMessageBody(propertiesFileUrl, env.ALREADY_BUILT_PROJECTS)
-                    echo "[INFO] Message Body: ${messageBody}"
-                    echo "[INFO] Topic: ${topic}"
-                    echo "[INFO] Event Type: ${eventType}"
-                    build job: env.SEND_UMB_MESSAGE_JOB_PATH, parameters: [
-                            [$class: 'StringParameterValue', name: 'MESSAGE_BODY', value: messageBody],
-                            [$class: 'StringParameterValue', name: 'TOPIC', value: topic],
-                            [$class: 'StringParameterValue', name: 'EVENT_TYPE', value: eventType]
-                    ]
-                    echo '[SUCCESS] Message was successfully sent.'
+                        def propertiesFileUrl = "${env.STAGING_SERVER_URL}/kogito/KOGITO-${PME_BUILD_VARIABLES['productVersion']}.${PME_BUILD_VARIABLES['milestone']}/kogito-${PME_BUILD_VARIABLES['datetimeSuffix']}.properties"
+                        def topic = "VirtualTopic.qe.ci.ba.kogito.${env.UMB_VERSION}.nightly.trigger"
+                        def eventType = "kogito-${env.UMB_VERSION}-nightly-qe-trigger"
+                        def messageBody = getMessageBody(propertiesFileUrl, env.ALREADY_BUILT_PROJECTS)
+                        echo "[INFO] Message Body: ${messageBody}"
+                        echo "[INFO] Topic: ${topic}"
+                        echo "[INFO] Event Type: ${eventType}"
+                        build job: env.SEND_UMB_MESSAGE_JOB_PATH, parameters: [
+                                [$class: 'StringParameterValue', name: 'MESSAGE_BODY', value: messageBody],
+                                [$class: 'StringParameterValue', name: 'TOPIC', value: topic],
+                                [$class: 'StringParameterValue', name: 'EVENT_TYPE', value: eventType]
+                        ]
+                        echo '[SUCCESS] Message was successfully sent.'
+                    } else {
+                        println "[WARNING] No message to send. None project has been built."
+                    }
                 }
             }
         }
