@@ -23,6 +23,8 @@ build:
 
   - project: kiegroup/kogito-apps
     build-command:
+      upstream: |
+        mvn clean install -DskipTests -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
       current: |
         mvn -f kogito-apps/pom.xml clean install -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
     clone:
@@ -30,6 +32,8 @@ build:
 
   - project: kiegroup/kogito-examples
     build-command:
+      upstream: |
+        mvn clean install -DskipTests -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
       current: |
         mvn -f kogito-examples/pom.xml clean install -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
         mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
