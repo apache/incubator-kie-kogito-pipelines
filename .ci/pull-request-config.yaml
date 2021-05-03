@@ -6,17 +6,17 @@ build:
   - project: kiegroup/kogito-runtimes
     build-command:
       upstream: |
-        mvn clean install -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3 -DskipTests
+        mvn clean install -DskipTests -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
       current: |
-        mvn -f kogito-runtimes/pom.xml clean install -fae -Prun-code-coverage -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
-        mvn -f kogito-runtimes-integration-tests/pom.xml -fae -Ppersistence clean verify
+        mvn -f kogito-runtimes/pom.xml clean install -fae -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+        mvn -f kogito-runtimes-integration-tests/pom.xml -fae clean verify -Ppersistence
     clone:
       - kogito-runtimes
       - kogito-runtimes-integration-tests
 
   - project: kiegroup/optaplanner
     build-command:
-      current: mvn -f optaplanner/pom.xml -e clean install -nsu -Prun-code-coverage,wildfly -Dfull  -Dintegration-tests=false -Dmaven.test.failure.ignore=true -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+      current: mvn -f optaplanner/pom.xml -e -nsu clean install -Dfull  -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
       upstream: mvn -e clean install -Dquickly -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
     clone:
       - optaplanner
@@ -24,7 +24,7 @@ build:
   - project: kiegroup/kogito-apps
     build-command:
       current: |
-        mvn -f kogito-apps/pom.xml clean install -Prun-code-coverage -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+        mvn -f kogito-apps/pom.xml clean install -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
     clone:
       - kogito-apps
 
