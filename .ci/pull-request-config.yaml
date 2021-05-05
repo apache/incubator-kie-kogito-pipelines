@@ -2,6 +2,16 @@ version: "2.0"
 
 dependencies: ./project-dependencies.yaml
 
+default:
+  build-command:
+    after:
+      upstream: |
+        docker rm -f $(docker ps -a -q) || date
+        docker rmi -f $(podman images -q) || date
+      current: |
+        docker rm -f $(docker ps -a -q) || date
+        docker rmi -f $(podman images -q) || date
+
 build:
   - project: kiegroup/kogito-runtimes
     build-command:
