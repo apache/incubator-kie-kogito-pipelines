@@ -7,10 +7,10 @@ default:
     after:
       upstream: |
         docker rm -f $(docker ps -a -q) || date
-        docker rmi -f $(podman images -q) || date
+        docker rmi -f $(docker images -q) || date
       current: |
         docker rm -f $(docker ps -a -q) || date
-        docker rmi -f $(podman images -q) || date
+        docker rmi -f $(docker images -q) || date
 
 build:
   - project: kiegroup/kogito-runtimes
