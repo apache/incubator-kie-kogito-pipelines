@@ -1,0 +1,30 @@
+diff --git a/pom.xml b/pom.xml
+index cb78f5b..ffd401d 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -79,6 +79,25 @@
+         <useReleaseProfile>true</useReleaseProfile>
+     </properties>
+
++    <repositories>
++        <repository>
++            <snapshots>
++              <enabled>false</enabled>
++            </snapshots>
++            <id>kogito</id>
++            <name>kogito</name>
++            <url>https://repository.jboss.org/nexus/content/groups/kogito-public/</url>
++        </repository>
++        <repository>
++          <snapshots>
++            <enabled>false</enabled>
++          </snapshots>
++          <id>central</id>
++          <name>Maven Central</name>
++          <url>https://repo.maven.apache.org/maven2</url>
++        </repository>
++    </repositories>
++
+     <modules>
+         <module>bom</module>
+         <module>descriptor</module>
