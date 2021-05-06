@@ -4,11 +4,11 @@ dependencies: ./project-dependencies.yaml
 
 default:
   build-command:
-    before:
+    after:
       upstream: |
-        docker system prune
+        docker system prune -f
       current: |
-        docker system prune
+        docker system prune -f
 
 build:
   - project: kiegroup/kogito-runtimes
