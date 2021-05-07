@@ -4,6 +4,9 @@ dependencies: ./project-dependencies.yaml
 
 default:
   build-command:
+    before:
+      upstream: export MVN_OPTS="-fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
+      current: export MVN_OPTS="-fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
     upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
     after:
       upstream: |
@@ -14,6 +17,7 @@ default:
 build:
   - project: kiegroup/kogito-runtimes
     build-command:
+      upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
       current: |
         mvn -f kogito-runtimes/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
         mvn -f kogito-runtimes-integration-tests/pom.xml clean verify -Ppersistence ${{ env.BUILD_MVN_OPTS }}
@@ -22,12 +26,14 @@ build:
       - kogito-runtimes-integration-tests
 
   - project: kiegroup/optaplanner
+    upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
     build-command:
       current: mvn -f optaplanner/pom.xml -nsu clean install -Dfull ${{ env.BUILD_MVN_OPTS }}
     clone:
       - optaplanner
 
   - project: kiegroup/kogito-apps
+    upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
     build-command:
       current: |
         mvn -f kogito-apps/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
@@ -35,6 +41,7 @@ build:
       - kogito-apps
 
   - project: kiegroup/kogito-examples
+    upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
     build-command:
       current: |
         mvn -f kogito-examples/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
