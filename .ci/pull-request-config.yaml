@@ -4,13 +4,7 @@ dependencies: ./project-dependencies.yaml
 
 default:
   build-command:
-    before:
-      upstream: export MVN_OPTS="-fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
-      current: export MVN_OPTS="-fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
-    upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
     after:
-      upstream: |
-        docker system prune -f
       current: |
         docker system prune -f
 
