@@ -4,6 +4,10 @@ dependencies: ./project-dependencies.yaml
 
 default:
   build-command:
+    before:
+      upstream: export MVN_OPTS="-fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
+      current: export MVN_OPTS="-fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
+    upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.MVN_OPTS }}
     after:
       upstream: |
         docker system prune -f
@@ -13,39 +17,32 @@ default:
 build:
   - project: kiegroup/kogito-runtimes
     build-command:
-      upstream: |
-        mvn clean install -DskipTests -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
       current: |
-        mvn -f kogito-runtimes/pom.xml clean install -fae -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
-        mvn -f kogito-runtimes-integration-tests/pom.xml -fae clean verify -Ppersistence
+        mvn -f kogito-runtimes/pom.xml clean install ${{ env.MVN_OPTS }}
+        mvn -f kogito-runtimes-integration-tests/pom.xml clean verify -Ppersistence ${{ env.MVN_OPTS }}
     clone:
       - kogito-runtimes
       - kogito-runtimes-integration-tests
 
   - project: kiegroup/optaplanner
     build-command:
-      current: mvn -f optaplanner/pom.xml -e -nsu clean install -Dfull -fae -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
-      upstream: mvn -e clean install -Dquickly -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+      current: mvn -f optaplanner/pom.xml -nsu clean install -Dfull ${{ env.MVN_OPTS }}
     clone:
       - optaplanner
 
   - project: kiegroup/kogito-apps
     build-command:
-      upstream: |
-        mvn clean install -DskipTests -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
       current: |
-        mvn -f kogito-apps/pom.xml clean install -fae -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+        mvn -f kogito-apps/pom.xml clean install ${{ env.MVN_OPTS }}
     clone:
       - kogito-apps
 
   - project: kiegroup/kogito-examples
     build-command:
-      upstream: |
-        mvn clean install -DskipTests -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
       current: |
-        mvn -f kogito-examples/pom.xml clean install -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
-        mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
-        mvn -f kogito-examples-events/pom.xml clean install -Pevents -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+        mvn -f kogito-examples/pom.xml clean install ${{ env.MVN_OPTS }}
+        mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence ${{ env.MVN_OPTS }}
+        mvn -f kogito-examples-events/pom.xml clean install -Pevents ${{ env.MVN_OPTS }}
     clone:
       - kogito-examples
       - kogito-examples-persistence
