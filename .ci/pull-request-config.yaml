@@ -5,9 +5,9 @@ dependencies: ./project-dependencies.yaml
 default:
   build-command:
     before:
-      upstream: export MVN_OPTS="-fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
-      current: export MVN_OPTS="-fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
-    upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.MVN_OPTS }}
+      upstream: export BUILD_MVN_OPTS="-fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
+      current: export BUILD_MVN_OPTS="-fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
+    upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
     after:
       upstream: |
         docker system prune -f
@@ -18,31 +18,31 @@ build:
   - project: kiegroup/kogito-runtimes
     build-command:
       current: |
-        mvn -f kogito-runtimes/pom.xml clean install ${{ env.MVN_OPTS }}
-        mvn -f kogito-runtimes-integration-tests/pom.xml clean verify -Ppersistence ${{ env.MVN_OPTS }}
+        mvn -f kogito-runtimes/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
+        mvn -f kogito-runtimes-integration-tests/pom.xml clean verify -Ppersistence ${{ env.BUILD_MVN_OPTS }}
     clone:
       - kogito-runtimes
       - kogito-runtimes-integration-tests
 
   - project: kiegroup/optaplanner
     build-command:
-      current: mvn -f optaplanner/pom.xml -nsu clean install -Dfull ${{ env.MVN_OPTS }}
+      current: mvn -f optaplanner/pom.xml -nsu clean install -Dfull ${{ env.BUILD_MVN_OPTS }}
     clone:
       - optaplanner
 
   - project: kiegroup/kogito-apps
     build-command:
       current: |
-        mvn -f kogito-apps/pom.xml clean install ${{ env.MVN_OPTS }}
+        mvn -f kogito-apps/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
     clone:
       - kogito-apps
 
   - project: kiegroup/kogito-examples
     build-command:
       current: |
-        mvn -f kogito-examples/pom.xml clean install ${{ env.MVN_OPTS }}
-        mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence ${{ env.MVN_OPTS }}
-        mvn -f kogito-examples-events/pom.xml clean install -Pevents ${{ env.MVN_OPTS }}
+        mvn -f kogito-examples/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
+        mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence ${{ env.BUILD_MVN_OPTS }}
+        mvn -f kogito-examples-events/pom.xml clean install -Pevents ${{ env.BUILD_MVN_OPTS }}
     clone:
       - kogito-examples
       - kogito-examples-persistence
