@@ -1,0 +1,53 @@
+version: "2.0"
+
+dependencies: ./project-dependencies.yaml
+
+default:
+  build-command:
+    after:
+      upstream: |
+        docker system prune -f
+      current: |
+        docker system prune -f
+
+build:
+  - project: kiegroup/kogito-runtimes
+    build-command:
+      upstream: |
+        mvn clean install -DskipTests -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+      current: |
+        mvn -f kogito-runtimes/pom.xml clean install -fae -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+        mvn -f kogito-runtimes-integration-tests/pom.xml -fae clean verify -Ppersistence
+    clone:
+      - kogito-runtimes
+      - kogito-runtimes-integration-tests
+
+  - project: kiegroup/optaplanner
+    build-command:
+      current: mvn -f optaplanner/pom.xml -e -nsu clean install -Dfull -fae -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+      upstream: mvn -e clean install -Dquickly -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+    clone:
+      - optaplanner
+
+  - project: kiegroup/kogito-apps
+    build-command:
+      upstream: |
+        mvn clean install -DskipTests -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+      current: |
+        mvn -f kogito-apps/pom.xml clean install -fae -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+    clone:
+      - kogito-apps
+
+  - project: kiegroup/kogito-examples
+    build-command:
+      upstream: |
+        mvn clean install -DskipTests -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+      current: |
+        mvn -f kogito-examples/pom.xml clean install -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+        mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+        mvn -f kogito-examples-events/pom.xml clean install -Pevents -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+    clone:
+      - kogito-examples
+      - kogito-examples-persistence
+      - kogito-examples-events
+            
