@@ -20,23 +20,23 @@ build:
       - kogito-runtimes-integration-tests
 
   - project: kiegroup/optaplanner
-    upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
     build-command:
+      upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
       current: mvn -f optaplanner/pom.xml -nsu clean install -Dfull ${{ env.BUILD_MVN_OPTS }}
     clone:
       - optaplanner
 
   - project: kiegroup/kogito-apps
-    upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
     build-command:
+      upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
       current: |
         mvn -f kogito-apps/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
     clone:
       - kogito-apps
 
   - project: kiegroup/kogito-examples
-    upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
     build-command:
+      upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
       current: |
         mvn -f kogito-examples/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
         mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence ${{ env.BUILD_MVN_OPTS }}
@@ -45,4 +45,3 @@ build:
       - kogito-examples
       - kogito-examples-persistence
       - kogito-examples-events
-            
