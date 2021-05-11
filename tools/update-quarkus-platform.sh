@@ -36,7 +36,6 @@ if [ $? != 0 ]; then
     exit 2
 fi
 set -- $args
-echo $args
 for i
 do
         case "$i"
