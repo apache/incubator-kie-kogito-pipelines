@@ -1,3 +1,4 @@
+#!/bin/sh
 set -euo pipefail
  
 MAVEN_VERSION=3.6.2

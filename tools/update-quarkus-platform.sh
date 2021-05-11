@@ -1,9 +1,10 @@
+#!/bin/sh
 set -euo pipefail
 
 MINOR_VERSION=
 
 usage() {
-    echo 'Usage: update-kie-versions.sh -s $MINOR_VERSION -f $FORK [-n] COMMAND'
+    echo 'Usage: update-quarkus-platform.sh -s $MINOR_VERSION -f $FORK [-n] COMMAND'
     echo
     echo 'Options:'
     echo '  -s $MINOR_VERSION    set MINOR version'
@@ -18,13 +19,13 @@ usage() {
     echo '  #  - Add staging repositories'
     echo '  #  - Push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run'
-    echo '  sh update-platform-001.sh -s 7.0.Final -f evacchi -n stage'
+    echo '  sh update-quarkus-platform.sh -s 7.0.Final -f evacchi -n stage'
     echo
     echo '  # Finalize the PR:'
     echo '  #  - Remove staging repositories'
     echo '  #  - Force-push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run'
-    echo '  sh update-platform-001.sh -s 7.0.Final -f evacchi -n finalize'
+    echo '  sh update-quarkus-platform.sh -s 7.0.Final -f evacchi -n finalize'
 }
 
 args=`getopt s:f:nh $*`
