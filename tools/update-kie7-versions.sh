@@ -9,7 +9,7 @@ DRY_RUN=false
 FORK=
 
 usage() {
-    echo 'Usage: update-kie-versions.sh -p $PROJECT -s $KIE_VERSION -b $BASE_BRANCH -f $FORK -n'
+    echo 'Usage: update-kie7-versions.sh -p $PROJECT -s $KIE_VERSION -b $BASE_BRANCH -f $FORK [-n]'
     echo
     echo 'Options:'
     echo '  -p $PROJECT      set kogito or optaplanner -- default is kogito'
@@ -17,13 +17,20 @@ usage() {
     echo '  -b $BASE_BRANCH  should be main or a version branch'
     echo '  -f $FORK         GH account where the branch should be pushed'
     echo '  -n               no execution: clones, creates the branch, but will not push or create the PR'
-
+    echo
+    echo 'Examples:'
+    echo '  #  - Update Kogito to KIE 7.54.0.Final, '
+    echo '  #  - Base branch is master'
+    echo '  #  - Push the branch to evacchi/quarkus-platform'
+    echo '  #  - Dry Run '
+    echo '  sh update-kie7-versions.sh -p kogito -s 7.54.0.Final -b master -f evacchi -n'
+    echo
 }
 
 args=`getopt p:s:b:f:nh $*`
 if [ $? != 0 ]
 then
-        echo 'Usage: ...'
+        usage
         exit 2
 fi
 set -- $args
@@ -79,11 +86,11 @@ esac
 
 
 if [ "$BRANCH" = "" ]; then BRANCH=$DEFAULT_BRANCH; else PREFIX="${BRANCH}-"; fi
-if [ "$BRANCH" = "master" ]; then PREFIX=""; else PREFIX="${BRANCH}-"; fi
+if [ "$BRANCH" = "$DEFAULT_BRANCH" ]; then PREFIX=""; else PREFIX="${BRANCH}-"; fi
 
 if [ "$FORK" = "" ]; then 
         >&2 echo ERROR: no fork specified.
-        usage()
+        usage
 
         exit -1
 fi

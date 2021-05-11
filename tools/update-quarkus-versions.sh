@@ -1,13 +1,10 @@
 set -euo pipefail
  
-# set the git remote for the PR
-# e.g. I set evacchi for https://github.com/evacchi/kogito-runtimes
-
 MAVEN_VERSION=3.6.2
 PROJECT=kogito
 
 usage() {
-    echo 'Usage: update-kie-versions.sh -p $PROJECT -s $QUARKUS_VERSION -m $MAVEN_VERSION -b $BASE_BRANCH -f $FORK -n'
+    echo 'Usage: update-quarkus-versions.sh -p $PROJECT -s $QUARKUS_VERSION -m $MAVEN_VERSION -b $BASE_BRANCH -f $FORK [-n]'
     echo
     echo 'Options:'
     echo '  -p $PROJECT          set kogito or optaplanner -- default is kogito'
@@ -16,13 +13,21 @@ usage() {
     echo '  -b $BASE_BRANCH      should be main or a version branch'
     echo '  -f $FORK             GH account where the branch should be pushed'
     echo '  -n                   no execution: clones, creates the branch, but will not push or create the PR'
-
+    echo
+    echo 'Examples:'
+    echo '  #  - Update Kogito to Quarkus 2.0.0.Final, '
+    echo '  #  - Pin MAVEN_VERSION to 3.6.2'
+    echo '  #  - Base branch is master'
+    echo '  #  - Push the branch to evacchi/quarkus-platform'
+    echo '  #  - Dry Run '
+    echo '  sh update-quarkus-versions.sh -p kogito -s 2.0.0.Final -m 3.6.2 -b master -f evacchi -n'
+    echo
 }
 
 args=`getopt p:s:b:f:m:nh $*`
 if [ $? != 0 ]
 then
-        echo 'Usage: ...'
+        usage
         exit 2
 fi
 set -- $args
@@ -69,7 +74,7 @@ case $PROJECT in
         >&2 echo ERROR: Unknown project: $PROJECT.
         usage
 
-        exit -1
+        exit 2
 esac
 
 
@@ -77,7 +82,7 @@ if [ "$FORK" = "" ]; then
         >&2 echo ERROR: no fork specified.
         usage
 
-        exit -1
+        exit 2
 fi
 
 
@@ -105,6 +110,9 @@ echo VERSION......$QUARKUS_VERSION
 echo
 echo DRY_RUN! No changes will be pushed!
 echo
+
+# print all commands
+set -x
 
 git clone https://github.com/$ORIGIN
 cd $REPO
