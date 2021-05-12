@@ -74,7 +74,7 @@ class KogitoJobTemplate {
                     scm {
                         git {
                             remote {
-                                url(jobParams.git.repo_url ?: Utils.createRepositoryUrl('kiegroup', jobParams.git.repository))
+                                url(jobParams.git.repo_url ?: Utils.createRepositoryUrl(jobParams.git.author, jobParams.git.repository))
                                 credentials(jobParams.git.credentials)
                                 refspec('+refs/pull/*:refs/remotes/origin/pr/*')
                             }
