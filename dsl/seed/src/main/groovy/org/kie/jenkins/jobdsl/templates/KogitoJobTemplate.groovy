@@ -74,10 +74,11 @@ class KogitoJobTemplate {
                     scm {
                         git {
                             remote {
-                                url(jobParams.git.repo_url ?: Utils.createRepositoryUrl('${ghprbPullAuthorLogin}', jobParams.git.repository))
+                                url(jobParams.git.repo_url ?: Utils.createRepositoryUrl(jobParams.git.author, jobParams.git.repository))
                                 credentials(jobParams.git.credentials)
+                                refspec('+refs/pull/*:refs/remotes/origin/pr/*')
                             }
-                            branch(jobParams.pr.checkout_branch ?: '${ghprbSourceBranch}')
+                            branch(jobParams.pr.checkout_branch ?: '${sha1}')
                             extensions {
                                 cleanBeforeCheckout()
                                 if (jobParams.git.useRelativeTargetDirectory) {
