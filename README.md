@@ -84,7 +84,7 @@ Build execution is performed using the [`github-action-chain`](https://github.co
 After the build, test results are parsed and logged using the [`action-surefire-report`](https://github.com/ScaCap/action-surefire-report) action (actually we are using a forked version until this [PR #56](https://github.com/ScaCap/action-surefire-report/pull/56) will be accepted).
 
 Additional notes about `kogito-runtimes` build: this repo requires a full downstream build of all the repositories so to minimize disk usage and execution time the repo has been configured to use multiple jobs in parallel, one for each repo.
-This means that instead of a single `ci-pr.yaml` file, there are four of them: `runtimes-pr.yaml`, `optaplanner-pr.yaml`, `apps-pr.yaml` and `examples-pr.yaml`
+This means that instead of a single `ci-pr.yaml` file, there are four of them: `runtimes-pr.yaml`, `optaplanner-pr.yaml`, `apps-pr.yaml` and `examples-pr.yaml`. For each of them all upstream repos are just compiled without test execution.
 
 ### Sonar cloud
 
