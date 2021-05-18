@@ -2,6 +2,10 @@ version: "2.0"
 
 dependencies: ./project-dependencies.yaml
 
+pre: |
+  export BUILD_MVN_OPTS="${{ env.BUILD_MVN_OPTS }} -Dmaven.test.failure.ignore=true -fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
+  echo "BUILD_MVN_OPTS=${{ env.BUILD_MVN_OPTS }}"
+
 default:
   build-command:
     upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
