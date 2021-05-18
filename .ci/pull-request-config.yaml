@@ -3,9 +3,8 @@ version: "2.0"
 dependencies: ./project-dependencies.yaml
 
 pre: |
-  env
   export BUILD_MVN_OPTS="${{ env.BUILD_MVN_OPTS }} -Dmaven.test.failure.ignore=true -fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
-  echo "${{ env.BUILD_MVN_OPTS }}"
+  echo "BUILD_MVN_OPTS=${{ env.BUILD_MVN_OPTS }}"
 
 default:
   build-command:
