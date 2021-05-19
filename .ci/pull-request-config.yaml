@@ -3,7 +3,7 @@ version: "2.0"
 dependencies: ./project-dependencies.yaml
 
 pre: |
-  export BUILD_MVN_OPTS="${{ env.BUILD_MVN_OPTS }} -Dmaven.test.failure.ignore=true -fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
+  export BUILD_MVN_OPTS="${{ env.BUILD_MVN_OPTS }} -nsu -fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
   echo "BUILD_MVN_OPTS=${{ env.BUILD_MVN_OPTS }}"
 
 default:
@@ -25,7 +25,7 @@ build:
 
   - project: kiegroup/optaplanner
     build-command: 
-      current: mvn -f optaplanner/pom.xml -nsu clean install -Dfull ${{ env.BUILD_MVN_OPTS }}
+      current: mvn -f optaplanner/pom.xml clean install -Dfull ${{ env.BUILD_MVN_OPTS }}
     clone:
       - optaplanner
 
