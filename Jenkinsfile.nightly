@@ -157,6 +157,7 @@ pipeline {
                     echo "Call ${EXAMPLES_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
+                    addBooleanParam(buildParams, 'UPDATE_NIGHTLY_BRANCH', true)
 
                     // images and operator deploy testing will use older working artifacts if that one fails
                     buildJob(EXAMPLES_DEPLOY, buildParams, false)
