@@ -148,11 +148,11 @@ class KogitoJobTemplate {
                             messages {
                                 ghprbBuildResultMessage {
                                     result('ERROR')
-                                    message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **an error**. Please check [the logs](" + '${BUILD_URL}' + 'console).')
+                                    message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **an error**. Please check [the logs](\${BUILD_URL}display/redirect).")
                                 }
                                 ghprbBuildResultMessage {
                                     result('FAILURE')
-                                    message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **failed**. Please check [the logs](" + '${BUILD_URL}' + 'console).')
+                                    message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **failed**. Please check [the logs](\${BUILD_URL}display/redirect).")
                                 }
                                 ghprbBuildResultMessage {
                                     result('SUCCESS')
