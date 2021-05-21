@@ -359,6 +359,11 @@ boolean isJobSucceeded(String jobName) {
     return job ? job.getResult() == 'SUCCESS' : false
 }
 
+boolean isJobUnstable(String jobName) {
+    def job = getJob(jobName)
+    return job ? job.getResult() == 'UNSTABLE' : false
+}
+
 void addFailedStage(String jobName = '') {
     FAILED_STAGES.put("${STAGE_NAME}", jobName)
 }
@@ -478,7 +483,7 @@ boolean isImagesPromote() {
 }
 
 boolean isExamplesImagesPromote() {
-    return isExamplesImagesDeploy() && isJobSucceeded(EXAMPLES_IMAGES_DEPLOY)
+    return isExamplesImagesDeploy() && (isJobSucceeded(EXAMPLES_IMAGES_DEPLOY) || isJobUnstable(EXAMPLES_IMAGES_DEPLOY))
 }
 
 boolean isOperatorPromote() {
