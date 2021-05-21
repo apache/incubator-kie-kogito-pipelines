@@ -19,12 +19,6 @@ class KogitoJobTemplate {
                 numToKeep(10)
             }
 
-            if (!Utils.areTriggersDisabled(script) && jobParams.triggers && jobParams.triggers.cron) {
-                triggers {
-                    cron (jobParams.triggers.cron)
-                }
-            }
-
             if (jobParams.disable_concurrent) {
                 throttleConcurrentBuilds {
                     maxTotal(1)
@@ -33,6 +27,16 @@ class KogitoJobTemplate {
 
             properties {
                 githubProjectUrl(jobParams.git.project_url ?: Utils.createProjectUrl(jobParams.git.author, jobParams.git.repository))
+
+                if (!Utils.areTriggersDisabled(script) && jobParams.triggers && jobParams.triggers.cron) {
+                    pipelineTriggers {
+                        triggers {
+                            cron {
+                                spec(jobParams.triggers.cron)
+                            }
+                        }
+                    }
+                }
             }
 
             definition {
@@ -100,72 +104,76 @@ class KogitoJobTemplate {
             }
 
             // Add ghprbTrigger
-            triggers {
-                ghprbTrigger {
-                    // Ordered by appearence in Jenkins UI
-                    gitHubAuthId(jobParams.git.credentials)
-                    adminlist('')
-                    useGitHubHooks(true)
-                    triggerPhrase(jobParams.pr.trigger_phrase ?: '.*[j|J]enkins,?.*(retest|test) this.*')
-                    onlyTriggerPhrase(jobParams.pr.trigger_phrase_only ?: false)
-                    autoCloseFailedPullRequests(false)
-                    skipBuildPhrase(".*\\[skip\\W+ci\\].*")
-                    displayBuildErrorsOnDownstreamBuilds(false)
-                    cron('')
-                    whitelist(jobParams.git.author)
-                    orgslist(jobParams.git.author)
-                    blackListLabels('')
-                    whiteListLabels('')
-                    allowMembersOfWhitelistedOrgsAsAdmin(true)
-                    buildDescTemplate('')
-                    blackListCommitAuthor('')
-                    whiteListTargetBranches {
-                        (jobParams.pr.whiteListTargetBranches ?: []).each { br ->
-                            ghprbBranch {
-                                branch(br)
-                            }
-                        }
-                    }
-                    blackListTargetBranches {
-                        (jobParams.pr.blackListTargetBranches ?: []).each { br ->
-                            ghprbBranch {
-                                branch(br)
-                            }
-                        }
-                    }
-                    includedRegions('')
-                    excludedRegions('')
-                    extensions {
-                        ghprbSimpleStatus {
-                            commitStatusContext(jobParams.pr.commitContext ?: 'Linux')
-                            addTestResults(true)
-                            showMatrixStatus(false)
-                            statusUrl('${BUILD_URL}display/redirect')
-                            triggeredStatus('Build triggered.')
-                            startedStatus('Build started.')
-                        }
-                        ghprbBuildStatus {
-                            messages {
-                                ghprbBuildResultMessage {
-                                    result('ERROR')
-                                    message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **an error**. Please check [the logs](\${BUILD_URL}display/redirect).")
-                                }
-                                ghprbBuildResultMessage {
-                                    result('FAILURE')
-                                    message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **failed**. Please check [the logs](\${BUILD_URL}display/redirect).")
-                                }
-                                ghprbBuildResultMessage {
-                                    result('SUCCESS')
-                                    message("The ${jobParams.pr.commitContext ?: 'Linux'} check is **successful**.")
+            properties {
+                pipelineTriggers {
+                    triggers {
+                        ghprbTrigger {
+                            // Ordered by appearence in Jenkins UI
+                            gitHubAuthId(jobParams.git.credentials)
+                            adminlist('')
+                            useGitHubHooks(true)
+                            triggerPhrase(jobParams.pr.trigger_phrase ?: '.*[j|J]enkins,?.*(retest|test) this.*')
+                            onlyTriggerPhrase(jobParams.pr.trigger_phrase_only ?: false)
+                            autoCloseFailedPullRequests(false)
+                            skipBuildPhrase(".*\\[skip\\W+ci\\].*")
+                            displayBuildErrorsOnDownstreamBuilds(false)
+                            cron('')
+                            whitelist(jobParams.git.author)
+                            orgslist(jobParams.git.author)
+                            blackListLabels('')
+                            whiteListLabels('')
+                            allowMembersOfWhitelistedOrgsAsAdmin(true)
+                            buildDescTemplate('')
+                            blackListCommitAuthor('')
+                            whiteListTargetBranches {
+                                (jobParams.pr.whiteListTargetBranches ?: []).each { br ->
+                                    ghprbBranch {
+                                        branch(br)
+                                    }
                                 }
                             }
+                            blackListTargetBranches {
+                                (jobParams.pr.blackListTargetBranches ?: []).each { br ->
+                                    ghprbBranch {
+                                        branch(br)
+                                    }
+                                }
+                            }
+                            includedRegions('')
+                            excludedRegions('')
+                            extensions {
+                                ghprbSimpleStatus {
+                                    commitStatusContext(jobParams.pr.commitContext ?: 'Linux')
+                                    addTestResults(true)
+                                    showMatrixStatus(false)
+                                    statusUrl('${BUILD_URL}display/redirect')
+                                    triggeredStatus('Build triggered.')
+                                    startedStatus('Build started.')
+                                }
+                                ghprbBuildStatus {
+                                    messages {
+                                        ghprbBuildResultMessage {
+                                            result('ERROR')
+                                            message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **an error**. Please check [the logs](\${BUILD_URL}display/redirect).")
+                                        }
+                                        ghprbBuildResultMessage {
+                                            result('FAILURE')
+                                            message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **failed**. Please check [the logs](\${BUILD_URL}display/redirect).")
+                                        }
+                                        ghprbBuildResultMessage {
+                                            result('SUCCESS')
+                                            message("The ${jobParams.pr.commitContext ?: 'Linux'} check is **successful**.")
+                                        }
+                                    }
+                                }
+                            }
+                            permitAll(false)
+                            commentFilePath('')
+                            msgSuccess('Success')
+                            msgFailure('Failure')
+                            commitStatusContext('')
                         }
                     }
-                    permitAll(false)
-                    commentFilePath('')
-                    msgSuccess('Success')
-                    msgFailure('Failure')
-                    commitStatusContext('')
                 }
             }
         }
