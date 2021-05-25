@@ -1,8 +1,6 @@
 #!/bin/sh
 set -euo pipefail
 
-# kogito or optaplanner
-PROJECT=kogito
 BRANCH=master
 DEFAULT_BRANCH=master
 DRY_RUN=false
@@ -10,10 +8,9 @@ FORK=
 KIE_VERSION=
 
 usage() {
-    echo 'Usage: update-kie7-versions.sh -p $PROJECT -s $KIE_VERSION -b $BASE_BRANCH -f $FORK [-n]'
+    echo 'Usage: update-kie7-versions.sh -s $KIE_VERSION -b $BASE_BRANCH -f $FORK [-n]'
     echo
     echo 'Options:'
-    echo '  -p $PROJECT      set kogito or optaplanner -- default is kogito'
     echo '  -s $KIE_VERSION  set version'
     echo '  -b $BASE_BRANCH  should be main or a version branch'
     echo '  -f $FORK         GH account where the branch should be pushed'
@@ -24,7 +21,7 @@ usage() {
     echo '  #  - Base branch is master'
     echo '  #  - Push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run '
-    echo '  sh update-kie7-versions.sh -p kogito -s 7.54.0.Final -b master -f evacchi -n'
+    echo '  sh update-kie7-versions.sh -s 7.54.0.Final -b master -f evacchi -n'
     echo
 }
 
@@ -39,9 +36,6 @@ for i
 do
         case "$i"
         in
-                -p)
-                        PROJECT=$2;
-                        shift;shift ;;
                 -s)
                         KIE_VERSION=$2;
                         shift;shift ;;
@@ -71,21 +65,6 @@ if [ "$KIE_VERSION" = "" ]; then
         exit -1
 fi
 
-case $PROJECT in
-    kogito)
-        REPO=kogito-runtimes
-        ;;
-    optaplanner)
-        REPO=optaplanner
-        ;;
-    *)
-        >&2 echo ERROR: Unknown project: $PROJECT.
-        usage
-
-        exit -1
-esac
-
-
 if [ "$BRANCH" = "" ]; then BRANCH=$DEFAULT_BRANCH; else PREFIX="${BRANCH}-"; fi
 if [ "$BRANCH" = "$DEFAULT_BRANCH" ]; then PREFIX=""; else PREFIX="${BRANCH}-"; fi
 
@@ -96,13 +75,12 @@ if [ "$FORK" = "" ]; then
         exit -1
 fi
 
-
+REPO=kogito-runtimes
 ORIGIN=kiegroup/$REPO
 PR_FORK=$FORK/$REPO
 PR_BRANCH=bump-${PREFIX}kie-$KIE_VERSION
 
 
-echo PROJECT......$PROJECT 
 echo ORIGIN.......$ORIGIN
 echo PR_FORK......$PR_FORK
 echo BRANCH.......$BRANCH
@@ -124,7 +102,7 @@ git checkout $BRANCH
 git checkout -b $PR_BRANCH
  
 # process versions
-mvn -pl :${PROJECT}-build-parent \
+mvn -pl :kogito-kie7-bom \
 versions:set-property \
 -Dproperty=version.org.kie7 \
 -DnewVersion=$KIE_VERSION \
