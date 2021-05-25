@@ -109,8 +109,10 @@ echo BRANCH.......$BRANCH
 echo PR_BRANCH....$PR_BRANCH
 echo VERSION......$QUARKUS_VERSION
 echo
+if [ "$DRY_RUN" = "true" ]; then
 echo DRY_RUN! No changes will be pushed!
 echo
+fi
 
 # print all commands
 set -x
@@ -146,7 +148,7 @@ versions:set-property \
 # commit all
 git commit -am "Bump Quarkus $QUARKUS_VERSION"
 
-if [ "$DRY_RUN" = "" ]; then
+if [ "$DRY_RUN" = "false" ]; then
    # push the branch to a remote
    git push -u https://github.com/$PR_FORK $PR_BRANCH
    

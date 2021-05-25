@@ -7,6 +7,7 @@ BRANCH=master
 DEFAULT_BRANCH=master
 DRY_RUN=false
 FORK=
+KIE_VERSION=
 
 usage() {
     echo 'Usage: update-kie7-versions.sh -p $PROJECT -s $KIE_VERSION -b $BASE_BRANCH -f $FORK [-n]'
@@ -108,8 +109,10 @@ echo BRANCH.......$BRANCH
 echo PR_BRANCH....$PR_BRANCH
 echo VERSION......$KIE_VERSION
 echo
+if [ "$DRY_RUN" = "true" ]; then
 echo DRY_RUN! No changes will be pushed!
 echo
+fi
 
 
 git clone https://github.com/$ORIGIN
@@ -130,7 +133,7 @@ versions:set-property \
 # commit all
 git commit -am "[$BRANCH] Bump KIE $KIE_VERSION"
  
-if [ "$DRY_RUN" = "" ]; then
+if [ "$DRY_RUN" = "false" ]; then
     # push the branch to a remote
     git push -u $PR_FORK $PR_BRANCH
     

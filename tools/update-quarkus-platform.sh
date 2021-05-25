@@ -111,8 +111,10 @@ echo KOGITO_VERSION...........$KOGITO_VERSION
 echo OPTAPLANNER_VERSION......$OPTAPLANNER_VERSION
 echo COMMAND..................$COMMAND
 echo
+if [ "$DRY_RUN" = "true" ]; then
 echo DRY_RUN! No changes will be pushed!
 echo
+fi
 
 
 stage() {
@@ -146,7 +148,7 @@ stage() {
     # commit all
     git commit -am "Kogito $KOGITO_VERSION + OptaPlanner $OPTAPLANNER_VERSION"
 
-    if [ "$DRY_RUN" = "" ]; then
+    if [ "$DRY_RUN" = "false" ]; then
         # push the branch to a remote
         git push -u $PR_FORK $PR_BRANCH
         # Open a PR to kogito-runtimes using the commit as a title
@@ -174,7 +176,7 @@ finalize() {
     # overwrite old commit (no need to squash)
     git commit --amend --no-edit pom.xml
     
-    if [ "$DRY_RUN" = "" ]; then
+    if [ "$DRY_RUN" = "false" ]; then
         # push forced (we are overwriting the old commit)
         git push --force-with-lease
     fi
