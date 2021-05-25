@@ -25,7 +25,7 @@ usage() {
     echo
 }
 
-args=`getopt p:s:b:f:nh $*`
+args=`getopt s:b:f:nh $*`
 if [ $? != 0 ]
 then
         usage
