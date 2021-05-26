@@ -32,7 +32,7 @@ build:
   - project: kiegroup/kogito-apps
     build-command: 
       current: |
-        mvn -f kogito-apps/pom.xml clean install -Pvalidate-formatting ${{ env.BUILD_MVN_OPTS }}
+        mvn -f kogito-apps/pom.xml clean install -Dvalidate-formatting ${{ env.BUILD_MVN_OPTS }}
     clone:
       - kogito-apps
 
