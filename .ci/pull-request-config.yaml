@@ -39,7 +39,7 @@ build:
   - project: kiegroup/kogito-examples
     build-command: 
       current: |
-        mvn -f kogito-examples/pom.xml clean install -Pvalidate-formatting ${{ env.BUILD_MVN_OPTS }}
+        mvn -f kogito-examples/pom.xml clean install -Dvalidate-formatting ${{ env.BUILD_MVN_OPTS }}
         mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence ${{ env.BUILD_MVN_OPTS }}
         mvn -f kogito-examples-events/pom.xml clean install -Pevents ${{ env.BUILD_MVN_OPTS }}
     clone:
