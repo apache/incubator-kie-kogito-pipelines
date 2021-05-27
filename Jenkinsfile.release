@@ -22,6 +22,9 @@ OPERATOR_PROMOTE = 'kogito-operator-promote'
 // for more options on built job entity
 JOBS = [:]
 
+previousJobProperties = [:]
+releaseProperties = [:]
+
 defaultImageParamsPrefix = 'IMAGE'
 kogitoImagesParamsPrefix = 'KOGITO_IMAGES'
 examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
@@ -49,9 +52,25 @@ pipeline {
         stage('Initialize') {
             steps {
                 script {
-                    assert getKogitoArtifactsVersion() != ''
+                    // Restore config from previous run
+                    if (params.RESTORE_FROM_PREVIOUS_JOB) {
+                        previousJobProperties = readPropertiesFromUrl(params.RESTORE_FROM_PREVIOUS_JOB, 'release.properties')
+                        previousJobProperties.findAll { it.key.startsWith('build.') }.each { key, value ->
+                            String[] splitKey = key.split('\\.')
+                            String jobName = splitKey[1]
+                            String jobAttr = splitKey[2]
+                            if (!JOBS.containsKey(jobName)) {
+                                JOBS.put(jobName, [:])
+                            }
+                            def jobMap = JOBS[jobName]
+                            jobMap.put(jobAttr, value)
+                        }
+                        echo "Previous run jobs config imported: ${JOBS}"
+                    }
+
+                    assert getKogitoArtifactsVersion()
                     if (isArtifactsDeploy() || isArtifactsPromote()) {
-                        assert getOptaPlannerVersion() != ''
+                        assert getOptaPlannerVersion()
                     }
 
                     currentBuild.displayName = getDisplayName()
@@ -63,13 +82,23 @@ pipeline {
                         sendNotification("Git Author is different from `kiegroup` and no `ARTIFACTS_REPOSITORY` parameter has been provided. Are you sure you want to continue ? => ${env.BUILD_URL}input")
                         input message: 'Should the pipeline continue with no `ARTIFACTS_REPOSITORY` defined ?', ok: 'Yes'
                     }
-                }
             }
         }
+            post {
+                always {
+                    setReleasePropertyIfneeded('kogito.version', getKogitoArtifactsVersion())
+                    setReleasePropertyIfneeded('kogito.images.version', getKogitoImagesVersion())
+                    setReleasePropertyIfneeded('kogito.operator.version', getKogitoOperatorVersion())
+                    setReleasePropertyIfneeded('optaplanner.version', getOptaPlannerVersion())
+                    setReleasePropertyIfneeded('optaplanner.branch', getOptaPlannerReleaseBranch())
+                    setReleasePropertyIfneeded('deploy.latest', isDeployAsLatest())
+                }
+            }
+    }
 
         stage('Build & Deploy Kogito Runtimes') {
             when {
-                expression { return isArtifactsDeploy() }
+                expression { return isArtifactsDeploy() && !hasJob(RUNTIMES_DEPLOY) }
             }
             steps {
                 script {
@@ -85,7 +114,7 @@ pipeline {
 
         stage('Build & Deploy OptaPlanner') {
             when {
-                expression { return isArtifactsDeploy() }
+                expression { return isArtifactsDeploy() && !hasJob(OPTAPLANNER_DEPLOY) }
             }
             steps {
                 script {
@@ -103,7 +132,7 @@ pipeline {
 
         stage('Build & Deploy Kogito Apps') {
             when {
-                expression { return isArtifactsDeploy() }
+                expression { return isArtifactsDeploy() && !hasJob(APPS_DEPLOY) }
             }
             steps {
                 script {
@@ -120,7 +149,7 @@ pipeline {
 
         stage('Build & Deploy Kogito Examples') {
             when {
-                expression { return isArtifactsDeploy() }
+                expression { return isArtifactsDeploy() && !hasJob(EXAMPLES_DEPLOY) }
             }
             steps {
                 script {
@@ -141,20 +170,23 @@ pipeline {
                     sendNotification("All artifacts have been staged. You can find them here: ${getStagingRepository()}")
 
                     String jobUrl = getJobUrl(EXAMPLES_DEPLOY)
-                    def deployProps = jobUrl ? readDeployProperties(jobUrl) : [:]
+                    def deployProps = jobUrl ? readPropertiesFromUrl(jobUrl, 'deployment.properties') : [:]
 
-                    env.EXAMPLES_URI = params.EXAMPLES_URI ?: (deployProps['kogito-examples.pr.source.uri'] ?: "https://github.com/${getGitAuthor()}/kogito-examples")
-                    env.EXAMPLES_REF = params.EXAMPLES_REF ?: (deployProps['kogito-examples.pr.source.ref'] ?: util.getReleaseBranchFromVersion(getKogitoArtifactsVersion()))
-
+                    env.EXAMPLES_URI = params.EXAMPLES_URI ?: (previousJobProperties['examples.uri'] ?: (deployProps['kogito-examples.pr.source.uri'] ?: "https://github.com/${getGitAuthor()}/kogito-examples"))
+                    env.EXAMPLES_REF = params.EXAMPLES_REF ?: (previousJobProperties['examples.ref'] ?: (deployProps['kogito-examples.pr.source.ref'] ?: util.getReleaseBranchFromVersion(getKogitoArtifactsVersion())))
+                    
                     echo "Got examples uri ${env.EXAMPLES_URI}"
                     echo "Got examples ref ${env.EXAMPLES_REF}"
+
+                    setReleasePropertyIfneeded('examples.uri', env.EXAMPLES_URI)
+                    setReleasePropertyIfneeded('examples.ref', env.EXAMPLES_REF)
                 }
             }
         }
 
         stage('Build & Deploy Kogito Images') {
             when {
-                expression { return isImagesDeploy() }
+                expression { return isImagesDeploy() && !hasJob(IMAGES_DEPLOY) }
             }
             steps {
                 script {
@@ -173,7 +205,7 @@ pipeline {
 
         stage('Build & Deploy Examples Images') {
             when {
-                expression { return isExamplesImagesDeploy() }
+                expression { return isExamplesImagesDeploy() && !hasJob(EXAMPLES_IMAGES_DEPLOY) }
             }
             steps {
                 script {
@@ -195,7 +227,7 @@ pipeline {
 
         stage('Build & Deploy Kogito Operator') {
             when {
-                expression { return isOperatorDeploy() }
+                expression { return isOperatorDeploy() && !hasJob(OPERATOR_DEPLOY) }
             }
             steps {
                 script {
@@ -249,7 +281,7 @@ pipeline {
 
         stage('Promote Kogito Runtimes') {
             when {
-                expression { return getJobUrl(RUNTIMES_DEPLOY) }
+                expression { return getJobUrl(RUNTIMES_DEPLOY) && !hasJob(RUNTIMES_PROMOTE) }
             }
             steps {
                 script {
@@ -265,7 +297,7 @@ pipeline {
 
         stage('Promote OptaPlanner') {
             when {
-                expression { return getJobUrl(OPTAPLANNER_DEPLOY) }
+                expression { return getJobUrl(OPTAPLANNER_DEPLOY) && !hasJob(OPTAPLANNER_PROMOTE) }
             }
             steps {
                 script {
@@ -282,7 +314,7 @@ pipeline {
 
         stage('Promote Kogito Apps') {
             when {
-                expression { return getJobUrl(APPS_DEPLOY) }
+                expression { return getJobUrl(APPS_DEPLOY) && !hasJob(APPS_PROMOTE) }
             }
             steps {
                 script {
@@ -299,7 +331,7 @@ pipeline {
 
         stage('Promote Kogito Examples') {
             when {
-                expression { return getJobUrl(EXAMPLES_DEPLOY) }
+                expression { return getJobUrl(EXAMPLES_DEPLOY) && !hasJob(EXAMPLES_PROMOTE) }
             }
             steps {
                 script {
@@ -308,7 +340,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
                     addDeployBuildUrlParam(buildParams, EXAMPLES_DEPLOY)
-                    addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', params.DEPLOY_AS_LATEST)
+                    addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', isDeployAsLatest())
 
                     buildJob(EXAMPLES_PROMOTE, buildParams)
                 }
@@ -317,7 +349,7 @@ pipeline {
 
         stage('Promote Kogito Images') {
             when {
-                expression { return getJobUrl(IMAGES_DEPLOY) }
+                expression { return getJobUrl(IMAGES_DEPLOY) && !hasJob(IMAGES_PROMOTE) }
             }
             steps {
                 script {
@@ -328,7 +360,7 @@ pipeline {
                         addImageBuildParams(buildParams, getKogitoImagesTempTag(), false, baseImageParamsPrefix)
                     }
                     addImageBuildParams(buildParams, getKogitoImagesFinalTag(), true, promoteImageParamsPrefix)
-                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
+                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
 
                     buildJob(IMAGES_PROMOTE, buildParams)
                 }
@@ -337,14 +369,14 @@ pipeline {
 
         stage('Promote Examples Images') {
             when {
-                expression { return isExamplesImagesPromote() }
+                expression { return isExamplesImagesPromote() && !hasJob(EXAMPLES_IMAGES_PROMOTE) }
             }
             steps {
                 script {
                     sendStageNotification()
 
                     def buildParams = getDefaultBuildParams()
-                    
+
                     addDeployBuildUrlParamOrClosure(buildParams, EXAMPLES_IMAGES_DEPLOY)  {
                         addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag(), false, baseImageParamsPrefix)
                         addStringParam(buildParams, constructKey(baseImageParamsPrefix, 'NAME_PREFIX'), 'examples')
@@ -352,7 +384,7 @@ pipeline {
 
                     addImageBuildParams(buildParams, getKogitoExamplesImagesFinalTag(), true, promoteImageParamsPrefix)
                     addStringParam(buildParams, constructKey(promoteImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
+                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
 
                     buildJob(EXAMPLES_IMAGES_PROMOTE, buildParams)
                 }
@@ -361,7 +393,7 @@ pipeline {
 
         stage('Promote Kogito Operator') {
             when {
-                expression { return getJobUrl(OPERATOR_DEPLOY) }
+                expression { return getJobUrl(OPERATOR_DEPLOY) && !hasJob(OPERATOR_PROMOTE) }
             }
             steps {
                 script {
@@ -374,7 +406,7 @@ pipeline {
 
                     // Base image information is given by the deploy URL
                     addImageBuildParams(buildParams, getKogitoOperatorFinalTag(), true, promoteImageParamsPrefix)
-                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', params.DEPLOY_AS_LATEST)
+                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
 
                     buildJob(OPERATOR_PROMOTE, buildParams)
                 }
@@ -398,13 +430,22 @@ pipeline {
         //             // TODO how to set nextSnapshot ?
         //             addStringParam(buildParams, "nextSnapshot", "???")
 
-    //             buildJob(OPERATOR_DEPLOY, "../../kogito-docs/kogito-docs-upload", buildParams)
-    //         }
-    //     }
-    // }
-    }
+//             buildJob(OPERATOR_DEPLOY, "../../kogito-docs/kogito-docs-upload", buildParams)
+//         }
+//     }
+// }
+}
     post {
         always {
+            script {
+                JOBS.each { name, job ->
+                    setReleasePropertyIfneeded("build.${name}.result", job.result)
+                    setReleasePropertyIfneeded("build.${name}.absoluteUrl", job.absoluteUrl)
+                }
+                def propertiesStr = releaseProperties.collect { entry -> "${entry.key}=${entry.value}" }.join('\n')
+                writeFile( file : 'release.properties' , text : propertiesStr)
+                archiveArtifacts artifacts: 'release.properties'
+            }
             cleanWs()
         }
         success {
@@ -422,8 +463,8 @@ def buildJob(String jobName, List buildParams) {
     echo "Build ${jobName} with params ${buildParams}"
 
     def job = build(job: "./${jobName}", wait: true, parameters: buildParams, propagate: false)
-    def jobResult = job.getResult()
-    def jobUrl = job.getAbsoluteUrl()
+    def jobResult = job.result
+    def jobUrl = job.absoluteUrl
     if (jobResult != 'SUCCESS') {
         echo "Sending a notification about an unsuccessful job build ${jobName}."
         sendNotification("`${jobName}` finished with status `${jobResult}`.\nSee: ${jobUrl}\n\nPlease provide which action should be done (retry ? continue ? skip ? abort ?): ${env.BUILD_URL}input")
@@ -459,10 +500,14 @@ def getJob(String jobName) {
     return JOBS[jobName]
 }
 
+boolean hasJob(String jobName) {
+    return JOBS.containsKey(jobName)
+}
+
 String getJobUrl(String jobName) {
     echo "getJobUrl for ${jobName}"
     def job = getJob(jobName)
-    return job ? job.getAbsoluteUrl() : ''
+    return job ? job.absoluteUrl : ''
 }
 
 void sendSuccessfulReleaseNotification() {
@@ -489,17 +534,14 @@ void sendNotification(String body) {
                 to: env.KOGITO_CI_EMAIL_TO
 }
 
-def readDeployProperties(String buildUrl) {
-    def deployProperties = [:]
-    if (buildUrl != '') {
-        if (!buildUrl.endsWith('/')) {
-            buildUrl += '/'
-        }
-        sh "wget ${buildUrl}artifact/deployment.properties -O deployment.properties"
-        deployProperties = readProperties file: 'deployment.properties'
-        echo deployProperties.collect { entry -> "${entry.key}=${entry.value}" }.join('\n')
+def readPropertiesFromUrl(String url, String propsFilename) {
+    if (!url.endsWith('/')) {
+        url += '/'
     }
-    return deployProperties
+    sh "wget ${url}artifact/${propsFilename} -O ${propsFilename}"
+    def props = readProperties file: propsFilename
+    echo props.collect { entry -> "${entry.key}=${entry.value}" }.join('\n')
+    return props
 }
 
 List getDefaultBuildParams(String version = '') {
@@ -522,9 +564,9 @@ void addDeployBuildUrlParam(buildParams, jobName) {
 
 void addDeployBuildUrlParamOrClosure(buildParams, jobName, closure = null) {
     String url = getJobUrl(jobName)
-    if(url) {
+    if (url) {
         addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(jobName))
-    } else if(closure){
+    } else if (closure) {
         closure()
     }
 }
@@ -571,19 +613,19 @@ String getDisplayName(version = '') {
 }
 
 String getKogitoArtifactsVersion() {
-    return params.PROJECT_VERSION
+    return params.PROJECT_VERSION ?: previousJobProperties['kogito.version']
 }
 
 String getKogitoImagesVersion() {
-    return params.KOGITO_IMAGES_VERSION ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion())
+    return params.KOGITO_IMAGES_VERSION ?: (previousJobProperties['kogito.images.version'] ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion()))
 }
 
 String getKogitoOperatorVersion() {
-    return params.KOGITO_OPERATOR_VERSION ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion())
+    return params.KOGITO_OPERATOR_VERSION ?: (previousJobProperties['kogito.operator.version'] ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion()))
 }
 
 String getOptaPlannerVersion() {
-    return params.OPTAPLANNER_VERSION
+    return params.OPTAPLANNER_VERSION ?: previousJobProperties['optaplanner.version']
 }
 
 String getGitAuthor() {
@@ -595,11 +637,15 @@ String getArtifactsRepositoryParam() {
 }
 
 String getOptaPlannerReleaseBranch() {
-    return params.OPTAPLANNER_RELEASE_BRANCH ?: util.getReleaseBranchFromVersion(getOptaPlannerVersion())
+    return params.OPTAPLANNER_RELEASE_BRANCH ?: (previousJobProperties['optaplanner.branch'] ?: util.getReleaseBranchFromVersion(getOptaPlannerVersion()))
 }
 
 String getStagingRepository() {
     return getArtifactsRepositoryParam() ?: env.DEFAULT_STAGING_REPOSITORY
+}
+
+boolean isDeployAsLatest() {
+    return params.DEPLOY_AS_LATEST || previousJobProperties['deploy.latest']?.toBoolean()
 }
 
 boolean isArtifactsDeploy() {
@@ -661,4 +707,10 @@ String getKogitoOperatorFinalTag() {
 String removeVersionSuffixIfExist(String version) {
     Integer[] versionSplit = util.parseVersion(version)
     return "${versionSplit[0]}.${versionSplit[1]}.${versionSplit[2]}"
+}
+
+void setReleasePropertyIfneeded(String key, def value) {
+    if (value) {
+        releaseProperties[key] = value
+    }
 }
