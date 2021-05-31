@@ -480,7 +480,7 @@ boolean isOperatorDeploy() {
 }
 
 boolean isImagesPromote() {
-    return isImagesDeploy() && isJobSucceeded(IMAGES_DEPLOY)
+    return isImagesDeploy() && (isJobSucceeded(IMAGES_DEPLOY) || isJobUnstable(IMAGES_DEPLOY))
 }
 
 boolean isExamplesImagesPromote() {
