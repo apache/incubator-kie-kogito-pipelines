@@ -423,7 +423,7 @@ void addSkipIntegrationTestsParam(buildParams) {
 
 void addExamplesParam(buildParams) {
     addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
-    addStringParam(buildParams, 'EXAMPLES_REF', getBuildBranch())
+    addStringParam(buildParams, 'EXAMPLES_REF', "nightly-${getBuildBranch()}")
 }
 
 void addImageBuildParams(List buildParams, String tag, boolean isFinalImage = false, String paramsPrefix = defaultImageParamsPrefix) {
