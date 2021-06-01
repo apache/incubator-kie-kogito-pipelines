@@ -149,6 +149,9 @@ void setupNightlyJob(String jobFolder) {
 void setupReleaseJob(String jobFolder) {
     KogitoJobTemplate.createPipelineJob(this, getJobParams('kogito-release', jobFolder, 'Jenkinsfile.release', 'Kogito Release')).with {
         parameters {
+
+            stringParam('RESTORE_FROM_PREVIOUS_JOB', '', 'URL to a previous stopped release job which needs to be continued')
+            
             stringParam('PROJECT_VERSION', '', 'Project version to release as Major.minor.micro')
             stringParam('KOGITO_IMAGES_VERSION', '', 'To be set if different from PROJECT_VERSION. Should be only a bug fix update from PROJECT_VERSION.')
             stringParam('KOGITO_OPERATOR_VERSION', '', 'To be set if different from PROJECT_VERSION. Should be only a bug fix update from PROJECT_VERSION.')
