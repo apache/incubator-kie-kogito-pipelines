@@ -5,7 +5,16 @@ dependencies:
   - project: kiegroup/optaplanner
     dependencies:
       - project: kiegroup/kogito-runtimes
-  
+    mapping:
+      dependencies:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
+      dependant:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)" 
+
   - project: kiegroup/kogito-apps
     dependencies:
       - project: kiegroup/kogito-runtimes
