@@ -14,7 +14,7 @@
 # fi
 # 
 # if [ -z $branch ]; then
-#   branch='master'
+#   branch='main'
 # fi
 # 
 # echo '----- Cloning main dsl pipelines repo'

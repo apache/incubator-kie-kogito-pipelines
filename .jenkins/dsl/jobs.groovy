@@ -78,7 +78,7 @@ void setupCreateIssueToolsJob(String jobFolder) {
         parameters {
             stringParam('AUTHOR', '', 'Git author')
             stringParam('REPOSITORY', '', 'Git repository')
-            stringParam('BRANCH', 'master', 'Git branch')
+            stringParam('BRANCH', 'main', 'Git branch')
             stringParam('ISSUE_TITLE', '', 'Title of the issue')
             textParam('ISSUE_BODY', '', 'Body of the issue')
         }

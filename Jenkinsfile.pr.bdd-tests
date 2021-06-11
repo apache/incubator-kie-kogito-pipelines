@@ -73,7 +73,7 @@ pipeline {
                     echo "Call ${OPTAPLANNER_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
 
-                    def targetBranch = (changeTarget != 'master') ? getOptaPlannerBranch() : ''
+                    def targetBranch = (changeTarget != 'main') ? getOptaPlannerBranch() : ''
                     addAuthorBranchParamsIfExist(buildParams, 'optaplanner', targetBranch)
                     addStringParam(buildParams, 'PR_TARGET_BRANCH', targetBranch)
                     addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', targetBranch)
@@ -219,7 +219,7 @@ void addAuthorBranchParamsIfExist(List params, String repo, String targetBranch 
         addStringParam(params, 'GIT_AUTHOR', changeAuthor)
         addStringParam(params, 'BUILD_BRANCH_NAME', changeBranch)
     // set build branch to kiegroup's version branch
-    } else if (targetBranch != 'master' && doesBranchExist(repo, 'kiegroup', targetBranch)) {
+    } else if (targetBranch != 'main' && doesBranchExist(repo, 'kiegroup', targetBranch)) {
         addStringParam(params, 'BUILD_BRANCH_NAME', targetBranch)
     }
 }
@@ -247,7 +247,7 @@ void addExamplesParams(List buildParams) {
         branch = changeTarget
     } else {
         author = 'kiegroup'
-        branch = 'master'
+        branch = 'main'
     }
     addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${author}/kogito-examples")
     addStringParam(buildParams, 'EXAMPLES_REF', branch)

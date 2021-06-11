@@ -18,10 +18,10 @@ usage() {
     echo 'Examples:'
     echo '  #  - Update Kogito to Quarkus 2.0.0.Final, '
     echo '  #  - Pin MAVEN_VERSION to 3.6.2'
-    echo '  #  - Base branch is master'
+    echo '  #  - Base branch is main'
     echo '  #  - Push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run '
-    echo '  sh update-quarkus-versions.sh -p kogito -s 2.0.0.Final -m 3.6.2 -b master -f evacchi -n'
+    echo '  sh update-quarkus-versions.sh -p kogito -s 2.0.0.Final -m 3.6.2 -b main -f evacchi -n'
     echo
 }
 
@@ -94,10 +94,10 @@ REPO=kogito-runtimes
 
 ORIGIN=kiegroup/$REPO
 PR_FORK=$FORK/$REPO
-BRANCH=master
+BRANCH=main
 PREFIX=""
 if [ "$BRANCH" = "" ]; then BRANCH=$DEFAULT_BRANCH; else PREFIX="${BRANCH}-"; fi
-if [ "$BRANCH" = "master" ]; then PREFIX=""; else PREFIX="${BRANCH}-"; fi
+if [ "$BRANCH" = "main" ]; then PREFIX=""; else PREFIX="${BRANCH}-"; fi
 
 # kogito-runtimes or optaplanner
 PR_BRANCH=bump-${PREFIX}quarkus-$QUARKUS_VERSION

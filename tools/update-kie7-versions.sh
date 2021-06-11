@@ -1,8 +1,8 @@
 #!/bin/sh
 set -euo pipefail
 
-BRANCH=master
-DEFAULT_BRANCH=master
+BRANCH=main
+DEFAULT_BRANCH=main
 DRY_RUN=false
 FORK=
 KIE_VERSION=
@@ -18,10 +18,10 @@ usage() {
     echo
     echo 'Examples:'
     echo '  #  - Update Kogito to KIE 7.54.0.Final, '
-    echo '  #  - Base branch is master'
+    echo '  #  - Base branch is main'
     echo '  #  - Push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run '
-    echo '  sh update-kie7-versions.sh -s 7.54.0.Final -b master -f evacchi -n'
+    echo '  sh update-kie7-versions.sh -s 7.54.0.Final -b main -f evacchi -n'
     echo
 }
 

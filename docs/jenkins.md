@@ -95,11 +95,11 @@ Here is an example of the generated job hierarchy:
     .
     ├── 0-seed-job                   # main seed job to create other branch & repo jobs.
     ├── nightly                      # all related nightly jobs
-    │   ├── master                   # master nightly jobs
+    │   ├── main                     # main nightly jobs
     │   └── ...{RELEASE BRANCHES}    # nightly jobs related to specific release branches
     ├── other                        # some other jobs
     ├── pullrequest                  # all related pr jobs
-    │   ├── master                   # master pr jobs
+    │   ├── main                     # main pr jobs
     │   ├── {RELEASE_BRANCH}         # release branch pr jobs
     │   └── kogito-runtimes.bdd      # PR jobs for running BDD tests from kogito-runtimes repository
     ├── release                      # all related release jobs
@@ -134,7 +134,7 @@ branch=$1
 author=$2
 
 if [ -z $branch ]; then
-branch='master'
+branch='main'
 fi
 
 if [ -z $author ]; then
@@ -161,7 +161,7 @@ $ cd .jenkins/dsl && ./scripts/test.sh
 
 #### Test specific repository jobs
 
-You can use the description in [seed_job_repo.groovy](../dsl/seed/jobs/seed_job_repo.groovy) and create the repo seed job directly by setting then the Seed author/branch (take the `kiegroup/master` by default if you don't have any) and then set correctly those environement variables:
+You can use the description in [seed_job_repo.groovy](../dsl/seed/jobs/seed_job_repo.groovy) and create the repo seed job directly by setting then the Seed author/branch (take the `kiegroup/main` by default if you don't have any) and then set correctly those environement variables:
 
 * **REPO_NAME**  
   This is the repository you want to test
@@ -173,7 +173,7 @@ You can use the description in [seed_job_repo.groovy](../dsl/seed/jobs/seed_job_
   The "key" for job generation. You can use the same value as `GIT_BRANCH`
 * **GIT_MAIN_BRANCH**
   This is to define what is the main branch when processing jobs.  
-  If the jobs you want to test is branch agnostic, then you can just set `master` or anything else.  
+  If the jobs you want to test is branch agnostic, then you can just set `main` or anything else.  
   If the job you want to test is only for the main branch, then you should set the same value as `GIT_BRANCH`.
 * **GIT_JENKINS_CONFIG_PATH**  
   This is where to find the jenkins seed file for job generation. Usually it is `.jenkins`
@@ -198,11 +198,11 @@ For example, if you are working with `kogito-images` and `kogito-operator` pipel
 * CUSTOM_REPOSITORIES=kogito-images:kogito-998756,kogito-operator:kogito-998756
 * CUSTOM_AUTHOR=<YOUR_GITHUB_AUTHOR>
 * CUSTOM_MAIN_BRANCH=kogito-998756  
-  => This will allow to generate pull requests, else it considers the main branch to be the one defined into the seed config (most of the time `master`) and does not generate those.
+  => This will allow to generate pull requests, else it considers the main branch to be the one defined into the seed config (most of the time `main`) and does not generate those.
 
-By default, in `CUSTOM_REPOSITORIES`, if you don't define any branch, `master` is taken.
+By default, in `CUSTOM_REPOSITORIES`, if you don't define any branch, `main` is taken.
 
-*NOTE: If you are testing nightly/release pipelines, you will need to set the correct `SEED_AUTHOR` and `SEED_BRANCH` because you will need specific credentials for your test. Else you can use directly the `kiegroup/master` repository.*
+*NOTE: If you are testing nightly/release pipelines, you will need to set the correct `SEED_AUTHOR` and `SEED_BRANCH` because you will need specific credentials for your test. Else you can use directly the `kiegroup/main` repository.*
 
 #### Generate all
 

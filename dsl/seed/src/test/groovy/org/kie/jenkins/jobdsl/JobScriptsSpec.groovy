@@ -46,7 +46,7 @@ class JobScriptsSpec extends Specification {
         envVars.put('GIT_MAIN_BRANCH', 'GIT_MAIN_BRANCH')
         envVars.put('GIT_BRANCH', 'GIT_BRANCH')
         envVars.put('GIT_AUTHOR', 'GIT_AUTHOR')
-        envVars.put('MAIN_BRANCHES', '{"default":"master"}')
+        envVars.put('MAIN_BRANCHES', '{"default":"main"}')
 
         envVars.put('CUSTOM_BRANCH_KEY', 'CUSTOM_BRANCH_KEY')
         envVars.put('CUSTOM_REPOSITORIES', 'CUSTOM_REPOSITORIES')
