@@ -59,13 +59,13 @@ pipeline {
                             String[] splitKey = key.split('\\.')
                             String jobName = splitKey[1]
                             String jobAttr = splitKey[2]
-                            if (!JOBS.containsKey(jobName)) {
-                                JOBS.put(jobName, [:])
+                            if (!hasJob(jobName)) {
+                                registerJob(jobName, [:])
                             }
-                            def jobMap = JOBS[jobName]
+                            def jobMap = getJob(jobName)
                             jobMap.put(jobAttr, value)
                         }
-                        echo "Previous run jobs config imported: ${JOBS}"
+                        echo "Previous run jobs config imported: ${getAllJobs()}"
                     }
 
                     assert getKogitoArtifactsVersion()
@@ -438,13 +438,7 @@ pipeline {
     post {
         always {
             script {
-                JOBS.each { name, job ->
-                    setReleasePropertyIfneeded("build.${name}.result", job.result)
-                    setReleasePropertyIfneeded("build.${name}.absoluteUrl", job.absoluteUrl)
-                }
-                def propertiesStr = releaseProperties.collect { entry -> "${entry.key}=${entry.value}" }.join('\n')
-                writeFile( file : 'release.properties' , text : propertiesStr)
-                archiveArtifacts artifacts: 'release.properties'
+                saveReleaseProperties()
             }
             cleanWs()
         }
@@ -489,11 +483,17 @@ def buildJob(String jobName, List buildParams) {
         registerJob(jobName, job)
     }
 
+    saveReleaseProperties()
+
     return job
 }
 
 def registerJob(String jobName, def job) {
     JOBS[jobName] = job
+}
+
+def getAllJobs() {
+    return JOBS
 }
 
 def getJob(String jobName) {
@@ -510,9 +510,19 @@ String getJobUrl(String jobName) {
     return job ? job.absoluteUrl : ''
 }
 
+void saveReleaseProperties() {
+    getAllJobs().each { name, job ->
+        setReleasePropertyIfneeded("build.${name}.result", job.result)
+        setReleasePropertyIfneeded("build.${name}.absoluteUrl", job.absoluteUrl)
+    }
+    def propertiesStr = releaseProperties.collect { entry -> "${entry.key}=${entry.value}" }.join('\n')
+    writeFile( file : 'release.properties' , text : propertiesStr)
+    archiveArtifacts artifacts: 'release.properties'
+}
+
 void sendSuccessfulReleaseNotification() {
     String bodyMsg = 'Release is successful with those jobs:\n'
-    JOBS.each {
+    getAllJobs().each {
         bodyMsg += "- ${it.key}\n"
     }
     bodyMsg += "\nPlease look here: ${BUILD_URL} for more information"
