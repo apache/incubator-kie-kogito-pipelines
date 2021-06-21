@@ -17,7 +17,7 @@ build:
   - project: kiegroup/kogito-runtimes
     build-command:
       current: |
-        mvn -f kogito-runtimes/pom.xml clean install -Dvalidate-formatting ${{ env.BUILD_MVN_OPTS }}
+        mvn -f kogito-runtimes/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
     clone:
       - kogito-runtimes
 
