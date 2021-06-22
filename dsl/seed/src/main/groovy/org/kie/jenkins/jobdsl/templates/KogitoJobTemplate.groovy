@@ -209,10 +209,6 @@ class KogitoJobTemplate {
                                             result('FAILURE')
                                             message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **failed**. Please check [the logs](\${BUILD_URL}display/redirect).")
                                         }
-                                        ghprbBuildResultMessage {
-                                            result('SUCCESS')
-                                            message("The ${jobParams.pr.commitContext ?: 'Linux'} check is **successful**.")
-                                        }
                                     }
                                 }
                                 ghprbCancelBuildsOnUpdate {
