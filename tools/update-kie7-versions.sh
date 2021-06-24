@@ -113,7 +113,7 @@ git commit -am "[$BRANCH] Bump KIE $KIE_VERSION"
  
 if [ "$DRY_RUN" = "false" ]; then
     # push the branch to a remote
-    git push -u $PR_FORK $PR_BRANCH
+    git push -u https://github.com/$PR_FORK $PR_BRANCH
     
     # Open a PR to kogito-runtimes using the commit as a title
     # e.g. see https://github.com/kiegroup/kogito-runtimes/pull/1200
