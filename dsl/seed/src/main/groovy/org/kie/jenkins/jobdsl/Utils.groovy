@@ -47,8 +47,10 @@ class Utils {
         return getBindingValue(script, 'GIT_MAIN_BRANCH')
     }
 
-    static String isMainBranch(def script) {
-        return getGitBranch(script) == getGitMainBranch(script)
+    static boolean isMainBranch(def script) {
+        boolean result = getGitBranch(script) == getGitMainBranch(script)
+        script.println("Branch=${getGitBranch(script)}. Main Branch=${getGitMainBranch(script)}. Is main branch ? => ${result}")
+        return result
     }
 
     static String getGitAuthor(def script) {
