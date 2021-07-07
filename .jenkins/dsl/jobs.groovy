@@ -58,8 +58,7 @@ setupNightlyJob(nightlyBranchFolder)
 
 folder(KogitoConstants.KOGITO_DSL_RELEASE_FOLDER)
 if (isMainBranch()) {
-    // Release prepare and create branches jobs are not in a specific branch and should be generated only on main branch
-    setupCreateReleaseBranchJob(KogitoConstants.KOGITO_DSL_RELEASE_FOLDER)
+    // Release prepare is not in a specific branch and should be generated only on main branch
     setupPrepareReleaseJob(KogitoConstants.KOGITO_DSL_RELEASE_FOLDER)
 } else {
     // No release job directly on main branch
@@ -193,27 +192,11 @@ void setupReleaseJob(String jobFolder) {
     }
 }
 
-void setupCreateReleaseBranchJob(String jobFolder) {
-    KogitoJobTemplate.createPipelineJob(this, getJobParams('create-release-branches', jobFolder, 'Jenkinsfile.release.create-branches', 'Create release branches')).with {
-        parameters {
-            stringParam('REPOSITORIES', '', 'Comma-separated list of repository[:base branch] to update. The default base branch for every repository is the \'master\' branch.')
-            stringParam('RELEASE_BRANCH', '', 'Release branch to create')
-        }
-
-        environmentVariables {
-            env('GIT_AUTHOR', "${GIT_AUTHOR_NAME}")
-            env('GIT_AUTHOR_CREDS_ID', "${GIT_AUTHOR_CREDENTIALS_ID}")
-            env('DEFAULT_BASE_BRANCH', "${GIT_MAIN_BRANCH}")
-        }
-    }
-}
-
 void setupPrepareReleaseJob(String jobFolder) {
     KogitoJobTemplate.createPipelineJob(this, getJobParams('prepare-release-branch', jobFolder, 'Jenkinsfile.release.prepare', 'Prepare env for a release')).with {
         parameters {
             stringParam('KOGITO_VERSION', '', 'Project version to release as Major.minor.micro')
             stringParam('OPTAPLANNER_VERSION', '', 'Project version of OptaPlanner and its examples to release as Major.minor.micro')
-            stringParam('OPTAPLANNER_RELEASE_BRANCH', '', 'Use to override the release branch name deduced from the OPTAPLANNER_VERSION')
 
             booleanParam('BRANCH_PRODUCT_REPOSITORIES', false, 'Set to true to create branch also on Product repositories')
         }
@@ -222,6 +205,7 @@ void setupPrepareReleaseJob(String jobFolder) {
             env('JENKINS_EMAIL_CREDS_ID', "${JENKINS_EMAIL_CREDS_ID}")
 
             env('PIPELINE_MAIN_BRANCH', "${GIT_MAIN_BRANCH}")
+            env('DEFAULT_BASE_BRANCH', "${GIT_MAIN_BRANCH}")
 
             env('GIT_AUTHOR', "${GIT_AUTHOR_NAME}")
             env('GIT_AUTHOR_CREDS_ID', "${GIT_AUTHOR_CREDENTIALS_ID}")
