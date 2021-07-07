@@ -184,6 +184,7 @@ pipeline {
                                 testErrors = true
                             } finally {
                                 junit 'build/test-results/**/*.xml'
+                                archiveArtifacts 'build/reports/**'
                             }
                         }
                     }
