@@ -11,7 +11,7 @@ FORK=
 KIE_VERSION=
 
 usage() {
-    echo 'Usage: update-kie7-versions.sh -s $KIE_VERSION -b $BASE_BRANCH -f $FORK [-n]'
+    echo 'Usage: update-kie7-versions.sh -s $KIE_VERSION -b $BASE_BRANCH -f $FORK [-s] [-n]'
     echo
     echo 'Options:'
     echo '  -v $KIE_VERSION  set version'
