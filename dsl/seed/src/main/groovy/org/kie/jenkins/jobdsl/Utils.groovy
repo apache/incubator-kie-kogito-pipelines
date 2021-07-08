@@ -39,18 +39,22 @@ class Utils {
         return getBindingValue(script, 'QUARKUS_LTS_VERSION')
     }
 
-    static String getGitBranch(def script) {
-        return getBindingValue(script, 'GIT_BRANCH')
-    }
-
-    static String getGitMainBranch(def script) {
-        return getBindingValue(script, 'GIT_MAIN_BRANCH')
-    }
-
     static boolean isMainBranch(def script) {
         boolean result = getGitBranch(script) == getGitMainBranch(script)
         script.println("Branch=${getGitBranch(script)}. Main Branch=${getGitMainBranch(script)}. Is main branch ? => ${result}")
         return result
+    }
+
+    static String getRepoName(def script) {
+        return getBindingValue(script, 'REPO_NAME')
+    }
+
+    static String getGitBranch(def script) {
+        return getBindingValue(script, 'GIT_BRANCH')
+    }
+    
+    static String getGitMainBranch(def script) {
+        return getBindingValue(script, 'GIT_MAIN_BRANCH')
     }
 
     static String getGitAuthor(def script) {

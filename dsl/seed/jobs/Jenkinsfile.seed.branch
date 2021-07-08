@@ -1,0 +1,160 @@
+/////////////////////////////////////////////////////////////////////////////////////
+// This Jenkinsfile generate the respective repository seed jobs based on configured branch
+/////////////////////////////////////////////////////////////////////////////////////
+
+import groovy.json.JsonOutput
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+util = null
+
+shouldRun = false
+LISTEN_TO_MODIFIED_PATHS = [
+    'dsl/seed/config/branch.yaml',
+    'dsl/seed/gradle',
+    'dsl/seed/jobs/seed_job_branch.groovy',
+    'dsl/seed/jobs/Jenkinsfile.seed.branch',
+    'dsl/seed/jobs/scripts',
+    'dsl/seed/src',
+    'dsl/seed/build.gradle',
+    'dsl/seed/gradle.properties',
+]
+
+pipeline {
+    agent none
+
+    options {
+        timestamps()
+    }
+
+    // parameters {
+    // See ./jobs/seed_job.groovy
+    // }
+
+    stages {
+        stage('Preliminary check') {
+            agent any
+            steps {
+                script {
+                    checkout scm
+                    util = load 'dsl/seed/jobs/scripts/util.groovy'
+
+                    shouldRun = params.FORCE_REBUILD ?: util.arePathsModified(LISTEN_TO_MODIFIED_PATHS)
+                    if (!shouldRun) {
+                        echo "No force rebuild or modified paths ${LISTEN_TO_MODIFIED_PATHS}"
+                        echo 'Nothing done'
+                    }
+                }
+            }
+            post {
+                always {
+                    cleanWs()
+                }
+            }
+        }
+        stage('Launch generation') {
+            when {
+                expression { return shouldRun }
+            }
+            stages {
+                stage('Generate jobs') {
+                    agent {
+                        label 'kie-rhel7 && kie-mem4g'
+                    }
+                    tools {
+                        jdk 'kie-jdk1.8'
+                    }
+                    stages {
+                        stage('Initialize') {
+                            steps {
+                                script {
+                                    checkout scm
+                                    util = load 'dsl/seed/jobs/scripts/util.groovy'
+                                }
+                            }
+                        }
+
+                        stage('Generate repository seed jobs') {
+                            steps {
+                                script {
+                                    util.readBranchConfig().repositories.collect { it.name }.each { repository ->
+                                        println "[INFO] Generate repo seed job for repository ${repository}"
+                                        def repoCfg = util.getRepoConfig(repository, "${GENERATION_BRANCH}")
+                                        dir("${util.getDslSeedFolderAbsolutePath()}") {
+                                                jobDsl(targets: 'jobs/seed_job_repo.groovy',
+                                                        sandbox: false,
+                                                        ignoreExisting: false,
+                                                        ignoreMissingFiles: false,
+                                                        removedJobAction: 'IGNORE',
+                                                        removedViewAction: 'IGNORE',
+                                                        //removedConfigFilesAction: 'IGNORE',
+                                                        lookupStrategy: 'SEED_JOB',
+                                                        additionalClasspath: 'src/main/groovy',
+                                                        additionalParameters : [
+                                                            JOB_NAME: getRepoBranchSeedJobName(repository),
+
+                                                            // Params propagation
+                                                            SEED_AUTHOR: "${SEED_AUTHOR}",
+                                                            SEED_BRANCH: "${SEED_BRANCH}",
+
+                                                            // Env
+                                                            REPO_NAME: repository,
+                                                            GIT_BRANCH: repoCfg.git.branch,
+                                                            GIT_AUTHOR: repoCfg.git.author.name,
+                                                            GENERATION_BRANCH: "${GENERATION_BRANCH}",
+                                                            GIT_MAIN_BRANCH: getMainBranch(repository),
+                                                            GIT_JENKINS_CONFIG_PATH: repoCfg.git.jenkins_config_path
+                                                        ],
+                                                )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // stage('Launch repository seed jobs') {
+                        //     steps {
+                        //         script {
+                        //             Map parallelJobs = [:]
+                        //             util.readBranchConfig().repositories.collect { it.name }.each { repository ->
+                        //                 parallelJobs.put(repository, { launchRepositorySeedJob(repository) })
+                        //             }
+
+                        //             parallel parallelJobs
+                        //         }
+                        //     }
+                        // }
+                    }
+                    post {
+                        always {
+                            cleanWs()
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+String getRepoBranchSeedJobName(String repository) {
+    return "z-seed-${GENERATION_BRANCH}-${repository}-job"
+}
+
+boolean getMainBranch(String repository) {
+    Map mainBranches = readJSON(text: "${MAIN_BRANCHES}")
+    return mainBranches.get(mainBranches.containsKey(repository) ? repository : 'default')
+}
+
+void launchRepositorySeedJob(String repository) {
+    println "[INFO] Launch repository seed job for repository ${repository}"
+
+    List jobParams = []
+    jobParams.add(booleanParam(name: 'DEBUG', value: params.DEBUG))
+    jobParams.add(stringParam(name: 'SEED_AUTHOR', value: params.SEED_AUTHOR))
+    jobParams.add(stringParam(name: 'SEED_BRANCH', value: params.SEED_BRANCH))
+    jobParams.add(booleanParam(name: 'FORCE_REBUILD', value: params.FORCE_REBUILD))
+
+    echo "Build ./${getRepoBranchSeedJobName(repository)} with parameters ${jobParams}"
+    build(job: "./${getRepoBranchSeedJobName(repository)}", parameters: jobParams, wait: false)
+}

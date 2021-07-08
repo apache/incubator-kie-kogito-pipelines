@@ -90,6 +90,8 @@ pipeline {
         stage('Update kogito-pipelines branch config') {
             steps {
                 script {
+                    String branchConfigFile = 'dsl/seed/config/branch.yaml'
+                    
                     dir('pipelines-branch') {
                         deleteDir()
                         checkout(githubscm.resolveRepository(PIPELINE_REPO, getGitAuthor(), getKogitoReleaseBranch(), false))
@@ -108,14 +110,14 @@ pipeline {
                         def branchConfig = [ dependent_repositories : repositories]
 
                         echo "Write dsl branch_config => ${branchConfig}"
-                        sh 'rm dsl/branch_config.yaml'
-                        writeYaml file: 'dsl/branch_config.yaml', data: branchConfig, overwrite: true
+                        sh "rm ${branchConfigFile}"
+                        writeYaml file: "${branchConfigFile}", data: branchConfig, overwrite: true
 
                         if (githubscm.isThereAnyChanges()) {
                             githubscm.commitChanges('Update DSL branch config after cut-off')
                             githubscm.pushObject('origin', getKogitoReleaseBranch(), getGitAuthorCredsId())
 
-                            sendNotification("kogito-pipelines ${getKogitoReleaseBranch()} `dsl/branch_config.yaml` has been updated with correct configuration")
+                            sendNotification("kogito-pipelines ${getKogitoReleaseBranch()} `${branchConfigFile}` has been updated with correct configuration")
                         } else {
                             println '[WARN] No changes to commit'
                         }
@@ -128,7 +130,7 @@ pipeline {
             steps {
                 script {
                     String botBranch = "${getKogitoReleaseBranch()}-${util.generateHash(10)}"
-                    String seedConfigFile = 'dsl/seed/config.yaml'
+                    String seedConfigFile = 'dsl/seed/config/main.yaml'
 
                     dir('pipelines-seed') {
                         deleteDir()

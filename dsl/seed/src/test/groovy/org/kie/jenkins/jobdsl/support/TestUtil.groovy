@@ -31,10 +31,8 @@ class TestUtil {
         xmlFile.text = xml
     }
 
-    static Map readSeedConfig() {
-        Map config = new Yaml().load(("config.yaml" as File).text)
-        config.git.remove('branches')
-        config.git.remove('main_branch')
+    static Map readBranchConfig() {
+        Map config = new Yaml().load(("config/branch.yaml" as File).text)
 
         Map props = [:]
         fillEnvProperties(props, '', config)
