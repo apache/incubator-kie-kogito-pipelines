@@ -311,6 +311,7 @@ class KogitoJobTemplate {
     *     repository: (optional) Repository to checkout for the job ?
     *     primary: (optional) should the job be launched first (only considered for non-parallel jobs)
     *     dependsOn: (optional) which job should be executed before that one ? Ignored if `primary` is set (only considered for non-parallel jobs)
+    *     jenkinsfile: (optional) where to lookup the jenkinsfile. else it will take the default one
     *   testType: (optional) Name of the tests. Used for the trigger phrase and commitContext. Default is `tests`.
     *   extraEnv: (optional) Environment variables to set to all the jobs
     *   primaryTriggerPhrase: Redefined default primary trigger phrase
@@ -344,6 +345,11 @@ class KogitoJobTemplate {
                 jobParams.job.description = "Run tests from ${jobParams.git.repository} repository"
             }
             jobParams.job.name += ".${jobCfg.id.toLowerCase()}"
+
+            // Update jenkinsfile path
+            if (jobCfg.jenkinsfile) {
+                jobParams.jenkinsfile = jobCfg.jenkinsfile
+            }
 
             jobParams.pr.putAll([
                 commitContext: getTypedId(testTypeName, jobCfg.id),
