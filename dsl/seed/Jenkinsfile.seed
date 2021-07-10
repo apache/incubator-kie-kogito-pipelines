@@ -27,7 +27,7 @@ pipeline {
     // }
 
     environment {
-        REPOSITORY_DSL_FOLDERS = [ '.jenkins/dsl', '.ci/jenkins/dsl' ]
+        REPOSITORY_DSL_FOLDERS = '.jenkins/dsl,.ci/jenkins/dsl'
 
         SEED_FOLDER = 'seed'
         DSL_SEED_FOLDER = "${WORKSPACE}/dsl/${SEED_FOLDER}"
@@ -160,7 +160,7 @@ pipeline {
                     }
 
                     iterateReposForEachBranchAndEachRepo('Copy jobs file') { seedBranch, repoName, repoConfig ->
-                        REPOSITORY_DSL_FOLDERS.each { folder ->
+                        REPOSITORY_DSL_FOLDERS.split(',').each { folder ->
                             if(fileExists(folder)) {
                                 dir("${folder}") {
                                     sh "mkdir -p ${getSeedFolder(seedBranch)}/jobs/${repoName}/"
