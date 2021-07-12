@@ -5,7 +5,6 @@ import org.kie.jenkins.jobdsl.RegexUtils
 import org.kie.jenkins.jobdsl.Utils
 import org.kie.jenkins.jobdsl.VersionUtils
 
-
 /**
 * PR job template
 **/
@@ -150,7 +149,7 @@ class KogitoJobTemplate {
                             }
                         }
                     }
-                    scriptPath("${jobParams.jenkinsfile ?: 'Jenkinsfile'}")
+                    scriptPath("${jobParams.jenkinsfile ?: '.ci/jenkins/Jenkinsfile'}")
                 }
             }
 
@@ -338,7 +337,7 @@ class KogitoJobTemplate {
                 // For now there is a problem of matching when putting both branch
                 // Sometimes it takes the source, sometimes the target ...
                 jobParams.pr.checkout_branch = VersionUtils.getProjectTargetBranch(jobCfg.repository, jobParams.git.branch, jobParams.git.repository)
-                
+
                 jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
                 jobParams.git.repository = jobCfg.repository
             } else {
@@ -347,15 +346,18 @@ class KogitoJobTemplate {
             jobParams.job.name += ".${jobCfg.id.toLowerCase()}"
 
             // Update jenkinsfile path
+            String defaultJenkinsConfigPath = Utils.getJenkinsConfigPath(jobCfg.repository)
             if (jobCfg.jenkinsfile) {
                 jobParams.jenkinsfile = jobCfg.jenkinsfile
+            } else if (defaultJenkinsConfigPath) {
+                jobParams.jenkinsfile = "${defaultJenkinsConfigPath}/Jenkinsfile"
             }
 
             jobParams.pr.putAll([
                 commitContext: getTypedId(testTypeName, jobCfg.id),
             ])
 
-            if(!jobParams.pr.run_only_for_branches) {
+            if (!jobParams.pr.run_only_for_branches) {
                 jobParams.pr.run_only_for_branches = [ jobParams.git.branch ]
             }
 
@@ -451,9 +453,18 @@ class KogitoJobTemplate {
             ],
             env: [:],
             pr: [
-                excluded_regions: ['LICENSE', '\\.gitignore', '.*\\.md', '.*\\.adoc', '.*\\.txt', '\\.github/.*', 'Jenkinsfile.*', '\\.jenkins/.*', '\\.ci/.*'],
+                excluded_regions: [
+                    'LICENSE',
+                    '\\.gitignore',
+                    '.*\\.md',
+                    '.*\\.adoc',
+                    '.*\\.txt',
+                    '\\.github/.*',
+                    '\\.ci/jenkins/.*',
+                ],
                 ignore_for_labels: 'skip-ci',
             ]
         ]
     }
+
 }

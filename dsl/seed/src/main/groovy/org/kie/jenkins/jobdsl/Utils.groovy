@@ -81,4 +81,8 @@ class Utils {
         return getBindingValue(script, 'JOB_BRANCH_FOLDER')
     }
 
+    static String getJenkinsConfigPath(def script, String repoName) {
+        return getBindingValue(script, "${repoName.toUpperCase()}_JENKINS_CONFIG_PATH")
+    }
+
 }

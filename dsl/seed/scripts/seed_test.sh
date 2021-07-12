@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 ### This script should be launch by any dependent DSL scripts generation repo for local testing of changes
-### Ideal dependent repo should have a `local_test.sh` script located in `.jenkins/dsl` folder
+### Ideal dependent repo should have a `local_test.sh` script located in `.ci/jenkins/dsl` folder
 ### With that implementation:
 ##!/bin/bash -e
 # TEMP_DIR=`mktemp -d`

@@ -36,9 +36,9 @@ Apart from this repository, pipelines are also concerning those repositories:
 
 Kogito has 2 main pipelines:
 
-* [Nightly pipeline](./Jenkinsfile.nightly)  
+* [Nightly pipeline](./.ci/jenkins/Jenkinsfile.nightly)  
   is a multibranch pipeline which is run daily on each active branch
-* [Release pipeline](./Jenkinsfile.release)  
+* [Release pipeline](./.ci/jenkins/Jenkinsfile.release)  
   is a on-demand single pipeline job
 
 More information can be found [here](./docs/nightly_and_release.md).
@@ -54,11 +54,11 @@ This is a set of cleanup utils jobs.
 Those jobs can be found into the `kogito-runtimes` repository.  
 They are daily run jobs:
 
-* [kogito-native](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.native)  
+* [kogito-native](https://github.com/kiegroup/kogito-runtimes/blob/main/.ci/jenkins/Jenkinsfile.native)  
   Perform a daily native build&test of runtimes.
-* [kogito-quarkus](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.quarkus)  
+* [kogito-quarkus](https://github.com/kiegroup/kogito-runtimes/blob/main/.ci/jenkins/Jenkinsfile.quarkus)  
   Perform a daily check of runtimes against latest snapshot of Quarkus.
-* [kogito-drools-snapshot](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.drools)  
+* [kogito-drools-snapshot](https://github.com/kiegroup/kogito-runtimes/blob/main/.ci/jenkins/Jenkinsfile.drools)  
   Perform a daily check of runtimes against latest snapshot of Drools.
 
 ### PR checks

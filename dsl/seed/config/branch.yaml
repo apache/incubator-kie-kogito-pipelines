@@ -14,7 +14,6 @@ repositories:
   - name: kogito-runtimes
   - name: kogito-apps
   - name: optaplanner
-    jenkins_config_path: .ci/jenkins
   - name: kogito-examples
   - name: kogito-images
   - name: kogito-operator
@@ -31,7 +30,7 @@ repositories:
 #     bot_author:
 #       name: another_gh_bot_author
 #       credentials_id: another_gh_bot_author_creds
-#     jenkins_config_path: .jenkins/
+#     jenkins_config_path: .ci/jenkins/
 
 # Main branch configuration
 git:
@@ -42,7 +41,7 @@ git:
   bot_author:
     name: bsig-gh-bot
     credentials_id: bsig-gh-bot
-  jenkins_config_path: .jenkins
+  jenkins_config_path: .ci/jenkins
 maven:
   settings_file_id: kogito_release_settings
   nexus:
