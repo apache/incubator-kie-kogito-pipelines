@@ -1,3 +1,11 @@
+lts:
+  enabled: true
+  quarkus_version: '1.11'
+
+disable:
+  triggers: false
+  branch: false
+
 repositories:
   - name: kogito-pipelines
   - name: kogito-runtimes
@@ -54,8 +62,3 @@ cloud:
     latest_git_branch: master
 jenkins:
   email_creds_id: KOGITO_CI_EMAIL_TO
-quarkus:
-  lts_version: '1.11'
-disable:
-  triggers: false
-  branch: false

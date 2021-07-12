@@ -36,13 +36,17 @@ class Utils {
     }
 
     static String getQuarkusLTSVersion(def script) {
-        return getBindingValue(script, 'QUARKUS_LTS_VERSION')
+        return getBindingValue(script, 'LTS_QUARKUS_VERSION')
     }
 
     static boolean isMainBranch(def script) {
         boolean result = getGitBranch(script) == getGitMainBranch(script)
         script.println("Branch=${getGitBranch(script)}. Main Branch=${getGitMainBranch(script)}. Is main branch ? => ${result}")
         return result
+    }
+
+    static boolean isLTSBranch(def script) {
+        return getBindingValue(script, 'LTS_ENABLED').toBoolean()
     }
 
     static String getRepoName(def script) {
