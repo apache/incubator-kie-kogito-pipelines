@@ -373,6 +373,10 @@ class KogitoJobTemplate {
             } else {
                 error 'You need to define `primary` or `dependsOn`. Else your job will never be launched...'
             }
+            // Add for all cases the `Jenkins run downstream` trigger comment if job dependsOn
+            if (jobCfg.dependsOn) {
+                jobParams.pr.trigger_phrase += '|' + generateMultiJobTriggerPhrasePattern(triggerPhraseTestType, 'downstream')
+            }
 
             // Update env
             if (multijobConfig.extraEnv) {
