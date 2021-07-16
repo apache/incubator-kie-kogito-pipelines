@@ -113,18 +113,18 @@ pipeline {
                             }
                         }
 
-                        // stage('Launch repository seed jobs') {
-                        //     steps {
-                        //         script {
-                        //             Map parallelJobs = [:]
-                        //             util.readBranchConfig().repositories.collect { it.name }.each { repository ->
-                        //                 parallelJobs.put(repository, { launchRepositorySeedJob(repository) })
-                        //             }
+                        stage('Launch repository seed jobs') {
+                            steps {
+                                script {
+                                    Map parallelJobs = [:]
+                                    util.readBranchConfig().repositories.collect { it.name }.each { repository ->
+                                        parallelJobs.put(repository, { launchRepositorySeedJob(repository) })
+                                    }
 
-                        //             parallel parallelJobs
-                        //         }
-                        //     }
-                        // }
+                                    parallel parallelJobs
+                                }
+                            }
+                        }
                     }
                     post {
                         always {
