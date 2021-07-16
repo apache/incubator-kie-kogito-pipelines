@@ -44,6 +44,7 @@ pipeline {
                     if (!shouldRun) {
                         echo "No force rebuild or modified paths ${LISTEN_TO_MODIFIED_PATHS}"
                         echo 'Nothing done'
+                        currentBuild.displayName = 'No generation'
                     }
                 }
             }

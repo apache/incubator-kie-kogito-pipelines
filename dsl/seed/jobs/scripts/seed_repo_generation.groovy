@@ -18,6 +18,7 @@ def generate() {
     if (!shouldRun) {
         echo "No force rebuild or modified paths ${paths}"
         echo 'Nothing done'
+        currentBuild.displayName = 'No generation'
         return
     }
 
