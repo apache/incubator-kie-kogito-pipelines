@@ -110,7 +110,7 @@ pipeline {
                         def branchConfig = [ dependent_repositories : repositories]
 
                         echo "Write dsl branch_config => ${branchConfig}"
-                        sh "rm ${branchConfigFile}"
+                        sh "rm -f ${branchConfigFile}"
                         writeYaml file: "${branchConfigFile}", data: branchConfig, overwrite: true
 
                         if (githubscm.isThereAnyChanges()) {
