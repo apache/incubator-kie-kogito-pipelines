@@ -154,7 +154,7 @@ void launchRepositorySeedJob(String repository) {
     jobParams.add(booleanParam(name: 'DEBUG', value: params.DEBUG))
     jobParams.add(stringParam(name: 'SEED_AUTHOR', value: params.SEED_AUTHOR))
     jobParams.add(stringParam(name: 'SEED_BRANCH', value: params.SEED_BRANCH))
-    jobParams.add(booleanParam(name: 'FORCE_REBUILD', value: params.FORCE_REBUILD))
+    jobParams.add(booleanParam(name: 'FORCE_REBUILD', value: true))
 
     echo "Build ./${getRepoBranchSeedJobName(repository)} with parameters ${jobParams}"
     build(job: "./${getRepoBranchSeedJobName(repository)}", parameters: jobParams, wait: false)

@@ -164,7 +164,7 @@ void launchBranchSeedJob(String branch) {
     jobParams.add(stringParam(name: 'CUSTOM_AUTHOR', value: params.CUSTOM_AUTHOR))
     jobParams.add(stringParam(name: 'SEED_AUTHOR', value: params.SEED_AUTHOR))
     jobParams.add(stringParam(name: 'SEED_BRANCH', value: getEffectiveSeedBranch(branch)))
-    jobParams.add(booleanParam(name: 'FORCE_REBUILD', value: params.FORCE_REBUILD))
+    jobParams.add(booleanParam(name: 'FORCE_REBUILD', value: true))
 
     echo "Build ./${getBranchSeedJobName(branch)} with parameters ${jobParams}"
     build(job: "./${getBranchSeedJobName(branch)}", parameters: jobParams, wait: false)
