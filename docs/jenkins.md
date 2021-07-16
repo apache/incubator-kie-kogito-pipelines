@@ -4,6 +4,7 @@
   * [Structure](#structure)
     * [Seed structure](#seed-structure)
     * [Jobs Structure](#jobs-structure)
+      * [Seed file entry point](#seed-file-entry-point)
     * [Generated jobs structure](#generated-jobs-structure)
   * [Testing](#testing)
     * [Local testing](#local-testing)
@@ -62,6 +63,8 @@ Each repository which want its job to be generated should be registered into the
     │   │   ├── jobs.groovy      # contains the jobs for the current branch to be generated
     │   └── tests                # (optional) tests for Jenkinsfiles
 
+#### Seed file entry point
+
 `Jenkinsfile.seed` should be defined as follow:
 
 ```groovy
@@ -78,7 +81,8 @@ seed_generation.generate()
 ```
 
 It is just an entry point for the job generation. The setup for job generation is then done in the `seed_generation.generate()` method.  
-The user does just need to create then the `.jenkins/dsl/jobs.groovy` file to generate the needed jobs for the repository.
+The user does just need to create then the `.jenkins/dsl/jobs.groovy` file to generate the needed jobs for the repository.  
+See an example [here](../.jenkins/dsl/jobs.groovy)
 
 Using a proper `Jenkinsfile.seed` stored directly into the repository folders will allow to set a hook on that repository to be able to refresh the jobs easily when an update is done.
 
