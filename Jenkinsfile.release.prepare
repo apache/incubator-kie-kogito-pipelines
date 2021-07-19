@@ -107,7 +107,8 @@ pipeline {
                             repositories.addAll(collectRepos(KOGITO_PRODUCT_REPOS, getKogitoReleaseBranch()))
                         }
 
-                        def branchConfig = [ dependent_repositories : repositories]
+                        def branchConfig = readYaml file: "${branchConfigFile}"
+                        branchConfig.repositories = repositories
 
                         echo "Write dsl branch_config => ${branchConfig}"
                         sh "rm -f ${branchConfigFile}"
