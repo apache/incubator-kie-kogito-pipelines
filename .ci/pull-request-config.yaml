@@ -8,6 +8,7 @@ pre: |
 
 default:
   build-command:
+    current: mvn -e clean install ${{ env.BUILD_MVN_OPTS }}
     upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
     after:
       current: |
@@ -44,3 +45,7 @@ build:
       - kogito-examples
       - kogito-examples-persistence
       - kogito-examples-events
+
+  - project: kiegroup/quarkus
+    build-command:
+      upstream: mvn -e clean install -fae -Pjava.net.preferIPv4Stack=true -Pquickly -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
