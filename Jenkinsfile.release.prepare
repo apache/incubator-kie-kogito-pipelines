@@ -102,7 +102,7 @@ pipeline {
                         repositories.addAll(collectRepos(RUNTIMES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(IMAGES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
-                        repositories.addAll(collectRepos([OPTAPLANNER_REPO], getOptaPlannerReleaseBranch()))
+                        repositories.addAll(collectRepos([OPTAPLANNER_REPO], getOptaPlannerReleaseBranch(), '.ci/jenkins'))
 
                         if (params.BRANCH_PRODUCT_REPOSITORIES) {
                             repositories.addAll(collectRepos(KOGITO_PRODUCT_REPOS, getKogitoReleaseBranch()))
@@ -241,13 +241,16 @@ String getRepoName(String repo) {
     return (repo.find(':')) ? repo.split(':')[0] : repo
 }
 
-List collectRepos(List repos, String branch) {
+List collectRepos(List repos, String branch, String jenkins_config_path = '') {
     return repos.collect { repoBranch ->
         String repo = getRepoName(repoBranch)
-        return [
+        Map map = [
             name : repo,
             branch : branch
         ]
+        if (jenkins_config_path) {
+            map.jenkins_config_path = jenkins_config_path
+        }
     }
 }
 
