@@ -57,10 +57,10 @@ pipeline {
             steps {
                 script {
                     def repositories = []
+                    repositories += PIPELINE_REPOS
                     repositories += RUNTIMES_REPOS
                     repositories += IMAGES_REPOS
                     repositories += OPERATOR_REPOS
-                    repositories += PIPELINE_REPOS // Create branch to activate nightlies if needed
 
                     if (params.BRANCH_PRODUCT_REPOSITORIES) {
                         repositories += KOGITO_PRODUCT_REPOS
@@ -98,6 +98,7 @@ pipeline {
                         sh "git checkout ${getKogitoReleaseBranch()}"
 
                         repositories = []
+                        repositories.addAll(collectRepos(PIPELINE_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(RUNTIMES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(IMAGES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
