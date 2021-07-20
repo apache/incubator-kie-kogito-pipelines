@@ -251,6 +251,7 @@ List collectRepos(List repos, String branch, String jenkins_config_path = '') {
         if (jenkins_config_path) {
             map.jenkins_config_path = jenkins_config_path
         }
+        return map
     }
 }
 
