@@ -1,5 +1,7 @@
 # Kogito Pipelines
 
+test update
+
 This repository contains some of the pipelines of Kogito project.  
 
 * [Kogito Pipelines](#kogito-pipelines)
@@ -96,7 +98,7 @@ NOTE: test coverage analysis is executed only by Jenkins PR build and not while 
 
 ## Jenkins
 
-All pipelines can be found in [kogito Jenkins folder](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito).
+All pipelines can be found in [kogito Jenkins folder](https://eng-jenkins-csb-business-automation.apps.ocp4.prod.psi.redhat.com/job/KIE/job/kogito).
 
 ### Jenkins jobs generation
 
