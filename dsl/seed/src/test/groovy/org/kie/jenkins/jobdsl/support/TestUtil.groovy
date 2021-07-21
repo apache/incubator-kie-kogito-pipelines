@@ -32,19 +32,19 @@ class TestUtil {
     }
 
     static Map readBranchConfig() {
-        Map config = new Yaml().load(("config/branch.yaml" as File).text)
+        Map config = new Yaml().load(('config/branch.yaml' as File).text)
 
         Map props = [:]
         fillEnvProperties(props, '', config)
         return props
     }
 
-    static void fillEnvProperties(Map envProperties, String envKeyPrefix, Map propsMap){
+    static void fillEnvProperties(Map envProperties, String envKeyPrefix, Map propsMap) {
         propsMap.each { key, value ->
             String newKey = generateEnvKey(envKeyPrefix, key)
-            if(value instanceof Map) {
+            if (value instanceof Map) {
                 fillEnvProperties(envProperties, newKey, value as Map)
-            } else if(value instanceof List) {
+            } else if (value instanceof List) {
                 envProperties[newKey] = (value as List).join(',')
             } else {
                 envProperties[newKey] = value
@@ -52,7 +52,8 @@ class TestUtil {
         }
     }
 
-    static String generateEnvKey(String envKeyPrefix, String key){
+    static String generateEnvKey(String envKeyPrefix, String key) {
         return (envKeyPrefix ? "${envKeyPrefix}_${key}" : key).toUpperCase()
     }
+
 }

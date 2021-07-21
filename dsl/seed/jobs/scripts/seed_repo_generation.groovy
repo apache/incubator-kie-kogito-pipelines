@@ -32,9 +32,7 @@ def generate() {
                 jobsFilePath = "${SEED_REPO}/${SEED_FOLDER}/jobs/empty_job_dsl.groovy"
             }
             echo "Copying DSL jobs file ${jobsFilePath}"
-            sh """
-                cp ${jobsFilePath} ${SEED_REPO}/${SEED_FOLDER}/jobs/jobs.groovy
-            """
+            sh "cp ${jobsFilePath} ${SEED_REPO}/${SEED_FOLDER}/jobs/jobs.groovy"
         }
 
         stage('Test jobs') {
