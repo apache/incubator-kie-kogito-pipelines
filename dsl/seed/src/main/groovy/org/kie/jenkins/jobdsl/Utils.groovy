@@ -18,10 +18,9 @@ class Utils {
         return "https://github.com/${author}/${repositoryName}/"
     }
 
-    static def getBindingValue(def script, String key){
+    static def getBindingValue(def script, String key) {
         return script.getBinding()[key]
     }
-
 
     static String getQuarkusLTSVersion(def script) {
         return getBindingValue(script, 'QUARKUS_LTS_VERSION')
@@ -30,4 +29,39 @@ class Utils {
     static boolean areTriggersDisabled(def script) {
         return getBindingValue(script, 'DISABLE_TRIGGERS').toBoolean()
     }
+
+    static boolean isMainBranch(def script) {
+        boolean result = getGitBranch(script) == getGitMainBranch(script)
+        script.println("Branch=${getGitBranch(script)}. Main Branch=${getGitMainBranch(script)}. Is main branch ? => ${result}")
+        return result
+    }
+
+    static String getRepoName(def script) {
+        return getBindingValue(script, 'REPO_NAME')
+    }
+
+    static String getGitBranch(def script) {
+        return getBindingValue(script, 'GIT_BRANCH')
+    }
+
+    static String getGitMainBranch(def script) {
+        return getBindingValue(script, 'GIT_MAIN_BRANCH')
+    }
+
+    static String getGitAuthor(def script) {
+        return getBindingValue(script, 'GIT_AUTHOR_NAME')
+    }
+
+    static String getGitAuthorCredsId(def script) {
+        return getBindingValue(script, 'GIT_AUTHOR_CREDENTIALS_ID')
+    }
+
+    static String getGitAuthorTokenCredsId(def script) {
+        return getBindingValue(script, 'GIT_AUTHOR_TOKEN_CREDENTIALS_ID')
+    }
+
+    static String getJobBranchFolder(def script) {
+        return getBindingValue(script, 'JOB_BRANCH_FOLDER')
+    }
+
 }

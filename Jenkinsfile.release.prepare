@@ -59,10 +59,10 @@ pipeline {
                     addStringParam(buildParams, 'RELEASE_BRANCH', getKogitoReleaseBranch())
 
                     def repositories = []
+                    repositories += PIPELINE_REPOS
                     repositories += RUNTIMES_REPOS
                     repositories += IMAGES_REPOS
                     repositories += OPERATOR_REPOS
-                    repositories += PIPELINE_REPOS // Create branch to activate nightlies if needed
 
                     echo "Call ${CREATE_RELEASE_BRANCHES} job with repositories ${repositories}"
                     addStringParam(buildParams, 'REPOSITORIES', repositories.join(','))
@@ -94,28 +94,36 @@ pipeline {
         stage('Update kogito-pipelines branch config') {
             steps {
                 script {
+                    String branchConfigFile = 'dsl/seed/config/branch.yaml'
+                    
                     dir('pipelines-branch') {
                         deleteDir()
                         checkout(githubscm.resolveRepository(PIPELINE_REPO, getGitAuthor(), getKogitoReleaseBranch(), false))
                         sh "git checkout ${getKogitoReleaseBranch()}"
 
                         repositories = []
+                        repositories.addAll(collectRepos(PIPELINE_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(RUNTIMES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(IMAGES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
-                        repositories.addAll(collectRepos([OPTAPLANNER_REPO], getOptaPlannerReleaseBranch()))
+                        repositories.addAll(collectRepos([OPTAPLANNER_REPO], getOptaPlannerReleaseBranch(), '.ci/jenkins'))
 
-                        def branchConfig = [ dependent_repositories : repositories]
+                        if (params.BRANCH_PRODUCT_REPOSITORIES) {
+                            repositories.addAll(collectRepos(KOGITO_PRODUCT_REPOS, getKogitoReleaseBranch()))
+                        }
+
+                        def branchConfig = readYaml file: "${branchConfigFile}"
+                        branchConfig.repositories = repositories
 
                         echo "Write dsl branch_config => ${branchConfig}"
-                        sh 'rm dsl/branch_config.yaml'
-                        writeYaml file: 'dsl/branch_config.yaml', data: branchConfig, overwrite: true
+                        sh "rm -f ${branchConfigFile}"
+                        writeYaml file: "${branchConfigFile}", data: branchConfig, overwrite: true
 
                         if (githubscm.isThereAnyChanges()) {
                             githubscm.commitChanges('Update DSL branch config after cut-off')
                             githubscm.pushObject('origin', getKogitoReleaseBranch(), getGitAuthorCredsId())
 
-                            sendNotification("kogito-pipelines ${getKogitoReleaseBranch()} `dsl/branch_config.yaml` has been updated with correct configuration")
+                            sendNotification("kogito-pipelines ${getKogitoReleaseBranch()} `${branchConfigFile}` has been updated with correct configuration")
                         } else {
                             println '[WARN] No changes to commit'
                         }
@@ -128,7 +136,7 @@ pipeline {
             steps {
                 script {
                     String botBranch = "${getKogitoReleaseBranch()}-${util.generateHash(10)}"
-                    String seedConfigFile = 'dsl/seed/config.yaml'
+                    String seedConfigFile = 'dsl/seed/config/main.yaml'
 
                     dir('pipelines-seed') {
                         deleteDir()
@@ -242,12 +250,16 @@ String getRepoName(String repo) {
     return (repo.find(':')) ? repo.split(':')[0] : repo
 }
 
-List collectRepos(List repos, String branch) {
+List collectRepos(List repos, String branch, String jenkins_config_path = '') {
     return repos.collect { repoBranch ->
         String repo = getRepoName(repoBranch)
-        return [
+        Map map = [
             name : repo,
             branch : branch
         ]
+        if (jenkins_config_path) {
+            map.jenkins_config_path = jenkins_config_path
+        }
+        return map
     }
 }
