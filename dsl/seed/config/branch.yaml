@@ -1,9 +1,29 @@
+repositories:
+  - name: kogito-pipelines
+  - name: kogito-runtimes
+  - name: kogito-apps
+  - name: optaplanner
+    jenkins_config_path: .ci/jenkins
+  - name: kogito-examples
+  - name: kogito-images
+  - name: kogito-operator
+  - name: rhpam-kogito-operator
+
+# Full Example
+# repositories:
+#   - name: NAME
+#     branch: branch_name
+#     author:
+#       name: another_gh_author
+#       credentials_id: another_gh_author_creds
+#       token_credentials_id: another_gh_author_creds_token
+#     bot_author:
+#       name: another_gh_bot_author
+#       credentials_id: another_gh_bot_author_creds
+#     jenkins_config_path: .jenkins/
+
+# Main branch configuration
 git:
-  branches:
-  - master
-  - 1.5.x
-  - 1.8.x
-  - 1.9.x
   author:
     name: kiegroup
     credentials_id: kie-ci
@@ -11,8 +31,7 @@ git:
   bot_author:
     name: bsig-gh-bot
     credentials_id: bsig-gh-bot
-  main_branch:
-    default: master
+  jenkins_config_path: .jenkins
 maven:
   settings_file_id: kogito_release_settings
   nexus:
@@ -39,3 +58,4 @@ quarkus:
   lts_version: '1.11'
 disable:
   triggers: false
+  branch: false
