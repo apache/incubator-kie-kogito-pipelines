@@ -354,7 +354,7 @@ class KogitoJobTemplate {
             } else {
                 jobParams.job.description = "Run tests from ${jobParams.git.repository} repository"
             }
-            
+
             // Update jenkinsfile path
             String defaultJenkinsConfigPath = Utils.getJenkinsConfigPath(script, jobParams.git.repository)
             if (jobCfg.jenkinsfile) {
@@ -362,7 +362,7 @@ class KogitoJobTemplate {
             } else if (defaultJenkinsConfigPath) {
                 jobParams.jenkinsfile = "${defaultJenkinsConfigPath}/Jenkinsfile"
             }
-            
+
             if (useBuildChain) {
                 // Buildchain uses centralized configuration for Jenkinsfile.buildchain to checkout
                 // Overrides configuration already done
@@ -493,9 +493,20 @@ class KogitoJobTemplate {
                     '\\.github/.*',
                     '\\.ci/jenkins/.*',
                 ],
-                ignore_for_labels: [ 'skip-ci', 'dsl-test' ], 
+                ignore_for_labels: [ 'skip-ci', 'dsl-test' ],
             ]
         ]
+    }
+
+    static def getCompletedJobParams(def script, String repository, String jobName, String jobFolder, String jenkinsfileName, String jobDescription = '') {
+        def jobParams = getDefaultJobParams(script, repository)
+        jobParams.job.name = jobName
+        jobParams.job.folder = jobFolder
+        jobParams.jenkinsfile = jenkinsfileName
+        if (jobDescription) {
+            jobParams.job.description = jobDescription ?: jobParams.job.description
+        }
+        return jobParams
     }
 
 }

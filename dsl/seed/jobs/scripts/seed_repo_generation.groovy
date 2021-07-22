@@ -54,7 +54,7 @@ def generate() {
             def envProps = getRepoEnvProperties()
             def repoConfig = getRepoConfig()
             envProps.put('GIT_MAIN_BRANCH', "${GIT_MAIN_BRANCH}")
-
+            
             // Add other repos `jenkins_config_path` var (useful if multijob PR checks for example)
             getAllBranchRepos().each { repoName ->
                 String key = generateEnvKey(repoName, 'jenkins_config_path')

@@ -1,0 +1,195 @@
+@Library('jenkins-pipeline-shared-libraries')_
+
+import org.kie.jenkins.MavenCommand
+
+pipeline {
+    agent {
+        label 'kie-rhel7 && !master'
+    }
+
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+    }
+
+    // parameters {
+    // For parameters, check into .jenkins/dsl/jobs.groovy file
+    // }
+
+    environment {
+        // Static env is defined into .jenkins/dsl/jobs.groovy file
+
+        KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+
+        BRANCH_HASH = "${util.generateHash(10)}"
+    }
+
+    stages {
+        stage('Initialization') {
+            steps {
+                script {
+                    assert getNewVersion()
+
+                    currentBuild.displayName = getNewVersion()
+
+                    checkout scm
+
+                    dir(getRepoName()) {
+                        deleteDir()
+                        checkout(githubscm.resolveRepository(getRepoName(), getGitAuthor(), getBuildBranch(), false))
+                    }
+                }
+            }
+        }
+        stage('Prepare for PR') {
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        githubscm.createBranch(getPRBranch())
+                    }
+                }
+            }
+        }
+        stage('Update Maven dependencies') {
+            when {
+                expression { return getMavenCompareDepsRemotePoms() }
+            }
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        getMavenCompareDepsRemotePoms().each { remotePom ->
+                            if (getMavenModules()) {
+                                getMavenModules().each { module ->
+                                    sh "${WORKSPACE}/tools/update-maven-compare-dependencies.sh ${remotePom} ${getNewVersion()} ${module}"
+                                }
+                            } else {
+                                sh "${WORKSPACE}/tools/update-maven-compare-dependencies.sh ${remotePom} ${getNewVersion()}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        stage('Update Maven properties') {
+            when {
+                expression { return getMavenProperties() }
+            }
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        getMavenProperties().each { prop ->
+                            if (getMavenModules()) {
+                                getMavenModules().each { module ->
+                                    sh "${WORKSPACE}/tools/update-maven-module-property.sh ${prop} ${getNewVersion()} ${module}"
+                                }
+                            } else {
+                                sh "${WORKSPACE}/tools/update-maven-module-property.sh ${prop} ${getNewVersion()}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        stage('Update Gradle properties') {
+            when {
+                expression { return getGradleRegex() }
+            }
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        getGradleRegex().each { regex ->
+                            sh "${WORKSPACE}/tools/update-build-gradle-regex-line.sh '${regex}' ${getNewVersion()}"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Create PRs') {
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        String commitMsg = "Bump ${getDependencyName()} version to ${getNewVersion()}"
+                        githubscm.commitChanges(commitMsg)
+                        githubscm.pushObject('origin', getPRBranch(), getAuthorCredsId())
+
+                        String prLink = githubscm.createPR(commitMsg, 'Please review and merge', getBuildBranch(), getAuthorCredsId())
+                        echo "Created PR ${prLink}"
+
+                        sendNotification("PR was created to update ${getDependencyName()} version to ${getNewVersion()}.\nPlease review and merge ${prLink}")
+                    }
+                }
+            }
+        }
+    }
+    post {
+        unsuccessful {
+            script {
+                sendErrorNotification()
+            }
+        }
+        cleanup {
+            cleanWs()
+        }
+    }
+}
+
+void sendNotification(String body) {
+    emailext body: "**${getDependencyName()} version update job**\n${body}",
+             subject: "[${getBuildBranch()}] ${getNotificationJobName()}",
+             to: env.KOGITO_CI_EMAIL_TO
+}
+
+void sendErrorNotification() {
+    sendNotification("Job #${BUILD_NUMBER} was: **${currentBuild.currentResult}**\nPlease look here: ${BUILD_URL}")
+}
+
+String getDependencyName() {
+    return "${DEPENDENCY_NAME}"
+}
+
+String getBuildBranch() {
+    return "${BUILD_BRANCH_NAME}"
+}
+
+String getGitAuthor() {
+    return "${GIT_AUTHOR}"
+}
+
+String getAuthorCredsId() {
+    return "${AUTHOR_CREDS_ID}"
+}
+
+String getPRBranch() {
+    return "bump-${getPRPrefixBranch() ?: getBuildBranch()}-${getDependencyName().toLowerCase()}-${getNewVersion()}"
+}
+
+String getPRPrefixBranch() {
+    return env.PR_PREFIX_BRANCH
+}
+
+String getNewVersion() {
+    return "${NEW_VERSION}"
+}
+
+String getRepoName() {
+    return "${REPO_NAME}"
+}
+
+String getNotificationJobName() {
+    return "${NOTIFICATION_JOB_NAME}"
+}
+
+List getMavenModules() {
+  return env.MAVEN_MODULES ? readJSON(text: env.MAVEN_MODULES) : []
+}
+
+List getMavenCompareDepsRemotePoms() {
+  return env.MAVEN_COMPARE_DEPS_REMOTE_POMS ? readJSON(text: env.MAVEN_COMPARE_DEPS_REMOTE_POMS) : []
+}
+
+List getMavenProperties() {
+  return env.MAVEN_PROPERTIES ? readJSON(text: env.MAVEN_PROPERTIES) : []
+}
+
+List getGradleRegex() {
+  return env.GRADLE_REGEX ? readJSON(text: env.GRADLE_REGEX) : []
+}
