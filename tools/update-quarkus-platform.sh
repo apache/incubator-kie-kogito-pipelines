@@ -33,7 +33,7 @@ usage() {
     echo '  sh update-quarkus-platform.sh -v 7.0.Final -f evacchi -n finalize'
 }
 
-args=`getopt v:f:s:nh $*`
+args=`getopt v:f:snh $*`
 if [ $? != 0 ]; then
     >&2 echo ERROR: no args given.
 

@@ -31,7 +31,7 @@ usage() {
     echo
 }
 
-args=`getopt p:q:m:s:b:f:nh $*`
+args=`getopt p:q:m:b:f:snh $*`
 if [ $? != 0 ]
 then
         usage

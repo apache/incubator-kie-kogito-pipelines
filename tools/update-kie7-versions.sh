@@ -29,7 +29,7 @@ usage() {
     echo
 }
 
-args=`getopt v:b:s:f:nh $*`
+args=`getopt v:b:f:snh $*`
 if [ $? != 0 ]
 then
         usage
