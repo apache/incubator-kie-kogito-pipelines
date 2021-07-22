@@ -7,6 +7,8 @@ GITHUB_URL_SSH="git@github.com:"
 MAVEN_VERSION=3.6.2
 PROJECT=kogito
 
+DRY_RUN=false
+
 usage() {
     echo 'Usage: update-quarkus-versions.sh -p $PROJECT -s $QUARKUS_VERSION -m $MAVEN_VERSION -b $BASE_BRANCH -f $FORK [-s] [-n]'
     echo
