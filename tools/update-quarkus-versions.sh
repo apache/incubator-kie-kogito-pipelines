@@ -5,8 +5,9 @@ GITHUB_URL="https://github.com/"
 GITHUB_URL_SSH="git@github.com:"
 
 MAVEN_VERSION=3.6.2
-PROJECT=kogito
 
+# kogito or optaplanner
+PROJECT=kogito
 DRY_RUN=false
 
 usage() {
@@ -71,7 +72,10 @@ do
         esac
 done
 
+echo "PROJECT = $PROJECT"
 
+# kogito-runtimes or optaplanner
+REPO=kogito-runtimes
 
 case $PROJECT in
     kogito)
@@ -94,12 +98,6 @@ if [ "$FORK" = "" ]; then
 
         exit 2
 fi
-
-
-# kogito or optaplanner
-PROJECT=kogito
-# kogito-runtimes or optaplanner
-REPO=kogito-runtimes
 
 ORIGIN=kiegroup/$REPO
 PR_FORK=$FORK/$REPO

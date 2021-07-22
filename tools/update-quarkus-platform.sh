@@ -8,7 +8,7 @@ MINOR_VERSION=
 DRY_RUN=false
 
 usage() {
-    echo 'Usage: update-quarkus-platform.sh -s $MINOR_VERSION -f $FORK [-s] [-n] COMMAND'
+    echo 'Usage: update-quarkus-platform.sh -v $MINOR_VERSION -f $FORK [-s] [-n] COMMAND'
     echo
     echo 'Options:'
     echo '  -v $MINOR_VERSION    set MINOR version'
