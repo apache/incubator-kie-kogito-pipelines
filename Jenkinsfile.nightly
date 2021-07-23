@@ -409,7 +409,7 @@ List getDefaultBuildParams(String buildBranchName = '') {
     buildBranchName = buildBranchName ?: getBuildBranch()
     List params = []
     addStringParam(params, 'DISPLAY_NAME', env.NIGHTLY_TAG)
-    addBooleanParam(buildParams, 'SEND_NOTIFICATION', true)
+    addBooleanParam(params, 'SEND_NOTIFICATION', true)
 
     return params
 }
