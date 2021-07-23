@@ -1,0 +1,11 @@
+version: "2.1"
+
+extends: ./project-dependencies.yaml
+
+dependencies:
+  - project: kiegroup/quarkus
+    mapping:
+      dependant:
+        default:
+          - source: .*
+            target: 1.11

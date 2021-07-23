@@ -9,6 +9,10 @@ build_maven_tool = env.BUILD_MAVEN_TOOL?.trim() ?: 'kie-maven-3.8.1'
 pr_type = env.BUILDCHAIN_PR_TYPE?.trim() ?: 'pr'
 build_chain_additional_arguments = env.BUILDCHAIN_PROJECT ? "-sp=${env.BUILDCHAIN_PROJECT.trim()}" : ''
 
+is_native = env.NATIVE ? true : false
+is_lts = env.LTS ? true : false
+
+
 pipeline {
     agent {
         label agentLabel
@@ -51,7 +55,7 @@ pipeline {
             }
             steps {
                 script {
-                    def buildChainActionInfo = getBuildChainActionInfo(build_chain_additional_arguments)
+                    def buildChainActionInfo = getBuildChainActionInfo(is_native, is_lts, build_chain_additional_arguments)
                     withCredentials([string(credentialsId: 'kie-ci1-token', variable: 'GITHUB_TOKEN')]) {
                         sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/\${GROUP}/kogito-pipelines/master/.ci/${buildChainActionInfo.file}' -folder='bc' build ${buildChainActionInfo.action} -url=${env.ghprbPullLink} ${buildChainActionInfo.arguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -Dmaven.wagon.http.ssl.insecure=true'"
                     }
@@ -107,8 +111,11 @@ def isSingle(){
     return pr_type == 'single';
 }
 
-def getBuildChainActionInfo(String defaultArguments) {
-    return isFDB() ? [action: 'fd', file: 'pull-request-config.yaml', arguments: defaultArguments] :
-                     isSingle() ? [action: 'single', file: 'pull-request-config.yaml', arguments: defaultArguments] :
-                     [action: 'pr', file: 'pull-request-config.yaml', arguments: defaultArguments]
+def getBuildChainActionInfo(Boolean isNative, Boolean isLts, String defaultArguments) {
+    def definitionFile = isNative ? 'pull-request-native-config.yaml' :
+                         isLts ? 'pull-request-lts-config.yaml' :
+                         'pull-request-config.yaml'
+    return isFDB() ? [action: 'fd', file: definitionFile, arguments: defaultArguments] :
+                     isSingle() ? [action: 'single', file: definitionFile, arguments: defaultArguments] :
+                     [action: 'pr', file: definitionFile, arguments: defaultArguments]
 }

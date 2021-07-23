@@ -1,10 +1,12 @@
 version: "2.1"
 
-dependencies: ./project-dependencies.yaml
+dependencies: ./project-dependencies-quarkus.yaml
 
 pre: |
   export BUILD_MVN_OPTS="${{ env.BUILD_MVN_OPTS }} -nsu -fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
   echo "BUILD_MVN_OPTS=${{ env.BUILD_MVN_OPTS }}"
+  export BUILD_MVN_OPTS_LTS="-Dversion.io.quarkus=999-SNAPSHOT"
+  echo "BUILD_MVN_OPTS_LTS=${{ env.BUILD_MVN_OPTS_LTS }}"
 
 default:
   build-command:
@@ -24,9 +26,13 @@ build:
 
   - project: kiegroup/optaplanner
     build-command: 
-      current: mvn -f optaplanner/pom.xml clean install -Dfull ${{ env.BUILD_MVN_OPTS }}
+      current: mvn -f optaplanner/pom.xml clean install -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_LTS }} 
     clone:
       - optaplanner
+
+  - project: kiegroup/optaplanner-quickstarts
+    build-command: 
+      current: mvn clean install -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_LTS }} 
 
   - project: kiegroup/kogito-apps
     build-command: 
@@ -45,3 +51,7 @@ build:
       - kogito-examples
       - kogito-examples-persistence
       - kogito-examples-events
+
+  - project: kiegroup/quarkus
+    build-command:
+      upstream: mvn -e clean install -fae -Pjava.net.preferIPv4Stack=true -Pquickly -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
