@@ -1,7 +1,5 @@
 # Kogito Pipelines
 
-test update
-
 This repository contains some of the pipelines of Kogito project.  
 
 * [Kogito Pipelines](#kogito-pipelines)
