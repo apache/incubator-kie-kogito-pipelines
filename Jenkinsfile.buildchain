@@ -10,7 +10,7 @@ pr_type = env.BUILDCHAIN_PR_TYPE?.trim() ?: 'pr'
 build_chain_additional_arguments = env.BUILDCHAIN_PROJECT ? "-sp=${env.BUILDCHAIN_PROJECT.trim()}" : ''
 
 is_native = env.NATIVE ? true : false
-is_lts = env.LTS ? true : false
+is_lts = env.QUARKUS_BRANCH ? true : false
 
 
 pipeline {
