@@ -106,4 +106,4 @@ Any message / error is sent to [kogito-ci](https://kie.zulipchat.com/#narrow/str
 
 ### Format
 
-    [branch][d for daily if occurs] Pipeline name
+    [branch] Project
