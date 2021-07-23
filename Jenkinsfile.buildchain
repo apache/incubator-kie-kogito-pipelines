@@ -51,10 +51,7 @@ pipeline {
             }
             steps {
                 script {
-                    def buildChainActionInfo =
-                      isFDB() ? [action: 'fd', file: 'pull-request-config.yaml', arguments: build_chain_additional_arguments] :
-                      isSingle() ? [action: 'single', file: 'pull-request-config.yaml', arguments: build_chain_additional_arguments] :
-                      [action: 'pr', file: 'pull-request-config.yaml', arguments: build_chain_additional_arguments]
+                    def buildChainActionInfo = getBuildChainActionInfo(build_chain_additional_arguments)
                     withCredentials([string(credentialsId: 'kie-ci1-token', variable: 'GITHUB_TOKEN')]) {
                         sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/\${GROUP}/kogito-pipelines/master/.ci/${buildChainActionInfo.file}' -folder='bc' build ${buildChainActionInfo.action} -url=${env.ghprbPullLink} ${buildChainActionInfo.arguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -Dmaven.wagon.http.ssl.insecure=true'"
                     }
@@ -108,4 +105,10 @@ def isFDB(){
 
 def isSingle(){
     return pr_type == 'single';
+}
+
+def getBuildChainActionInfo(String defaultArguments) {
+    return isFDB() ? [action: 'fd', file: 'pull-request-config.yaml', arguments: defaultArguments] :
+                     isSingle() ? [action: 'single', file: 'pull-request-config.yaml', arguments: defaultArguments] :
+                     [action: 'pr', file: 'pull-request-config.yaml', arguments: defaultArguments]
 }
