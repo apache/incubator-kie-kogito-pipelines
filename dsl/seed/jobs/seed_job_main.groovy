@@ -55,6 +55,8 @@ pipelineJob('0-seed-job') {
     }
 
     properties {
+        githubProjectUrl("https://github.com/${SEED_AUTHOR}/kogito-pipelines/")
+
         pipelineTriggers {
             triggers {
                 gitHubPushTrigger()
