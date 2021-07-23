@@ -1,6 +1,6 @@
 version: "2.1"
 
-dependencies: ./project-dependencies-quarkus.yaml
+dependencies: ./project-dependencies.yaml
 
 pre: |
   export BUILD_MVN_OPTS="${{ env.BUILD_MVN_OPTS }} -nsu -fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
