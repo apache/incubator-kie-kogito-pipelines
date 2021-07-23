@@ -55,6 +55,8 @@ pipelineJob("${JOB_NAME}") {
     }
 
     properties {
+        githubProjectUrl("https://github.com/${GIT_AUTHOR}/${REPO_NAME}/")
+        
         pipelineTriggers {
             triggers {
                 gitHubPushTrigger()

@@ -121,6 +121,10 @@ pipeline {
                                                 removedViewAction: 'IGNORE',
                                                 //removedConfigFilesAction: 'IGNORE',
                                                 lookupStrategy: 'SEED_JOB',
+                                                additionalParameters : [
+                                                    SEED_AUTHOR: "${SEED_AUTHOR}",
+                                                    SEED_BRANCH: "${SEED_BRANCH}",
+                                                ],
                                         )
                                     }
                                 }
