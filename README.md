@@ -1,6 +1,6 @@
 # Kogito Pipelines
 
-This repository contains some of the pipelines of Kogito project.  
+This repository contains some of the pipelines of Kogito project.
 
 * [Kogito Pipelines](#kogito-pipelines)
 * [Kogito Repositories](#kogito-repositories)
