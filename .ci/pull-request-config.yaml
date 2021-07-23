@@ -9,7 +9,7 @@ pre: |
 default:
   build-command:
     current: mvn -e clean install ${{ env.BUILD_MVN_OPTS }}
-    upstream: mvn -e clean install -DskipTests -Dquickly ${{ env.BUILD_MVN_OPTS }}
+    upstream: mvn -e clean install -Dquickly ${{ env.BUILD_MVN_OPTS }}
     after:
       current: |
         docker system prune -f
