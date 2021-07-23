@@ -10,7 +10,7 @@ pre: |
 
 default:
   build-command:
-    current: mvn -e clean install ${{ env.BUILD_MVN_OPTS }}
+    current: mvn -e clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_NATIVE }}
     upstream: mvn -e clean install -Dquickly ${{ env.BUILD_MVN_OPTS }}
     after:
       current: |
