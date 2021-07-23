@@ -90,8 +90,6 @@ This means that instead of a single `ci-pr.yaml` file, there are four of them: `
 
 NOTE: test coverage analysis is executed only by Jenkins PR build and not while using GitHub action
 
-// TODO
-
 # Configuration of pipelines
 
 ## Jenkins
