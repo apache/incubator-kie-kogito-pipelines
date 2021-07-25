@@ -38,18 +38,18 @@ Those jobs should be present at the same level as the nightly and/or release job
 
 Here is the list of jobs and link to Jenkinsfiles:
 
-* [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.deploy)
-* [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.promote)
-* [optaplanner-deploy](https://github.com/kiegroup/optaplanner/blob/master/Jenkinsfile.deploy)
-* [optaplanner-promote](https://github.com/kiegroup/optaplanner/blob/master/Jenkinsfile.promote)
-* [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.deploy)
-* [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/master/Jenkinsfile.promote)
-* [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.deploy)
-* [kogito-images-promote](https://github.com/kiegroup/kogito-images/blob/master/Jenkinsfile.promote)
-* [kogito-examples-images-deploy](https://github.com/kiegroup/kogito-operator/blob/master/Jenkinsfile.examples-images.deploy)
-* [kogito-examples-images-promote](https://github.com/kiegroup/kogito-operator/blob/master/Jenkinsfile.examples-images.promote)
-* [kogito-operator-deploy](https://github.com/kiegroup/kogito-operator/blob/master/Jenkinsfile.deploy)
-* [kogito-operator-promote](https://github.com/kiegroup/kogito-operator/blob/master/Jenkinsfile.promote)
+* [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.deploy)
+* [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.promote)
+* [optaplanner-deploy](https://github.com/kiegroup/optaplanner/blob/main/Jenkinsfile.deploy)
+* [optaplanner-promote](https://github.com/kiegroup/optaplanner/blob/main/Jenkinsfile.promote)
+* [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.deploy)
+* [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.promote)
+* [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/main/Jenkinsfile.deploy)
+* [kogito-images-promote](https://github.com/kiegroup/kogito-images/blob/main/Jenkinsfile.promote)
+* [kogito-examples-images-deploy](https://github.com/kiegroup/kogito-operator/blob/main/Jenkinsfile.examples-images.deploy)
+* [kogito-examples-images-promote](https://github.com/kiegroup/kogito-operator/blob/main/Jenkinsfile.examples-images.promote)
+* [kogito-operator-deploy](https://github.com/kiegroup/kogito-operator/blob/main/Jenkinsfile.deploy)
+* [kogito-operator-promote](https://github.com/kiegroup/kogito-operator/blob/main/Jenkinsfile.promote)
 
 ## Release process
 
@@ -228,7 +228,7 @@ In the Zulip kogito-ci stream, there should be a link to the failing job. Open i
 In case the main pipeline is failing, this will be most likely a Groovy error.  
 This can happen when changes have been made to the [Release Jenkinsfile](../Jenkinsfile.release).
 
-The problem will need to be corrected on `master` and the pipeline could be restarted.
+The problem will need to be corrected on `main` and the pipeline could be restarted.
 
 ### Release pipeline is reporting a called *-deploy job is failing
 

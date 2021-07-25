@@ -54,11 +54,11 @@ This is a set of cleanup utils jobs.
 Those jobs can be found into the `kogito-runtimes` repository.  
 They are daily run jobs:
 
-* [kogito-native](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.native)  
+* [kogito-native](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.native)  
   Perform a daily native build&test of runtimes.
-* [kogito-quarkus](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.quarkus)  
+* [kogito-quarkus](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.quarkus)  
   Perform a daily check of runtimes against latest snapshot of Quarkus.
-* [kogito-drools-snapshot](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.drools)  
+* [kogito-drools-snapshot](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.drools)  
   Perform a daily check of runtimes against latest snapshot of Drools.
 
 ### PR checks
@@ -77,7 +77,7 @@ Only the Operator PR check is not yet in this folder as it is still on another J
 Each repository has a `ci-pr.yaml` file in `.github/workflows` folder to configure the workflow.
 The `kogito-runtimes` repo has a different configuration, see additional notes at the end of this paragraph.
 
-Repo dependencies and build commands are configured in the centralized [`.ci` folder](https://github.com/kiegroup/kogito-pipelines/tree/master/.ci) in this repo.
+Repo dependencies and build commands are configured in the centralized [`.ci` folder](https://github.com/kiegroup/kogito-pipelines/tree/main/.ci) in this repo.
 
 Build execution is performed using the [`github-action-chain`](https://github.com/kiegroup/github-action-build-chain) action that automatically performs cross repo builds.
 

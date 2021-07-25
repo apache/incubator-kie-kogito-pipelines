@@ -2,7 +2,7 @@
 
 // Configuration of the seed and generated jobs is done via `dsl/seed/config.yaml`
 pipelineJob("${JOB_NAME}") {
-    description("This job creates all needed Jenkins jobs on branch ${GENERATION_BRANCH}. DO NOT USE FOR TESTING !!!! See https://github.com/kiegroup/kogito-pipelines/blob/master/docs/jenkins.md#test-specific-jobs")
+    description("This job creates all needed Jenkins jobs on branch ${GENERATION_BRANCH}. DO NOT USE FOR TESTING !!!! See https://github.com/kiegroup/kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs")
 
     logRotator {
         numToKeep(5)
@@ -15,7 +15,7 @@ pipelineJob("${JOB_NAME}") {
     parameters {
         booleanParam('DEBUG', false, 'Enable Debug capability')
 
-        stringParam('CUSTOM_REPOSITORIES', "${CUSTOM_REPOSITORIES}", 'To generate only some custom repos... Comma list of `repo[:branch]`. Example: `kogito-pipelines:any_change`. If no branch is given, then `master` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
+        stringParam('CUSTOM_REPOSITORIES', "${CUSTOM_REPOSITORIES}", 'To generate only some custom repos... Comma list of `repo[:branch]`. Example: `kogito-pipelines:any_change`. If no branch is given, then `main` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
         stringParam('CUSTOM_AUTHOR', "${CUSTOM_AUTHOR}", 'To generate only some custom repos... Define from from which author the custom repositories are checked out. If none given, then `SEED_AUTHOR` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
 
         stringParam('SEED_AUTHOR', "${SEED_AUTHOR}", 'If different from the default')

@@ -13,7 +13,7 @@ pipeline {
         string(description: 'The RHBA version prefix, something like 7.52.0.Final-redhat', name: 'RHBA_VERSION_PREFIX')
         string(description: 'The deployment URL', name: 'KOGITO_DEPLOYMENT_REPO_URL')
         booleanParam(description: 'Skip Tests? True as default', name: 'SKIP_TESTS', defaultValue: true)
-        string(description: 'The UMB message version', name: 'UMB_VERSION', defaultValue: 'master')
+        string(description: 'The UMB message version', name: 'UMB_VERSION', defaultValue: 'main')
         string(description: 'The product version', name: 'PRODUCT_VERSION')
         string(description: 'The optaplanner product version', name: 'OPTAPLANNER_PRODUCT_VERSION')
     }

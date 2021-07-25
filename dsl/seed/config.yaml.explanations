@@ -4,7 +4,7 @@
 git:
   # Each branch will be accessible as `GIT_BRANCH` env var
   branches:
-  - master
+  - main
   author:
     name: kiegroup
     credentials_id: kie-ci
@@ -14,7 +14,7 @@ git:
     credentials_id: bsig-gh-bot
   # Each main branch will be accessible as `GIT_MAIN_BRANCH` env var
   main_branch:
-    default: master
+    default: main
 
 ##### MAVEN
 maven:
@@ -39,7 +39,7 @@ cloud:
     registry_credentials_release: release_kogito
     registry: quay.io
     namespace: kiegroup
-    latest_git_branch: master
+    latest_git_branch: main
 
 ##### MISC
 jenkins:
