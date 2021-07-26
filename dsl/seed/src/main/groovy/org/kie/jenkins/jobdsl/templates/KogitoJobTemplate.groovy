@@ -191,7 +191,7 @@ class KogitoJobTemplate {
                                 }
                             }
                             includedRegions('')
-                            excludedRegions('')
+                            excludedRegions(jobParams.pr.excluded_regions ? jobParams.pr.excluded_regions.join('\n') : '')
                             extensions {
                                 ghprbSimpleStatus {
                                     commitStatusContext(jobParams.pr.commitContext ?: 'Linux')
