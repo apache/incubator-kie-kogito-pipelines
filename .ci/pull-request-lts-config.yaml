@@ -3,14 +3,12 @@ version: "2.1"
 dependencies: ./project-dependencies-quarkus.yaml
 
 pre: |
-  export BUILD_MVN_OPTS="${{ env.BUILD_MVN_OPTS }} -nsu -fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
+  export BUILD_MVN_OPTS="${{ env.BUILD_MVN_OPTS }} -Dversion.io.quarkus=999-SNAPSHOT -nsu -fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
   echo "BUILD_MVN_OPTS=${{ env.BUILD_MVN_OPTS }}"
-  export BUILD_MVN_OPTS_LTS="-Dversion.io.quarkus=999-SNAPSHOT"
-  echo "BUILD_MVN_OPTS_LTS=${{ env.BUILD_MVN_OPTS_LTS }}"
 
 default:
   build-command:
-    current: mvn -e clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_LTS }}
+    current: mvn -e clean install ${{ env.BUILD_MVN_OPTS }}
     upstream: mvn -e clean install -Dquickly ${{ env.BUILD_MVN_OPTS }}
     after:
       current: |
@@ -20,33 +18,33 @@ build:
   - project: kiegroup/kogito-runtimes
     build-command:
       current: |
-        mvn -f kogito-runtimes/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_LTS }}
+        mvn -f kogito-runtimes/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
     clone:
       - kogito-runtimes
 
   - project: kiegroup/optaplanner
     build-command: 
-      current: mvn -f optaplanner/pom.xml clean install -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_LTS }} 
+      current: mvn -f optaplanner/pom.xml clean install -Dfull ${{ env.BUILD_MVN_OPTS }} 
     clone:
       - optaplanner
 
   - project: kiegroup/optaplanner-quickstarts
     build-command: 
-      current: mvn clean install -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_LTS }} 
+      current: mvn clean install -Dfull ${{ env.BUILD_MVN_OPTS }} 
 
   - project: kiegroup/kogito-apps
     build-command: 
       current: |
-        mvn -f kogito-apps/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_LTS }}
+        mvn -f kogito-apps/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
     clone:
       - kogito-apps
 
   - project: kiegroup/kogito-examples
     build-command: 
       current: |
-        mvn -f kogito-examples/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_LTS }}
-        mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_LTS }}
-        mvn -f kogito-examples-events/pom.xml clean install -Pevents ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_LTS }}
+        mvn -f kogito-examples/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
+        mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence ${{ env.BUILD_MVN_OPTS }}
+        mvn -f kogito-examples-events/pom.xml clean install -Pevents ${{ env.BUILD_MVN_OPTS }}
     clone:
       - kogito-examples
       - kogito-examples-persistence
