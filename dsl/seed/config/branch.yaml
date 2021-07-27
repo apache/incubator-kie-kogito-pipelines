@@ -1,3 +1,13 @@
+# Disabled until Quarkus 2.2 is out
+# Follow-up issue: https://issues.redhat.com/browse/KOGITO-5487
+lts:
+  enabled: false
+  quarkus_version: '1.11'
+
+disable:
+  triggers: false
+  branch: false
+
 repositories:
   - name: kogito-pipelines
   - name: kogito-runtimes
@@ -54,8 +64,3 @@ cloud:
     latest_git_branch: main
 jenkins:
   email_creds_id: KOGITO_CI_EMAIL_TO
-quarkus:
-  lts_version: '1.11'
-disable:
-  triggers: false
-  branch: false
