@@ -450,7 +450,9 @@ class KogitoJobTemplate {
                 token_credentials: Utils.getGitAuthorTokenCredsId(script)
             ],
             env: [:],
-            pr: [:]
+            pr: [
+                excluded_regions: ['LICENSE', '\\.gitignore', '.*\\.md', '.*\\.adoc', '.*\\.txt', 'docsimg/.*', '\\.github/.*', 'Jenkinsfile.*', '\\.jenkins/.*']
+            ]
         ]
     }
 }
