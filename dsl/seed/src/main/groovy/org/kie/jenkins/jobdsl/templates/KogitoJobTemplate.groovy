@@ -191,7 +191,7 @@ class KogitoJobTemplate {
                                 }
                             }
                             includedRegions('')
-                            excludedRegions('')
+                            excludedRegions(jobParams.pr.excluded_regions ? jobParams.pr.excluded_regions.join('\n') : '')
                             extensions {
                                 ghprbSimpleStatus {
                                     commitStatusContext(jobParams.pr.commitContext ?: 'Linux')
@@ -450,7 +450,9 @@ class KogitoJobTemplate {
                 token_credentials: Utils.getGitAuthorTokenCredsId(script)
             ],
             env: [:],
-            pr: [:]
+            pr: [
+                excluded_regions: ['LICENSE', '\\.gitignore', '.*\\.md', '.*\\.adoc', '.*\\.txt', '\\.github/.*', 'Jenkinsfile.*', '\\.jenkins/.*']
+            ]
         ]
     }
 }
