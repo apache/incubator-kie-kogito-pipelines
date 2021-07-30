@@ -152,6 +152,8 @@ stage() {
     
     # add custom repositories
     echo "$DIFF_FILE" | patch pom.xml
+
+    mvn process-resources
     
     # commit all
     git commit -am "Kogito $KOGITO_VERSION + OptaPlanner $OPTAPLANNER_VERSION"
