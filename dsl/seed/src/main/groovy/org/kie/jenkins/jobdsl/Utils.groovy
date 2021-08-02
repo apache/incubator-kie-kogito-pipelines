@@ -49,6 +49,10 @@ class Utils {
         return getBindingValue(script, 'LTS_ENABLED').toBoolean()
     }
 
+    static String getLTSNativeBuilderImage(def script) {
+        return getBindingValue(script, 'LTS_NATIVE_BUILDER_IMAGE')
+    }
+
     static String getRepoName(def script) {
         return getBindingValue(script, 'REPO_NAME')
     }
