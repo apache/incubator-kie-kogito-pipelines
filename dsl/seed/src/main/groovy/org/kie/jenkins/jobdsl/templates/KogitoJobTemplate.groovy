@@ -451,7 +451,7 @@ class KogitoJobTemplate {
             ],
             env: [:],
             pr: [
-                excluded_regions: ['LICENSE', '\\.gitignore', '.*\\.md', '.*\\.adoc', '.*\\.txt', '\\.github/.*', 'Jenkinsfile.*', '\\.jenkins/.*'],
+                excluded_regions: ['LICENSE', '\\.gitignore', '.*\\.md', '.*\\.adoc', '.*\\.txt', '\\.github/.*', 'Jenkinsfile.*', '\\.jenkins/.*', '\\.ci/.*'],
                 ignore_for_labels: 'skip-ci',
             ]
         ]
