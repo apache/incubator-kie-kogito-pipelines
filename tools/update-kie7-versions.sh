@@ -1,6 +1,9 @@
 #!/bin/sh
 set -euo pipefail
 
+GITHUB_URL="https://github.com/"
+GITHUB_URL_SSH="git@github.com:"
+
 BRANCH=main
 DEFAULT_BRANCH=main
 DRY_RUN=false
@@ -8,11 +11,12 @@ FORK=
 KIE_VERSION=
 
 usage() {
-    echo 'Usage: update-kie7-versions.sh -s $KIE_VERSION -b $BASE_BRANCH -f $FORK [-n]'
+    echo 'Usage: update-kie7-versions.sh -s $KIE_VERSION -b $BASE_BRANCH -f $FORK [-s] [-n]'
     echo
     echo 'Options:'
-    echo '  -s $KIE_VERSION  set version'
+    echo '  -v $KIE_VERSION  set version'
     echo '  -b $BASE_BRANCH  should be main or a version branch'
+    echo '  -s               Use SSH to connect to GitHub'
     echo '  -f $FORK         GH account where the branch should be pushed'
     echo '  -n               no execution: clones, creates the branch, but will not push or create the PR'
     echo
@@ -21,11 +25,11 @@ usage() {
     echo '  #  - Base branch is main'
     echo '  #  - Push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run '
-    echo '  sh update-kie7-versions.sh -s 7.54.0.Final -b main -f evacchi -n'
+    echo '  sh update-kie7-versions.sh -v 7.54.0.Final -b main -f evacchi -n'
     echo
 }
 
-args=`getopt s:b:f:nh $*`
+args=`getopt v:b:f:snh $*`
 if [ $? != 0 ]
 then
         usage
@@ -42,6 +46,9 @@ do
                 -b)
                         BRANCH=$2
                         shift;shift ;;
+                -s)     
+                        GITHUB_URL=${GITHUB_URL_SSH}
+                        shift;;
                 -f)
                         FORK=$2
                         shift;shift ;;
@@ -93,7 +100,7 @@ echo
 fi
 
 
-git clone https://github.com/$ORIGIN
+git clone ${GITHUB_URL}${ORIGIN}
 cd $REPO
 
 git checkout $BRANCH
@@ -113,7 +120,7 @@ git commit -am "[$BRANCH] Bump KIE $KIE_VERSION"
  
 if [ "$DRY_RUN" = "false" ]; then
     # push the branch to a remote
-    git push -u https://github.com/$PR_FORK $PR_BRANCH
+    git push -u ${GITHUB_URL}${PR_FORK} ${PR_BRANCH}
     
     # Open a PR to kogito-runtimes using the commit as a title
     # e.g. see https://github.com/kiegroup/kogito-runtimes/pull/1200

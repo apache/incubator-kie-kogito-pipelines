@@ -1,16 +1,23 @@
 #!/bin/sh
 set -euo pipefail
  
+GITHUB_URL="https://github.com/"
+GITHUB_URL_SSH="git@github.com:"
+
 MAVEN_VERSION=3.6.2
+
+# kogito or optaplanner
 PROJECT=kogito
+DRY_RUN=false
 
 usage() {
-    echo 'Usage: update-quarkus-versions.sh -p $PROJECT -s $QUARKUS_VERSION -m $MAVEN_VERSION -b $BASE_BRANCH -f $FORK [-n]'
+    echo 'Usage: update-quarkus-versions.sh -p $PROJECT -s $QUARKUS_VERSION -m $MAVEN_VERSION -b $BASE_BRANCH -f $FORK [-s] [-n]'
     echo
     echo 'Options:'
     echo '  -p $PROJECT          set kogito or optaplanner -- default is kogito'
-    echo '  -s $QUARKUS_VERSION  set version'
+    echo '  -q $QUARKUS_VERSION  set version'
     echo '  -m $MAVEN_VERSION    set version'
+    echo '  -s                   Use SSH to connect to GitHub'
     echo '  -b $BASE_BRANCH      should be main or a version branch'
     echo '  -f $FORK             GH account where the branch should be pushed'
     echo '  -n                   no execution: clones, creates the branch, but will not push or create the PR'
@@ -21,11 +28,11 @@ usage() {
     echo '  #  - Base branch is main'
     echo '  #  - Push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run '
-    echo '  sh update-quarkus-versions.sh -p kogito -s 2.0.0.Final -m 3.6.2 -b main -f evacchi -n'
+    echo '  sh update-quarkus-versions.sh -p kogito -q 2.0.0.Final -m 3.6.2 -b main -f evacchi -n'
     echo
 }
 
-args=`getopt p:s:b:f:m:nh $*`
+args=`getopt p:q:m:b:f:snh $*`
 if [ $? != 0 ]
 then
         usage
@@ -39,12 +46,15 @@ do
                 -p)
                         PROJECT=$2;
                         shift;shift ;;
-                -s)
+                -q)
                         QUARKUS_VERSION=$2;
                         shift;shift ;;
                 -m)
                         MAVEN_VERSION=$2
                         shift;shift ;;
+                -s)     
+                        GITHUB_URL=${GITHUB_URL_SSH}
+                        shift;;
                 -b)
                         BRANCH=$2
                         shift;shift ;;
@@ -62,7 +72,10 @@ do
         esac
 done
 
+echo "PROJECT = $PROJECT"
 
+# kogito-runtimes or optaplanner
+REPO=kogito-runtimes
 
 case $PROJECT in
     kogito)
@@ -85,12 +98,6 @@ if [ "$FORK" = "" ]; then
 
         exit 2
 fi
-
-
-# kogito or optaplanner
-PROJECT=kogito
-# kogito-runtimes or optaplanner
-REPO=kogito-runtimes
 
 ORIGIN=kiegroup/$REPO
 PR_FORK=$FORK/$REPO
@@ -117,7 +124,7 @@ fi
 # print all commands
 set -x
 
-git clone https://github.com/$ORIGIN
+git clone ${GITHUB_URL}${ORIGIN}
 cd $REPO
 
 # create branch named like version
@@ -150,7 +157,7 @@ git commit -am "Bump Quarkus $QUARKUS_VERSION"
 
 if [ "$DRY_RUN" = "false" ]; then
    # push the branch to a remote
-   git push -u https://github.com/$PR_FORK $PR_BRANCH
+   git push -u ${GITHUB_URL}${PR_FORK} ${PR_BRANCH}
    
    # Open a PR to kogito-runtimes using the commit as a title
    # e.g. see https://github.com/kiegroup/kogito-runtimes/pull/1200

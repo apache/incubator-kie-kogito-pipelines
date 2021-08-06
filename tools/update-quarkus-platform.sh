@@ -1,15 +1,20 @@
 #!/bin/sh
 set -euo pipefail
 
+GITHUB_URL="https://github.com/"
+GITHUB_URL_SSH="git@github.com:"
+
 MINOR_VERSION=
+DRY_RUN=false
 
 usage() {
-    echo 'Usage: update-quarkus-platform.sh -s $MINOR_VERSION -f $FORK [-n] COMMAND'
+    echo 'Usage: update-quarkus-platform.sh -v $MINOR_VERSION -f $FORK [-s] [-n] COMMAND'
     echo
     echo 'Options:'
-    echo '  -s $MINOR_VERSION    set MINOR version'
+    echo '  -v $MINOR_VERSION    set MINOR version'
     echo '                       e.g. 6.0.Final for Kogito 1.6.0.Final and OptaPlanner 8.6.0.Final'
     echo '  -f $FORK             GH account where the branch should be pushed'
+    echo '  -s                   Use SSH to connect to GitHub'
     echo '  -n                   no execution: clones, creates the branch, but will not push or create the PR'
     echo '  COMMAND              may be `stage` or `finalize`'
     echo
@@ -19,16 +24,16 @@ usage() {
     echo '  #  - Add staging repositories'
     echo '  #  - Push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run'
-    echo '  sh update-quarkus-platform.sh -s 7.0.Final -f evacchi -n stage'
+    echo '  sh update-quarkus-platform.sh -v 7.0.Final -f evacchi -n stage'
     echo
     echo '  # Finalize the PR:'
     echo '  #  - Remove staging repositories'
     echo '  #  - Force-push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run'
-    echo '  sh update-quarkus-platform.sh -s 7.0.Final -f evacchi -n finalize'
+    echo '  sh update-quarkus-platform.sh -v 7.0.Final -f evacchi -n finalize'
 }
 
-args=`getopt s:f:nh $*`
+args=`getopt v:f:snh $*`
 if [ $? != 0 ]; then
     >&2 echo ERROR: no args given.
 
@@ -40,12 +45,15 @@ for i
 do
         case "$i"
         in
-                -s)
+                -v)
                         MINOR_VERSION=$2;
                         shift;shift ;;
                 -f)
                         FORK=$2
                         shift;shift ;;
+                -s)     
+                        GITHUB_URL=${GITHUB_URL_SSH}
+                        shift;;
                 -n)     
                         DRY_RUN=true
                         shift;;
@@ -102,7 +110,7 @@ OPTAPLANNER_VERSION=8.$MINOR_VERSION
 PR_BRANCH=bump-kogito-$KOGITO_VERSION+optaplanner-$OPTAPLANNER_VERSION
 
 
-
+echo GITHUB_URL...............$GITHUB_URL
 echo ORIGIN...................$ORIGIN
 echo PR_FORK..................$PR_FORK
 echo BRANCH...................$BRANCH
@@ -120,7 +128,7 @@ fi
 stage() {
     set -x
 
-    git clone https://github.com/$ORIGIN
+    git clone ${GITHUB_URL}${ORIGIN}
     cd $REPO
 
     # ensure main branch
@@ -144,13 +152,15 @@ stage() {
     
     # add custom repositories
     echo "$DIFF_FILE" | patch pom.xml
+
+    mvn process-resources
     
     # commit all
     git commit -am "Kogito $KOGITO_VERSION + OptaPlanner $OPTAPLANNER_VERSION"
 
     if [ "$DRY_RUN" = "false" ]; then
         # push the branch to a remote
-        git push -u $PR_FORK $PR_BRANCH
+        git push -u ${GITHUB_URL}$PR_FORK $PR_BRANCH
         # Open a PR to kogito-runtimes using the commit as a title
         gh pr create --fill --base $BRANCH -R $ORIGIN
     fi
@@ -162,7 +172,7 @@ finalize() {
     if [ -d "$REPO" ]; then
         cd $REPO
     else
-        git clone https://github.com/$PR_FORK
+        git clone ${GITHUB_URL}$PR_FORK
         cd $REPO;
     fi
 
@@ -187,31 +197,31 @@ index cb78f5b..ffd401d 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -79,6 +79,25 @@
-         <useReleaseProfile>true</useReleaseProfile>
+         </overridesfile>
      </properties>
-
+ 
 +    <repositories>
 +        <repository>
 +            <snapshots>
-+              <enabled>false</enabled>
++                <enabled>false</enabled>
 +            </snapshots>
 +            <id>kogito</id>
 +            <name>kogito</name>
 +            <url>https://repository.jboss.org/nexus/content/groups/kogito-public/</url>
 +        </repository>
 +        <repository>
-+          <snapshots>
++            <snapshots>
 +            <enabled>false</enabled>
-+          </snapshots>
-+          <id>central</id>
-+          <name>Maven Central</name>
-+          <url>https://repo.maven.apache.org/maven2</url>
++            </snapshots>
++            <id>central</id>
++            <name>Maven Central</name>
++            <url>https://repo.maven.apache.org/maven2</url>
 +        </repository>
 +    </repositories>
 +
-     <modules>
-         <module>bom</module>
-         <module>descriptor</module>
+     <distributionManagement>
+         <snapshotRepository>
+             <id>sonatype-nexus-snapshots</id>
 
 }
 '
