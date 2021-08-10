@@ -149,6 +149,7 @@ do
   mvn -pl :${i} \
      versions:set-property \
      -Dproperty=version.io.quarkus \
+     -Dproperty=version.io.quarkus.quarkus-test-maven \
      -DnewVersion=$QUARKUS_VERSION \
      -DgenerateBackupPoms=false
  
