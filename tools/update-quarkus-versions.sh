@@ -76,13 +76,18 @@ echo "PROJECT = $PROJECT"
 
 # kogito-runtimes or optaplanner
 REPO=kogito-runtimes
+declare -a MODULES
 
 case $PROJECT in
     kogito)
         REPO=kogito-runtimes
+        MODULES[0]=kogito-dependencies-bom
+        MODULES[1]=kogito-build-parent
+        MODULES[2]=kogito-quarkus-bom
         ;;
     optaplanner)
         REPO=optaplanner
+        MODULES[0]=optaplanner-build-parent
         ;;
     *)
         >&2 echo ERROR: Unknown project: $PROJECT.
@@ -130,27 +135,31 @@ cd $REPO
 # create branch named like version
 git checkout -b $PR_BRANCH
  
-# align third-party dependencies with Quarkus
-mvn versions:compare-dependencies \
--pl :${PROJECT}-build-parent \
--DremotePom=io.quarkus:quarkus-bom:$QUARKUS_VERSION \
--DupdatePropertyVersions=true \
--DupdateDependencies=true \
--DgenerateBackupPoms=false
+for i in "${MODULES[@]}"
+do
+  # align third-party dependencies with Quarkus
+  mvn versions:compare-dependencies \
+  -pl :${i} \
+  -DremotePom=io.quarkus:quarkus-bom:$QUARKUS_VERSION \
+  -DupdatePropertyVersions=true \
+  -DupdateDependencies=true \
+  -DgenerateBackupPoms=false
  
-# update Quarkus version
-mvn -pl :${PROJECT}-build-parent \
-   versions:set-property \
-   -Dproperty=version.io.quarkus \
-   -DnewVersion=$QUARKUS_VERSION \
+  # update Quarkus version
+  mvn -pl :${i} \
+     versions:set-property \
+     -Dproperty=version.io.quarkus \
+     -Dproperty=version.io.quarkus.quarkus-test-maven \
+     -DnewVersion=$QUARKUS_VERSION \
+     -DgenerateBackupPoms=false
+ 
+  # pin Maven version
+  mvn -pl :${i} \
+  versions:set-property \
+   -Dproperty=version.maven \
+   -DnewVersion=$MAVEN_VERSION \
    -DgenerateBackupPoms=false
- 
-# pin Maven version
-mvn -pl :${PROJECT}-build-parent \
-versions:set-property \
--Dproperty=version.maven \
--DnewVersion=$MAVEN_VERSION \
--DgenerateBackupPoms=false
+done
  
 # commit all
 git commit -am "Bump Quarkus $QUARKUS_VERSION"
