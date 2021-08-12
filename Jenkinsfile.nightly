@@ -45,7 +45,6 @@ pipeline {
 
         IMAGE_NAME_NIGHTLY_SUFFIX = 'nightly'
 
-        TEMP_TAG = "temp-${getBuildBranch()}-tests"
         // Use branch name in nightly tag as we may have parallel main and release branch builds
         NIGHTLY_TAG = """${getBuildBranch()}-${sh(
                 returnStdout: true,
@@ -57,7 +56,6 @@ pipeline {
         stage('Initialize') {
             steps {
                 script {
-                    echo "temporary tag is ${env.TEMP_TAG}"
                     echo "nightly tag is ${env.NIGHTLY_TAG}"
 
                     currentBuild.displayName = env.NIGHTLY_TAG
@@ -166,7 +164,7 @@ pipeline {
             steps {
                 script {
                     def buildParams = getDefaultBuildParams()
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, true)
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
 
                     // For testing
@@ -198,12 +196,12 @@ pipeline {
                                 script {
                                     def buildParams = getDefaultBuildParams()
                                     addSkipTestsParam(buildParams)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, true)
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
                                     addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
                                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
 
                                     // For BDD tests
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, true, kogitoImagesParamsPrefix)
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
                                     addExamplesParam(buildParams)
 
                                     buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams)
@@ -223,12 +221,12 @@ pipeline {
                                 script {
                                     def buildParams = getDefaultBuildParams()
                                     addSkipTestsParam(buildParams)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, true)
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
                                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
 
                                     // For BDD tests
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, true, kogitoImagesParamsPrefix)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, true, examplesImagesParamsPrefix)
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix)
                                     addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
                                     addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
                                     addExamplesParam(buildParams)
@@ -257,14 +255,14 @@ pipeline {
                                 script {
                                     def buildParams = getDefaultBuildParams()
                                     addSkipTestsParam(buildParams)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, true, defaultImageParamsPrefix, 'lts')
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, defaultImageParamsPrefix, 'lts')
                                     addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
                                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
 
                                     // For BDD tests
                                     addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getLTSNativeBuilderImage())
                                     addStringParam(buildParams, 'BDD_TEST_TAGS', '@native && ~@nonnativelts')
-                                    addImageBuildParams(buildParams, env.TEMP_TAG, true, kogitoImagesParamsPrefix)
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
                                     addExamplesParam(buildParams)
 
                                     buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams, getLTSJobKey(EXAMPLES_IMAGES_DEPLOY))
@@ -289,8 +287,8 @@ pipeline {
                                     // For BDD tests
                                     addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getLTSNativeBuilderImage())
                                     addStringParam(buildParams, 'BDD_TEST_TAGS', '@native && ~@nonnativelts')
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, true, kogitoImagesParamsPrefix)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, true, examplesImagesParamsPrefix, 'lts')
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix, 'lts')
                                     addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
                                     addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
                                     addExamplesParam(buildParams)
@@ -411,8 +409,7 @@ void addExamplesParam(buildParams) {
     addStringParam(buildParams, 'EXAMPLES_REF', "nightly-${getBuildBranch()}")
 }
 
-void addImageBuildParams(List buildParams, String tag, boolean isFinalImage = false, String paramsPrefix = defaultImageParamsPrefix, String extraSuffix = '') {
-    addBooleanParam(buildParams, constructKey(paramsPrefix, 'USE_OPENSHIFT_REGISTRY'), !isFinalImage && params.USE_TEMP_OPENSHIFT_REGISTRY)
+void addImageBuildParams(List buildParams, String tag, String paramsPrefix = defaultImageParamsPrefix, String extraSuffix = '') {
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
     addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
