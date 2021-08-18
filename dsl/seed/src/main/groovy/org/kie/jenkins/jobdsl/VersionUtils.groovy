@@ -7,6 +7,9 @@ class VersionUtils {
         if (isKogitoProject(project)) {
             return getTargetBranch(branch, isOptaplannerProject(upstreamProject) ? -7 : 0)
         } else if (isOptaplannerProject(project)) {
+            if (isOptaplannerQuickstartsProject(project) && branch == 'development') {
+                return 'main'
+            }
             return getTargetBranch(branch, isOptaplannerProject(upstreamProject) ? 0 : 7)
         } else {
             throw new Exception()
@@ -33,6 +36,10 @@ class VersionUtils {
 
     static boolean isOptaplannerProject(String project) {
         return project.startsWith('opta')
+    }
+
+    static boolean isOptaplannerQuickstartsProject(String project) {
+        return project == 'optaplanner-quickstarts'
     }
 
 }
