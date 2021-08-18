@@ -17,12 +17,15 @@ IMAGES_PROMOTE = 'kogito-images-promote'
 EXAMPLES_IMAGES_PROMOTE = 'kogito-examples-images-promote'
 OPERATOR_PROMOTE = 'kogito-operator-promote'
 
-// Map of executed jobs
-// See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
-// for more options on built job entity
-JOBS = [:]
+ARTIFACTS_STAGING_STAGE = 'stage.artifacts.staging'
+ARTIFACTS_RELEASE_STAGE = 'stage.artifacts.release'
 
-previousJobProperties = [:]
+JOB_PROPERTY_PREFIX = 'build'
+JOB_RESULT_PROPERTY_KEY = 'result'
+JOB_URL_PROPERTY_KEY = 'absoluteUrl'
+JOB_DECISION_PROPERTY_KEY = 'decision'
+JOB_DECISION_MESSAGE_PROPERTY_KEY = 'decisionMessage'
+
 releaseProperties = [:]
 
 defaultImageParamsPrefix = 'IMAGE'
@@ -54,18 +57,8 @@ pipeline {
                 script {
                     // Restore config from previous run
                     if (params.RESTORE_FROM_PREVIOUS_JOB) {
-                        previousJobProperties = readPropertiesFromUrl(params.RESTORE_FROM_PREVIOUS_JOB, 'release.properties')
-                        previousJobProperties.findAll { it.key.startsWith('build.') }.each { key, value ->
-                            String[] splitKey = key.split('\\.')
-                            String jobName = splitKey[1]
-                            String jobAttr = splitKey[2]
-                            if (!hasJob(jobName)) {
-                                registerJob(jobName, [:])
-                            }
-                            def jobMap = getJob(jobName)
-                            jobMap.put(jobAttr, value)
-                        }
-                        echo "Previous run jobs config imported: ${getAllJobs()}"
+                        releaseProperties = readPropertiesFromUrl(params.RESTORE_FROM_PREVIOUS_JOB, 'release.properties')
+                        echo "Release properties imported from previous job: ${releaseProperties}"
                     }
 
                     assert getKogitoArtifactsVersion()
@@ -82,8 +75,8 @@ pipeline {
                         sendNotification("Git Author is different from `kiegroup` and no `ARTIFACTS_REPOSITORY` parameter has been provided. Are you sure you want to continue ? => ${env.BUILD_URL}input")
                         input message: 'Should the pipeline continue with no `ARTIFACTS_REPOSITORY` defined ?', ok: 'Yes'
                     }
+                }
             }
-        }
             post {
                 always {
                     setReleasePropertyIfneeded('kogito.version', getKogitoArtifactsVersion())
@@ -94,16 +87,14 @@ pipeline {
                     setReleasePropertyIfneeded('deploy.latest', isDeployAsLatest())
                 }
             }
-    }
+        }
 
         stage('Build & Deploy Kogito Runtimes') {
             when {
-                expression { return isArtifactsDeploy() && !hasJob(RUNTIMES_DEPLOY) }
+                expression { return isArtifactsDeploy() }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
 
@@ -114,12 +105,10 @@ pipeline {
 
         stage('Build & Deploy OptaPlanner') {
             when {
-                expression { return isArtifactsDeploy() && !hasJob(OPTAPLANNER_DEPLOY) }
+                expression { return isArtifactsDeploy() }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams(getOptaPlannerVersion())
                     addSkipTestsParam(buildParams)
                     addSkipIntegrationTestsParam(buildParams)
@@ -132,12 +121,10 @@ pipeline {
 
         stage('Build & Deploy Kogito Apps') {
             when {
-                expression { return isArtifactsDeploy() && !hasJob(APPS_DEPLOY) }
+                expression { return isArtifactsDeploy() }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
@@ -149,12 +136,10 @@ pipeline {
 
         stage('Build & Deploy Kogito Examples') {
             when {
-                expression { return isArtifactsDeploy() && !hasJob(EXAMPLES_DEPLOY) }
+                expression { return isArtifactsDeploy() }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
@@ -165,33 +150,38 @@ pipeline {
         }
 
         stage('Artifacts\' staging finalization') {
+            when {
+                expression { !areArtifactsStaged() }
+            }
             steps {
                 script {
-                    sendNotification("All artifacts have been staged. You can find them here: ${getStagingRepository()}")
+                    if (isArtifactsDeploy()) {
+                        sendNotification("All artifacts have been staged. You can find them here: ${getStagingRepository()}")
+                    }
 
                     String jobUrl = getJobUrl(EXAMPLES_DEPLOY)
                     def deployProps = jobUrl ? readPropertiesFromUrl(jobUrl, 'deployment.properties') : [:]
 
-                    env.EXAMPLES_URI = params.EXAMPLES_URI ?: (previousJobProperties['examples.uri'] ?: (deployProps['kogito-examples.pr.source.uri'] ?: "https://github.com/${getGitAuthor()}/kogito-examples"))
-                    env.EXAMPLES_REF = params.EXAMPLES_REF ?: (previousJobProperties['examples.ref'] ?: (deployProps['kogito-examples.pr.source.ref'] ?: util.getReleaseBranchFromVersion(getKogitoArtifactsVersion())))
-                    
+                    env.EXAMPLES_URI = params.EXAMPLES_URI ?: (getReleaseProperty('examples.uri') ?: (deployProps['kogito-examples.pr.source.uri'] ?: "https://github.com/${getGitAuthor()}/kogito-examples"))
+                    env.EXAMPLES_REF = params.EXAMPLES_REF ?: (getReleaseProperty('examples.ref') ?: (deployProps['kogito-examples.pr.source.ref'] ?: util.getReleaseBranchFromVersion(getKogitoArtifactsVersion())))
+
                     echo "Got examples uri ${env.EXAMPLES_URI}"
                     echo "Got examples ref ${env.EXAMPLES_REF}"
 
                     setReleasePropertyIfneeded('examples.uri', env.EXAMPLES_URI)
                     setReleasePropertyIfneeded('examples.ref', env.EXAMPLES_REF)
+
+                    setArtifactsStaged()
                 }
             }
         }
 
         stage('Build & Deploy Kogito Images') {
             when {
-                expression { return isImagesDeploy() && !hasJob(IMAGES_DEPLOY) }
+                expression { return isImagesDeploy() }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
                     addStringParam(buildParams, 'KOGITO_ARTIFACTS_VERSION', getKogitoArtifactsVersion())
                     addImageBuildParams(buildParams, getKogitoImagesTempTag())
@@ -205,12 +195,10 @@ pipeline {
 
         stage('Build & Deploy Examples Images') {
             when {
-                expression { return isExamplesImagesDeploy() && !hasJob(EXAMPLES_IMAGES_DEPLOY) }
+                expression { return isExamplesImagesDeploy() }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
                     addSkipTestsParam(buildParams)
                     addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag())
@@ -227,12 +215,10 @@ pipeline {
 
         stage('Build & Deploy Kogito Operator') {
             when {
-                expression { return isOperatorDeploy() && !hasJob(OPERATOR_DEPLOY) }
+                expression { return isOperatorDeploy() }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
                     addSkipTestsParam(buildParams)
                     addImageBuildParams(buildParams, getKogitoOperatorTempTag())
@@ -265,7 +251,7 @@ pipeline {
         stage('Are staged artifacts released?') {
             when {
                 // Execute only if artifacts repository was not given, which means the staging repository has been created
-                expression { return isArtifactsDeploy() && !getArtifactsRepositoryParam() }
+                expression { return isArtifactsDeploy() && !getArtifactsRepositoryParam() && !areArtifactsReleased() }
             }
             steps {
                 script {
@@ -275,18 +261,17 @@ pipeline {
                     input message: 'Has the staging repository been released ?', ok: 'Yes'
 
                     sendNotification('Artifacts have been released. Finalizing now the release ...')
+                    setArtifactsReleased()
                 }
             }
         }
 
         stage('Promote Kogito Runtimes') {
             when {
-                expression { return getJobUrl(RUNTIMES_DEPLOY) && !hasJob(RUNTIMES_PROMOTE) }
+                expression { return isArtifactsPromote() && isJobConsideredOk(RUNTIMES_DEPLOY) }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams()
                     addDeployBuildUrlParam(buildParams, RUNTIMES_DEPLOY)
 
@@ -297,12 +282,10 @@ pipeline {
 
         stage('Promote OptaPlanner') {
             when {
-                expression { return getJobUrl(OPTAPLANNER_DEPLOY) && !hasJob(OPTAPLANNER_PROMOTE) }
+                expression { return isArtifactsPromote() && isJobConsideredOk(OPTAPLANNER_DEPLOY) }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams(getOptaPlannerVersion())
                     addDeployBuildUrlParam(buildParams, OPTAPLANNER_DEPLOY)
                     addStringParam(buildParams, 'KOGITO_VERSION', getKogitoArtifactsVersion())
@@ -314,12 +297,10 @@ pipeline {
 
         stage('Promote Kogito Apps') {
             when {
-                expression { return getJobUrl(APPS_DEPLOY) && !hasJob(APPS_PROMOTE) }
+                expression { return isArtifactsPromote() && isJobConsideredOk(APPS_DEPLOY) }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
                     addDeployBuildUrlParam(buildParams, APPS_DEPLOY)
@@ -331,12 +312,10 @@ pipeline {
 
         stage('Promote Kogito Examples') {
             when {
-                expression { return getJobUrl(EXAMPLES_DEPLOY) && !hasJob(EXAMPLES_PROMOTE) }
+                expression { return isArtifactsPromote() && isJobConsideredOk(EXAMPLES_DEPLOY) }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams()
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
                     addDeployBuildUrlParam(buildParams, EXAMPLES_DEPLOY)
@@ -349,12 +328,10 @@ pipeline {
 
         stage('Promote Kogito Images') {
             when {
-                expression { return getJobUrl(IMAGES_DEPLOY) && !hasJob(IMAGES_PROMOTE) }
+                expression { return isImagesPromote() && isJobConsideredOk(IMAGES_DEPLOY) }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
                     addDeployBuildUrlParamOrClosure(buildParams, IMAGES_DEPLOY) {
                         addImageBuildParams(buildParams, getKogitoImagesTempTag(), false, baseImageParamsPrefix)
@@ -369,12 +346,10 @@ pipeline {
 
         stage('Promote Examples Images') {
             when {
-                expression { return isExamplesImagesPromote() && !hasJob(EXAMPLES_IMAGES_PROMOTE) }
+                expression { return isExamplesImagesPromote() && isJobConsideredOk(EXAMPLES_IMAGES_DEPLOY) }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams()
 
                     addDeployBuildUrlParamOrClosure(buildParams, EXAMPLES_IMAGES_DEPLOY)  {
@@ -393,12 +368,10 @@ pipeline {
 
         stage('Promote Kogito Operator') {
             when {
-                expression { return getJobUrl(OPERATOR_DEPLOY) && !hasJob(OPERATOR_PROMOTE) }
+                expression { return isOperatorPromote() && isJobConsideredOk(OPERATOR_DEPLOY) }
             }
             steps {
                 script {
-                    sendStageNotification()
-
                     def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
                     addDeployBuildUrlParamOrClosure(buildParams, OPERATOR_DEPLOY)  {
                         addImageBuildParams(buildParams, getKogitoOperatorTempTag(), false, baseImageParamsPrefix)
@@ -430,11 +403,11 @@ pipeline {
         //             // TODO how to set nextSnapshot ?
         //             addStringParam(buildParams, "nextSnapshot", "???")
 
-//             buildJob(OPERATOR_DEPLOY, '../../kogito-docs/kogito-docs-upload', buildParams)
-//         }
-//     }
-// }
-}
+    //             buildJob(OPERATOR_DEPLOY, '../../kogito-docs/kogito-docs-upload', buildParams)
+    //         }
+    //     }
+    // }
+    }
     post {
         always {
             script {
@@ -454,67 +427,97 @@ pipeline {
 }
 
 def buildJob(String jobName, List buildParams) {
-    echo "Build ${jobName} with params ${buildParams}"
-
-    def job = build(job: "./${jobName}", wait: true, parameters: buildParams, propagate: false)
-    def jobResult = job.result
-    def jobUrl = job.absoluteUrl
-    if (jobResult != 'SUCCESS') {
-        echo "Sending a notification about an unsuccessful job build ${jobName}."
-        sendNotification("`${jobName}` finished with status `${jobResult}`.\nSee: ${jobUrl}\n\nPlease provide which action should be done (retry ? continue ? skip ? abort ?): ${env.BUILD_URL}input")
-
-        // abort is handled automatically by the pipeline in the input
-        def result = input message: "Job `${jobName}` is in status ${jobResult}. What do you want to do ?\nBeware that skipping a deploy job will not launch the promote part.", parameters: [choice(name: 'ACTION', choices: ['retry', 'continue', 'skip'].join('\n')), string(name: 'MESSAGE', description: 'If you want to add information to your action...')]
-        String resultStr = "`${jobName}` failure => Decision was made to ${result['ACTION']}."
-        if (result['MESSAGE'] != '') {
-            resultStr += "Additional Information: `${result['MESSAGE']}`"
-        }
-        echo resultStr
-        sendNotification(resultStr)
-
-        // If skip, do not do anything (no registration)
-        if (result['ACTION'] == 'retry') {
-            return buildJob(jobName, buildParams)
-        } else if (result['ACTION'] == 'continue') {
-            registerJob(jobName, job)
-        }
+    if (!hasJob(jobName)) {
+        sendStageNotification()
+        echo "Build ${jobName} with params ${buildParams}"
+        def job = build(job: "./${jobName}", wait: true, parameters: buildParams, propagate: false)
+        registerJobExecution(jobName, job.result, job.absoluteUrl)
     } else {
-        // Succeeded
-        registerJob(jobName, job)
+        echo 'Job was already executed. Retrieving information...'
     }
 
     saveReleaseProperties()
 
-    return job
+    def jobResult = getJobResult(jobName)
+    def jobUrl = getJobUrl(jobName)
+    def jobDecision = getJobDecision(jobName)
+    if (jobResult != 'SUCCESS') {
+        if (jobDecision != 'continue' && jobDecision != 'skip') {
+            echo "Sending a notification about an unsuccessful job build ${jobName}."
+            sendNotification("`${jobName}` finished with status `${jobResult}`.\nSee: ${jobUrl}\n\nPlease provide which action should be done (retry ? continue ? skip ? abort ?): ${env.BUILD_URL}input")
+
+            // abort is handled automatically by the pipeline in the input
+            def result = input message: "Job `${jobName}` is in status ${jobResult}. What do you want to do ?\nBeware that skipping a deploy job will not launch the promote part.", parameters: [choice(name: 'ACTION', choices: ['retry', 'continue', 'skip'].join('\n')), string(name: 'MESSAGE', description: 'If you want to add information to your action...')]
+            def inputDecision = result['ACTION']
+            def inputMessage = result['MESSAGE']
+            registerJobDecision(jobName, inputDecision, inputMessage)
+
+            String resultStr = "`${jobName}` failure => Decision was made to ${inputDecision}."
+            if (inputMessage) {
+                resultStr += "Additional Information: `${inputMessage}`"
+            }
+            sendNotification(resultStr)
+
+            if (inputDecision == 'retry') {
+                // If retry, remove job and build again
+                return buildJob(jobName, buildParams)
+            }
+        } else {
+            echo "Job decision was '${jobDecision}'"
+        }
+    } else {
+        echo 'Job succeeded'
+    }
 }
 
-def registerJob(String jobName, def job) {
-    JOBS[jobName] = job
+String getJobPropertySuffix(String jobName) {
+    return "${JOB_PROPERTY_PREFIX}.${jobName}"
 }
 
-def getAllJobs() {
-    return JOBS
+String getJobPropertyKey(String jobName, String key) {
+    return "${getJobPropertySuffix(jobName)}.${key}"
 }
 
-def getJob(String jobName) {
-    return JOBS[jobName]
+def registerJobExecution(String jobName, String result, String absoluteUrl) {
+    setReleasePropertyIfneeded(getJobPropertyKey(jobName, JOB_RESULT_PROPERTY_KEY), result)
+    setReleasePropertyIfneeded(getJobPropertyKey(jobName, JOB_URL_PROPERTY_KEY), absoluteUrl)
+}
+
+def registerJobDecision(String jobName, String decision, String message = '') {
+    setReleasePropertyIfneeded(getJobPropertyKey(jobName, JOB_DECISION_PROPERTY_KEY), decision)
+    setReleasePropertyIfneeded(getJobPropertyKey(jobName, JOB_DECISION_MESSAGE_PROPERTY_KEY), message)
+}
+
+List getAllJobNames() {
+    return releaseProperties.findAll { it.key.startsWith(JOB_PROPERTY_PREFIX) }.collect { it.key.split('\\.')[1] }
 }
 
 boolean hasJob(String jobName) {
-    return JOBS.containsKey(jobName)
+    return releaseProperties.any { it.key.startsWith(getJobPropertySuffix(jobName)) }
 }
 
 String getJobUrl(String jobName) {
     echo "getJobUrl for ${jobName}"
-    def job = getJob(jobName)
-    return job ? job.absoluteUrl : ''
+    return getReleaseProperty(getJobPropertyKey(jobName, JOB_URL_PROPERTY_KEY)) ?: ''
+}
+
+String getJobResult(String jobName) {
+    echo "getJobResult for ${jobName}"
+    return getReleaseProperty(getJobPropertyKey(jobName, JOB_RESULT_PROPERTY_KEY)) ?: ''
+}
+
+String getJobDecision(String jobName) {
+    echo "getJobDecision for ${jobName}"
+    return getReleaseProperty(getJobPropertyKey(jobName, JOB_DECISION_PROPERTY_KEY)) ?: ''
+}
+
+boolean isJobConsideredOk(String jobName) {
+    String result = getJobResult(jobName)
+    String decision = getJobDecision(jobName)
+    return result == 'SUCCESS' || (result == 'UNSTABLE' &&  decision == 'continue')
 }
 
 void saveReleaseProperties() {
-    getAllJobs().each { name, job ->
-        setReleasePropertyIfneeded("build.${name}.result", job.result)
-        setReleasePropertyIfneeded("build.${name}.absoluteUrl", job.absoluteUrl)
-    }
     def propertiesStr = releaseProperties.collect { entry -> "${entry.key}=${entry.value}" }.join('\n')
     writeFile( file : 'release.properties' , text : propertiesStr)
     archiveArtifacts artifacts: 'release.properties'
@@ -522,9 +525,9 @@ void saveReleaseProperties() {
 
 void sendSuccessfulReleaseNotification() {
     String bodyMsg = 'Release is successful with those jobs:\n'
-    getAllJobs().each {
+    getAllJobNames().findAll { isJobConsideredOk(it) }.each {
         bodyMsg += "- ${it.key}\n"
-    }
+}
     bodyMsg += "\nPlease look here: ${BUILD_URL} for more information"
     sendNotification(bodyMsg)
 }
@@ -623,19 +626,19 @@ String getDisplayName(version = '') {
 }
 
 String getKogitoArtifactsVersion() {
-    return params.PROJECT_VERSION ?: previousJobProperties['kogito.version']
+    return params.PROJECT_VERSION ?: getReleaseProperty('kogito.version')
 }
 
 String getKogitoImagesVersion() {
-    return params.KOGITO_IMAGES_VERSION ?: (previousJobProperties['kogito.images.version'] ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion()))
+    return params.KOGITO_IMAGES_VERSION ?: (getReleaseProperty('kogito.images.version') ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion()))
 }
 
 String getKogitoOperatorVersion() {
-    return params.KOGITO_OPERATOR_VERSION ?: (previousJobProperties['kogito.operator.version'] ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion()))
+    return params.KOGITO_OPERATOR_VERSION ?: (getReleaseProperty('kogito.operator.version') ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion()))
 }
 
 String getOptaPlannerVersion() {
-    return params.OPTAPLANNER_VERSION ?: previousJobProperties['optaplanner.version']
+    return params.OPTAPLANNER_VERSION ?: getReleaseProperty('optaplanner.version')
 }
 
 String getGitAuthor() {
@@ -647,7 +650,7 @@ String getArtifactsRepositoryParam() {
 }
 
 String getOptaPlannerReleaseBranch() {
-    return params.OPTAPLANNER_RELEASE_BRANCH ?: (previousJobProperties['optaplanner.branch'] ?: util.getReleaseBranchFromVersion(getOptaPlannerVersion()))
+    return params.OPTAPLANNER_RELEASE_BRANCH ?: (getReleaseProperty('optaplanner.branch') ?: util.getReleaseBranchFromVersion(getOptaPlannerVersion()))
 }
 
 String getStagingRepository() {
@@ -655,7 +658,7 @@ String getStagingRepository() {
 }
 
 boolean isDeployAsLatest() {
-    return params.DEPLOY_AS_LATEST || previousJobProperties['deploy.latest']?.toBoolean()
+    return params.DEPLOY_AS_LATEST || getReleaseProperty('deploy.latest')?.toBoolean()
 }
 
 boolean isArtifactsDeploy() {
@@ -723,4 +726,28 @@ void setReleasePropertyIfneeded(String key, def value) {
     if (value) {
         releaseProperties[key] = value
     }
+}
+
+boolean hasReleaseProperty(String key) {
+    return releaseProperties.containsKey(key)
+}
+
+def getReleaseProperty(String key) {
+    return releaseProperties[key]
+}
+
+boolean areArtifactsStaged() {
+    return hasReleaseProperty(ARTIFACTS_STAGING_STAGE)
+}
+
+void setArtifactsStaged() {
+    setReleasePropertyIfneeded(ARTIFACTS_STAGING_STAGE, true)
+}
+
+boolean areArtifactsReleased() {
+    return hasReleaseProperty(ARTIFACTS_RELEASE_STAGE)
+}
+
+void setArtifactsReleased() {
+    setReleasePropertyIfneeded(ARTIFACTS_RELEASE_STAGE, true)
 }
