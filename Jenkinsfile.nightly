@@ -334,13 +334,11 @@ def getJob(String jobKey) {
 
 String getJobUrl(String jobKey) {
     echo "getJobUrl for ${jobKey}"
-    def job = getJob(jobKey)
-    return job ? job.getAbsoluteUrl() : ''
+    return getJob(jobKey)?.getAbsoluteUrl() ?: ''
 }
 
 boolean isJobSucceeded(String jobKey) {
-    def job = getJob(jobKey)
-    return job ? job.getResult() == 'SUCCESS' : false
+    return getJob(jobKey)?.getResult() == 'SUCCESS'
 }
 
 String getLTSJobKey(String jobName) {
@@ -390,7 +388,7 @@ void sendPipelineErrorNotification() {
 List getDefaultBuildParams(String buildBranchName = '', String key = '') {
     buildBranchName = buildBranchName ?: getBuildBranch()
     List params = []
-    addStringParam(params, 'DISPLAY_NAME', "${key ? key + '-' : ''}${env.NIGHTLY_TAG}")
+    addStringParam(params, 'DISPLAY_NAME', "${key ? "${key}-" : ''}${env.NIGHTLY_TAG}")
     addBooleanParam(params, 'SEND_NOTIFICATION', true)
 
     return params
