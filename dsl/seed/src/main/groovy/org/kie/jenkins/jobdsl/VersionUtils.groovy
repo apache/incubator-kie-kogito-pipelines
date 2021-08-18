@@ -4,12 +4,12 @@ package org.kie.jenkins.jobdsl
 class VersionUtils {
 
     static String getProjectTargetBranch(String project, String branch, String upstreamProject) {
+        if (isOptaplannerQuickstartsProject(upstreamProject) && branch == 'development') {
+            return 'main'
+        }
         if (isKogitoProject(project)) {
             return getTargetBranch(branch, isOptaplannerProject(upstreamProject) ? -7 : 0)
         } else if (isOptaplannerProject(project)) {
-            if (isOptaplannerQuickstartsProject(project) && branch == 'development') {
-                return 'main'
-            }
             return getTargetBranch(branch, isOptaplannerProject(upstreamProject) ? 0 : 7)
         } else {
             throw new Exception()
