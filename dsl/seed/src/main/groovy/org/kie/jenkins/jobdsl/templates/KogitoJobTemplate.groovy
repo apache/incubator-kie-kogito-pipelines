@@ -358,12 +358,10 @@ class KogitoJobTemplate {
                 // Buildchain uses centralized configuration for Jenkinsfile.buildchain to checkout
                 // Overrides configuration already done
                 jobParams.pr.checkout_branch = VersionUtils.getProjectTargetBranch(KogitoConstants.BUILDCHAIN_REPOSITORY, jobParams.git.branch, jobParams.git.repository)
+                jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository ?: jobParams.git.repository}")
+                jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
                 jobParams.git.repository = KogitoConstants.BUILDCHAIN_REPOSITORY
                 jobParams.jenkinsfile = KogitoConstants.BUILDCHAIN_JENKINSFILE_PATH
-                if (jobCfg.repository) {
-                    jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository}")
-                }
-                jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
             }
             jobParams.job.name += ".${jobCfg.id.toLowerCase()}"
 
