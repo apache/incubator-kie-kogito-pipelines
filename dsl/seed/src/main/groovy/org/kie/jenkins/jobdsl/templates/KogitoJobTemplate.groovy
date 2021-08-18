@@ -339,7 +339,7 @@ class KogitoJobTemplate {
 
             jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
 
-            if (jobCfg.repository) { // Downstream job
+            if (jobCfg.repository && jobCfg.repository != jobParams.git.repository ) { // Downstream job
                 jobParams.env.put('DOWNSTREAM_BUILD', true)
                 jobParams.env.put('UPSTREAM_TRIGGER_PROJECT', jobParams.git.repository)
                 jobParams.job.description = "Run ${testTypeName} tests of ${jobCfg.repository} due to changes in ${jobParams.git.repository} repository"
