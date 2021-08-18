@@ -116,6 +116,10 @@ void setupNightlyJob(String jobFolder) {
 
             env('MAVEN_SETTINGS_CONFIG_FILE_ID', "${MAVEN_SETTINGS_FILE_ID}")
             env('ARTIFACTS_REPOSITORY', "${MAVEN_ARTIFACTS_REPOSITORY}")
+
+            if (Utils.isLTSBranch(this)) {
+                env('LTS_NATIVE_BUILDER_IMAGE', Utils.getLTSNativeBuilderImage(this))
+            }
         }
     }
 }

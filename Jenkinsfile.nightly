@@ -1,5 +1,4 @@
 import org.jenkinsci.plugins.workflow.libs.Library
-
 @Library('jenkins-pipeline-shared-libraries')_
 
 // Deploy jobs
@@ -10,11 +9,6 @@ EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 EXAMPLES_IMAGES_DEPLOY = 'kogito-examples-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
-EXAMPLES_IMAGES_PROMOTE = 'kogito-examples-images-promote'
-
-// Promote jobs
-IMAGES_PROMOTE = 'kogito-images-promote'
-OPERATOR_PROMOTE = 'kogito-operator-promote'
 
 // Map of executed jobs
 // See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
@@ -51,19 +45,17 @@ pipeline {
 
         IMAGE_NAME_NIGHTLY_SUFFIX = 'nightly'
 
-        TEMP_TAG = "temp-${getBuildBranch()}-tests"
         // Use branch name in nightly tag as we may have parallel main and release branch builds
         NIGHTLY_TAG = """${getBuildBranch()}-${sh(
                 returnStdout: true,
                 script: 'date -u "+%Y-%m-%d"'
             ).trim()}"""
-}
+    }
 
     stages {
         stage('Initialize') {
             steps {
                 script {
-                    echo "temporary tag is ${env.TEMP_TAG}"
                     echo "nightly tag is ${env.NIGHTLY_TAG}"
 
                     currentBuild.displayName = env.NIGHTLY_TAG
@@ -77,12 +69,11 @@ pipeline {
             }
             steps {
                 script {
-                    echo "Call ${RUNTIMES_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
 
                     // images and operator deploy testing will use older working artifacts if that one fails
-                    buildJob(RUNTIMES_DEPLOY, buildParams, false)
+                    buildJob(RUNTIMES_DEPLOY, buildParams)
                 }
             }
             post {
@@ -98,8 +89,6 @@ pipeline {
             }
             steps {
                 script {
-                    echo "Call ${OPTAPLANNER_DEPLOY} job"
-
                     String optaplannerBranch = getBuildBranch()
                     String [] buildBranchSplit = optaplannerBranch.split("\\.")
                     if (buildBranchSplit.length == 3) {
@@ -117,7 +106,7 @@ pipeline {
                     def quickstartsBranch = optaplannerBranch == 'main' ? 'development' : optaplannerBranch
                     addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', quickstartsBranch)
 
-                    buildJob(OPTAPLANNER_DEPLOY, buildParams, false)
+                    buildJob(OPTAPLANNER_DEPLOY, buildParams)
                 }
             }
             post {
@@ -133,12 +122,11 @@ pipeline {
             }
             steps {
                 script {
-                    echo "Call ${APPS_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
 
                     // images and operator deploy testing will use older working artifacts if that one fails
-                    buildJob(APPS_DEPLOY, buildParams, false)
+                    buildJob(APPS_DEPLOY, buildParams)
                 }
             }
             post {
@@ -154,13 +142,12 @@ pipeline {
             }
             steps {
                 script {
-                    echo "Call ${EXAMPLES_DEPLOY} job"
                     def buildParams = getDefaultBuildParams()
                     addSkipTestsParam(buildParams)
                     addBooleanParam(buildParams, 'UPDATE_NIGHTLY_BRANCH', true)
 
                     // images and operator deploy testing will use older working artifacts if that one fails
-                    buildJob(EXAMPLES_DEPLOY, buildParams, false)
+                    buildJob(EXAMPLES_DEPLOY, buildParams)
                 }
             }
             post {
@@ -176,10 +163,10 @@ pipeline {
             }
             steps {
                 script {
-                    echo "Call ${IMAGES_DEPLOY} job"
-
                     def buildParams = getDefaultBuildParams()
-                    addImageBuildParams(buildParams, env.TEMP_TAG)
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
+
                     // For testing
                     addSkipTestsParam(buildParams)
                     addExamplesParam(buildParams)
@@ -187,7 +174,7 @@ pipeline {
                     // Ask to create the PR with changes occuring in this
                     addBooleanParam(buildParams, 'CREATE_PR', true)
 
-                    buildJob(IMAGES_DEPLOY, buildParams, false)
+                    buildJob(IMAGES_DEPLOY, buildParams)
                 }
             }
             post {
@@ -197,129 +184,125 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Examples Images') {
-            when {
-                expression { return isExamplesImagesDeploy() }
-            }
-            steps {
-                script {
-                    echo "Call ${EXAMPLES_IMAGES_DEPLOY} job"
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
-                    addImageBuildParams(buildParams, env.TEMP_TAG)
-                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+        stage('Build examples images & BDD testing') {
+            parallel {
+                stage('Main Build examples images & BDD testing') {
+                    stages {
+                        stage('Build & Deploy Examples Images') {
+                            when {
+                                expression { return isExamplesImagesDeploy() }
+                            }
+                            steps {
+                                script {
+                                    def buildParams = getDefaultBuildParams()
+                                    addSkipTestsParam(buildParams)
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+                                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
 
-                    // For BDD tests
-                    addImageBuildParams(buildParams, env.TEMP_TAG, false, kogitoImagesParamsPrefix)
-                    addExamplesParam(buildParams)
+                                    // For BDD tests
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+                                    addExamplesParam(buildParams)
 
-                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams, false)
+                                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams)
+                                }
+                            }
+                            post {
+                                failure {
+                                    addFailedStage(EXAMPLES_IMAGES_DEPLOY)
+                                }
+                            }
+                        }
+                        stage('Build & Deploy Operator') {
+                            when {
+                                expression { return isOperatorDeploy() }
+                            }
+                            steps {
+                                script {
+                                    def buildParams = getDefaultBuildParams()
+                                    addSkipTestsParam(buildParams)
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
+
+                                    // For BDD tests
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix)
+                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
+                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
+                                    addExamplesParam(buildParams)
+
+                                    buildJob(OPERATOR_DEPLOY, buildParams)
+                                }
+                            }
+                            post {
+                                failure {
+                                    addFailedStage(OPERATOR_DEPLOY)
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-            post {
-                failure {
-                    addFailedStage(OPERATOR_DEPLOY)
-                }
-            }
-        }
+                stage('LTS Build examples images & BDD testing') {
+                    when {
+                        expression { return getLTSNativeBuilderImage() }
+                    }
+                    stages {
+                        stage('Build & Deploy Examples Images LTS') {
+                            when {
+                                expression { return isExamplesImagesDeploy() }
+                            }
+                            steps {
+                                script {
+                                    def buildParams = getDefaultBuildParams()
+                                    addSkipTestsParam(buildParams)
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, defaultImageParamsPrefix, 'lts')
+                                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+                                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
 
-        stage('Build & Deploy Operator') {
-            when {
-                expression { return isOperatorDeploy() }
-            }
-            steps {
-                script {
-                    echo "Call ${OPERATOR_DEPLOY} job"
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
-                    addImageBuildParams(buildParams, env.TEMP_TAG)
+                                    // For BDD tests
+                                    addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getLTSNativeBuilderImage())
+                                    addStringParam(buildParams, 'BDD_TEST_TAGS', '@native && ~@nonnativelts')
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+                                    addExamplesParam(buildParams)
 
-                    // For BDD tests
-                    addImageBuildParams(buildParams, env.TEMP_TAG, false, kogitoImagesParamsPrefix)
-                    addImageBuildParams(buildParams, env.TEMP_TAG, false, examplesImagesParamsPrefix)
-                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
-                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
-                    addExamplesParam(buildParams)
+                                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams, getLTSJobKey(EXAMPLES_IMAGES_DEPLOY))
+                                }
+                            }
+                            post {
+                                failure {
+                                    addFailedStage(getLTSJobKey(EXAMPLES_IMAGES_DEPLOY))
+                                }
+                            }
+                        }
+                        stage('Build & Deploy Operator LTS') {
+                            when {
+                                expression { return getLTSNativeBuilderImage() && isOperatorDeploy() }
+                            }
+                            steps {
+                                script {
+                                    def buildParams = getDefaultBuildParams()
+                                    addSkipTestsParam(buildParams)
+                                    addBooleanParam(buildParams, 'SKIP_DEPLOY', true)
 
-                    buildJob(OPERATOR_DEPLOY, buildParams, false)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(OPERATOR_DEPLOY)
-                }
-            }
-        }
+                                    // For BDD tests
+                                    addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getLTSNativeBuilderImage())
+                                    addStringParam(buildParams, 'BDD_TEST_TAGS', '@native && ~@nonnativelts')
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix, 'lts')
+                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
+                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
+                                    addExamplesParam(buildParams)
 
-        stage('Promote Images') {
-            when {
-                expression { return isImagesPromote() }
-            }
-            steps {
-                script {
-                    echo "Call ${IMAGES_PROMOTE} job"
-
-                    def buildParams = getDefaultBuildParams()
-                    addDeployBuildUrlParam(buildParams, IMAGES_DEPLOY)
-                    // Base image information is given by the deploy URL
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, true, promoteImageParamsPrefix)
-                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
-
-                    buildJob(IMAGES_PROMOTE, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(IMAGES_PROMOTE)
-                }
-            }
-        }
-
-        stage('Promote Examples Images') {
-            when {
-                expression { return isExamplesImagesPromote() }
-            }
-            steps {
-                script {
-                    echo "Call ${EXAMPLES_IMAGES_PROMOTE} job"
-
-                    def buildParams = getDefaultBuildParams()
-                    addDeployBuildUrlParam(buildParams, EXAMPLES_IMAGES_DEPLOY)
-                    // Base image information is given by the deploy URL
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, true, promoteImageParamsPrefix)
-                    addStringParam(buildParams, constructKey(promoteImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
-
-                    buildJob(EXAMPLES_IMAGES_PROMOTE, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(OPERATOR_PROMOTE)
-                }
-            }
-        }
-
-        stage('Promote Operator') {
-            when {
-                expression { return isOperatorPromote() }
-            }
-            steps {
-                script {
-                    echo "Call ${OPERATOR_PROMOTE} job"
-
-                    def buildParams = getDefaultBuildParams()
-                    addDeployBuildUrlParam(buildParams, OPERATOR_DEPLOY)
-                    // Base image information is given by the deploy URL
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, true, promoteImageParamsPrefix)
-                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
-
-                    buildJob(OPERATOR_PROMOTE, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(OPERATOR_PROMOTE)
+                                    buildJob(OPERATOR_DEPLOY, buildParams, getLTSJobKey(OPERATOR_DEPLOY))
+                                }
+                            }
+                            post {
+                                failure {
+                                    addFailedStage(getLTSJobKey(OPERATOR_DEPLOY))
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -331,45 +314,42 @@ pipeline {
     }
 }
 
-def buildJob(String jobName, List buildParams, boolean propagate=true) {
-    echo "Build ${jobName} with params ${buildParams} and propagate = ${propagate}"
+def buildJob(String jobName, List buildParams, String jobKey = jobName) {
+    echo "[${jobKey}] Build ${jobName} with params ${buildParams}"
 
-    def job = build(job: "${jobName}", wait: true, parameters: buildParams, propagate: propagate)
-    JOBS[jobName] = job
+    def job = build(job: "${jobName}", wait: true, parameters: buildParams, propagate: false)
+    JOBS[jobKey] = job
 
-    // Set Unstable if we don't propagate and job failed
-    if (!propagate && !isJobSucceeded(jobName)) {
-        addUnstableStage(jobName)
+    // Set Unstable if job did not succeed
+    if (!isJobSucceeded(jobKey)) {
+        addUnstableStage(jobKey)
         unstable("Job ${jobName} finished with result ${job.getResult()}")
     }
     return job
 }
 
-def getJob(String jobName) {
-    return JOBS[jobName]
+def getJob(String jobKey) {
+    return JOBS[jobKey]
 }
 
-String getJobUrl(String jobName) {
-    echo "getJobUrl for ${jobName}"
-    def job = getJob(jobName)
-    return job ? job.getAbsoluteUrl() : ''
+String getJobUrl(String jobKey) {
+    echo "getJobUrl for ${jobKey}"
+    return getJob(jobKey)?.getAbsoluteUrl() ?: ''
 }
 
-boolean isJobSucceeded(String jobName) {
-    def job = getJob(jobName)
-    return job ? job.getResult() == 'SUCCESS' : false
+boolean isJobSucceeded(String jobKey) {
+    return getJob(jobKey)?.getResult() == 'SUCCESS'
 }
 
-boolean isJobUnstable(String jobName) {
-    def job = getJob(jobName)
-    return job ? job.getResult() == 'UNSTABLE' : false
+String getLTSJobKey(String jobName) {
+    return "${jobName}-lts"
 }
 
-void addFailedStage(String jobName = '') {
-    FAILED_STAGES.put("${STAGE_NAME}", jobName)
+void addFailedStage(String jobKey = '') {
+    FAILED_STAGES.put("${STAGE_NAME}", jobKey)
 }
-void addUnstableStage(String jobName = '') {
-    UNSTABLE_STAGES.put("${STAGE_NAME}", jobName)
+void addUnstableStage(String jobKey = '') {
+    UNSTABLE_STAGES.put("${STAGE_NAME}", jobKey)
 }
 
 void sendPipelineErrorNotification() {
@@ -405,10 +385,10 @@ void sendPipelineErrorNotification() {
                 to: env.KOGITO_CI_EMAIL_TO
 }
 
-List getDefaultBuildParams(String buildBranchName = '') {
+List getDefaultBuildParams(String buildBranchName = '', String key = '') {
     buildBranchName = buildBranchName ?: getBuildBranch()
     List params = []
-    addStringParam(params, 'DISPLAY_NAME', env.NIGHTLY_TAG)
+    addStringParam(params, 'DISPLAY_NAME', "${key ? "${key}-" : ''}${env.NIGHTLY_TAG}")
     addBooleanParam(params, 'SEND_NOTIFICATION', true)
 
     return params
@@ -427,17 +407,12 @@ void addExamplesParam(buildParams) {
     addStringParam(buildParams, 'EXAMPLES_REF', "nightly-${getBuildBranch()}")
 }
 
-void addImageBuildParams(List buildParams, String tag, boolean isFinalImage = false, String paramsPrefix = defaultImageParamsPrefix) {
-    addBooleanParam(buildParams, constructKey(paramsPrefix, 'USE_OPENSHIFT_REGISTRY'), !isFinalImage && params.USE_TEMP_OPENSHIFT_REGISTRY)
+void addImageBuildParams(List buildParams, String tag, String paramsPrefix = defaultImageParamsPrefix, String extraSuffix = '') {
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
     addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
-    addStringParam(buildParams, constructKey(paramsPrefix, 'NAME_SUFFIX'), env.IMAGE_NAME_NIGHTLY_SUFFIX)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'NAME_SUFFIX'), (extraSuffix ? "${extraSuffix}-" : '') + env.IMAGE_NAME_NIGHTLY_SUFFIX)
     addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)
-}
-
-void addDeployBuildUrlParam(buildParams, jobName) {
-    addStringParam(buildParams, 'DEPLOY_BUILD_URL', getJobUrl(jobName))
 }
 
 void addStringParam(List params, String key, String value) {
@@ -480,16 +455,8 @@ boolean isOperatorDeploy() {
     return !params.SKIP_OPERATOR
 }
 
-boolean isImagesPromote() {
-    return isImagesDeploy() && (isJobSucceeded(IMAGES_DEPLOY) || isJobUnstable(IMAGES_DEPLOY))
-}
-
-boolean isExamplesImagesPromote() {
-    return isExamplesImagesDeploy() && (isJobSucceeded(EXAMPLES_IMAGES_DEPLOY) || isJobUnstable(EXAMPLES_IMAGES_DEPLOY))
-}
-
-boolean isOperatorPromote() {
-    return isOperatorDeploy() && isJobSucceeded(OPERATOR_DEPLOY)
+String getLTSNativeBuilderImage() {
+    return env.LTS_NATIVE_BUILDER_IMAGE
 }
 
 String getArtifactsRepositoryParam() {
