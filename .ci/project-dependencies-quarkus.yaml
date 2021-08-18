@@ -3,9 +3,18 @@ version: "2.1"
 extends: ./project-dependencies.yaml
 
 dependencies:
-  - project: kiegroup/quarkus
+  - project: quarkusio/quarkus
     mapping:
       dependant:
         default:
           - source: .*
             target: 1.11
+
+  - project: kiegroup/kogito-runtimes
+    dependencies:
+      - project: quarkusio/quarkus
+
+  - project: kiegroup/optaplanner
+    dependencies:
+      - project: kiegroup/kogito-runtimes
+      - project: quarkusio/quarkus

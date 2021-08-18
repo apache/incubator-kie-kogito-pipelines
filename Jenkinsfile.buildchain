@@ -9,8 +9,8 @@ build_maven_tool = env.BUILD_MAVEN_TOOL?.trim() ?: 'kie-maven-3.8.1'
 pr_type = env.BUILDCHAIN_PR_TYPE?.trim() ?: 'pr'
 build_chain_additional_arguments = env.BUILDCHAIN_PROJECT ? "-sp=${env.BUILDCHAIN_PROJECT.trim()}" : ''
 
-is_native = env.NATIVE ? true : false
-is_lts = env.QUARKUS_BRANCH ? true : false
+is_native = env.NATIVE ? env.NATIVE.toBoolean() : false
+is_lts = env.LTS ? env.LTS.toBoolean() : false
 
 
 pipeline {

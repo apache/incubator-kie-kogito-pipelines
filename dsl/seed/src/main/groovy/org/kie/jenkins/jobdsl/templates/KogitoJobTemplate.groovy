@@ -242,6 +242,7 @@ class KogitoJobTemplate {
     *     commitContext => 'LTS' commit context
     *   env:
     *     QUARKUS_BRANCH => LTS quarkus branch
+    *     LTS => true
     **/
     static def createQuarkusLTSPRJob(def script, Map jobParams = [:]) {
         def quarkusLtsVersion = Utils.getQuarkusLTSVersion(script)
@@ -258,6 +259,7 @@ class KogitoJobTemplate {
 
         jobParams.env = jobParams.env ?: [:]
         jobParams.env.put('QUARKUS_BRANCH', quarkusLtsVersion)
+        jobParams.env.put('LTS', true)
 
         return createPRJob(script, jobParams)
     }
@@ -335,28 +337,33 @@ class KogitoJobTemplate {
                 jobParams.jenkinsfile = jobCfg.jenkinsfile
             }
 
+            jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
+
             if (jobCfg.repository) { // Downstream job
                 jobParams.env.put('DOWNSTREAM_BUILD', true)
                 jobParams.env.put('UPSTREAM_TRIGGER_PROJECT', jobParams.git.repository)
                 jobParams.job.description = "Run ${testTypeName} tests of ${jobCfg.repository} due to changes in ${jobParams.git.repository} repository"
                 jobParams.job.name += '.downstream'
 
-                jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
-
-                if (useBuildChain) {
-                    // Buildchain uses centralized configuration for Jenkinsfile.buildchain to checkout
-                    jobParams.pr.checkout_branch = VersionUtils.getProjectTargetBranch(KogitoConstants.BUILDCHAIN_REPOSITORY, jobParams.git.branch, jobParams.git.repository)
-                    jobParams.git.repository = KogitoConstants.BUILDCHAIN_REPOSITORY
-                    jobParams.jenkinsfile = KogitoConstants.BUILDCHAIN_JENKINSFILE_PATH
-                    jobParams.env.put('BUILDCHAIN_PROJECT', jobCfg.repository)
-                    jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
-                } else {
-                    // Checkout targeted repo and build it
+                // Checkout targeted repo and build it
+                // Buildchain will use other settings and we should not interfere here
+                if (!useBuildChain) {
                     jobParams.pr.checkout_branch = VersionUtils.getProjectTargetBranch(jobCfg.repository, jobParams.git.branch, jobParams.git.repository)
-                    jobParams.git.repository = jobCfg.repository
+                    jobParams.git.repository = jobCfg.repository   
                 }
             } else {
                 jobParams.job.description = "Run tests from ${jobParams.git.repository} repository"
+            }
+            if (useBuildChain) {
+                // Buildchain uses centralized configuration for Jenkinsfile.buildchain to checkout
+                // Overrides configuration already done
+                jobParams.pr.checkout_branch = VersionUtils.getProjectTargetBranch(KogitoConstants.BUILDCHAIN_REPOSITORY, jobParams.git.branch, jobParams.git.repository)
+                jobParams.git.repository = KogitoConstants.BUILDCHAIN_REPOSITORY
+                jobParams.jenkinsfile = KogitoConstants.BUILDCHAIN_JENKINSFILE_PATH
+                if (jobCfg.repository) {
+                    jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository}")
+                }
+                jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
             }
             jobParams.job.name += ".${jobCfg.id.toLowerCase()}"
 
@@ -417,7 +424,10 @@ class KogitoJobTemplate {
     */
     static def createMultijobLTSPRJobs(def script, Map multijobConfig, Closure defaultParamsGetter) {
         multijobConfig.testType = 'LTS'
-        multijobConfig.extraEnv = [ QUARKUS_BRANCH: Utils.getQuarkusLTSVersion(script) ]
+        multijobConfig.extraEnv = [ 
+            QUARKUS_BRANCH: Utils.getQuarkusLTSVersion(script),
+            LTS: true
+        ]
         multijobConfig.optional = true
         multijobConfig.primaryTriggerPhrase = KogitoConstants.KOGITO_LTS_PR_TRIGGER_PHRASE
         createMultijobPRJobs(script, multijobConfig, defaultParamsGetter)
