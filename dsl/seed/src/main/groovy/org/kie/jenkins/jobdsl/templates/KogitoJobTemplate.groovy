@@ -349,7 +349,7 @@ class KogitoJobTemplate {
                 // Buildchain will use other settings and we should not interfere here
                 if (!useBuildChain) {
                     jobParams.pr.checkout_branch = VersionUtils.getProjectTargetBranch(jobCfg.repository, jobParams.git.branch, jobParams.git.repository)
-                    jobParams.git.repository = jobCfg.repository   
+                    jobParams.git.repository = jobCfg.repository
                 }
             } else {
                 jobParams.job.description = "Run tests from ${jobParams.git.repository} repository"
@@ -403,6 +403,9 @@ class KogitoJobTemplate {
             }
 
             // Update env
+            if (jobCfg.env) {
+                jobParams.env.putAll(jobCfg.env)
+            }
             if (multijobConfig.extraEnv) {
                 jobParams.env.putAll(multijobConfig.extraEnv)
             }
@@ -424,10 +427,11 @@ class KogitoJobTemplate {
     */
     static def createMultijobLTSPRJobs(def script, Map multijobConfig, Closure defaultParamsGetter) {
         multijobConfig.testType = 'LTS'
-        multijobConfig.extraEnv = [ 
+        multijobConfig.extraEnv = multijobConfig.extraEnv ?: [:]
+        multijobConfig.extraEnv.putAll([
             QUARKUS_BRANCH: Utils.getQuarkusLTSVersion(script),
             LTS: true
-        ]
+        ])
         multijobConfig.optional = true
         multijobConfig.primaryTriggerPhrase = KogitoConstants.KOGITO_LTS_PR_TRIGGER_PHRASE
         createMultijobPRJobs(script, multijobConfig, defaultParamsGetter)
@@ -446,7 +450,8 @@ class KogitoJobTemplate {
     */
     static def createMultijobNativePRJobs(def script, Map multijobConfig, Closure defaultParamsGetter) {
         multijobConfig.testType = 'native'
-        multijobConfig.extraEnv = [ NATIVE: true ]
+        multijobConfig.extraEnv = multijobConfig.extraEnv ?: [:]
+        multijobConfig.extraEnv.putAll([ NATIVE: true ])
         multijobConfig.optional = true
         multijobConfig.primaryTriggerPhrase = KogitoConstants.KOGITO_NATIVE_PR_TRIGGER_PHRASE
         createMultijobPRJobs(script, multijobConfig, defaultParamsGetter)
