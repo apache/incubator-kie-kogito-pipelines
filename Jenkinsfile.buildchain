@@ -12,6 +12,7 @@ build_chain_additional_arguments = env.BUILDCHAIN_PROJECT ? "-sp=${env.BUILDCHAI
 is_native = env.NATIVE ? env.NATIVE.toBoolean() : false
 is_lts = env.LTS ? env.LTS.toBoolean() : false
 
+settingsXmlId = 'kogito_release_settings'
 
 pipeline {
     agent {
@@ -43,21 +44,23 @@ pipeline {
         }
         stage('check space before build') {
             steps {
-                script{
+                script {
                     util.spaceLeft()
                 }
             }
         }
         stage('Build projects') {
             tools {
-              jdk build_jdk_tool
-              maven build_maven_tool
+                jdk build_jdk_tool
+                maven build_maven_tool
             }
             steps {
                 script {
-                    def settingsXmlId = 'kogito_release_settings'
+                    if (isSonarCloudAnalysis()) {
+                        env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS} -Prun-code-coverage"
+                    }
                     def buildChainActionInfo = getBuildChainActionInfo(is_native, is_lts, build_chain_additional_arguments)
-                    
+
                     configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
                         withCredentials([string(credentialsId: 'kie-ci1-token', variable: 'GITHUB_TOKEN')]) {
                             sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/\${GROUP}/kogito-pipelines/main/.ci/${buildChainActionInfo.file}' -folder='bc' build ${buildChainActionInfo.action} -url=${env.ghprbPullLink} ${buildChainActionInfo.arguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true'"
@@ -66,9 +69,27 @@ pipeline {
                 }
             }
         }
+        stage('Sonar analysis') {
+            tools {
+                jdk build_jdk_tool
+                maven build_maven_tool
+            }
+            steps {
+                script {
+                    if (isSonarCloudAnalysis()) {
+                        def project = util.getProjectTriggeringJob()[1]
+                        dir("bc/kiegroup_${project.replaceAll('-', '_')}") {
+                            maven.runMavenWithSettingsSonar(settingsXmlId, '-nsu generate-resources -Psonarcloud-analysis -Denforcer.skip=true', 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
+                        }
+                    } else {
+                        println '[INFO] No sonar analysis execution.'
+                    }
+                }
+            }
+        }
         stage('check space after build') {
             steps {
-                script{
+                script {
                     util.spaceLeft()
                 }
             }
@@ -103,16 +124,16 @@ pipeline {
     }
 }
 
-def isPR(){
-    return pr_type == 'pr';
+def isPR() {
+    return pr_type == 'pr'
 }
 
-def isFDB(){
-    return pr_type == 'fdb';
+def isFDB() {
+    return pr_type == 'fdb'
 }
 
-def isSingle(){
-    return pr_type == 'single';
+def isSingle() {
+    return pr_type == 'single'
 }
 
 def getBuildChainActionInfo(Boolean isNative, Boolean isLts, String defaultArguments) {
@@ -122,4 +143,16 @@ def getBuildChainActionInfo(Boolean isNative, Boolean isLts, String defaultArgum
     return isFDB() ? [action: 'fd', file: definitionFile, arguments: defaultArguments] :
                      isSingle() ? [action: 'single', file: definitionFile, arguments: defaultArguments] :
                      [action: 'pr', file: definitionFile, arguments: defaultArguments]
+}
+
+boolean isDefaultCheck() {
+    return !isNative && !isLts
+}
+
+boolean isSonarCloudAnalysis() {
+    if (isPR()) {
+        def project = util.getProjectTriggeringJob()[1]
+        return isDefaultCheck() && env.BUILDCHAIN_PROJECT && env.BUILDCHAIN_PROJECT == project
+    }
+    return false
 }
