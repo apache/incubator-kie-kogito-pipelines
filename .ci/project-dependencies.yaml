@@ -105,13 +105,13 @@ dependencies:
     mapping:
       dependencies:
         default:
-          - source: (\d*)\.(.*)\.(.*)
+          - source: (8)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
           - source: development
             target: main
       dependant:
         default:
-          - source: (\d*)\.(.*)\.(.*)
+          - source: (1)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
           - source: main
             target: development
