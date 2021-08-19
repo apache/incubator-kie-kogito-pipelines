@@ -150,6 +150,9 @@ boolean isDefaultCheck() {
 }
 
 boolean isSonarCloudAnalysis() {
+    if (env.DISABLE_SONARCLOUD?.toBoolean()) {
+        return false
+    }
     if (isPR()) {
         def project = util.getProjectTriggeringJob()[1]
         return isDefaultCheck() && env.BUILDCHAIN_PROJECT && env.BUILDCHAIN_PROJECT == project
