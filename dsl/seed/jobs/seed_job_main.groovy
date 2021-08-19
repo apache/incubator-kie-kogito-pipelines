@@ -1,5 +1,13 @@
 // +++++++++++++++++++++++++++++++++++++++++++ create a seed job ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+String getSeedAuthor() {
+    return SEED_AUTHOR ?: 'kiegroup'
+}
+
+String getSeedBranch() {
+    return SEED_BRANCH ?: 'main'
+}
+
 // Configuration of the seed and generated jobs is done via `dsl/seed/config.yaml`
 pipelineJob('0-seed-job') {
     description('This job creates all needed Jenkins jobs. DO NOT USE FOR TESTING !!!! See https://github.com/kiegroup/kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs')
@@ -30,8 +38,8 @@ pipelineJob('0-seed-job') {
         stringParam('CUSTOM_AUTHOR', '', 'To generate only some custom repos... Define from from which author the custom repositories are checked out. If none given, then `SEED_AUTHOR` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
         stringParam('CUSTOM_MAIN_BRANCH', '', 'To generate only some custom repos... If no main_branch is given, then DSL config `git.main_branch` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
 
-        stringParam('SEED_AUTHOR', 'kiegroup', 'If different from the default')
-        stringParam('SEED_BRANCH', 'main', 'If different from the default')
+        stringParam('SEED_AUTHOR', getSeedAuthor(), 'If different from the default')
+        stringParam('SEED_BRANCH', getSeedBranch(), 'If different from the default')
 
         booleanParam('FORCE_REBUILD', false, 'Default, the job will scan for modified files and do the update in case some files are modified. In case you want to force the DSL generation')
     }
@@ -41,10 +49,10 @@ pipelineJob('0-seed-job') {
             scm {
                 git {
                     remote {
-                        url('https://github.com/${SEED_AUTHOR}/kogito-pipelines.git')
+                        url("https://github.com/${getSeedAuthor()}/kogito-pipelines.git")
                         credentials('kie-ci')
                     }
-                    branch('${SEED_BRANCH}')
+                    branch(getSeedBranch())
                     extensions {
                         cleanBeforeCheckout()
                     }
@@ -55,7 +63,7 @@ pipelineJob('0-seed-job') {
     }
 
     properties {
-        githubProjectUrl("https://github.com/${SEED_AUTHOR}/kogito-pipelines/")
+        githubProjectUrl("https://github.com/${getSeedAuthor()}/kogito-pipelines/")
 
         pipelineTriggers {
             triggers {
