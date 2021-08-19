@@ -177,7 +177,7 @@ boolean isSonarCloudAnalysis() {
     }
     if (isPR()) {
         def project = util.getProjectTriggeringJob()[1]
-        return isDefaultCheck() && env.BUILDCHAIN_PROJECT && getProjectGroupName(env.BUILDCHAIN_PROJECT)[1] == project
+        return isDefaultCheck() && env.BUILDCHAIN_PROJECT && util.getProjectGroupName(env.BUILDCHAIN_PROJECT)[1] == project
     }
     return false
 }
