@@ -63,7 +63,7 @@ pipeline {
             steps {
                 script {
                     if (isSonarCloudAnalysis()) {
-                        def project = util.getProjectTriggeringJob()[1]
+                        def project = (env.BUILDCHAIN_PROJECT ? util.getProjectGroupName(env.BUILDCHAIN_PROJECT) : util.getProjectTriggeringJob())[1]
                         dir("bc/kiegroup_${project.replaceAll('-', '_')}") {
                             maven.runMavenWithSettingsSonar(getSettingsXmlId(), "-nsu generate-resources -Psonarcloud-analysis -Denforcer.skip=true ${SONARCLOUD_ANALYSIS_MVN_OPTS}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
                         }
@@ -176,8 +176,7 @@ boolean isSonarCloudAnalysis() {
         return false
     }
     if (isPR()) {
-        def project = util.getProjectTriggeringJob()[1]
-        return isDefaultCheck() && env.BUILDCHAIN_PROJECT && util.getProjectGroupName(env.BUILDCHAIN_PROJECT)[1] == project
+        return isDefaultCheck() && !env.DOWNSTREAM_BUILD?.toBoolean()
     }
     return false
 }
