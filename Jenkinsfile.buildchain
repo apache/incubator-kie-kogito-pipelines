@@ -79,7 +79,7 @@ pipeline {
                     if (isSonarCloudAnalysis()) {
                         def project = util.getProjectTriggeringJob()[1]
                         dir("bc/kiegroup_${project.replaceAll('-', '_')}") {
-                            maven.runMavenWithSettingsSonar(settingsXmlId, '-nsu generate-resources -Psonarcloud-analysis -Denforcer.skip=true', 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
+                            maven.runMavenWithSettingsSonar(settingsXmlId, "-nsu generate-resources -Psonarcloud-analysis -Denforcer.skip=true ${SONARCLOUD_ANALYSIS_MVN_OPTS}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
                         }
                     } else {
                         println '[INFO] No sonar analysis execution.'
