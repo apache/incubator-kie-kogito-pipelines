@@ -1,29 +1,15 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
-additionalTimeout = "${env.ADDITIONAL_TIMEOUT?.trim() ?: 120}"
-
-agentLabel = "${env.ADDITIONAL_LABEL?.trim() ? ADDITIONAL_LABEL : 'kie-rhel7 && kie-mem16g'} && !master"
-build_jdk_tool = env.BUILD_JDK_TOOL?.trim() ?: 'kie-jdk11'
-build_maven_tool = env.BUILD_MAVEN_TOOL?.trim() ?: 'kie-maven-3.8.1'
-
-pr_type = env.BUILDCHAIN_PR_TYPE?.trim() ?: 'pr'
-build_chain_additional_arguments = env.BUILDCHAIN_PROJECT ? "-sp=${env.BUILDCHAIN_PROJECT.trim()}" : ''
-
-is_native = env.NATIVE ? env.NATIVE.toBoolean() : false
-is_lts = env.LTS ? env.LTS.toBoolean() : false
-
-settingsXmlId = 'kogito_release_settings'
-
 pipeline {
     agent {
-        label agentLabel
+        label getAgentLabel()
     }
     tools {
         nodejs 'nodejs-12.16.3'
     }
     options {
         timestamps ()
-        timeout(time: additionalTimeout, unit: 'MINUTES')
+        timeout(time: getTimeoutValue(), unit: 'MINUTES')
     }
     environment {
         FIREFOX_FOLDER = '/opt/tools/firefox-60esr'
@@ -51,17 +37,17 @@ pipeline {
         }
         stage('Build projects') {
             tools {
-                jdk build_jdk_tool
-                maven build_maven_tool
+                jdk getJdkTool()
+                maven getMavenTool()
             }
             steps {
                 script {
                     if (isSonarCloudAnalysis()) {
                         env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS} -Prun-code-coverage"
                     }
-                    def buildChainActionInfo = getBuildChainActionInfo(is_native, is_lts, build_chain_additional_arguments)
+                    def buildChainActionInfo = getBuildChainActionInfo()
 
-                    configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
+                    configFileProvider([configFile(fileId: getSettingsXmlId(), variable: 'MAVEN_SETTINGS_FILE')]) {
                         withCredentials([string(credentialsId: 'kie-ci1-token', variable: 'GITHUB_TOKEN')]) {
                             sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/\${GROUP}/kogito-pipelines/main/.ci/${buildChainActionInfo.file}' -folder='bc' build ${buildChainActionInfo.action} -url=${env.ghprbPullLink} ${buildChainActionInfo.arguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true'"
                         }
@@ -71,15 +57,15 @@ pipeline {
         }
         stage('Sonar analysis') {
             tools {
-                jdk build_jdk_tool
-                maven build_maven_tool
+                jdk getJdkTool()
+                maven getMavenTool()
             }
             steps {
                 script {
                     if (isSonarCloudAnalysis()) {
                         def project = util.getProjectTriggeringJob()[1]
                         dir("bc/kiegroup_${project.replaceAll('-', '_')}") {
-                            maven.runMavenWithSettingsSonar(settingsXmlId, "-nsu generate-resources -Psonarcloud-analysis -Denforcer.skip=true ${SONARCLOUD_ANALYSIS_MVN_OPTS}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
+                            maven.runMavenWithSettingsSonar(getSettingsXmlId(), "-nsu generate-resources -Psonarcloud-analysis -Denforcer.skip=true ${SONARCLOUD_ANALYSIS_MVN_OPTS}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
                         }
                     } else {
                         println '[INFO] No sonar analysis execution.'
@@ -124,29 +110,65 @@ pipeline {
     }
 }
 
-def isPR() {
-    return pr_type == 'pr'
+String getAgentLabel() {
+    return "${env.ADDITIONAL_LABEL?.trim() ? ADDITIONAL_LABEL : 'kie-rhel7 && kie-mem16g'} && !master"
 }
 
-def isFDB() {
-    return pr_type == 'fdb'
+String getTimeoutValue() {
+    return "${env.ADDITIONAL_TIMEOUT?.trim() ?: 120}"
 }
 
-def isSingle() {
-    return pr_type == 'single'
+String getJdkTool() {
+    return env.BUILD_JDK_TOOL?.trim() ?: 'kie-jdk11'
 }
 
-def getBuildChainActionInfo(Boolean isNative, Boolean isLts, String defaultArguments) {
-    def definitionFile = isNative ? 'pull-request-native-config.yaml' :
-                         isLts ? 'pull-request-lts-config.yaml' :
+String getMavenTool() {
+    return env.BUILD_MAVEN_TOOL?.trim() ?: 'kie-maven-3.8.1'
+}
+
+String getPrType() {
+    return env.BUILDCHAIN_PR_TYPE?.trim() ?: 'pr'
+}
+
+boolean isPR() {
+    return getPrType() == 'pr'
+}
+
+boolean isFDB() {
+    return getPrType() == 'fdb'
+}
+
+boolean isSingle() {
+    return getPrType() == 'single'
+}
+
+def getBuildChainActionInfo() {
+    def definitionFile = isNative() ? 'pull-request-native-config.yaml' :
+                         isLts() ? 'pull-request-lts-config.yaml' :
                          'pull-request-config.yaml'
-    return isFDB() ? [action: 'fd', file: definitionFile, arguments: defaultArguments] :
-                     isSingle() ? [action: 'single', file: definitionFile, arguments: defaultArguments] :
-                     [action: 'pr', file: definitionFile, arguments: defaultArguments]
+    return isFDB() ? [action: 'fd', file: definitionFile, arguments: getBuildChainAdditionalArguments()] :
+                     isSingle() ? [action: 'single', file: definitionFile, arguments: getBuildChainAdditionalArguments()] :
+                     [action: 'pr', file: definitionFile, arguments: getBuildChainAdditionalArguments()]
+}
+
+def getBuildChainAdditionalArguments() {
+    return env.BUILDCHAIN_PROJECT ? "-sp=${env.BUILDCHAIN_PROJECT.trim()}" : ''
+}
+
+String getSettingsXmlId() {
+    return 'kogito_release_settings'
 }
 
 boolean isDefaultCheck() {
-    return !isNative && !isLts
+    return !isNative() && !isLts()
+}
+
+boolean isNative() {
+    return env.NATIVE ? env.NATIVE.toBoolean() : false
+}
+
+boolean isLts() {
+    return env.LTS ? env.LTS.toBoolean() : false
 }
 
 boolean isSonarCloudAnalysis() {
