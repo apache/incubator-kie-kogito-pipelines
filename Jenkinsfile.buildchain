@@ -43,7 +43,7 @@ pipeline {
             steps {
                 script {
                     if (isSonarCloudAnalysis()) {
-                        env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS} -Prun-code-coverage"
+                        env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -Prun-code-coverage"
                     }
                     def buildChainActionInfo = getBuildChainActionInfo()
 
