@@ -55,7 +55,7 @@ pipeline {
             }
             steps {
                 script {
-                    def settingsXmlId = '771ff52a-a8b4-40e6-9b22-d54c7314aa1e'
+                    def settingsXmlId = 'kogito_release_settings'
                     def buildChainActionInfo = getBuildChainActionInfo(is_native, is_lts, build_chain_additional_arguments)
                     
                     configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
