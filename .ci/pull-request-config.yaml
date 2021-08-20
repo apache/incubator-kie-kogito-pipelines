@@ -33,6 +33,8 @@ build:
   - project: kiegroup/optaplanner-quickstarts
     build-command: 
       current: mvn clean install -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} 
+    clone:
+      - optaplanner-quickstarts
 
   - project: kiegroup/kogito-apps
     build-command: 
