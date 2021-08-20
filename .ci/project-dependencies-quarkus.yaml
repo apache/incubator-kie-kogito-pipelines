@@ -16,5 +16,35 @@ dependencies:
 
   - project: kiegroup/optaplanner
     dependencies:
-      - project: kiegroup/kogito-runtimes
       - project: quarkusio/quarkus
+      - project: kiegroup/kogito-runtimes
+  
+  - project: kiegroup/kogito-apps
+    dependencies:
+      - project: quarkusio/quarkus
+      - project: kiegroup/kogito-runtimes
+      - project: kiegroup/optaplanner
+  
+  - project: kiegroup/kogito-examples
+    dependencies:
+      - project: quarkusio/quarkus
+      - project: kiegroup/kogito-runtimes
+      - project: kiegroup/optaplanner
+  
+  - project: kiegroup/optaweb-employee-rostering
+    dependencies:
+      - project: quarkusio/quarkus
+      - project: kiegroup/kogito-runtimes
+      - project: kiegroup/optaplanner
+  
+  - project: kiegroup/optaweb-vehicle-routing
+    dependencies:
+      - project: quarkusio/quarkus
+      - project: kiegroup/kogito-runtimes
+      - project: kiegroup/optaplanner
+  
+  - project: kiegroup/optaplanner-quickstarts
+    dependencies:
+      - project: quarkusio/quarkus
+      - project: kiegroup/kogito-runtimes
+      - project: kiegroup/optaplanner
