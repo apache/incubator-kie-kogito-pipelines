@@ -30,12 +30,6 @@ build:
     clone:
       - optaplanner
 
-  - project: kiegroup/optaplanner-quickstarts
-    build-command: 
-      current: mvn clean install -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} 
-    clone:
-      - optaplanner-quickstarts
-
   - project: kiegroup/kogito-apps
     build-command: 
       current: |
@@ -53,6 +47,24 @@ build:
       - kogito-examples
       - kogito-examples-persistence
       - kogito-examples-events
+  
+  - project: kiegroup/optaweb-employee-rostering
+    build-command: 
+      current: mvn clean install -f optaweb-employee-rostering/pom.xml ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} 
+    clone:
+      - optaweb-employee-rostering
+
+  - project: kiegroup/optaweb-vehicle-routing
+    build-command: 
+      current: mvn clean install -f optaweb-vehicle-routing/pom.xml ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} 
+    clone:
+      - optaweb-vehicle-routing
+
+  - project: kiegroup/optaplanner-quickstarts
+    build-command: 
+      current: mvn clean install -f optaplanner-quickstarts/pom.xml -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} 
+    clone:
+      - optaplanner-quickstarts
 
   - project: quarkusio/quarkus
     build-command:
