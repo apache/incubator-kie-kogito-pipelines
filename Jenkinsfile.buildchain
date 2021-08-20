@@ -156,7 +156,8 @@ def getBuildChainAdditionalArguments() {
 }
 
 String getSettingsXmlId() {
-    return isPR() || isFDB() ? 'kogito_pr_settings' : 'kogito_release_settings'
+    // return isPR() || isFDB() ? 'kogito_pr_settings' : 'kogito_release_settings'
+    return 'kogito_release_settings'
 }
 
 boolean isDefaultCheck() {
