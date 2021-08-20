@@ -5,7 +5,7 @@ dependencies: ./project-dependencies-quarkus.yaml
 pre: |
   export BUILD_MVN_OPTS="${{ env.BUILD_MVN_OPTS }} -nsu -fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.httpconnectionManager.ttlSeconds=120"
   echo "BUILD_MVN_OPTS=${{ env.BUILD_MVN_OPTS }}"
-  export BUILD_MVN_OPTS_CURRENT="-Dversion.io.quarkus=999-SNAPSHOT"
+  export BUILD_MVN_OPTS_CURRENT="${{ env.BUILD_MVN_OPTS_CURRENT }} -Dversion.io.quarkus=999-SNAPSHOT"
   echo "BUILD_MVN_OPTS_CURRENT=${{ env.BUILD_MVN_OPTS_CURRENT }}"
 
 default:
