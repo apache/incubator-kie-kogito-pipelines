@@ -155,9 +155,8 @@ def getBuildChainAdditionalArguments() {
     return env.BUILDCHAIN_PROJECT ? "-sp=${env.BUILDCHAIN_PROJECT.trim()}" : ''
 }
 
-String getSettingsXmlId() {
-    // return isPR() || isFDB() ? 'kogito_pr_settings' : 'kogito_release_settings'
-    return 'kogito_release_settings'
+String getSettingsXmlId() { 
+    return isPR() || isFDB() ? 'kogito_pr_settings' : 'kogito_release_settings'
 }
 
 boolean isDefaultCheck() {
