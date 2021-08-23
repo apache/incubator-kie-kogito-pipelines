@@ -346,7 +346,7 @@ class KogitoJobTemplate {
             jobParams.job.name += ".${jobCfg.id.toLowerCase()}"
 
             // Update jenkinsfile path
-            String defaultJenkinsConfigPath = Utils.getJenkinsConfigPath(jobParams.git.repository)
+            String defaultJenkinsConfigPath = Utils.getJenkinsConfigPath(this, jobParams.git.repository)
             if (jobCfg.jenkinsfile) {
                 jobParams.jenkinsfile = jobCfg.jenkinsfile
             } else if (defaultJenkinsConfigPath) {
