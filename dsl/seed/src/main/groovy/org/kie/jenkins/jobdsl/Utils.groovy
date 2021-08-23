@@ -32,7 +32,7 @@ class Utils {
     }
 
     static def getBindingValue(def script, String key) {
-        return script.getBinding()[key]
+        return script.getBinding().hasVariable(key) ? script.getBinding().getVariable(key) : ''
     }
 
     static String getQuarkusLTSVersion(def script) {
