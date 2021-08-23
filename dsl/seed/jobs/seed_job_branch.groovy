@@ -34,10 +34,10 @@ pipelineJob("${JOB_NAME}") {
             scm {
                 git {
                     remote {
-                        url('https://github.com/${SEED_AUTHOR}/kogito-pipelines.git')
+                        url("https://github.com/${SEED_AUTHOR}/kogito-pipelines.git")
                         credentials('kie-ci')
                     }
-                    branch('${SEED_BRANCH}')
+                    branch("${SEED_BRANCH}")
                     extensions {
                         cleanBeforeCheckout()
                     }
