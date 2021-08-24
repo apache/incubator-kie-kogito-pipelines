@@ -30,14 +30,14 @@ build:
   - project: kiegroup/kogito-apps
     build-command: 
       current: |
-        mvn -f kogito-apps/pom.xml clean install -Dvalidate-formatting ${{ env.BUILD_MVN_OPTS }}
+        mvn -f kogito-apps/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
     clone:
       - kogito-apps
 
   - project: kiegroup/kogito-examples
     build-command: 
       current: |
-        mvn -f kogito-examples/pom.xml clean install -Dvalidate-formatting ${{ env.BUILD_MVN_OPTS }}
+        mvn -f kogito-examples/pom.xml clean install ${{ env.BUILD_MVN_OPTS }}
         mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence ${{ env.BUILD_MVN_OPTS }}
         mvn -f kogito-examples-events/pom.xml clean install -Pevents ${{ env.BUILD_MVN_OPTS }}
     clone:
