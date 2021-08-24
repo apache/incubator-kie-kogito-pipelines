@@ -116,6 +116,6 @@ class JenkinsfilePrBddTests extends JenkinsPipelineSpecification {
             Jenkinsfile.addExamplesParams(params)
         then:
             1 * getPipelineMock('string.call').call(['name' : 'EXAMPLES_URI', 'value' : 'https://github.com/kiegroup/kogito-examples'])
-            1 * getPipelineMock('string.call').call(['name' : 'EXAMPLES_REF', 'value' : 'master'])
+            1 * getPipelineMock('string.call').call(['name' : 'EXAMPLES_REF', 'value' : 'main'])
     }
 }

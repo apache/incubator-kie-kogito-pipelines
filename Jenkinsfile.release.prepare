@@ -43,7 +43,7 @@ pipeline {
                     env.RELEASE_BRANCH = util.getReleaseBranchFromVersion(getKogitoVersion())
                     echo "Kogito Release Branch ${getKogitoReleaseBranch()}"
 
-                    env.OPTAPLANNER_RELEASE_BRANCH = params.OPTAPLANNER_RELEASE_BRANCH ?: util.getReleaseBranchFromVersion(getOptaPlannerVersion())
+                    env.OPTAPLANNER_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getOptaPlannerVersion())
                     echo "OptaPlanner Release Branch ${getOptaPlannerReleaseBranch()}"
 
                     currentBuild.displayName = getDisplayName("${getKogitoReleaseBranch()}/${getOptaPlannerReleaseBranch()}")
@@ -56,23 +56,18 @@ pipeline {
         stage('Create Kogito release branches') {
             steps {
                 script {
-                    def buildParams = []
-                    addDisplayNameParam(buildParams)
-                    addStringParam(buildParams, 'RELEASE_BRANCH', getKogitoReleaseBranch())
-
                     def repositories = []
+                    repositories += PIPELINE_REPOS
                     repositories += RUNTIMES_REPOS
                     repositories += IMAGES_REPOS
                     repositories += OPERATOR_REPOS
-                    repositories += PIPELINE_REPOS // Create branch to activate nightlies if needed
 
-                    if(params.BRANCH_PRODUCT_REPOSITORIES) {
+                    if (params.BRANCH_PRODUCT_REPOSITORIES) {
                         repositories += KOGITO_PRODUCT_REPOS
                     }
 
-                    echo "Call ${CREATE_RELEASE_BRANCHES} job with repositories ${repositories}"
-                    addStringParam(buildParams, 'REPOSITORIES', repositories.join(','))
-                    buildJob(CREATE_RELEASE_BRANCHES, buildParams)
+                    echo "Create ${getKogitoReleaseBranch()} on repositories ${repositories}"
+                    createBranches(repositories, getKogitoReleaseBranch())
 
                     sendNotification("${getKogitoReleaseBranch()} branches have been created for repositories: ${repositories}")
                 }
@@ -82,15 +77,10 @@ pipeline {
         stage('Create OptaPlanner release branches') {
             steps {
                 script {
-                    def buildParams = []
-                    addDisplayNameParam(buildParams, getDisplayName(getOptaPlannerReleaseBranch()))
-                    addStringParam(buildParams, 'RELEASE_BRANCH', getOptaPlannerReleaseBranch())
-
                     def repositories = OPTAPLANNER_REPOS
 
-                    echo "Call ${CREATE_RELEASE_BRANCHES} job with repositories ${repositories}"
-                    addStringParam(buildParams, 'REPOSITORIES', repositories.join(','))
-                    buildJob(CREATE_RELEASE_BRANCHES, buildParams)
+                    echo "Create ${getOptaPlannerReleaseBranch()} on repositories ${repositories}"
+                    createBranches(repositories, getOptaPlannerReleaseBranch())
 
                     sendNotification("${getOptaPlannerReleaseBranch()} branches have been created for repositories: ${repositories}")
                 }
@@ -100,32 +90,36 @@ pipeline {
         stage('Update kogito-pipelines branch config') {
             steps {
                 script {
+                    String branchConfigFile = 'dsl/seed/config/branch.yaml'
+                    
                     dir('pipelines-branch') {
                         deleteDir()
                         checkout(githubscm.resolveRepository(PIPELINE_REPO, getGitAuthor(), getKogitoReleaseBranch(), false))
                         sh "git checkout ${getKogitoReleaseBranch()}"
 
                         repositories = []
+                        repositories.addAll(collectRepos(PIPELINE_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(RUNTIMES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(IMAGES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
-                        repositories.addAll(collectRepos([OPTAPLANNER_REPO], getOptaPlannerReleaseBranch()))
+                        repositories.addAll(collectRepos([OPTAPLANNER_REPO], getOptaPlannerReleaseBranch(), '.ci/jenkins'))
 
-                        if(params.BRANCH_PRODUCT_REPOSITORIES) {
+                        if (params.BRANCH_PRODUCT_REPOSITORIES) {
                             repositories.addAll(collectRepos(KOGITO_PRODUCT_REPOS, getKogitoReleaseBranch()))
                         }
 
-                        def branchConfig = [ dependent_repositories : repositories]
+                        def branchConfig = readYaml file: "${branchConfigFile}"
+                        branchConfig.repositories = repositories
 
                         echo "Write dsl branch_config => ${branchConfig}"
-                        sh 'rm dsl/branch_config.yaml'
-                        writeYaml file: 'dsl/branch_config.yaml', data: branchConfig, overwrite: true
+                        sh "rm -f ${branchConfigFile}"
+                        writeYaml file: "${branchConfigFile}", data: branchConfig, overwrite: true
 
                         if (githubscm.isThereAnyChanges()) {
                             githubscm.commitChanges('Update DSL branch config after cut-off')
                             githubscm.pushObject('origin', getKogitoReleaseBranch(), getGitAuthorCredsId())
 
-                            sendNotification("kogito-pipelines ${getKogitoReleaseBranch()} `dsl/branch_config.yaml` has been updated with correct configuration")
+                            sendNotification("kogito-pipelines ${getKogitoReleaseBranch()} `${branchConfigFile}` has been updated with correct configuration")
                         } else {
                             println '[WARN] No changes to commit'
                         }
@@ -138,7 +132,7 @@ pipeline {
             steps {
                 script {
                     String botBranch = "${getKogitoReleaseBranch()}-${util.generateHash(10)}"
-                    String seedConfigFile = 'dsl/seed/config.yaml'
+                    String seedConfigFile = 'dsl/seed/config/main.yaml'
 
                     dir('pipelines-seed') {
                         deleteDir()
@@ -152,14 +146,14 @@ pipeline {
 
                         if (!seedConfig.git.branches.find { it == getKogitoReleaseBranch() }) {
                             seedConfig.git.branches.add(getKogitoReleaseBranch())
-                        }
+                    }
 
                         echo "Write seed config => ${seedConfig}"
                         sh "rm ${seedConfigFile}"
                         writeYaml file: seedConfigFile, data: seedConfig, overwrite: true
 
                         if (githubscm.isThereAnyChanges()) {
-                            // Never push directly to master, always create a PR
+                            // Never push directly to main, always create a PR
                             commitMsg = "Add release branch ${getKogitoReleaseBranch()} after cut-off"
                             prBody = "Generated by build ${BUILD_TAG}: ${BUILD_URL}.\nPlease review and merge."
                             githubscm.commitChanges(commitMsg)
@@ -173,7 +167,7 @@ pipeline {
                             println '[WARN] No changes to PR'
                         }
 
-                // ideally there is a push action to seed job on master so that the seed jobs is started automatically to rebuild the DSL jobs when PR is merged
+                // ideally there is a push action to seed job on main so that the seed jobs is started automatically to rebuild the DSL jobs when PR is merged
                 }
             }
         }
@@ -181,20 +175,23 @@ pipeline {
 }
 }
 
-void buildJob(String jobName, List buildParams) {
-    echo "Build ${jobName} with params ${buildParams}"
-
-    build(job: "${jobName}", wait: true, parameters: buildParams, propagate: true)
-}
-
-def getJob(String jobName) {
-    return JOBS[jobName]
-}
-
-String getJobUrl(String jobName) {
-    echo "getJobUrl for ${jobName}"
-    def job = getJob(jobName)
-    return job ? job.getAbsoluteUrl() : ''
+void createBranches(List repositories, String releaseBranch) {
+    for (String repo : repositories) {
+        echo "Checkout repo ${repo}"
+        dir(repo) {
+            deleteDir()
+            checkout(githubscm.resolveRepository(getUrl(repo), getGitAuthor(), getBase(repo), false))
+            sh 'git fetch origin'
+            String branchRemoteResult = sh(script: "git ls-remote origin ${releaseBranch} | wc -l", returnStdout: true).trim()
+            if (Integer.parseInt(branchRemoteResult) > 0) {
+                echo 'Release branch already exist ... will not create it'
+            } else {
+                echo "Release branch ${releaseBranch} does not exist ... gonna create it"
+                githubscm.createBranch(releaseBranch)
+                githubscm.pushObject('origin', releaseBranch, getGitAuthorCredsId())
+            }
+        }
+    }
 }
 
 void sendErrorNotification() {
@@ -206,14 +203,6 @@ void sendNotification(String body) {
     echo body
     emailext body: body, subject: "[${getKogitoReleaseBranch()}] Cut-off Pipeline",
                 to: env.KOGITO_CI_EMAIL_TO
-}
-
-void addDisplayNameParam(buildParams, name = '') {
-    addStringParam(buildParams, 'DISPLAY_NAME', name ?: getDisplayName())
-}
-
-void addStringParam(List params, String key, String value) {
-    params.add(string(name: key, value: value))
 }
 
 String getDisplayName(branch = '') {
@@ -252,12 +241,24 @@ String getRepoName(String repo) {
     return (repo.find(':')) ? repo.split(':')[0] : repo
 }
 
-List collectRepos(List repos, String branch) {
+List collectRepos(List repos, String branch, String jenkins_config_path = '') {
     return repos.collect { repoBranch ->
         String repo = getRepoName(repoBranch)
-        return [
+        Map map = [
             name : repo,
             branch : branch
         ]
+        if (jenkins_config_path) {
+            map.jenkins_config_path = jenkins_config_path
+        }
+        return map
     }
+}
+
+String getUrl(String repo) {
+    return repo.split(':')[0]
+}
+
+String getBase(String repo) {
+    return (repo.find(':')) ? repo.split(':')[1] : env.DEFAULT_BASE_BRANCH
 }

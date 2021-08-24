@@ -82,7 +82,7 @@ def get_and_delete_old_tags(image,max_tags):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Removes extra tags from the registry')
-    parser.add_argument('--max-tags', dest='max_tags', default=10,type=int, help='Defines the maximum number of tags for the image to be available, defaults to 10')
+    parser.add_argument('--max-tags', dest='max_tags', default=50,type=int, help='Defines the maximum number of tags for the image to be available, defaults to 10')
     args = parser.parse_args()
 
     for image in IMAGES:

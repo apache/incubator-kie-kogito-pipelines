@@ -1,23 +1,9 @@
 import org.kie.jenkins.jobdsl.templates.KogitoJobTemplate
 import org.kie.jenkins.jobdsl.KogitoConstants
-
-boolean isMainBranch() {
-    return "${GIT_BRANCH}" == "${GIT_MAIN_BRANCH}"
-}
+import org.kie.jenkins.jobdsl.Utils
 
 def getDefaultJobParams() {
-    return [
-        job: [
-            name: 'kogito-pipelines'
-        ],
-        git: [
-            author: "${GIT_AUTHOR_NAME}",
-            branch: "${GIT_BRANCH}",
-            repository: 'kogito-pipelines',
-            credentials: "${GIT_AUTHOR_CREDENTIALS_ID}",
-            token_credentials: "${GIT_AUTHOR_TOKEN_CREDENTIALS_ID}"
-        ]
-    ]
+    return KogitoJobTemplate.getDefaultJobParams(this, 'kogito-pipelines')
 }
 
 def getJobParams(String jobName, String jobFolder, String jenkinsfileName, String jobDescription = '') {
@@ -35,36 +21,24 @@ def bddRuntimesPrFolder = "${KogitoConstants.KOGITO_DSL_PULLREQUEST_FOLDER}/${Ko
 def nightlyBranchFolder = "${KogitoConstants.KOGITO_DSL_NIGHTLY_FOLDER}/${JOB_BRANCH_FOLDER}"
 def releaseBranchFolder = "${KogitoConstants.KOGITO_DSL_RELEASE_FOLDER}/${JOB_BRANCH_FOLDER}"
 
-if ("${GIT_BRANCH}" == "${GIT_MAIN_BRANCH}") {
+if (Utils.isMainBranch(this)) {
     // PRs
-    folder(KogitoConstants.KOGITO_DSL_PULLREQUEST_FOLDER)
-    folder(bddRuntimesPrFolder)
-
     setupKogitoRuntimesBDDPrJob(bddRuntimesPrFolder)
 
     // Tools
-    folder(KogitoConstants.KOGITO_DSL_TOOLS_FOLDER)
-
     setupCreateIssueToolsJob(KogitoConstants.KOGITO_DSL_TOOLS_FOLDER)
     setupCleanOldNamespacesToolsJob(KogitoConstants.KOGITO_DSL_TOOLS_FOLDER)
     setupCleanOldNightlyImagesToolsJob(KogitoConstants.KOGITO_DSL_TOOLS_FOLDER)
 }
 
 // Nightly
-folder(KogitoConstants.KOGITO_DSL_NIGHTLY_FOLDER)
-folder(nightlyBranchFolder)
-
 setupNightlyJob(nightlyBranchFolder)
 
-folder(KogitoConstants.KOGITO_DSL_RELEASE_FOLDER)
-if (isMainBranch()) {
-    // Release prepare and create branches jobs are not in a specific branch and should be generated only on main branch
-    setupCreateReleaseBranchJob(KogitoConstants.KOGITO_DSL_RELEASE_FOLDER)
+if (Utils.isMainBranch(this)) {
+    // Release prepare is not in a specific branch and should be generated only on main branch
     setupPrepareReleaseJob(KogitoConstants.KOGITO_DSL_RELEASE_FOLDER)
 } else {
     // No release job directly on main branch
-    folder(releaseBranchFolder)
-
     setupReleaseJob(releaseBranchFolder)
 }
 
@@ -104,7 +78,7 @@ void setupCreateIssueToolsJob(String jobFolder) {
         parameters {
             stringParam('AUTHOR', '', 'Git author')
             stringParam('REPOSITORY', '', 'Git repository')
-            stringParam('BRANCH', 'master', 'Git branch')
+            stringParam('BRANCH', 'main', 'Git branch')
             stringParam('ISSUE_TITLE', '', 'Title of the issue')
             textParam('ISSUE_BODY', '', 'Body of the issue')
         }
@@ -142,6 +116,10 @@ void setupNightlyJob(String jobFolder) {
 
             env('MAVEN_SETTINGS_CONFIG_FILE_ID', "${MAVEN_SETTINGS_FILE_ID}")
             env('ARTIFACTS_REPOSITORY', "${MAVEN_ARTIFACTS_REPOSITORY}")
+
+            if (Utils.isLTSBranch(this)) {
+                env('LTS_NATIVE_BUILDER_IMAGE', Utils.getLTSNativeBuilderImage(this))
+            }
         }
     }
 }
@@ -149,9 +127,8 @@ void setupNightlyJob(String jobFolder) {
 void setupReleaseJob(String jobFolder) {
     KogitoJobTemplate.createPipelineJob(this, getJobParams('kogito-release', jobFolder, 'Jenkinsfile.release', 'Kogito Release')).with {
         parameters {
-
             stringParam('RESTORE_FROM_PREVIOUS_JOB', '', 'URL to a previous stopped release job which needs to be continued')
-            
+
             stringParam('PROJECT_VERSION', '', 'Project version to release as Major.minor.micro')
             stringParam('KOGITO_IMAGES_VERSION', '', 'To be set if different from PROJECT_VERSION. Should be only a bug fix update from PROJECT_VERSION.')
             stringParam('KOGITO_OPERATOR_VERSION', '', 'To be set if different from PROJECT_VERSION. Should be only a bug fix update from PROJECT_VERSION.')
@@ -193,27 +170,11 @@ void setupReleaseJob(String jobFolder) {
     }
 }
 
-void setupCreateReleaseBranchJob(String jobFolder) {
-    KogitoJobTemplate.createPipelineJob(this, getJobParams('create-release-branches', jobFolder, 'Jenkinsfile.release.create-branches', 'Create release branches')).with {
-        parameters {
-            stringParam('REPOSITORIES', '', 'Comma-separated list of repository[:base branch] to update. The default base branch for every repository is the \'master\' branch.')
-            stringParam('RELEASE_BRANCH', '', 'Release branch to create')
-        }
-
-        environmentVariables {
-            env('GIT_AUTHOR', "${GIT_AUTHOR_NAME}")
-            env('GIT_AUTHOR_CREDS_ID', "${GIT_AUTHOR_CREDENTIALS_ID}")
-            env('DEFAULT_BASE_BRANCH', "${GIT_MAIN_BRANCH}")
-        }
-    }
-}
-
 void setupPrepareReleaseJob(String jobFolder) {
     KogitoJobTemplate.createPipelineJob(this, getJobParams('prepare-release-branch', jobFolder, 'Jenkinsfile.release.prepare', 'Prepare env for a release')).with {
         parameters {
             stringParam('KOGITO_VERSION', '', 'Project version to release as Major.minor.micro')
             stringParam('OPTAPLANNER_VERSION', '', 'Project version of OptaPlanner and its examples to release as Major.minor.micro')
-            stringParam('OPTAPLANNER_RELEASE_BRANCH', '', 'Use to override the release branch name deduced from the OPTAPLANNER_VERSION')
 
             booleanParam('BRANCH_PRODUCT_REPOSITORIES', false, 'Set to true to create branch also on Product repositories')
         }
@@ -222,6 +183,7 @@ void setupPrepareReleaseJob(String jobFolder) {
             env('JENKINS_EMAIL_CREDS_ID', "${JENKINS_EMAIL_CREDS_ID}")
 
             env('PIPELINE_MAIN_BRANCH', "${GIT_MAIN_BRANCH}")
+            env('DEFAULT_BASE_BRANCH', "${GIT_MAIN_BRANCH}")
 
             env('GIT_AUTHOR', "${GIT_AUTHOR_NAME}")
             env('GIT_AUTHOR_CREDS_ID', "${GIT_AUTHOR_CREDENTIALS_ID}")

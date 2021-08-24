@@ -1,6 +1,6 @@
 # Kogito Pipelines
 
-This repository contains some of the pipelines of Kogito project.  
+This repository contains some of the pipelines of Kogito project.
 
 * [Kogito Pipelines](#kogito-pipelines)
 * [Kogito Repositories](#kogito-repositories)
@@ -24,8 +24,8 @@ This repository contains some of the pipelines of Kogito project.
 Apart from this repository, pipelines are also concerning those repositories:
 
 * [kogito-runtimes](https://github.com/kiegroup/kogito-runtimes)
-* [kogito-apps](https://github.com/kiegroup/kogito-apps)
 * [optaplanner](https://github.com/kiegroup/optaplanner)
+* [kogito-apps](https://github.com/kiegroup/kogito-apps)
 * [kogito-examples](https://github.com/kiegroup/kogito-examples)
 * [kogito-images](https://github.com/kiegroup/kogito-images)
 * [kogito-operator](https://github.com/kiegroup/kogito-operator)
@@ -54,11 +54,11 @@ This is a set of cleanup utils jobs.
 Those jobs can be found into the `kogito-runtimes` repository.  
 They are daily run jobs:
 
-* [kogito-native](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.native)  
+* [kogito-native](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.native)  
   Perform a daily native build&test of runtimes.
-* [kogito-quarkus](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.quarkus)  
+* [kogito-quarkus](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.quarkus)  
   Perform a daily check of runtimes against latest snapshot of Quarkus.
-* [kogito-drools-snapshot](https://github.com/kiegroup/kogito-runtimes/blob/master/Jenkinsfile.drools)  
+* [kogito-drools-snapshot](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.drools)  
   Perform a daily check of runtimes against latest snapshot of Drools.
 
 ### PR checks
@@ -77,7 +77,7 @@ Only the Operator PR check is not yet in this folder as it is still on another J
 Each repository has a `ci-pr.yaml` file in `.github/workflows` folder to configure the workflow.
 The `kogito-runtimes` repo has a different configuration, see additional notes at the end of this paragraph.
 
-Repo dependencies and build commands are configured in the centralized [`.ci` folder](https://github.com/kiegroup/kogito-pipelines/tree/master/.ci) in this repo.
+Repo dependencies and build commands are configured in the centralized [`.ci` folder](https://github.com/kiegroup/kogito-pipelines/tree/main/.ci) in this repo.
 
 Build execution is performed using the [`github-action-chain`](https://github.com/kiegroup/github-action-build-chain) action that automatically performs cross repo builds.
 
@@ -90,13 +90,11 @@ This means that instead of a single `ci-pr.yaml` file, there are four of them: `
 
 NOTE: test coverage analysis is executed only by Jenkins PR build and not while using GitHub action
 
-// TODO
-
 # Configuration of pipelines
 
 ## Jenkins
 
-All pipelines can be found in [kogito Jenkins folder](https://rhba-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/KIE/job/kogito).
+All pipelines can be found in [kogito Jenkins folder](https://eng-jenkins-csb-business-automation.apps.ocp4.prod.psi.redhat.com/job/KIE/job/kogito).
 
 ### Jenkins jobs generation
 
@@ -108,4 +106,4 @@ Any message / error is sent to [kogito-ci](https://kie.zulipchat.com/#narrow/str
 
 ### Format
 
-    [branch][d for daily if occurs] Pipeline name
+    [branch] Project

@@ -13,9 +13,10 @@ pipeline {
         string(description: 'The RHBA version prefix, something like 7.52.0.Final-redhat', name: 'RHBA_VERSION_PREFIX')
         string(description: 'The deployment URL', name: 'KOGITO_DEPLOYMENT_REPO_URL')
         booleanParam(description: 'Skip Tests? True as default', name: 'SKIP_TESTS', defaultValue: true)
-        string(description: 'The UMB message version', name: 'UMB_VERSION', defaultValue: 'master')
+        string(description: 'The UMB message version', name: 'UMB_VERSION', defaultValue: 'main')
         string(description: 'The product version', name: 'PRODUCT_VERSION')
         string(description: 'The optaplanner product version', name: 'OPTAPLANNER_PRODUCT_VERSION')
+        string(description: 'The config repository branch', name: 'DEFAULT_CONFIG_BRANCH', defaultValue: 'main')
     }
     options {
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')
@@ -32,7 +33,7 @@ pipeline {
         stage('Clone build configuration repo') {
             steps {
                 script {
-                    def currentBranch = env.BRANCH_NAME ?: env.GIT_BRANCH
+                    def currentBranch = env.DEFAULT_CONFIG_BRANCH ?: env.BRANCH_NAME ?: env.GIT_BRANCH
                     println "Checking out ${env.BUILD_CONFIGURATION_REPO_URL}:${currentBranch} into build_config folder"
                     sh "git clone -b ${currentBranch} --single-branch ${env.BUILD_CONFIGURATION_REPO_URL} build_config"
                 }
@@ -54,7 +55,7 @@ pipeline {
                         def pipelineHelper = new PipelineHelper(this)
                         pipelineHelper.retry(
                         {
-                            def SETTINGS_XML_ID = 'kogito-nightly-master'
+                            def SETTINGS_XML_ID = 'kogito-nightly-main'
                             def projectCollection = ['kogito-runtimes', 'optaplanner', 'kogito-examples', 'optaplanner-quickstarts', 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'jboss-integration/kogito-rhba']
                             def projectVariableMap = [:]
                             def additionalVariables = ['optaplannerProductVersion': env.OPTAPLANNER_PRODUCT_VERSION, 'optaplanner-quickstarts-scmRevision': 'stable', 'rhbaProductVersion': env.RHBA_LASTEST_PRODUCT_VERSION]

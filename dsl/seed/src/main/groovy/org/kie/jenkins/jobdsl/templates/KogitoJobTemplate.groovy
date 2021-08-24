@@ -1,8 +1,10 @@
 package org.kie.jenkins.jobdsl.templates
 
 import org.kie.jenkins.jobdsl.KogitoConstants
-import org.kie.jenkins.jobdsl.Utils
 import org.kie.jenkins.jobdsl.RegexUtils
+import org.kie.jenkins.jobdsl.Utils
+import org.kie.jenkins.jobdsl.VersionUtils
+
 
 /**
 * PR job template
@@ -33,6 +35,7 @@ class KogitoJobTemplate {
     *
     */
     static def createPipelineJob(def script, Map jobParams = [:]) {
+        Utils.createFolderHierarchy(script, jobParams.job.folder)
         return script.pipelineJob("${jobParams.job.folder}/${jobParams.job.name}") {
             description("""
                         ${jobParams.job.description ?: jobParams.job.name} on branch ${jobParams.git.branch}\n
@@ -106,8 +109,8 @@ class KogitoJobTemplate {
     *     trigger_phrase_only: (optional) Set to true if the PR job should not be launched automatically but with the trigger phrase
     *     ignore_for_labels: (optional) Labels list to ignore
     *     run_only_for_labels: (optional) Labels list to run only when set
-    *     whiteListTargetBranches: (optional) Branches for which the job should be executed
-    *     blackListTargetBranches: (optional) Branches for which the job should NOT be executed
+    *     run_only_for_branches: (optional) Branches for which the job should be executed
+    *     ignore_for_branches: (optional) Branches for which the job should NOT be executed
     *     commitContext: (optional) Name of the commit context to appear in GH. Default is `Linux`.
     **/
     static def createPRJob(def script, Map jobParams = [:]) {
@@ -115,8 +118,7 @@ class KogitoJobTemplate {
         jobParams.pr = jobParams.pr ?: [:] // Setup default config for pr to avoid NullPointerException
 
         if (!jobParams.job.folder) {
-            script.folder(KogitoConstants.KOGITO_DSL_PULLREQUEST_FOLDER)
-            jobParams.job.folder = KogitoConstants.KOGITO_DSL_PULLREQUEST_FOLDER
+            jobParams.job.folder = "${KogitoConstants.KOGITO_DSL_PULLREQUEST_FOLDER}/${Utils.getJobBranchFolder(script)}"
         }
 
         return createPipelineJob(script, jobParams).with {
@@ -175,21 +177,21 @@ class KogitoJobTemplate {
                             buildDescTemplate('')
                             blackListCommitAuthor('')
                             whiteListTargetBranches {
-                                (jobParams.pr.whiteListTargetBranches ?: []).each { br ->
+                                (jobParams.pr.run_only_for_branches ?: []).each { br ->
                                     ghprbBranch {
                                         branch(br)
                                     }
                                 }
                             }
                             blackListTargetBranches {
-                                (jobParams.pr.blackListTargetBranches ?: []).each { br ->
+                                (jobParams.pr.ignore_for_branches ?: []).each { br ->
                                     ghprbBranch {
                                         branch(br)
                                     }
                                 }
                             }
                             includedRegions('')
-                            excludedRegions('')
+                            excludedRegions(jobParams.pr.excluded_regions ? jobParams.pr.excluded_regions.join('\n') : '')
                             extensions {
                                 ghprbSimpleStatus {
                                     commitStatusContext(jobParams.pr.commitContext ?: 'Linux')
@@ -208,10 +210,6 @@ class KogitoJobTemplate {
                                         ghprbBuildResultMessage {
                                             result('FAILURE')
                                             message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **failed**. Please check [the logs](\${BUILD_URL}display/redirect).")
-                                        }
-                                        ghprbBuildResultMessage {
-                                            result('SUCCESS')
-                                            message("The ${jobParams.pr.commitContext ?: 'Linux'} check is **successful**.")
                                         }
                                     }
                                 }
@@ -313,6 +311,7 @@ class KogitoJobTemplate {
     *     repository: (optional) Repository to checkout for the job ?
     *     primary: (optional) should the job be launched first (only considered for non-parallel jobs)
     *     dependsOn: (optional) which job should be executed before that one ? Ignored if `primary` is set (only considered for non-parallel jobs)
+    *     jenkinsfile: (optional) where to lookup the jenkinsfile. else it will take the default one
     *   testType: (optional) Name of the tests. Used for the trigger phrase and commitContext. Default is `tests`.
     *   extraEnv: (optional) Environment variables to set to all the jobs
     *   primaryTriggerPhrase: Redefined default primary trigger phrase
@@ -326,7 +325,6 @@ class KogitoJobTemplate {
 
         multijobConfig.jobs.each { jobCfg ->
             def jobParams = defaultParamsGetter()
-            jobParams.job.folder = KogitoConstants.KOGITO_DSL_PULLREQUEST_FOLDER
             jobParams.env = jobParams.env ?: [:]
             jobParams.pr = jobParams.pr ?: [:]
 
@@ -336,20 +334,30 @@ class KogitoJobTemplate {
                 jobParams.env.put('UPSTREAM_TRIGGER_PROJECT', jobParams.git.repository)
                 jobParams.job.description = "Run ${testTypeName} tests of ${jobCfg.repository} due to changes in ${jobParams.git.repository} repository"
                 jobParams.job.name += '.downstream'
-                jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
-                jobParams.git.repository = jobCfg.repository
                 // If downstream repo, checkout target branch for Jenkinsfile
                 // For now there is a problem of matching when putting both branch
                 // Sometimes it takes the source, sometimes the target ...
-                jobParams.pr.checkout_branch = '${ghprbTargetBranch}'
+                jobParams.pr.checkout_branch = VersionUtils.getProjectTargetBranch(jobCfg.repository, jobParams.git.branch, jobParams.git.repository)
+                
+                jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
+                jobParams.git.repository = jobCfg.repository
             } else {
                 jobParams.job.description = "Run tests from ${jobParams.git.repository} repository"
             }
             jobParams.job.name += ".${jobCfg.id.toLowerCase()}"
 
+            // Update jenkinsfile path
+            if (jobCfg.jenkinsfile) {
+                jobParams.jenkinsfile = jobCfg.jenkinsfile
+            }
+
             jobParams.pr.putAll([
-                commitContext: getTypedId(testTypeName, jobCfg.id)
+                commitContext: getTypedId(testTypeName, jobCfg.id),
             ])
+
+            if(!jobParams.pr.run_only_for_branches) {
+                jobParams.pr.run_only_for_branches = [ jobParams.git.branch ]
+            }
 
             // Setup PR triggers
             if (parallel || jobCfg.primary) {
@@ -364,6 +372,10 @@ class KogitoJobTemplate {
                 jobParams.pr.trigger_phrase += '|' + generateMultiJobTriggerPhrasePattern(triggerPhraseTestType, RegexUtils.getRegexMultipleCase(jobCfg.id))
             } else {
                 error 'You need to define `primary` or `dependsOn`. Else your job will never be launched...'
+            }
+            // Add for all cases the `Jenkins run downstream` trigger comment if job dependsOn
+            if (jobCfg.dependsOn) {
+                jobParams.pr.trigger_phrase += '|' + generateMultiJobTriggerPhrasePattern(triggerPhraseTestType, 'downstream')
             }
 
             // Update env
@@ -425,4 +437,23 @@ class KogitoJobTemplate {
         return "(.*${RegexUtils.getRegexFirstLetterCase('jenkins')},?.*(rerun|run) ${idStr}${testType}.*)"
     }
 
+    static def getDefaultJobParams(def script, String repository) {
+        return [
+            job: [
+                name: repository
+            ],
+            git: [
+                author: Utils.getGitAuthor(script),
+                branch: Utils.getGitBranch(script),
+                repository: repository,
+                credentials: Utils.getGitAuthorCredsId(script),
+                token_credentials: Utils.getGitAuthorTokenCredsId(script)
+            ],
+            env: [:],
+            pr: [
+                excluded_regions: ['LICENSE', '\\.gitignore', '.*\\.md', '.*\\.adoc', '.*\\.txt', '\\.github/.*', 'Jenkinsfile.*', '\\.jenkins/.*', '\\.ci/.*'],
+                ignore_for_labels: 'skip-ci',
+            ]
+        ]
+    }
 }
