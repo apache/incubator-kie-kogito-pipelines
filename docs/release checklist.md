@@ -20,4 +20,4 @@ Jobs should then be created for the branch and nightly are automatically activat
 ## All done
 
 - Release can be announced
-  Please check also with Koigto Tooling team
+  Please check also with Kogito Tooling team
