@@ -1,7 +1,5 @@
 version: "2.1"
 
-extends: ./project-dependencies.yaml
-
 dependencies:
   - project: quarkusio/quarkus
     mapping:
@@ -10,7 +8,7 @@ dependencies:
           - source: .*
             target: 2.2
 
-  - project: kiegroup/kogito-runtimes
+  - project: radtriste/kogito-runtimes
     dependencies:
       - project: quarkusio/quarkus
     mapping:
@@ -23,5 +21,115 @@ dependencies:
           - source: (\d*)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
       exclude:
-        - kiegroup/kogito-examples
-        - kiegroup/kogito-apps
+        - quarkusio/quarkus
+        - radtriste/kogito-examples
+        - radtriste/kogito-apps
+  
+  - project: radtriste/optaplanner
+    dependencies:
+      - project: radtriste/kogito-runtimes
+    mapping:
+      dependencies:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
+      dependant:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
+      exclude:
+        - quarkusio/quarkus
+        - radtriste/optaweb-employee-rostering
+        - radtriste/optaweb-vehicle-routing
+        - radtriste/optaplanner-quickstarts
+
+  - project: radtriste/kogito-apps
+    dependencies:
+      - project: radtriste/kogito-runtimes
+      - project: radtriste/optaplanner
+    mapping:
+      dependencies:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
+      dependant:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
+      exclude:
+        - quarkusio/quarkus
+        - radtriste/kogito-examples
+        - radtriste/kogito-runtimes
+
+  - project: radtriste/kogito-examples
+    dependencies:
+      - project: radtriste/kogito-runtimes
+      - project: radtriste/optaplanner
+    mapping:
+      dependencies:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
+      dependant:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
+      exclude:
+        - quarkusio/quarkus
+        - radtriste/kogito-apps
+        - radtriste/kogito-runtimes
+
+  - project: radtriste/optaweb-employee-rostering
+    dependencies:
+      - project: radtriste/optaplanner
+    mapping:
+      dependencies:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
+      dependant:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
+      exclude:
+        - quarkusio/quarkus
+        - radtriste/optaplanner  
+        - radtriste/optaweb-vehicle-routing
+        - radtriste/optaplanner-quickstarts
+
+  - project: radtriste/optaweb-vehicle-routing
+    dependencies:
+      - project: radtriste/optaplanner
+    mapping:
+      dependencies:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
+      dependant:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
+      exclude:
+        - quarkusio/quarkus
+        - radtriste/optaplanner
+        - radtriste/optaweb-employee-rostering
+        - radtriste/optaplanner-quickstarts
+
+  - project: radtriste/optaplanner-quickstarts
+    dependencies:
+      - project: radtriste/optaplanner
+    mapping:
+      dependencies:
+        default:
+          - source: (8)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
+          - source: development
+            target: main
+      dependant:
+        default:
+          - source: (1)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
+          - source: main
+            target: development
+      exclude:
+        - quarkusio/quarkus
