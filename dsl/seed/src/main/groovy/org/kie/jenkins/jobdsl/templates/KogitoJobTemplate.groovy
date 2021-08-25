@@ -354,6 +354,15 @@ class KogitoJobTemplate {
             } else {
                 jobParams.job.description = "Run tests from ${jobParams.git.repository} repository"
             }
+            
+            // Update jenkinsfile path
+            String defaultJenkinsConfigPath = Utils.getJenkinsConfigPath(script, jobParams.git.repository)
+            if (jobCfg.jenkinsfile) {
+                jobParams.jenkinsfile = jobCfg.jenkinsfile
+            } else if (defaultJenkinsConfigPath) {
+                jobParams.jenkinsfile = "${defaultJenkinsConfigPath}/Jenkinsfile"
+            }
+            
             if (useBuildChain) {
                 // Buildchain uses centralized configuration for Jenkinsfile.buildchain to checkout
                 // Overrides configuration already done
@@ -364,14 +373,6 @@ class KogitoJobTemplate {
                 jobParams.jenkinsfile = KogitoConstants.BUILDCHAIN_JENKINSFILE_PATH
             }
             jobParams.job.name += ".${jobCfg.id.toLowerCase()}"
-
-            // Update jenkinsfile path
-            String defaultJenkinsConfigPath = Utils.getJenkinsConfigPath(script, jobParams.git.repository)
-            if (jobCfg.jenkinsfile) {
-                jobParams.jenkinsfile = jobCfg.jenkinsfile
-            } else if (defaultJenkinsConfigPath) {
-                jobParams.jenkinsfile = "${defaultJenkinsConfigPath}/Jenkinsfile"
-            }
 
             jobParams.pr.putAll([
                 commitContext: getTypedId(testTypeName, jobCfg.id),
