@@ -81,8 +81,8 @@ seed_generation.generate()
 ```
 
 It is just an entry point for the job generation. The setup for job generation is then done in the `seed_generation.generate()` method.  
-The user does just need to create then the `.jenkins/dsl/jobs.groovy` file to generate the needed jobs for the repository.  
-See an example [here](../.jenkins/dsl/jobs.groovy)
+The user does just need to create then the `.ci/jenkins/dsl/jobs.groovy` file to generate the needed jobs for the repository.  
+See an example [here](../.ci/jenkins/dsl/jobs.groovy)
 
 Using a proper `Jenkinsfile.seed` stored directly into the repository folders will allow to set a hook on that repository to be able to refresh the jobs easily when an update is done.
 
@@ -122,8 +122,8 @@ $ cd dsl/seed && ./gradlew test
 
 #### Repository jobs local testing
 
-As shown in `.jenkins` folder, groovy scripts to generate jobs should be in `.jenkins/dsl/jobs` or `.ci/jenkins/dsl/jobs` directory.  
-Then, you can also add a small `.jenkins/dsl/test.sh` or `.ci/jenkins/dsl/test.sh` to test your groovy script:
+As shown in `.jenkins` folder, groovy scripts to generate jobs should be in `.ci/jenkins/dsl/jobs` directory.  
+Then, you can also add a small `.ci/jenkins/dsl/test.sh` to test your groovy script:
 
 ```bash
 #!/bin/bash -e
@@ -153,8 +153,8 @@ The script clones the `kogito-pipelines` repository and then call the `seed_test
 Then you can call the script:
 
 ```bash
-$ chmod u+x .jenkins/dsl/test.sh
-$ cd .jenkins/dsl && ./scripts/test.sh
+$ chmod u+x .ci/jenkins/dsl/test.sh
+$ cd .ci/jenkins/dsl && ./scripts/test.sh
 ```
 
 ### Test on Jenkins

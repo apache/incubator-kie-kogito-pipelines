@@ -2,6 +2,8 @@ import org.kie.jenkins.jobdsl.templates.KogitoJobTemplate
 import org.kie.jenkins.jobdsl.KogitoConstants
 import org.kie.jenkins.jobdsl.Utils
 
+JENKINSFILE_PATH = '.ci/jenkins'
+
 def getDefaultJobParams() {
     return KogitoJobTemplate.getDefaultJobParams(this, 'kogito-pipelines')
 }
@@ -47,7 +49,7 @@ if (Utils.isMainBranch(this)) {
 /////////////////////////////////////////////////////////////////
 
 void setupKogitoRuntimesBDDPrJob(String jobFolder) {
-    def jobParams = getJobParams('0-runtimes-bdd-testing', jobFolder, 'Jenkinsfile.pr.bdd-tests', 'Run on demand BDD tests from runtimes repository')
+    def jobParams = getJobParams('0-runtimes-bdd-testing', jobFolder, "${JENKINSFILE_PATH}/Jenkinsfile.pr.bdd-tests", 'Run on demand BDD tests from runtimes repository')
     jobParams.git.project_url = "https://github.com/${GIT_AUTHOR_NAME}/kogito-runtimes/"
     jobParams.git.repo_url = "https://github.com/${GIT_AUTHOR_NAME}/${jobParams.git.repository}/"
     jobParams.pr = [
@@ -61,19 +63,19 @@ void setupKogitoRuntimesBDDPrJob(String jobFolder) {
 }
 
 void setupCleanOldNamespacesToolsJob(String jobFolder) {
-    def jobParams = getJobParams('kogito-clean-old-namespaces', jobFolder, 'Jenkinsfile.tools.clean-old-namespaces')
+    def jobParams = getJobParams('kogito-clean-old-namespaces', jobFolder, "${JENKINSFILE_PATH}/Jenkinsfile.tools.clean-old-namespaces")
     jobParams.triggers = [ cron : '@midnight' ]
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
 void setupCleanOldNightlyImagesToolsJob(String jobFolder) {
-    jobParams = getJobParams('kogito-clean-old-nightly-images', jobFolder, 'Jenkinsfile.tools.clean-nightly-images')
+    jobParams = getJobParams('kogito-clean-old-nightly-images', jobFolder, "${JENKINSFILE_PATH}/Jenkinsfile.tools.clean-nightly-images")
     jobParams.triggers = [ cron : 'H 8 * * *' ]
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
 void setupCreateIssueToolsJob(String jobFolder) {
-    jobParams = getJobParams('kogito-create-issue', jobFolder, 'Jenkinsfile.tools.create-issue')
+    jobParams = getJobParams('kogito-create-issue', jobFolder, "${JENKINSFILE_PATH}/Jenkinsfile.tools.create-issue")
     KogitoJobTemplate.createPipelineJob(this, jobParams).with {
         parameters {
             stringParam('AUTHOR', '', 'Git author')
@@ -89,7 +91,7 @@ void setupCreateIssueToolsJob(String jobFolder) {
 }
 
 void setupNightlyJob(String jobFolder) {
-    def jobParams = getJobParams('kogito-nightly', jobFolder, 'Jenkinsfile.nightly', 'Kogito Nightly')
+    def jobParams = getJobParams('kogito-nightly', jobFolder, "${JENKINSFILE_PATH}/Jenkinsfile.nightly", 'Kogito Nightly')
     jobParams.triggers = [cron : '@midnight']
     KogitoJobTemplate.createPipelineJob(this, jobParams).with {
         parameters {
@@ -125,7 +127,7 @@ void setupNightlyJob(String jobFolder) {
 }
 
 void setupReleaseJob(String jobFolder) {
-    KogitoJobTemplate.createPipelineJob(this, getJobParams('kogito-release', jobFolder, 'Jenkinsfile.release', 'Kogito Release')).with {
+    KogitoJobTemplate.createPipelineJob(this, getJobParams('kogito-release', jobFolder, "${JENKINSFILE_PATH}/Jenkinsfile.release", 'Kogito Release')).with {
         parameters {
             stringParam('RESTORE_FROM_PREVIOUS_JOB', '', 'URL to a previous stopped release job which needs to be continued')
 
@@ -171,7 +173,7 @@ void setupReleaseJob(String jobFolder) {
 }
 
 void setupPrepareReleaseJob(String jobFolder) {
-    KogitoJobTemplate.createPipelineJob(this, getJobParams('prepare-release-branch', jobFolder, 'Jenkinsfile.release.prepare', 'Prepare env for a release')).with {
+    KogitoJobTemplate.createPipelineJob(this, getJobParams('prepare-release-branch', jobFolder, "${JENKINSFILE_PATH}/Jenkinsfile.release.prepare", 'Prepare env for a release')).with {
         parameters {
             stringParam('KOGITO_VERSION', '', 'Project version to release as Major.minor.micro')
             stringParam('OPTAPLANNER_VERSION', '', 'Project version of OptaPlanner and its examples to release as Major.minor.micro')

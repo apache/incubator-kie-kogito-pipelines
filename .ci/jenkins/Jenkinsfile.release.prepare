@@ -23,11 +23,11 @@ pipeline {
     }
 
     // parameters {
-    // For parameters, check into .jenkins/dsl/jobs.groovy file
+    // For parameters, check into ./dsl/jobs.groovy file
     // }
 
     environment {
-        // Some generated env is also defined into .jenkins/dsl/jobs.groovy file
+        // Some generated env is also defined into ./dsl/jobs.groovy file
 
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
     }
@@ -102,7 +102,7 @@ pipeline {
                         repositories.addAll(collectRepos(RUNTIMES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(IMAGES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
-                        repositories.addAll(collectRepos([OPTAPLANNER_REPO], getOptaPlannerReleaseBranch(), '.ci/jenkins'))
+                        repositories.addAll(collectRepos([OPTAPLANNER_REPO], getOptaPlannerReleaseBranch()))
 
                         if (params.BRANCH_PRODUCT_REPOSITORIES) {
                             repositories.addAll(collectRepos(KOGITO_PRODUCT_REPOS, getKogitoReleaseBranch()))

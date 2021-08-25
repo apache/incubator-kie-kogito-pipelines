@@ -32,7 +32,7 @@ class Utils {
     }
 
     static def getBindingValue(def script, String key) {
-        return script.getBinding()[key]
+        return script.getBinding().hasVariable(key) ? script.getBinding().getVariable(key) : ''
     }
 
     static String getQuarkusLTSVersion(def script) {
@@ -79,6 +79,10 @@ class Utils {
 
     static String getJobBranchFolder(def script) {
         return getBindingValue(script, 'JOB_BRANCH_FOLDER')
+    }
+
+    static String getJenkinsConfigPath(def script, String repoName) {
+        return getBindingValue(script, "${repoName.toUpperCase()}_JENKINS_CONFIG_PATH")
     }
 
 }
