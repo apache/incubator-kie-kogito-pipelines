@@ -68,4 +68,4 @@ build:
 
   - project: quarkusio/quarkus
     build-command:
-      upstream: mvn -e clean install -fae -Pjava.net.preferIPv4Stack=true -Pquickly -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
+      upstream: mvn -e clean install -fae -Djava.net.preferIPv4Stack=true -Dquickly -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 -Dmaven.wagon.http.retryHandler.count=3
