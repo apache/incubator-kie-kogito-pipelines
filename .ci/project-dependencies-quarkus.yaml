@@ -8,7 +8,7 @@ dependencies:
           - source: .*
             target: 2.2
 
-  - project: radtriste/kogito-runtimes
+  - project: kiegroup/kogito-runtimes
     dependencies:
       - project: quarkusio/quarkus
     mapping:
@@ -22,12 +22,12 @@ dependencies:
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
       exclude:
         - quarkusio/quarkus
-        - radtriste/kogito-examples
-        - radtriste/kogito-apps
+        - kiegroup/kogito-examples
+        - kiegroup/kogito-apps
   
-  - project: radtriste/optaplanner
+  - project: kiegroup/optaplanner
     dependencies:
-      - project: radtriste/kogito-runtimes
+      - project: kiegroup/kogito-runtimes
     mapping:
       dependencies:
         default:
@@ -39,14 +39,14 @@ dependencies:
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
       exclude:
         - quarkusio/quarkus
-        - radtriste/optaweb-employee-rostering
-        - radtriste/optaweb-vehicle-routing
-        - radtriste/optaplanner-quickstarts
+        - kiegroup/optaweb-employee-rostering
+        - kiegroup/optaweb-vehicle-routing
+        - kiegroup/optaplanner-quickstarts
 
-  - project: radtriste/kogito-apps
+  - project: kiegroup/kogito-apps
     dependencies:
-      - project: radtriste/kogito-runtimes
-      - project: radtriste/optaplanner
+      - project: kiegroup/kogito-runtimes
+      - project: kiegroup/optaplanner
     mapping:
       dependencies:
         default:
@@ -58,13 +58,13 @@ dependencies:
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
       exclude:
         - quarkusio/quarkus
-        - radtriste/kogito-examples
-        - radtriste/kogito-runtimes
+        - kiegroup/kogito-examples
+        - kiegroup/kogito-runtimes
 
-  - project: radtriste/kogito-examples
+  - project: kiegroup/kogito-examples
     dependencies:
-      - project: radtriste/kogito-runtimes
-      - project: radtriste/optaplanner
+      - project: kiegroup/kogito-runtimes
+      - project: kiegroup/optaplanner
     mapping:
       dependencies:
         default:
@@ -76,12 +76,12 @@ dependencies:
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
       exclude:
         - quarkusio/quarkus
-        - radtriste/kogito-apps
-        - radtriste/kogito-runtimes
+        - kiegroup/kogito-apps
+        - kiegroup/kogito-runtimes
 
-  - project: radtriste/optaweb-employee-rostering
+  - project: kiegroup/optaweb-employee-rostering
     dependencies:
-      - project: radtriste/optaplanner
+      - project: kiegroup/optaplanner
     mapping:
       dependencies:
         default:
@@ -93,13 +93,13 @@ dependencies:
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
       exclude:
         - quarkusio/quarkus
-        - radtriste/optaplanner  
-        - radtriste/optaweb-vehicle-routing
-        - radtriste/optaplanner-quickstarts
+        - kiegroup/optaplanner  
+        - kiegroup/optaweb-vehicle-routing
+        - kiegroup/optaplanner-quickstarts
 
-  - project: radtriste/optaweb-vehicle-routing
+  - project: kiegroup/optaweb-vehicle-routing
     dependencies:
-      - project: radtriste/optaplanner
+      - project: kiegroup/optaplanner
     mapping:
       dependencies:
         default:
@@ -111,13 +111,13 @@ dependencies:
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
       exclude:
         - quarkusio/quarkus
-        - radtriste/optaplanner
-        - radtriste/optaweb-employee-rostering
-        - radtriste/optaplanner-quickstarts
+        - kiegroup/optaplanner
+        - kiegroup/optaweb-employee-rostering
+        - kiegroup/optaplanner-quickstarts
 
-  - project: radtriste/optaplanner-quickstarts
+  - project: kiegroup/optaplanner-quickstarts
     dependencies:
-      - project: radtriste/optaplanner
+      - project: kiegroup/optaplanner
     mapping:
       dependencies:
         default:
