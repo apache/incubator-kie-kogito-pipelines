@@ -4,6 +4,9 @@ package org.kie.jenkins.jobdsl
 class VersionUtils {
 
     static String getProjectTargetBranch(String project, String branch, String upstreamProject) {
+        if (isOptaplannerQuickstartsProject(upstreamProject) && branch == 'development') {
+            return 'main'
+        }
         if (isKogitoProject(project)) {
             return getTargetBranch(branch, isOptaplannerProject(upstreamProject) ? -7 : 0)
         } else if (isOptaplannerProject(project)) {
@@ -33,6 +36,10 @@ class VersionUtils {
 
     static boolean isOptaplannerProject(String project) {
         return project.startsWith('opta')
+    }
+
+    static boolean isOptaplannerQuickstartsProject(String project) {
+        return project == 'optaplanner-quickstarts'
     }
 
 }

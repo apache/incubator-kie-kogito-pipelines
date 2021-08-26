@@ -1,0 +1,182 @@
+@Library('jenkins-pipeline-shared-libraries')_
+
+pipeline {
+    agent {
+        label getAgentLabel()
+    }
+    tools {
+        nodejs 'nodejs-12.16.3'
+    }
+    options {
+        timestamps ()
+        timeout(time: getTimeoutValue(), unit: 'MINUTES')
+    }
+    environment {
+        FIREFOX_FOLDER = '/opt/tools/firefox-60esr'
+    }
+    stages {
+        stage('Initialize') {
+            steps {
+                sh 'printenv'
+            }
+        }
+        // executes a script that compresses the consoleText and attaches it to the mail
+        stage('build sh script') {
+            steps {
+                script {
+                    mailer.buildLogScriptPR()
+                }
+            }
+        }
+        stage('check space before build') {
+            steps {
+                script {
+                    util.spaceLeft()
+                }
+            }
+        }
+        stage('Build projects') {
+            tools {
+                jdk getJdkTool()
+                maven getMavenTool()
+            }
+            steps {
+                script {
+                    if (isSonarCloudAnalysis()) {
+                        env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} -Prun-code-coverage"
+                    }
+                    def buildChainActionInfo = getBuildChainActionInfo()
+
+                    configFileProvider([configFile(fileId: getSettingsXmlId(), variable: 'MAVEN_SETTINGS_FILE')]) {
+                        withCredentials([string(credentialsId: 'kie-ci1-token', variable: 'GITHUB_TOKEN')]) {
+                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/\${GROUP}/kogito-pipelines/main/.ci/${buildChainActionInfo.file}' -folder='bc' build ${buildChainActionInfo.action} -url=${env.ghprbPullLink} ${buildChainActionInfo.arguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true'"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Sonar analysis') {
+            tools {
+                jdk getJdkTool()
+                maven getMavenTool()
+            }
+            steps {
+                script {
+                    if (isSonarCloudAnalysis()) {
+                        def project = (env.BUILDCHAIN_PROJECT ? util.getProjectGroupName(env.BUILDCHAIN_PROJECT) : util.getProjectTriggeringJob())[1]
+                        dir("bc/kiegroup_${project.replaceAll('-', '_')}/${project}") {
+                            maven.runMavenWithSettingsSonar(getSettingsXmlId(), "-nsu generate-resources -Psonarcloud-analysis -Denforcer.skip=true ${env.SONARCLOUD_ANALYSIS_MVN_OPTS ?: ''}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
+                        }
+                    } else {
+                        println '[INFO] No sonar analysis execution.'
+                    }
+                }
+            }
+        }
+        stage('check space after build') {
+            steps {
+                script {
+                    util.spaceLeft()
+                }
+            }
+        }
+    }
+    post {
+        always {
+            sh '$WORKSPACE/trace.sh'
+            junit '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml'
+        }
+        failure {
+            script {
+                mailer.sendEmail_failedPR()
+            }
+        }
+        unstable {
+            script {
+                mailer.sendEmail_unstablePR()
+            }
+        }
+        fixed {
+            script {
+                mailer.sendEmail_fixedPR()
+            }
+        }
+        cleanup {
+            script {
+                // Clean also docker in case of usage of testcontainers lib
+                util.cleanNode('docker')
+            }
+        }
+    }
+}
+
+String getAgentLabel() {
+    return "${env.ADDITIONAL_LABEL?.trim() ? ADDITIONAL_LABEL : 'kie-rhel7 && kie-mem16g'} && !master"
+}
+
+String getTimeoutValue() {
+    return "${env.ADDITIONAL_TIMEOUT?.trim() ?: (isNative() ? 360 : 180)}"
+}
+
+String getJdkTool() {
+    return env.BUILD_JDK_TOOL?.trim() ?: 'kie-jdk11'
+}
+
+String getMavenTool() {
+    return env.BUILD_MAVEN_TOOL?.trim() ?: 'kie-maven-3.8.1'
+}
+
+String getPrType() {
+    return env.BUILDCHAIN_PR_TYPE?.trim() ?: 'pr'
+}
+
+boolean isPR() {
+    return getPrType() == 'pr'
+}
+
+boolean isFDB() {
+    return getPrType() == 'fdb'
+}
+
+boolean isSingle() {
+    return getPrType() == 'single'
+}
+
+def getBuildChainActionInfo() {
+    def definitionFile = isNative() ? 'pull-request-native-config.yaml' :
+                         isLts() ? 'pull-request-lts-config.yaml' :
+                         'pull-request-config.yaml'
+    return isFDB() ? [action: 'fd', file: definitionFile, arguments: getBuildChainAdditionalArguments()] :
+                     isSingle() ? [action: 'single', file: definitionFile, arguments: getBuildChainAdditionalArguments()] :
+                     [action: 'pr', file: definitionFile, arguments: getBuildChainAdditionalArguments()]
+}
+
+def getBuildChainAdditionalArguments() {
+    return env.BUILDCHAIN_PROJECT ? "-sp=${env.BUILDCHAIN_PROJECT.trim()}" : ''
+}
+
+String getSettingsXmlId() { 
+    return isPR() || isFDB() ? 'kogito_pr_settings' : 'kogito_release_settings'
+}
+
+boolean isDefaultCheck() {
+    return !isNative() && !isLts()
+}
+
+boolean isNative() {
+    return env.NATIVE ? env.NATIVE.toBoolean() : false
+}
+
+boolean isLts() {
+    return env.LTS ? env.LTS.toBoolean() : false
+}
+
+boolean isSonarCloudAnalysis() {
+    if (env.DISABLE_SONARCLOUD?.toBoolean()) {
+        return false
+    }
+    if (isPR()) {
+        return isDefaultCheck() && !env.DOWNSTREAM_BUILD?.toBoolean()
+    }
+    return false
+}
