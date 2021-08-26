@@ -1,6 +1,16 @@
 version: "2.1"
+
 dependencies:
+  - project: quarkusio/quarkus
+    mapping:
+      dependant:
+        default:
+          - source: .*
+            target: 2.2
+
   - project: kiegroup/kogito-runtimes
+    dependencies:
+      - project: quarkusio/quarkus
     mapping:
       dependencies:
         default:
@@ -11,6 +21,7 @@ dependencies:
           - source: (\d*)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
       exclude:
+        - quarkusio/quarkus
         - kiegroup/kogito-examples
         - kiegroup/kogito-apps
   
@@ -27,6 +38,7 @@ dependencies:
           - source: (\d*)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
       exclude:
+        - quarkusio/quarkus
         - kiegroup/optaweb-employee-rostering
         - kiegroup/optaweb-vehicle-routing
         - kiegroup/optaplanner-quickstarts
@@ -45,6 +57,7 @@ dependencies:
           - source: (\d*)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
       exclude:
+        - quarkusio/quarkus
         - kiegroup/kogito-examples
         - kiegroup/kogito-runtimes
 
@@ -62,6 +75,7 @@ dependencies:
           - source: (\d*)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
       exclude:
+        - quarkusio/quarkus
         - kiegroup/kogito-apps
         - kiegroup/kogito-runtimes
 
@@ -78,6 +92,7 @@ dependencies:
           - source: (\d*)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
       exclude:
+        - quarkusio/quarkus
         - kiegroup/optaplanner  
         - kiegroup/optaweb-vehicle-routing
         - kiegroup/optaplanner-quickstarts
@@ -95,6 +110,7 @@ dependencies:
           - source: (\d*)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
       exclude:
+        - quarkusio/quarkus
         - kiegroup/optaplanner
         - kiegroup/optaweb-employee-rostering
         - kiegroup/optaplanner-quickstarts
@@ -115,3 +131,5 @@ dependencies:
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
           - source: main
             target: development
+      exclude:
+        - quarkusio/quarkus
