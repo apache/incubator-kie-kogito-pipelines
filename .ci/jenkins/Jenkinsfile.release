@@ -427,7 +427,7 @@ pipeline {
 }
 
 def buildJob(String jobName, List buildParams) {
-    if (!hasJob(jobName)) {
+    if (!hasJob(jobName) || getJobDecision(jobName) == 'retry') {
         sendStageNotification()
         echo "Build ${jobName} with params ${buildParams}"
         def job = build(job: "./${jobName}", wait: true, parameters: buildParams, propagate: false)
