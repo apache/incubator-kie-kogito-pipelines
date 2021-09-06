@@ -165,7 +165,7 @@ pipeline {
                 script {
                     def buildParams = getDefaultBuildParams()
                     addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
+                    addDeployImageWithLatestTagParam(buildParams)
 
                     // For testing
                     addSkipTestsParam(buildParams)
@@ -198,7 +198,7 @@ pipeline {
                                     addSkipTestsParam(buildParams)
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG)
                                     addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
+                                    addDeployImageWithLatestTagParam(buildParams)
 
                                     // For BDD tests
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
@@ -222,7 +222,7 @@ pipeline {
                                     def buildParams = getDefaultBuildParams()
                                     addSkipTestsParam(buildParams)
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
+                                    addDeployImageWithLatestTagParam(buildParams)
 
                                     // For BDD tests
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
@@ -257,7 +257,7 @@ pipeline {
                                     addSkipTestsParam(buildParams)
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG, defaultImageParamsPrefix, 'lts')
                                     addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
+                                    addDeployImageWithLatestTagParam(buildParams)
 
                                     // For BDD tests
                                     addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getLTSNativeBuilderImage())
@@ -413,6 +413,10 @@ void addImageBuildParams(List buildParams, String tag, String paramsPrefix = def
     addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
     addStringParam(buildParams, constructKey(paramsPrefix, 'NAME_SUFFIX'), (extraSuffix ? "${extraSuffix}-" : '') + env.IMAGE_NAME_NIGHTLY_SUFFIX)
     addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)
+}
+
+void addDeployImageWithLatestTagParam(buildParams) {
+    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
 }
 
 void addStringParam(List params, String key, String value) {
