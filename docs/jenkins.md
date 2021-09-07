@@ -176,7 +176,7 @@ You can use the description in [seed_job_repo.groovy](../dsl/seed/jobs/seed_job_
   If the jobs you want to test is branch agnostic, then you can just set `main` or anything else.  
   If the job you want to test is only for the main branch, then you should set the same value as `GIT_BRANCH`.
 * **GIT_JENKINS_CONFIG_PATH**  
-  This is where to find the jenkins seed file for job generation. Usually it is `jenkins`
+  This is where to find the jenkins seed file for job generation. Default is `.ci/jenkins`
 
 #### Test the whole Kogito jobs
 
