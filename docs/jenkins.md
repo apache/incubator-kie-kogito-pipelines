@@ -57,7 +57,7 @@ Each repo seed job will get the [branch config](../dsl/seed/config/branch.yaml) 
 Each repository which want its job to be generated should be registered into the [seed job branch config](../dsl/seed/config/branch.yaml) and should contain this folder structure in it root:
 
     .
-    ├── jenkins                
+    ├── .ci/jenkins                
     │   ├── dsl
     │   │   ├── Jenkinsfile.seed # Main entry point for generation of the jobs
     │   │   ├── jobs.groovy      # contains the jobs for the current branch to be generated
