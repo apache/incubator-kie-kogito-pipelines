@@ -122,7 +122,7 @@ $ cd dsl/seed && ./gradlew test
 
 #### Repository jobs local testing
 
-As shown in `jenkins` folder, groovy scripts to generate jobs should be in `.ci/jenkins/dsl/jobs` directory.  
+As shown in `.ci/jenkins` folder, groovy scripts to generate jobs should be in `.ci/jenkins/dsl/jobs` directory.  
 Then, you can also add a small `.ci/jenkins/dsl/test.sh` to test your groovy script:
 
 ```bash
