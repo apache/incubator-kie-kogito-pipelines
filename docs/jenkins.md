@@ -86,7 +86,7 @@ See an example [here](../.ci/jenkins/dsl/jobs.groovy)
 
 Using a proper `Jenkinsfile.seed` stored directly into the repository folders will allow to set a hook on that repository to be able to refresh the jobs easily when an update is done.
 
-*NOTE: Your pipelines' Jenkinsfiles can be stored anywhere in the repository. The reference is anyway done in the job script, so you can put whatever you want if needed. One good practise would be to store it at the root of the project or in the `jenkins` folder.*
+*NOTE: Your pipelines' Jenkinsfiles can be stored anywhere in the repository. The reference is anyway done in the job script, so you can put whatever you want if needed. One good practise would be to store it in the `.ci/jenkins` folder.*
 
 ### Generated jobs structure
 
