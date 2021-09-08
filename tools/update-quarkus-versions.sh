@@ -139,26 +139,31 @@ for i in "${MODULES[@]}"
 do
   # align third-party dependencies with Quarkus
   mvn versions:compare-dependencies \
-  -pl :${i} \
-  -DremotePom=io.quarkus:quarkus-bom:$QUARKUS_VERSION \
-  -DupdatePropertyVersions=true \
-  -DupdateDependencies=true \
-  -DgenerateBackupPoms=false
+    -pl :${i} \
+    -DremotePom=io.quarkus:quarkus-bom:$QUARKUS_VERSION \
+    -DupdatePropertyVersions=true \
+    -DupdateDependencies=true \
+    -DgenerateBackupPoms=false
  
   # update Quarkus version
   mvn -pl :${i} \
      versions:set-property \
      -Dproperty=version.io.quarkus \
+     -DnewVersion=$QUARKUS_VERSION \
+     -DgenerateBackupPoms=false
+
+  mvn -pl :${i} \
+     versions:set-property \
      -Dproperty=version.io.quarkus.quarkus-test-maven \
      -DnewVersion=$QUARKUS_VERSION \
      -DgenerateBackupPoms=false
  
   # pin Maven version
   mvn -pl :${i} \
-  versions:set-property \
-   -Dproperty=version.maven \
-   -DnewVersion=$MAVEN_VERSION \
-   -DgenerateBackupPoms=false
+    versions:set-property \
+    -Dproperty=version.maven \
+    -DnewVersion=$MAVEN_VERSION \
+    -DgenerateBackupPoms=false
 done
  
 # commit all
