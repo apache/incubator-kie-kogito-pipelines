@@ -57,7 +57,7 @@ Each repo seed job will get the [branch config](../dsl/seed/config/branch.yaml) 
 Each repository which want its job to be generated should be registered into the [seed job branch config](../dsl/seed/config/branch.yaml) and should contain this folder structure in it root:
 
     .
-    ├── .jenkins                
+    ├── .ci/jenkins                
     │   ├── dsl
     │   │   ├── Jenkinsfile.seed # Main entry point for generation of the jobs
     │   │   ├── jobs.groovy      # contains the jobs for the current branch to be generated
@@ -86,7 +86,7 @@ See an example [here](../.ci/jenkins/dsl/jobs.groovy)
 
 Using a proper `Jenkinsfile.seed` stored directly into the repository folders will allow to set a hook on that repository to be able to refresh the jobs easily when an update is done.
 
-*NOTE: Your pipelines' Jenkinsfiles can be stored anywhere in the repository. The reference is anyway done in the job script, so you can put whatever you want if needed. One good practise would be to store it at the root of the project or in the `.jenkins` folder.*
+*NOTE: Your pipelines' Jenkinsfiles can be stored anywhere in the repository. The reference is anyway done in the job script, so you can put whatever you want if needed. One good practise would be to store it in the `.ci/jenkins` folder.*
 
 ### Generated jobs structure
 
@@ -122,7 +122,7 @@ $ cd dsl/seed && ./gradlew test
 
 #### Repository jobs local testing
 
-As shown in `.jenkins` folder, groovy scripts to generate jobs should be in `.ci/jenkins/dsl/jobs` directory.  
+As shown in `.ci/jenkins` folder, groovy scripts to generate jobs should be in `.ci/jenkins/dsl/jobs` directory.  
 Then, you can also add a small `.ci/jenkins/dsl/test.sh` to test your groovy script:
 
 ```bash
@@ -154,7 +154,7 @@ Then you can call the script:
 
 ```bash
 $ chmod u+x .ci/jenkins/dsl/test.sh
-$ cd .ci/jenkins/dsl && ./scripts/test.sh
+$ cd .ci/jenkins/dsl && ./test.sh
 ```
 
 ### Test on Jenkins
@@ -176,7 +176,7 @@ You can use the description in [seed_job_repo.groovy](../dsl/seed/jobs/seed_job_
   If the jobs you want to test is branch agnostic, then you can just set `main` or anything else.  
   If the job you want to test is only for the main branch, then you should set the same value as `GIT_BRANCH`.
 * **GIT_JENKINS_CONFIG_PATH**  
-  This is where to find the jenkins seed file for job generation. Usually it is `.jenkins`
+  This is where to find the jenkins seed file for job generation. Default is `.ci/jenkins`
 
 #### Test the whole Kogito jobs
 
