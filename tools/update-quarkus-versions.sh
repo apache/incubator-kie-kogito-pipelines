@@ -9,6 +9,7 @@ MAVEN_VERSION=3.6.2
 # kogito or optaplanner
 PROJECT=kogito
 DRY_RUN=false
+BRANCH=main
 
 usage() {
     echo 'Usage: update-quarkus-versions.sh -p $PROJECT -s $QUARKUS_VERSION -m $MAVEN_VERSION -b $BASE_BRANCH -f $FORK [-s] [-n]'
@@ -106,7 +107,6 @@ fi
 
 ORIGIN=kiegroup/$REPO
 PR_FORK=$FORK/$REPO
-BRANCH=main
 PREFIX=""
 if [ "$BRANCH" = "" ]; then BRANCH=$DEFAULT_BRANCH; else PREFIX="${BRANCH}-"; fi
 if [ "$BRANCH" = "main" ]; then PREFIX=""; else PREFIX="${BRANCH}-"; fi
