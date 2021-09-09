@@ -9,6 +9,7 @@ MAVEN_VERSION=3.6.2
 # kogito or optaplanner
 PROJECT=kogito
 DRY_RUN=false
+BRANCH=main
 
 usage() {
     echo 'Usage: update-quarkus-versions.sh -p $PROJECT -s $QUARKUS_VERSION -m $MAVEN_VERSION -b $BASE_BRANCH -f $FORK [-s] [-n]'
@@ -106,13 +107,12 @@ fi
 
 ORIGIN=kiegroup/$REPO
 PR_FORK=$FORK/$REPO
-BRANCH=main
 PREFIX=""
 if [ "$BRANCH" = "" ]; then BRANCH=$DEFAULT_BRANCH; else PREFIX="${BRANCH}-"; fi
 if [ "$BRANCH" = "main" ]; then PREFIX=""; else PREFIX="${BRANCH}-"; fi
 
 # kogito-runtimes or optaplanner
-PR_BRANCH=bump-${PREFIX}quarkus-$QUARKUS_VERSION
+PR_BRANCH=${BRANCH}-bump-${PREFIX}quarkus-$QUARKUS_VERSION
 
 echo PROJECT......$PROJECT 
 echo ORIGIN.......$ORIGIN
@@ -132,6 +132,8 @@ set -x
 git clone ${GITHUB_URL}${ORIGIN}
 cd $REPO
 
+git checkout $BRANCH
+
 # create branch named like version
 git checkout -b $PR_BRANCH
  
@@ -139,26 +141,31 @@ for i in "${MODULES[@]}"
 do
   # align third-party dependencies with Quarkus
   mvn versions:compare-dependencies \
-  -pl :${i} \
-  -DremotePom=io.quarkus:quarkus-bom:$QUARKUS_VERSION \
-  -DupdatePropertyVersions=true \
-  -DupdateDependencies=true \
-  -DgenerateBackupPoms=false
+    -pl :${i} \
+    -DremotePom=io.quarkus:quarkus-bom:$QUARKUS_VERSION \
+    -DupdatePropertyVersions=true \
+    -DupdateDependencies=true \
+    -DgenerateBackupPoms=false
  
   # update Quarkus version
   mvn -pl :${i} \
      versions:set-property \
      -Dproperty=version.io.quarkus \
+     -DnewVersion=$QUARKUS_VERSION \
+     -DgenerateBackupPoms=false
+
+  mvn -pl :${i} \
+     versions:set-property \
      -Dproperty=version.io.quarkus.quarkus-test-maven \
      -DnewVersion=$QUARKUS_VERSION \
      -DgenerateBackupPoms=false
  
   # pin Maven version
   mvn -pl :${i} \
-  versions:set-property \
-   -Dproperty=version.maven \
-   -DnewVersion=$MAVEN_VERSION \
-   -DgenerateBackupPoms=false
+    versions:set-property \
+    -Dproperty=version.maven \
+    -DnewVersion=$MAVEN_VERSION \
+    -DgenerateBackupPoms=false
 done
  
 # commit all
