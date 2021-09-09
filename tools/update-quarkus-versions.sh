@@ -132,6 +132,8 @@ set -x
 git clone ${GITHUB_URL}${ORIGIN}
 cd $REPO
 
+git checkout $BRANCH
+
 # create branch named like version
 git checkout -b $PR_BRANCH
  
