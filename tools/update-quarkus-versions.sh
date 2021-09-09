@@ -112,7 +112,7 @@ if [ "$BRANCH" = "" ]; then BRANCH=$DEFAULT_BRANCH; else PREFIX="${BRANCH}-"; fi
 if [ "$BRANCH" = "main" ]; then PREFIX=""; else PREFIX="${BRANCH}-"; fi
 
 # kogito-runtimes or optaplanner
-PR_BRANCH=bump-${PREFIX}quarkus-$QUARKUS_VERSION
+PR_BRANCH=${BRANCH}-bump-${PREFIX}quarkus-$QUARKUS_VERSION
 
 echo PROJECT......$PROJECT 
 echo ORIGIN.......$ORIGIN
