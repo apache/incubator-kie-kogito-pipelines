@@ -85,7 +85,7 @@ fi
 REPO=kogito-runtimes
 ORIGIN=kiegroup/$REPO
 PR_FORK=$FORK/$REPO
-PR_BRANCH=bump-${PREFIX}kie-$KIE_VERSION
+PR_BRANCH=${BRANCH}-bump-${PREFIX}kie-$KIE_VERSION
 
 
 echo ORIGIN.......$ORIGIN
