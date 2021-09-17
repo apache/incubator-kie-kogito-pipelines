@@ -168,8 +168,10 @@ pipeline {
         stage('Start 0-seed-job') {
             steps {
                 script {
-                    echo "Build '../0-seed-job'"
-                    build(job: "../0-seed-job", wait: true, propagate: true)
+                    List parameters = []
+                    parameters.add(booleanParam(name: 'FORCE_REBUILD', value: true))
+                    echo "Build '../0-seed-job' with parameters ${parameters}"
+                    build(job: "../0-seed-job", wait: true, parameters: parameters, propagate: true)
                 }
             }
         }
@@ -191,7 +193,7 @@ pipeline {
                             retry(48) {
                                 sleep(15, MINUTES)
                                 echo "Build '../nightly/master/kogito-nightly' with parameters ${parameters}"
-                            // def job = build(job: "../nightly/${getKogitoReleaseBranch()}/kogito-nightly", wait: true, parameters: parameters.values(), propagate: false)
+                            // def job = build(job: "../nightly/${getKogitoReleaseBranch()}/kogito-nightly", wait: true, parameters: parameters, propagate: false)
                             // sendNotification("Update version pipeline on branch ${getKogitoReleaseBranch()} has been started. Please review its status here: ${job.absoluteUrl}")
                             }
                         }
@@ -209,7 +211,7 @@ pipeline {
                             parameters.add(string(name: 'KOGITO_VERSION', value: env.MASTER_KOGITO_VERSION))
                             parameters.add(string(name: 'OPTAPLANNER_VERSION', value: util.getNextVersion(getOptaPlannerVersion(), 'micro')))
                             echo "Build '../nightly/master/kogito-nightly' with parameters ${parameters}"
-                        // build(job: "../nightly/master/kogito-nightly", wait: true, parameters: parameters.values(), propagate: false)
+                        // def job = build(job: "../nightly/master/kogito-nightly", wait: true, parameters: parameters, propagate: false)
                         // sendNotification("Update version pipeline on main branch has been started. Please review its status here: ${job.absoluteUrl}")
                         }
                     }
