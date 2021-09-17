@@ -180,8 +180,9 @@ pipeline {
                             // Retry every 15 min for the next 12 hours
                             retry(48) {
                                 sleep(15, MINUTES)
-                                def job = build(job: "../nightly/${getKogitoReleaseBranch()}/kogito-nightly", wait: true, parameters: parameters.values(), propagate: false)
-                                sendNotification("Update version pipeline on branch ${getKogitoReleaseBranch()} has been started. Please review its status here: ${job.absoluteUrl}")
+                                echo "Build '../nightly/master/kogito-nightly' with parameters ${parameters}"
+                                // def job = build(job: "../nightly/${getKogitoReleaseBranch()}/kogito-nightly", wait: true, parameters: parameters.values(), propagate: false)
+                                // sendNotification("Update version pipeline on branch ${getKogitoReleaseBranch()} has been started. Please review its status here: ${job.absoluteUrl}")
                             }
                         }
                     }
@@ -197,8 +198,9 @@ pipeline {
                             parameters.add(booleanParam(name: 'UPDATE_VERSIONS', value: true))
                             parameters.add(string(name: 'KOGITO_VERSION', value: env.MASTER_KOGITO_VERSION))
                             parameters.add(string(name: 'OPTAPLANNER_VERSION', value: util.getNextVersion(getOptaPlannerVersion(), 'micro')))
-                            build(job: "../nightly/master/kogito-nightly", wait: true, parameters: parameters.values(), propagate: false)
-                            sendNotification("Update version pipeline on main branch has been started. Please review its status here: ${job.absoluteUrl}")
+                            echo "Build '../nightly/master/kogito-nightly' with parameters ${parameters}"
+                            // build(job: "../nightly/master/kogito-nightly", wait: true, parameters: parameters.values(), propagate: false)
+                            // sendNotification("Update version pipeline on main branch has been started. Please review its status here: ${job.absoluteUrl}")
                         }
                     }
                 }
