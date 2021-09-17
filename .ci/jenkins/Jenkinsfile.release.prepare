@@ -10,7 +10,7 @@ OPTAPLANNER_QUICKSTARTS_REPO = 'optaplanner-quickstarts'
 
 PIPELINE_REPOS = ["${PIPELINE_REPO}"]
 RUNTIMES_REPOS = ['kogito-runtimes', 'kogito-apps', 'kogito-examples']
-OPTAPLANNER_REPOS = ["${OPTAPLANNER_REPO}", 'optaweb-vehicle-routing', 'optaweb-employee-rostering', "${OPTAPLANNER_QUICKSTARTS_REPO}"]
+OPTAPLANNER_REPOS = ["${OPTAPLANNER_REPO}", 'optaweb-vehicle-routing:main', 'optaweb-employee-rostering:main', "${OPTAPLANNER_QUICKSTARTS_REPO}:development"]
 IMAGES_REPOS = ['kogito-images']
 OPERATOR_REPOS = ['kogito-operator']
 
@@ -105,7 +105,7 @@ pipeline {
                         repositories.addAll(collectRepos(RUNTIMES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(IMAGES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
-                        repositories.addAll(collectRepos([OPTAPLANNER_REPO, OPTAPLANNER_QUICKSTARTS_REPO], getOptaPlannerReleaseBranch()))
+                        repositories.addAll(collectRepos(OPTAPLANNER_REPOS, getOptaPlannerReleaseBranch()))
 
                         if (params.BRANCH_PRODUCT_REPOSITORIES) {
                             repositories.addAll(collectRepos(KOGITO_PRODUCT_REPOS, getKogitoReleaseBranch()))
@@ -146,7 +146,7 @@ pipeline {
 
                         if (!seedConfig.git.branches.find { it == getKogitoReleaseBranch() }) {
                             seedConfig.git.branches.add(getKogitoReleaseBranch())
-                    }
+                        }
 
                         echo "Write seed config => ${seedConfig}"
                         sh "rm ${seedConfigFile}"
@@ -160,6 +160,7 @@ pipeline {
                         } else {
                             println '[WARN] No changes to PR'
                         }
+                    }
                 }
             }
         }
@@ -181,8 +182,8 @@ pipeline {
                             retry(48) {
                                 sleep(15, MINUTES)
                                 echo "Build '../nightly/master/kogito-nightly' with parameters ${parameters}"
-                                // def job = build(job: "../nightly/${getKogitoReleaseBranch()}/kogito-nightly", wait: true, parameters: parameters.values(), propagate: false)
-                                // sendNotification("Update version pipeline on branch ${getKogitoReleaseBranch()} has been started. Please review its status here: ${job.absoluteUrl}")
+                            // def job = build(job: "../nightly/${getKogitoReleaseBranch()}/kogito-nightly", wait: true, parameters: parameters.values(), propagate: false)
+                            // sendNotification("Update version pipeline on branch ${getKogitoReleaseBranch()} has been started. Please review its status here: ${job.absoluteUrl}")
                             }
                         }
                     }
@@ -199,20 +200,19 @@ pipeline {
                             parameters.add(string(name: 'KOGITO_VERSION', value: env.MASTER_KOGITO_VERSION))
                             parameters.add(string(name: 'OPTAPLANNER_VERSION', value: util.getNextVersion(getOptaPlannerVersion(), 'micro')))
                             echo "Build '../nightly/master/kogito-nightly' with parameters ${parameters}"
-                            // build(job: "../nightly/master/kogito-nightly", wait: true, parameters: parameters.values(), propagate: false)
-                            // sendNotification("Update version pipeline on main branch has been started. Please review its status here: ${job.absoluteUrl}")
+                        // build(job: "../nightly/master/kogito-nightly", wait: true, parameters: parameters.values(), propagate: false)
+                        // sendNotification("Update version pipeline on main branch has been started. Please review its status here: ${job.absoluteUrl}")
                         }
                     }
                 }
             }
         }
 
-        // TODO we should update here the Kogito version on release branch
-        // create a update all project version with a base branch and a boolean (merge automatically)
-        // this one will
-
-    // TODO we should create the PRs for the new Optaplanner version on master
+    // TODO we should update here the Kogito version on release branch
+    // create a update all project version with a base branch and a boolean (merge automatically)
+    // this one will
     }
+// TODO we should create the PRs for the new Optaplanner version on master
 }
 
 void createBranches(List repositories, String releaseBranch) {
