@@ -171,7 +171,7 @@ pipeline {
                     steps {
                         script {
                             // Call release branch nightly with `UPDATE_VERSIONS`
-                            List parameters = [:]
+                            List parameters = []
                             parameters.add(string(name: 'JOB_RETRY_NB', value: '3'))
                             parameters.add(booleanParam(name: 'SKIP_TESTS', value: true))
                             parameters.add(booleanParam(name: 'UPDATE_VERSIONS', value: true))
@@ -193,7 +193,7 @@ pipeline {
                     steps {
                         script {
                             // Call nightly with `UPDATE_VERSIONS`
-                            List parameters = [:]
+                            List parameters = []
                             parameters.add(string(name: 'JOB_RETRY_NB', value: '3'))
                             parameters.add(booleanParam(name: 'SKIP_TESTS', value: true))
                             parameters.add(booleanParam(name: 'UPDATE_VERSIONS', value: true))
