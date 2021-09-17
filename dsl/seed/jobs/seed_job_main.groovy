@@ -31,7 +31,7 @@ pipelineJob('0-seed-job') {
         stringParam('CUSTOM_MAIN_BRANCH', '', 'To generate only some custom repos... If no main_branch is given, then DSL config `git.main_branch` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
 
         stringParam('SEED_AUTHOR', 'radtriste', 'If different from the default')
-        stringParam('SEED_BRANCH', 'test-setup', 'If different from the default')
+        stringParam('SEED_BRANCH', 'kogito-5536', 'If different from the default')
 
         booleanParam('FORCE_REBUILD', false, 'Default, the job will scan for modified files and do the update in case some files are modified. In case you want to force the DSL generation')
     }
