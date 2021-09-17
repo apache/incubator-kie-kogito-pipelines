@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+tar xf  /tmp/artifacts/graalvm-ce-java11-linux-amd64-21.1.0.tar.gz  -C /usr/share
+mv /usr/share/graalvm-ce-java11-21.1.0   /usr/share/graalvm
+/usr/share/graalvm/bin/gu install native-image
