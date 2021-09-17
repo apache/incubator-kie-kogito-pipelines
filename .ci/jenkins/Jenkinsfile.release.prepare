@@ -165,6 +165,15 @@ pipeline {
             }
         }
 
+        stage('Start 0-seed-job') {
+            steps {
+                script {
+                    echo "Build '../0-seed-job'"
+                    build(job: "../0-seed-job", wait: true, propagate: true)
+                }
+            }
+        }
+
         stage('Update versions') {
             parallel {
                 stage('Update version on release branch') {
