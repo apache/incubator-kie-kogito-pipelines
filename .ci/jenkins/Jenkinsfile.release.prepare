@@ -103,7 +103,7 @@ pipeline {
                         repositories.addAll(collectRepos(RUNTIMES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(IMAGES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
-                        repositories.addAll(collectRepos([OPTAPLANNER_REPO, OPTAPLANNER_QUICKSTARTS_REPO], getOptaPlannerReleaseBranch()))
+                        repositories.addAll(collectRepos(OPTAPLANNER_REPOS, getOptaPlannerReleaseBranch()))
 
                         if (params.BRANCH_PRODUCT_REPOSITORIES) {
                             repositories.addAll(collectRepos(KOGITO_PRODUCT_REPOS, getKogitoReleaseBranch()))
