@@ -191,7 +191,7 @@ pipeline {
 
                             // Retry every 15 min for the next 12 hours
                             retry(48) {
-                                sleep(15, 'MINUTES')
+                                sleep(time: 15, unit: 'MINUTES')
                                 echo "Build '../nightly/master/kogito-nightly' with parameters ${parameters}"
                             // def job = build(job: "../nightly/${getKogitoReleaseBranch()}/kogito-nightly", wait: true, parameters: parameters, propagate: false)
                             // sendNotification("Update version pipeline on branch ${getKogitoReleaseBranch()} has been started. Please review its status here: ${job.absoluteUrl}")
@@ -310,6 +310,10 @@ String getUrl(String repo) {
     return repo.split(':')[0]
 }
 
+String getDefaultBaseBranch() {
+    return env.DEFAULT_BASE_BRANCH
+}
+
 String getBase(String repo) {
-    return (repo.find(':')) ? repo.split(':')[1] : env.DEFAULT_BASE_BRANCH
+    return (repo.find(':')) ? repo.split(':')[1] : getDefaultBaseBranch()
 }
