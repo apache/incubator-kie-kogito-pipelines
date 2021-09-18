@@ -171,7 +171,7 @@ pipeline {
                     List parameters = []
                     parameters.add(booleanParam(name: 'FORCE_REBUILD', value: true))
                     echo "Build '../0-seed-job' with parameters ${parameters}"
-                    build(job: "../0-seed-job", wait: true, parameters: parameters, propagate: true)
+                    build(job: "../0-seed-job", wait: true, parameters: parameters, propagate: false)
                 }
             }
         }
@@ -188,10 +188,10 @@ pipeline {
                             parameters.add(booleanParam(name: 'UPDATE_VERSIONS', value: true))
                             parameters.add(string(name: 'KOGITO_VERSION', value: getKogitoVersion()))
                             parameters.add(string(name: 'OPTAPLANNER_VERSION', value: getOptaPlannerVersion()))
-
-                            // Retry every 15 min for the next 12 hours
-                            retry(48) {
-                                sleep(time: 15, unit: 'MINUTES')
+                            
+                            // Retry every 5 min for the next 12 hours, should be enough time for the jobs to be generated
+                            retry(144) {
+                                sleep(time: 5, unit: 'MINUTES')
                                 echo "Build '../nightly/master/kogito-nightly' with parameters ${parameters}"
                             // def job = build(job: "../nightly/${getKogitoReleaseBranch()}/kogito-nightly", wait: true, parameters: parameters, propagate: false)
                             // sendNotification("Update version pipeline on branch ${getKogitoReleaseBranch()} has been started. Please review its status here: ${job.absoluteUrl}")
