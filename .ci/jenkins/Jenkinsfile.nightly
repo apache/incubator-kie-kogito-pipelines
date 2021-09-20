@@ -60,10 +60,7 @@ pipeline {
 
                     if (params.UPDATE_VERSIONS) {
                         currentBuild.displayName = "Update versions"
-                        currentBuild.description = """
-                            Kogito ${KOGITO_VERSION}
-                            Optaplanner ${OPTAPLANNER_VERSION}
-                        """
+                        currentBuild.description = "Kogito ${KOGITO_VERSION}\nOptaplanner ${OPTAPLANNER_VERSION}"
                     } else {
                         currentBuild.displayName = env.NIGHTLY_TAG
                     }
