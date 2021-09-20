@@ -58,7 +58,15 @@ pipeline {
                 script {
                     echo "nightly tag is ${env.NIGHTLY_TAG}"
 
-                    currentBuild.displayName = env.NIGHTLY_TAG
+                    if (params.UPDATE_VERSIONS) {
+                        currentBuild.displayName = "Update versions"
+                        currentBuild.description = """
+                            Kogito ${KOGITO_VERSION}
+                            Optaplanner ${OPTAPLANNER_VERSION}
+                        """
+                    } else {
+                        currentBuild.displayName = env.NIGHTLY_TAG
+                    }
                 }
             }
         }
