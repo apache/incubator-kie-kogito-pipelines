@@ -193,8 +193,8 @@ pipeline {
                             retry(144) {
                                 sleep(time: 5, unit: 'MINUTES')
                                 echo "Build '../nightly/master/kogito-nightly' with parameters ${parameters}"
-                            def job = build(job: "../nightly/${getKogitoReleaseBranch()}/kogito-nightly", wait: true, parameters: parameters, propagate: false)
-                            sendNotification("Update version pipeline on branch ${getKogitoReleaseBranch()} has been started. Please review its status here: ${job.absoluteUrl}")
+                                def job = build(job: "../nightly/${getKogitoReleaseBranch()}/kogito-nightly", wait: true, parameters: parameters, propagate: false)
+                                sendNotification("Update version pipeline on branch ${getKogitoReleaseBranch()} has been started. Please review its status here: ${job.absoluteUrl}")
                             }
                         }
                     }

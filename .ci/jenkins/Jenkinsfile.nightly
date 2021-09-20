@@ -306,7 +306,7 @@ pipeline {
 }
 
 def buildJob(String jobName, List buildParams, String jobKey = jobName) {
-    echo "[${jobKey}] Build ${jobName} with params ${buildParams}"
+    echo "[${jobKey}] Build ${jobName} with parameters ${buildParams}"
 
     def job = null
     retry(params.JOB_RETRY_NB.toInteger()) {
@@ -381,24 +381,24 @@ void sendPipelineErrorNotification() {
 
 List getDefaultBuildParams(String buildBranchName = '', String key = '') {
     buildBranchName = buildBranchName ?: getBuildBranch()
-    List params = []
-    addStringParam(params, 'DISPLAY_NAME', "${key ? "${key}-" : ''}${env.NIGHTLY_TAG}")
-    addBooleanParam(params, 'SEND_NOTIFICATION', true)
+    List buildParams = []
+    addStringParam(buildParams, 'DISPLAY_NAME', "${key ? "${key}-" : ''}${env.NIGHTLY_TAG}")
+    addBooleanParam(buildParams, 'SEND_NOTIFICATION', true)
 
     boolean skipTests = params.SKIP_TESTS
     if (params.UPDATE_VERSIONS) {
-        addBooleanParam(params, 'CREATE_PR', true)
-        addStringParam(params, 'KOGITO_VERSION', params.KOGITO_VERSION)
-        addStringParam(params, 'OPTAPLANNER_VERSION', params.OPTAPLANNER_VERSION)
+        addBooleanParam(buildParams, 'CREATE_PR', true)
+        addStringParam(buildParams, 'KOGITO_VERSION', params.KOGITO_VERSION)
+        addStringParam(buildParams, 'OPTAPLANNER_VERSION', params.OPTAPLANNER_VERSION)
         if (getBuildBranch() != 'master') {
-            addBooleanParam(params, 'MERGE_PR_AUTOMATICALLY', true)
+            addBooleanParam(buildParams, 'MERGE_PR_AUTOMATICALLY', true)
         }
         // Always skip tests for an update of version
         skipTests = true
     }
-    addBooleanParam(params, 'SKIP_TESTS', skipTests)
+    addBooleanParam(buildParams, 'SKIP_TESTS', skipTests)
 
-    return params
+    return buildParams
 }
 
 void addSkipIntegrationTestsParam(buildParams) {
@@ -422,12 +422,12 @@ void addDeployImageWithLatestTagParam(buildParams) {
     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
 }
 
-void addStringParam(List params, String key, String value) {
-    params.add(string(name: key, value: value))
+void addStringParam(List buildParams, String key, String value) {
+    buildParams.add(string(name: key, value: value))
 }
 
-void addBooleanParam(List params, String key, boolean value) {
-    params.add(booleanParam(name: key, value: value))
+void addBooleanParam(List buildParams, String key, boolean value) {
+    buildParams.add(booleanParam(name: key, value: value))
 }
 
 String constructKey(String prefix, String paramId) {
