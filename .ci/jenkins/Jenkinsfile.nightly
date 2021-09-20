@@ -388,7 +388,6 @@ List getDefaultBuildParams(String buildBranchName = '', String key = '') {
     buildBranchName = buildBranchName ?: getBuildBranch()
     List buildParams = []
     addStringParam(buildParams, 'DISPLAY_NAME', "${key ? "${key}-" : ''}${env.NIGHTLY_TAG}")
-    addBooleanParam(buildParams, 'SEND_NOTIFICATION', true)
 
     boolean skipTests = params.SKIP_TESTS
     if (params.UPDATE_VERSIONS) {
@@ -400,6 +399,8 @@ List getDefaultBuildParams(String buildBranchName = '', String key = '') {
         }
         // Always skip tests for an update of version
         skipTests = true
+    } else {
+        addBooleanParam(buildParams, 'SEND_NOTIFICATION', true)
     }
     addBooleanParam(buildParams, 'SKIP_TESTS', skipTests)
 
