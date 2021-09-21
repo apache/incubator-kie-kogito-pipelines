@@ -1,7 +1,13 @@
 // +++++++++++++++++++++++++++++++++++++++++++ create a seed job ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+import org.kie.jenkins.jobdsl.FolderUtils
+
+// Create all folders
+folder("${GENERATION_BRANCH}")
+FolderUtils.getAllNeededFolders().each { folder("${GENERATION_BRANCH}/${it}") }
+
 // Configuration of the seed and generated jobs is done via `dsl/seed/config.yaml`
-pipelineJob("${JOB_NAME}") {
+pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
     description("This job creates all needed Jenkins jobs on branch ${GENERATION_BRANCH}. DO NOT USE FOR TESTING !!!! See https://github.com/kiegroup/kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs")
 
     logRotator {
@@ -34,10 +40,10 @@ pipelineJob("${JOB_NAME}") {
             scm {
                 git {
                     remote {
-                        url('https://github.com/${SEED_AUTHOR}/kogito-pipelines.git')
+                        url("https://github.com/${SEED_AUTHOR}/kogito-pipelines.git")
                         credentials('kie-ci')
                     }
-                    branch('${SEED_BRANCH}')
+                    branch("${SEED_BRANCH}")
                     extensions {
                         cleanBeforeCheckout()
                     }
