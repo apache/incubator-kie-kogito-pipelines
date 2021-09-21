@@ -253,7 +253,7 @@ pipeline {
                             }
                             steps {
                                 script {
-                                    def buildParams = getDefaultBuildParams()
+                                    def buildParams = getDefaultBuildParams(getBuildBranch(), 'LTS')
                                     addSkipTestsParam(buildParams)
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG, defaultImageParamsPrefix, 'lts')
                                     addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
@@ -280,7 +280,7 @@ pipeline {
                             }
                             steps {
                                 script {
-                                    def buildParams = getDefaultBuildParams()
+                                    def buildParams = getDefaultBuildParams(getBuildBranch(), 'LTS')
                                     addSkipTestsParam(buildParams)
                                     addBooleanParam(buildParams, 'SKIP_DEPLOY', true)
 
