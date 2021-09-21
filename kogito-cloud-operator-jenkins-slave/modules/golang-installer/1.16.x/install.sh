@@ -1,3 +1,4 @@
 #!/bin/sh
 set -e
-tar -C /usr/local/ -xf  /tmp/artifacts/go1.16.linux-amd64.tar.gz
+mkdir -p /opt/tools/golang/1.16
+tar -C /opt/tools/golang/1.16 -xf /tmp/artifacts/go1.16.linux-amd64.tar.gz
