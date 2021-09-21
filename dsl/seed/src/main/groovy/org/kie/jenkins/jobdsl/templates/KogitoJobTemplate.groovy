@@ -462,7 +462,7 @@ class KogitoJobTemplate {
                     '\\.github/.*',
                     '\\.ci/jenkins/.*',
                 ],
-                ignore_for_labels: 'skip-ci',
+                ignore_for_labels: [ 'skip-ci', 'dsl-test' ], 
             ]
         ]
     }
