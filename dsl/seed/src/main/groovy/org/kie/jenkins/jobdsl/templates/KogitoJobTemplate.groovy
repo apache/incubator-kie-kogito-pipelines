@@ -2,6 +2,7 @@ package org.kie.jenkins.jobdsl.templates
 
 import org.kie.jenkins.jobdsl.KogitoConstants
 import org.kie.jenkins.jobdsl.RegexUtils
+import org.kie.jenkins.jobdsl.FolderUtils
 import org.kie.jenkins.jobdsl.Utils
 import org.kie.jenkins.jobdsl.VersionUtils
 
@@ -34,7 +35,6 @@ class KogitoJobTemplate {
     *
     */
     static def createPipelineJob(def script, Map jobParams = [:]) {
-        Utils.createFolderHierarchy(script, jobParams.job.folder)
         return script.pipelineJob("${jobParams.job.folder}/${jobParams.job.name}") {
             description("""
                         ${jobParams.job.description ?: jobParams.job.name} on branch ${jobParams.git.branch}\n
@@ -117,7 +117,7 @@ class KogitoJobTemplate {
         jobParams.pr = jobParams.pr ?: [:] // Setup default config for pr to avoid NullPointerException
 
         if (!jobParams.job.folder) {
-            jobParams.job.folder = "${KogitoConstants.KOGITO_DSL_PULLREQUEST_FOLDER}/${Utils.getJobBranchFolder(script)}"
+            jobParams.job.folder = FolderUtils.getPullRequestFolder(script)
         }
 
         return createPipelineJob(script, jobParams).with {
