@@ -6,15 +6,6 @@ import groovy.json.JsonOutput
 
 class Utils {
 
-    static def createFolderHierarchy(def script, String folderFullPath) {
-        String folderPath = ''
-        folderFullPath.split('/').findAll { it != '' }.each {
-            folderPath = folderPath ? "${folderPath}/${it}" : it
-            println "Create job folder ${folderPath}"
-            script.folder(folderPath)
-    }
-}
-
     static def deepCopyObject(def originalMap) {
         return new JsonSlurper().parseText(JsonOutput.toJson(originalMap))
     }
@@ -60,7 +51,7 @@ class Utils {
     static String getGitBranch(def script) {
         return getBindingValue(script, 'GIT_BRANCH')
     }
-    
+
     static String getGitMainBranch(def script) {
         return getBindingValue(script, 'GIT_MAIN_BRANCH')
     }
@@ -75,10 +66,6 @@ class Utils {
 
     static String getGitAuthorTokenCredsId(def script) {
         return getBindingValue(script, 'GIT_AUTHOR_TOKEN_CREDENTIALS_ID')
-    }
-
-    static String getJobBranchFolder(def script) {
-        return getBindingValue(script, 'JOB_BRANCH_FOLDER')
     }
 
     static String getJenkinsConfigPath(def script, String repoName) {

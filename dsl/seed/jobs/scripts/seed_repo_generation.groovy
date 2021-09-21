@@ -22,13 +22,13 @@ def generate() {
         return
     }
 
-    node('kie-rhel7 && kie-mem4g') {
+    node('kie-rhel7 && kie-mem8g') {
         initNode()
 
         stage('Prepare jobs') {
             def repoConfig = getRepoConfig()
             String jobsFilePath = "${repoConfig.git.jenkins_config_path}/dsl/jobs.groovy"
-            if (repoConfig.disable.branch) {
+            if (repoConfig.disabled || repoConfig.disable.branch) {
                 jobsFilePath = "${SEED_REPO}/${SEED_FOLDER}/jobs/empty_job_dsl.groovy"
             }
             echo "Copying DSL jobs file ${jobsFilePath}"
@@ -48,7 +48,7 @@ def generate() {
 
         stage('Generate jobs') {
             def envProps = getRepoEnvProperties()
-            envProps.put('JOB_BRANCH_FOLDER', "${GENERATION_BRANCH}")
+            def repoConfig = getRepoConfig()
             envProps.put('GIT_MAIN_BRANCH', "${GIT_MAIN_BRANCH}")
 
             // Add other repos `jenkins_config_path` var (useful if multijob PR checks for example)
@@ -70,10 +70,8 @@ def generate() {
                 sandbox: false,
                 ignoreExisting: false,
                 ignoreMissingFiles: false,
-                // TODO DELETE should be done once all jobs of a branch are in separate branch folder
-                // Doing it before that is dangerous and may remove some other jobs ...
-                removedJobAction: 'IGNORE',
-                removedViewAction: 'IGNORE',
+                removedJobAction: repoConfig.disable.branch || repoConfig.disabled ? 'DISABLE' : 'DELETE',
+                removedViewAction: 'DELETE',
                 //removedConfigFilesAction: 'IGNORE',
                 lookupStrategy: 'SEED_JOB',
                 additionalClasspath: 'src/main/groovy',

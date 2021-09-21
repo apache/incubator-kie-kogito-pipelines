@@ -61,7 +61,7 @@ pipeline {
             stages {
                 stage('Generate jobs') {
                     agent {
-                        label 'kie-rhel7 && kie-mem4g'
+                        label 'kie-rhel7 && kie-mem8g'
                     }
                     tools {
                         jdk 'kie-jdk1.8'
@@ -87,8 +87,8 @@ pipeline {
                                                         sandbox: false,
                                                         ignoreExisting: false,
                                                         ignoreMissingFiles: false,
-                                                        removedJobAction: 'IGNORE',
-                                                        removedViewAction: 'IGNORE',
+                                                        removedJobAction: 'DISABLE',
+                                                        removedViewAction: 'DELETE',
                                                         //removedConfigFilesAction: 'IGNORE',
                                                         lookupStrategy: 'SEED_JOB',
                                                         additionalClasspath: 'src/main/groovy',
@@ -139,7 +139,7 @@ pipeline {
 }
 
 String getRepoBranchSeedJobName(String repository) {
-    return "z-seed-${GENERATION_BRANCH}-${repository}-job"
+    return "z-seed-${repository}-job"
 }
 
 boolean getMainBranch(String repository) {

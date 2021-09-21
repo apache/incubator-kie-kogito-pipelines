@@ -48,6 +48,9 @@ def getRepoConfig(String repository, String generationBranch, String seedRepoPat
     def cfg = deepCopyObject(branchConfig)
     cfg.remove('repositories')
 
+    // In case repository is disabled
+    cfg.disabled = repoConfig.disabled ?: false
+
     cfg.git.branch = repoConfig.branch ?: generationBranch
     cfg.git.jenkins_config_path = repoConfig.jenkins_config_path ?: cfg.git.jenkins_config_path
 

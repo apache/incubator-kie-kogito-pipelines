@@ -9,6 +9,7 @@ import javaposse.jobdsl.dsl.GeneratedJob
 import javaposse.jobdsl.dsl.GeneratedView
 import javaposse.jobdsl.dsl.JobManagement
 import javaposse.jobdsl.plugin.JenkinsJobManagement
+import javaposse.jobdsl.dsl.Folder
 import jenkins.model.Jenkins
 import org.junit.ClassRule
 import org.jvnet.hudson.test.JenkinsRule
@@ -40,7 +41,6 @@ class JobScriptsSpec extends Specification {
         Map<String, ?> envVars = TestUtil.readBranchConfig()
         envVars.put('DEBUG', false)
         envVars.put('JOB_NAME', 'JOB_NAME')
-        envVars.put('JOB_BRANCH_FOLDER', 'seed_branch')
         envVars.put('GENERATION_BRANCH', 'GENERATION_BRANCH')
         envVars.put('REPO_NAME', 'REPO_NAME')
         envVars.put('GIT_MAIN_BRANCH', 'GIT_MAIN_BRANCH')
@@ -58,6 +58,12 @@ class JobScriptsSpec extends Specification {
 
         envVars.put('GIT_JENKINS_CONFIG_PATH', 'GIT_JENKINS_CONFIG_PATH')
         JobManagement jm = new JenkinsJobManagement(System.out, envVars, new File('.'))
+        jm.createOrUpdateConfig(new Folder(jm, 'nightly'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'release'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'tools'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'pullrequest'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'other'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'kogito-runtimes.bdd'), true)
 
         when:
         GeneratedItems items = new DslScriptLoader(jm).runScript(file.text)
