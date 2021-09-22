@@ -291,6 +291,7 @@ class KogitoJobTemplate {
             jobParams.job.folder = prFolder
             jobParams.env = jobParams.env ?: [:]
             jobParams.pr = jobParams.pr ?: [:]
+            KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
 
             // Kept for backward compatibility
             jobParams.job.name += testTypeId ? ".${testTypeId}" : ''

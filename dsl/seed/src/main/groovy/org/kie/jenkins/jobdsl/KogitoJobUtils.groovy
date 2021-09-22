@@ -54,6 +54,21 @@ class KogitoJobUtils {
         return jobParams
     }
 
+    static def setupJobParamsDefaultJDKConfiguration(def script, def jobParams) {
+        jobParams.env = jobParams.env ?: [:]
+        jobParams.env.putAll([
+            BUILD_JDK_TOOL: Utils.getJenkinsDefaultJDKTools(script),
+        ])
+    }
+
+    static def setupJobParamsDefaultMavenConfiguration(def script, def jobParams) {
+        jobParams.env = jobParams.env ?: [:]
+        setupJobParamsDefaultJDKConfiguration(script, jobParams)
+        jobParams.env.putAll([
+            BUILD_MAVEN_TOOL: Utils.getJenkinsDefaultMavenTools(script),
+        ])
+    }
+
     /**
     * Seed job params are used for `common` jenkinsfiles which are taken from the seed
     **/
@@ -68,6 +83,7 @@ class KogitoJobUtils {
 
     static def createVersionUpdateToolsJob(def script, String repository, String dependencyName, def mavenUpdate = [:], def gradleUpdate = [:], def filepathReplaceRegex = [:]) {
         def jobParams = getSeedJobParams(script, "update-${dependencyName.toLowerCase()}-${repository}", Folder.TOOLS, 'Jenkinsfile.tools.update-dependency-version', "Update ${dependencyName} version for ${repository}")
+        KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
         // Setup correct checkout branch for pipelines
         jobParams.env.putAll([
             REPO_NAME: "${repository}",

@@ -1,11 +1,13 @@
 // +++++++++++++++++++++++++++++++++++++++++++ create a seed job ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-import org.kie.jenkins.jobdsl.KogitoConstants
 import org.kie.jenkins.jobdsl.SeedJobUtils
 import org.kie.jenkins.jobdsl.Utils
 
+KOGITO_PIPELINES_REPOSITORY = 'kogito-pipelines'
+DEFAULT_CREDENTIALS_ID = 'kie-ci'
+
 String getSeedRepo() {
-    return Utils.getSeedRepo(this) ?: KogitoConstants.KOGITO_PIPELINES_REPOSITORY
+    return Utils.getSeedRepo(this) ?: KOGITO_PIPELINES_REPOSITORY
 }
 
 String getSeedAuthor() {
@@ -13,7 +15,7 @@ String getSeedAuthor() {
 }
 
 String getSeedAuthorCredsId() {
-    return Utils.getSeedAuthorCredsId(this) ?: KogitoConstants.DEFAULT_CREDENTIALS_ID
+    return Utils.getSeedAuthorCredsId(this) ?: DEFAULT_CREDENTIALS_ID
 }
 
 String getSeedBranch() {
@@ -21,7 +23,7 @@ String getSeedBranch() {
 }
 
 String getSeedConfigFileGitRepository() {
-    return SEED_CONFIG_FILE_GIT_REPOSITORY ?: KogitoConstants.KOGITO_PIPELINES_REPOSITORY
+    return SEED_CONFIG_FILE_GIT_REPOSITORY ?: KOGITO_PIPELINES_REPOSITORY
 }
 
 String getSeedConfigFileGitAuthorName() {
@@ -29,7 +31,7 @@ String getSeedConfigFileGitAuthorName() {
 }
 
 String getSeedConfigFileGitAuthorCredsId() {
-    return SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID ?: KogitoConstants.DEFAULT_CREDENTIALS_ID
+    return SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID ?: DEFAULT_CREDENTIALS_ID
 }
 
 String getSeedConfigFileGitBranch() {

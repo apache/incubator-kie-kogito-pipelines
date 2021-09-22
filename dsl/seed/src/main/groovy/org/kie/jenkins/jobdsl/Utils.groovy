@@ -108,6 +108,18 @@ class Utils {
         return getBindingValue(script, 'JENKINS_EMAIL_CREDS_ID')
     }
 
+    static String getJenkinsDefaultTools(def script, String toolsName) {
+        return getBindingValue(script, "JENKINS_DEFAULT_TOOLS_${toolsName.toUpperCase()}")
+    }
+
+    static String getJenkinsDefaultJDKTools(def script) {
+        return getJenkinsDefaultTools(script, 'jdk')
+    }
+
+    static String getJenkinsDefaultMavenTools(def script) {
+        return getJenkinsDefaultTools(script, 'maven')
+    }
+
     static String getSeedRepo(def script) {
         return getBindingValue(script, 'SEED_REPO')
     }
