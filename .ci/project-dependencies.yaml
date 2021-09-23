@@ -105,6 +105,9 @@ dependencies:
     mapping:
       dependencies:
         default:
+          - source: development
+            target: main
+        kiegroup/kogito-runtimes:
           - source: (8)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
           - source: development
