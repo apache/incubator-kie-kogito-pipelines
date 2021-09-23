@@ -1,4 +1,4 @@
-name: org.kie.kogito.golang
+name: org.kie.kogito.golang.114
 version: "1.14"
 description: "Module used to install golang 1.14"
 artifacts: 
@@ -7,3 +7,6 @@ artifacts:
     md5: da94f0de926add9eea1c73698117238a
 execute:
   - script: install.sh
+envs:
+  - name: "GOROOT"
+    value: "/opt/tools/golang/1.16/go"
