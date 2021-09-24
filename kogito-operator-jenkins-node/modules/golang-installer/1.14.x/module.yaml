@@ -1,12 +1,14 @@
 name: org.kie.kogito.golang.114
 version: "1.14"
 description: "Module used to install golang 1.14"
+envs:
+  - name: GOPATH
+    value: /home/jenkins/go
+  - name: PATH
+    value: /home/jenkins/go/bin:$PATH
 artifacts: 
   - name: go1.14.linux-amd64.tar.gz
     url: https://dl.google.com/go/go1.14.linux-amd64.tar.gz
     md5: da94f0de926add9eea1c73698117238a
 execute:
   - script: install.sh
-envs:
-  - name: "GOROOT"
-    value: "/opt/tools/golang/1.14/go"

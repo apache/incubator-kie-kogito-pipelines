@@ -1,12 +1,14 @@
 name: org.kie.kogito.golang.116
 version: "1.16"
 description: "Module used to install golang 1.16"
+envs:
+  - name: GOPATH
+    value: /home/jenkins/go
+  - name: PATH
+    value: /home/jenkins/go/bin:$PATH
 artifacts: 
   - name: go1.16.linux-amd64.tar.gz
     url: https://dl.google.com/go/go1.16.linux-amd64.tar.gz
     md5: 1b92b0d2c230522ba499b4e7d3f1769b
 execute:
   - script: install.sh
-envs:
-  - name: "GOROOT"
-    value: "/opt/tools/golang/1.16/go"
