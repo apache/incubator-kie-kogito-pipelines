@@ -49,7 +49,7 @@ pipeline {
 
                     configFileProvider([configFile(fileId: getSettingsXmlId(), variable: 'MAVEN_SETTINGS_FILE')]) {
                         withCredentials([string(credentialsId: 'kie-ci1-token', variable: 'GITHUB_TOKEN')]) {
-                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/\${GROUP}/kogito-pipelines/main/.ci/${buildChainActionInfo.file}' -folder='bc' build ${buildChainActionInfo.action} -url=${env.ghprbPullLink} ${buildChainActionInfo.arguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true'"
+                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/${getBuildChainConfigBranch()}/.ci/${buildChainActionInfo.file}' -folder='bc' build ${buildChainActionInfo.action} -url=${env.ghprbPullLink} ${buildChainActionInfo.arguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true'"
                         }
                     }
                 }
@@ -153,6 +153,10 @@ def getBuildChainActionInfo() {
 
 def getBuildChainAdditionalArguments() {
     return env.BUILDCHAIN_PROJECT ? "-sp=${env.BUILDCHAIN_PROJECT.trim()}" : ''
+}
+
+String getBuildChainConfigBranch() {
+    return env.BUILDCHAIN_CONFIG_BRANCH ?: 'main'
 }
 
 String getSettingsXmlId() { 
