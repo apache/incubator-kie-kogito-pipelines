@@ -40,7 +40,7 @@ pipeline {
                     sh 'podman tag kogito-operator-jenkins-node:latest quay.io/tradisso/kogito-operator-jenkins-node:latest'
 
                     withCredentials([usernamePassword(credentialsId: 'tradisso-quay', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PWD')]) {
-                        sh "podman login -u ${REGISTRY_USER} -p ${REGISTRY_PWD} quay.io"
+                        sh "podman login --tls-verify=false -u ${REGISTRY_USER} -p ${REGISTRY_PWD} quay.io"
                     }
                     sh 'podman push quay.io/tradisso/kogito-operator-jenkins-node:latest'
                 }
