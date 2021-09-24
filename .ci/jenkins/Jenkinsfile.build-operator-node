@@ -4,7 +4,7 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 pipeline {
     agent {
-        label 'operator-slave'
+        label 'kogito-operator-node'
     }
 
     options {
@@ -21,7 +21,7 @@ pipeline {
                 script {
                     deleteDir()
                     // TODO to change
-                    checkout(githubscm.resolveRepository('kogito-pipelines', 'radtriste', 'update_slave_node', false))
+                    checkout(githubscm.resolveRepository('kogito-pipelines', 'radtriste', 'update_slave_node_community', false))
                 }
             }
         }

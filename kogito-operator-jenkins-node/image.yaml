@@ -1,12 +1,9 @@
 name: kogito-operator-jenkins-node
 version: "1.12.0"
-from: registry.redhat.io/openshift4/ose-jenkins-agent-base
-description: Image used by dynamic jenkins slave to build kogito-cloud-operator using podman
+from: quay.io/openshift/origin-jenkins-agent-base
+description: Image used by dynamic jenkins node to build kogito-operator
+
 packages:
-  content_sets:
-    x86_64:
-      - rhel-8-for-x86_64-baseos-rpms
-      - rhel-8-for-x86_64-appstream-rpms
   manager: dnf
   install:
     - gcc
