@@ -29,7 +29,7 @@ pipeline {
             steps {
                 script {
                     dir('kogito-operator-jenkins-node') {
-                        sh 'cekit -v build docker'
+                        sh 'cekit -v build podman'
                     }
                 }
             }
@@ -37,12 +37,12 @@ pipeline {
         stage('Tag and push') {
             steps {
                 script {
-                    sh 'docker tag kogito-operator-jenkins-node:latest quay.io/tradisso/kogito-operator-jenkins-node:latest'
+                    sh 'podman tag kogito-operator-jenkins-node:latest quay.io/tradisso/kogito-operator-jenkins-node:latest'
 
                     withCredentials([usernamePassword(credentialsId: 'tradisso-quay', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PWD')]) {
-                        sh "docker login -u ${REGISTRY_USER} -p ${REGISTRY_PWD} quay.io"
+                        sh "podman login -u ${REGISTRY_USER} -p ${REGISTRY_PWD} quay.io"
                     }
-                    sh 'docker push quay.io/tradisso/kogito-operator-jenkins-node:latest'
+                    sh 'podman push quay.io/tradisso/kogito-operator-jenkins-node:latest'
                 }
             }
         }
