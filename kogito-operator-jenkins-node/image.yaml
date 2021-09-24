@@ -3,12 +3,6 @@ version: "1.12.0"
 from: quay.io/openshift/origin-jenkins-agent-base
 description: Image used by dynamic jenkins node to build kogito-operator
 
-envs:
-  - name: "LANG"
-    value: "C.utf8"
-  - name: "LC_NAME"
-    value: "C.utf8"
-
 modules:
   repositories:
     - path: modules
