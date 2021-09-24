@@ -6,10 +6,11 @@ CREATE_RELEASE_BRANCHES = 'create-release-branches'
 
 PIPELINE_REPO = 'kogito-pipelines'
 OPTAPLANNER_REPO = 'optaplanner'
+OPTAPLANNER_QUICKSTARTS_REPO = 'optaplanner-quickstarts'
 
 PIPELINE_REPOS = ["${PIPELINE_REPO}"]
 RUNTIMES_REPOS = ['kogito-runtimes', 'kogito-apps', 'kogito-examples']
-OPTAPLANNER_REPOS = ["${OPTAPLANNER_REPO}", 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'optaplanner-quickstarts:development']
+OPTAPLANNER_REPOS = ["${OPTAPLANNER_REPO}", 'optaweb-vehicle-routing', 'optaweb-employee-rostering', "${OPTAPLANNER_QUICKSTARTS_REPO}:development"]
 IMAGES_REPOS = ['kogito-images']
 OPERATOR_REPOS = ['kogito-operator']
 
@@ -102,7 +103,7 @@ pipeline {
                         repositories.addAll(collectRepos(RUNTIMES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(IMAGES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
-                        repositories.addAll(collectRepos([OPTAPLANNER_REPO], getOptaPlannerReleaseBranch()))
+                        repositories.addAll(collectRepos(OPTAPLANNER_REPOS, getOptaPlannerReleaseBranch()))
 
                         if (params.BRANCH_PRODUCT_REPOSITORIES) {
                             repositories.addAll(collectRepos(KOGITO_PRODUCT_REPOS, getKogitoReleaseBranch()))

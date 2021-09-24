@@ -168,8 +168,8 @@ class KogitoJobTemplate {
                             skipBuildPhrase(".*\\[skip\\W+ci\\].*")
                             displayBuildErrorsOnDownstreamBuilds(false)
                             cron('')
-                            whitelist(jobParams.git.author)
-                            orgslist(jobParams.git.author)
+                            whitelist(jobParams.pr.authorized_users ? jobParams.pr.authorized_users.join('\n') : jobParams.git.author)
+                            orgslist(jobParams.pr.authorized_groups ? jobParams.pr.authorized_groups.join('\n') : jobParams.git.author)
                             blackListLabels(jobParams.pr.ignore_for_labels ? jobParams.pr.ignore_for_labels.join('\n') : '')
                             whiteListLabels(jobParams.pr.run_only_for_labels ? jobParams.pr.run_only_for_labels.join('\n') : '')
                             allowMembersOfWhitelistedOrgsAsAdmin(true)
@@ -242,6 +242,7 @@ class KogitoJobTemplate {
     *     commitContext => 'LTS' commit context
     *   env:
     *     QUARKUS_BRANCH => LTS quarkus branch
+    *     LTS => true
     **/
     static def createQuarkusLTSPRJob(def script, Map jobParams = [:]) {
         def quarkusLtsVersion = Utils.getQuarkusLTSVersion(script)
@@ -258,6 +259,7 @@ class KogitoJobTemplate {
 
         jobParams.env = jobParams.env ?: [:]
         jobParams.env.put('QUARKUS_BRANCH', quarkusLtsVersion)
+        jobParams.env.put('LTS', true)
 
         return createPRJob(script, jobParams)
     }
@@ -321,6 +323,7 @@ class KogitoJobTemplate {
         String triggerPhraseTestType = RegexUtils.getRegexMultipleCase(testTypeId)
 
         boolean parallel = multijobConfig.parallel
+        boolean useBuildChain = multijobConfig.buildchain
 
         multijobConfig.jobs.each { jobCfg ->
             def jobParams = defaultParamsGetter()
@@ -328,23 +331,30 @@ class KogitoJobTemplate {
             jobParams.pr = jobParams.pr ?: [:]
 
             jobParams.job.name += testTypeId ? ".${testTypeId}" : ''
-            if (jobCfg.repository) { // Downstream job
+
+            // Update jenkinsfile path
+            if (jobCfg.jenkinsfile) {
+                jobParams.jenkinsfile = jobCfg.jenkinsfile
+            }
+
+            jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
+
+            if (jobCfg.repository && jobCfg.repository != jobParams.git.repository ) { // Downstream job
                 jobParams.env.put('DOWNSTREAM_BUILD', true)
                 jobParams.env.put('UPSTREAM_TRIGGER_PROJECT', jobParams.git.repository)
                 jobParams.job.description = "Run ${testTypeName} tests of ${jobCfg.repository} due to changes in ${jobParams.git.repository} repository"
                 jobParams.job.name += '.downstream'
-                // If downstream repo, checkout target branch for Jenkinsfile
-                // For now there is a problem of matching when putting both branch
-                // Sometimes it takes the source, sometimes the target ...
-                jobParams.pr.checkout_branch = VersionUtils.getProjectTargetBranch(jobCfg.repository, jobParams.git.branch, jobParams.git.repository)
 
-                jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
-                jobParams.git.repository = jobCfg.repository
+                // Checkout targeted repo and build it
+                // Buildchain will use other settings and we should not interfere here
+                if (!useBuildChain) {
+                    jobParams.pr.checkout_branch = VersionUtils.getProjectTargetBranch(jobCfg.repository, jobParams.git.branch, jobParams.git.repository)
+                    jobParams.git.repository = jobCfg.repository
+                }
             } else {
                 jobParams.job.description = "Run tests from ${jobParams.git.repository} repository"
             }
-            jobParams.job.name += ".${jobCfg.id.toLowerCase()}"
-
+            
             // Update jenkinsfile path
             String defaultJenkinsConfigPath = Utils.getJenkinsConfigPath(script, jobParams.git.repository)
             if (jobCfg.jenkinsfile) {
@@ -352,6 +362,17 @@ class KogitoJobTemplate {
             } else if (defaultJenkinsConfigPath) {
                 jobParams.jenkinsfile = "${defaultJenkinsConfigPath}/Jenkinsfile"
             }
+            
+            if (useBuildChain) {
+                // Buildchain uses centralized configuration for Jenkinsfile.buildchain to checkout
+                // Overrides configuration already done
+                jobParams.pr.checkout_branch = VersionUtils.getProjectTargetBranch(KogitoConstants.BUILDCHAIN_REPOSITORY, jobParams.git.branch, jobParams.git.repository)
+                jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository ?: jobParams.git.repository}")
+                jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
+                jobParams.git.repository = KogitoConstants.BUILDCHAIN_REPOSITORY
+                jobParams.jenkinsfile = KogitoConstants.BUILDCHAIN_JENKINSFILE_PATH
+            }
+            jobParams.job.name += ".${jobCfg.id.toLowerCase()}"
 
             jobParams.pr.putAll([
                 commitContext: getTypedId(testTypeName, jobCfg.id),
@@ -368,7 +389,7 @@ class KogitoJobTemplate {
                 jobParams.pr.trigger_phrase = "(${multijobConfig.primaryTriggerPhrase ?: KogitoConstants.KOGITO_DEFAULT_PR_TRIGGER_PHRASE})"
                 jobParams.pr.trigger_phrase += '|' + generateMultiJobTriggerPhrasePattern(triggerPhraseTestType, parallel ? RegexUtils.getRegexMultipleCase(jobCfg.id) : '')
             } else if (jobCfg.dependsOn) {
-                // Sequential and need to wait for another job to complete
+                // Sequential and need to wait for another job to complete`
                 jobParams.pr.trigger_phrase_only = true
                 jobParams.pr.trigger_phrase = "(.*${getTypedId(testTypeName, jobCfg.dependsOn, true)}.*successful.*)"
                 jobParams.pr.trigger_phrase += '|' + generateMultiJobTriggerPhrasePattern(triggerPhraseTestType, RegexUtils.getRegexMultipleCase(jobCfg.id))
@@ -381,6 +402,9 @@ class KogitoJobTemplate {
             }
 
             // Update env
+            if (jobCfg.env) {
+                jobParams.env.putAll(jobCfg.env)
+            }
             if (multijobConfig.extraEnv) {
                 jobParams.env.putAll(multijobConfig.extraEnv)
             }
@@ -402,7 +426,11 @@ class KogitoJobTemplate {
     */
     static def createMultijobLTSPRJobs(def script, Map multijobConfig, Closure defaultParamsGetter) {
         multijobConfig.testType = 'LTS'
-        multijobConfig.extraEnv = [ QUARKUS_BRANCH: Utils.getQuarkusLTSVersion(script) ]
+        multijobConfig.extraEnv = multijobConfig.extraEnv ?: [:]
+        multijobConfig.extraEnv.putAll([
+            QUARKUS_BRANCH: Utils.getQuarkusLTSVersion(script),
+            LTS: true
+        ])
         multijobConfig.optional = true
         multijobConfig.primaryTriggerPhrase = KogitoConstants.KOGITO_LTS_PR_TRIGGER_PHRASE
         createMultijobPRJobs(script, multijobConfig, defaultParamsGetter)
@@ -421,7 +449,8 @@ class KogitoJobTemplate {
     */
     static def createMultijobNativePRJobs(def script, Map multijobConfig, Closure defaultParamsGetter) {
         multijobConfig.testType = 'native'
-        multijobConfig.extraEnv = [ NATIVE: true ]
+        multijobConfig.extraEnv = multijobConfig.extraEnv ?: [:]
+        multijobConfig.extraEnv.putAll([ NATIVE: true ])
         multijobConfig.optional = true
         multijobConfig.primaryTriggerPhrase = KogitoConstants.KOGITO_NATIVE_PR_TRIGGER_PHRASE
         createMultijobPRJobs(script, multijobConfig, defaultParamsGetter)

@@ -6,22 +6,28 @@ disable:
   triggers: false
   branch: false
 repositories:
-- name: kogito-pipelines
-  branch: 1.11.x
-- name: kogito-runtimes
-  branch: 1.11.x
-- name: kogito-apps
-  branch: 1.11.x
-- name: kogito-examples
-  branch: 1.11.x
-- name: kogito-images
-  branch: 1.11.x
-- name: kogito-operator
-  branch: 1.11.x
-- name: optaplanner
-  branch: 8.11.x
-- name: rhpam-kogito-operator
-  branch: 1.11.x
+  - name: kogito-pipelines
+    branch: 1.11.x
+  - name: kogito-runtimes
+    branch: 1.11.x
+  - name: optaplanner
+    branch: 8.11.x
+  - name: optaweb-employee-rostering
+    branch: 8.11.x
+  - name: optaweb-vehicle-routing
+    branch: 8.11.x
+  - name: optaplanner-quickstarts
+    branch: 8.11.x
+  - name: kogito-apps
+    branch: 1.11.x
+  - name: kogito-examples
+    branch: 1.11.x
+  - name: kogito-images
+    branch: 1.11.x
+  - name: kogito-operator
+    branch: 1.11.x
+  - name: rhpam-kogito-operator
+    branch: 1.11.x
 git:
   author:
     name: kiegroup

@@ -4,6 +4,9 @@ package org.kie.jenkins.jobdsl
 class VersionUtils {
 
     static String getProjectTargetBranch(String project, String branch, String upstreamProject) {
+        if (isOptaplannerQuickstartsProject(upstreamProject) && branch == 'development') {
+            return 'main'
+        }
         if (isKogitoProject(project)) {
             return getTargetBranch(branch, isOptaplannerProject(upstreamProject) ? -7 : 0)
         } else if (isOptaplannerProject(project)) {
@@ -18,9 +21,8 @@ class VersionUtils {
         String [] versionSplit = targetBranch.split("\\.")
         if (versionSplit.length == 3
             && versionSplit[0].isNumber()
-            && versionSplit[1].isNumber()
-            && versionSplit[2] == 'x') {
-            targetBranch = "${Integer.parseInt(versionSplit[0]) + addToMajor}.${versionSplit[1]}.x"
+            && versionSplit[1].isNumber()) {
+            targetBranch = "${Integer.parseInt(versionSplit[0]) + addToMajor}.${versionSplit[1]}.${versionSplit[2]}"
         } else {
             println "Cannot parse branch as release branch so going further with current value: ${branch}"
         }
@@ -33,6 +35,10 @@ class VersionUtils {
 
     static boolean isOptaplannerProject(String project) {
         return project.startsWith('opta')
+    }
+
+    static boolean isOptaplannerQuickstartsProject(String project) {
+        return project == 'optaplanner-quickstarts'
     }
 
 }
