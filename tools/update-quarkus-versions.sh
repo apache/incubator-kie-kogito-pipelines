@@ -6,8 +6,8 @@ GITHUB_URL_SSH="git@github.com:"
 
 MAVEN_VERSION=3.6.2
 
-# kogito/optaplanner/examples
-PROJECT=kogito
+# kogito-runtimes, optaplanner. kogito-examples or optaplanner-quickstarts
+REPO=kogito-runtimes
 DRY_RUN=false
 BRANCH=main
 
@@ -15,7 +15,7 @@ usage() {
     echo 'Usage: update-quarkus-versions.sh -p $PROJECT -s $QUARKUS_VERSION -m $MAVEN_VERSION -b $BASE_BRANCH -f $FORK [-s] [-n]'
     echo
     echo 'Options:'
-    echo '  -p $PROJECT          set kogito or optaplanner -- default is kogito'
+    echo '  -p $PROJECT          set kogito-runtimes, optaplanner. kogito-examples or optaplanner-quickstarts -- default is kogito-runtimes'
     echo '  -q $QUARKUS_VERSION  set version'
     echo '  -m $MAVEN_VERSION    set version'
     echo '  -s                   Use SSH to connect to GitHub'
@@ -45,7 +45,7 @@ do
         case "$i"
         in
                 -p)
-                        PROJECT=$2;
+                        REPO=$2;
                         shift;shift ;;
                 -q)
                         QUARKUS_VERSION=$2;
@@ -73,16 +73,12 @@ do
         esac
 done
 
-echo "PROJECT = $PROJECT"
-
-# kogito-runtimes or optaplanner
-REPO=kogito-runtimes
 MODULES=
 QUARKUS_PROPERTIES=
+GRADLE_REGEX=
 
-case $PROJECT in
-    kogito)
-        REPO=kogito-runtimes
+case $REPO in
+    kogito-runtimes)
         MODULES[0]=kogito-dependencies-bom
         MODULES[1]=kogito-build-parent
         MODULES[2]=kogito-quarkus-bom
@@ -90,17 +86,20 @@ case $PROJECT in
         QUARKUS_PROPERTIES[1]=version.io.quarkus.quarkus-test-maven
         ;;
     optaplanner)
-        REPO=optaplanner
         MODULES[0]=optaplanner-build-parent
         QUARKUS_PROPERTIES[0]=version.io.quarkus
         ;;
-    examples)
-        REPO=kogito-examples
+    kogito-examples)
         QUARKUS_PROPERTIES[0]=quarkus-plugin.version
         QUARKUS_PROPERTIES[1]=quarkus.platform.version
         ;;
+    optaplanner-quickstarts)
+        QUARKUS_PROPERTIES[0]=quarkus.platform.version
+        GRADLE_REGEX[0]='id "io.quarkus" version'
+        GRADLE_REGEX[1]='def quarkusVersion ='
+        ;;
     *)
-        >&2 echo ERROR: Unknown project: $PROJECT.
+        >&2 echo ERROR: Unknown project: $REPO.
         usage
 
         exit 2
@@ -123,7 +122,7 @@ if [ "$BRANCH" = "main" ]; then PREFIX=""; else PREFIX="${BRANCH}-"; fi
 # kogito-runtimes or optaplanner
 PR_BRANCH=${BRANCH}-bump-${PREFIX}quarkus-$QUARKUS_VERSION
 
-echo PROJECT................$PROJECT 
+echo PROJECT................$REPO 
 echo ORIGIN.................$ORIGIN
 echo PR_FORK................$PR_FORK
 echo BRANCH.................$BRANCH
@@ -159,7 +158,13 @@ function update_quarkus_properties() {
       mvnArgs="-pl :$1 ${mvnArgs}"
     fi
     mvn $mvnArgs
-      
+  done
+}
+
+function update_gradle_regexps() {
+  for re in "${GRADLE_REGEX[@]}"
+  do
+    find . -name build.gradle -exec sed -i "s|${re}.*|${re}\"${QUARKUS_VERSION}\"|g" {} \;
   done
 }
 
@@ -186,8 +191,12 @@ else
       -DgenerateBackupPoms=false
   done
 fi
+
+if [ ! -z $GRADLE_REGEX ]; then
+  update_gradle_regexps
+fi
  
-# # commit all
+# commit all
 # git commit -am "Bump Quarkus $QUARKUS_VERSION"
 
 # if [ "$DRY_RUN" = "false" ]; then
