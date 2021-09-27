@@ -197,13 +197,13 @@ if [ ! -z $GRADLE_REGEX ]; then
 fi
  
 # commit all
-# git commit -am "Bump Quarkus $QUARKUS_VERSION"
+git commit -am "Bump Quarkus $QUARKUS_VERSION"
 
-# if [ "$DRY_RUN" = "false" ]; then
-#    # push the branch to a remote
-#    git push -u ${GITHUB_URL}${PR_FORK} ${PR_BRANCH}
+if [ "$DRY_RUN" = "false" ]; then
+   # push the branch to a remote
+   git push -u ${GITHUB_URL}${PR_FORK} ${PR_BRANCH}
    
-#    # Open a PR to kogito-runtimes using the commit as a title
-#    # e.g. see https://github.com/kiegroup/kogito-runtimes/pull/1200
-#    gh pr create --fill --base $BRANCH -R $ORIGIN
-# fi
+   # Open a PR to kogito-runtimes using the commit as a title
+   # e.g. see https://github.com/kiegroup/kogito-runtimes/pull/1200
+   gh pr create --fill --base $BRANCH -R $ORIGIN
+fi
