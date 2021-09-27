@@ -1,12 +1,12 @@
 #!/bin/sh
-set -euo pipefail
+set -eo pipefail
  
 GITHUB_URL="https://github.com/"
 GITHUB_URL_SSH="git@github.com:"
 
 MAVEN_VERSION=3.6.2
 
-# kogito or optaplanner
+# kogito/optaplanner/examples
 PROJECT=kogito
 DRY_RUN=false
 BRANCH=main
@@ -77,7 +77,8 @@ echo "PROJECT = $PROJECT"
 
 # kogito-runtimes or optaplanner
 REPO=kogito-runtimes
-declare -a MODULES
+MODULES=
+QUARKUS_PROPERTIES=
 
 case $PROJECT in
     kogito)
@@ -85,10 +86,18 @@ case $PROJECT in
         MODULES[0]=kogito-dependencies-bom
         MODULES[1]=kogito-build-parent
         MODULES[2]=kogito-quarkus-bom
+        QUARKUS_PROPERTIES[0]=version.io.quarkus
+        QUARKUS_PROPERTIES[1]=version.io.quarkus.quarkus-test-maven
         ;;
     optaplanner)
         REPO=optaplanner
         MODULES[0]=optaplanner-build-parent
+        QUARKUS_PROPERTIES[0]=version.io.quarkus
+        ;;
+    examples)
+        REPO=kogito-examples
+        QUARKUS_PROPERTIES[0]=quarkus-plugin.version
+        QUARKUS_PROPERTIES[1]=quarkus.platform.version
         ;;
     *)
         >&2 echo ERROR: Unknown project: $PROJECT.
@@ -114,12 +123,13 @@ if [ "$BRANCH" = "main" ]; then PREFIX=""; else PREFIX="${BRANCH}-"; fi
 # kogito-runtimes or optaplanner
 PR_BRANCH=${BRANCH}-bump-${PREFIX}quarkus-$QUARKUS_VERSION
 
-echo PROJECT......$PROJECT 
-echo ORIGIN.......$ORIGIN
-echo PR_FORK......$PR_FORK
-echo BRANCH.......$BRANCH
-echo PR_BRANCH....$PR_BRANCH
-echo VERSION......$QUARKUS_VERSION
+echo PROJECT................$PROJECT 
+echo ORIGIN.................$ORIGIN
+echo PR_FORK................$PR_FORK
+echo BRANCH.................$BRANCH
+echo PR_BRANCH..............$PR_BRANCH
+echo VERSION................$QUARKUS_VERSION
+echo QUARKUS_PROPERTIES.....${QUARKUS_PROPERTIES[@]}
 echo
 if [ "$DRY_RUN" = "true" ]; then
 echo DRY_RUN! No changes will be pushed!
@@ -136,46 +146,55 @@ git checkout $BRANCH
 
 # create branch named like version
 git checkout -b $PR_BRANCH
- 
-for i in "${MODULES[@]}"
-do
-  # align third-party dependencies with Quarkus
-  mvn versions:compare-dependencies \
-    -pl :${i} \
-    -DremotePom=io.quarkus:quarkus-bom:$QUARKUS_VERSION \
-    -DupdatePropertyVersions=true \
-    -DupdateDependencies=true \
-    -DgenerateBackupPoms=false
- 
-  # update Quarkus version
-  mvn -pl :${i} \
-     versions:set-property \
-     -Dproperty=version.io.quarkus \
-     -DnewVersion=$QUARKUS_VERSION \
-     -DgenerateBackupPoms=false
 
-  mvn -pl :${i} \
-     versions:set-property \
-     -Dproperty=version.io.quarkus.quarkus-test-maven \
-     -DnewVersion=$QUARKUS_VERSION \
-     -DgenerateBackupPoms=false
- 
-  # pin Maven version
-  mvn -pl :${i} \
-    versions:set-property \
-    -Dproperty=version.maven \
-    -DnewVersion=$MAVEN_VERSION \
-    -DgenerateBackupPoms=false
-done
- 
-# commit all
-git commit -am "Bump Quarkus $QUARKUS_VERSION"
+# update Quarkus version
+function update_quarkus_properties() {
+  for prop in "${QUARKUS_PROPERTIES[@]}"
+  do
+    local mvnArgs="versions:set-property \
+      -Dproperty=${prop} \
+      -DnewVersion=$QUARKUS_VERSION \
+      -DgenerateBackupPoms=false"
+    if [ ! -z $1 ]; then
+      mvnArgs="-pl :$1 ${mvnArgs}"
+    fi
+    mvn $mvnArgs
+      
+  done
+}
 
-if [ "$DRY_RUN" = "false" ]; then
-   # push the branch to a remote
-   git push -u ${GITHUB_URL}${PR_FORK} ${PR_BRANCH}
-   
-   # Open a PR to kogito-runtimes using the commit as a title
-   # e.g. see https://github.com/kiegroup/kogito-runtimes/pull/1200
-   gh pr create --fill --base $BRANCH -R $ORIGIN
+if [ -z $MODULES ]; then
+  update_quarkus_properties
+else
+  for i in "${MODULES[@]}"
+  do
+    # align third-party dependencies with Quarkus
+    mvn versions:compare-dependencies \
+      -pl :${i} \
+      -DremotePom=io.quarkus:quarkus-bom:$QUARKUS_VERSION \
+      -DupdatePropertyVersions=true \
+      -DupdateDependencies=true \
+      -DgenerateBackupPoms=false
+  
+    update_quarkus_properties ${i}
+  
+    # pin Maven version
+    mvn -pl :${i} \
+      versions:set-property \
+      -Dproperty=version.maven \
+      -DnewVersion=$MAVEN_VERSION \
+      -DgenerateBackupPoms=false
+  done
 fi
+ 
+# # commit all
+# git commit -am "Bump Quarkus $QUARKUS_VERSION"
+
+# if [ "$DRY_RUN" = "false" ]; then
+#    # push the branch to a remote
+#    git push -u ${GITHUB_URL}${PR_FORK} ${PR_BRANCH}
+   
+#    # Open a PR to kogito-runtimes using the commit as a title
+#    # e.g. see https://github.com/kiegroup/kogito-runtimes/pull/1200
+#    gh pr create --fill --base $BRANCH -R $ORIGIN
+# fi
