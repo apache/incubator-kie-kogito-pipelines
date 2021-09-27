@@ -20,29 +20,29 @@ build:
   - project: kiegroup/kogito-runtimes
     build-command:
       current: |
-        mvn -f kogito-runtimes/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }}
+        mvn -f kogito-runtimes/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS }}
     clone:
       - kogito-runtimes
 
   - project: kiegroup/optaplanner
     build-command: 
-      current: mvn -f optaplanner/pom.xml clean install -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }}
+      current: mvn -f optaplanner/pom.xml clean install -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAPLANNER_BUILD_MVN_OPTS }}
     clone:
       - optaplanner
 
   - project: kiegroup/kogito-apps
     build-command: 
       current: |
-        mvn -f kogito-apps/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }}
+        mvn -f kogito-apps/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_APPS_BUILD_MVN_OPTS }}
     clone:
       - kogito-apps
 
   - project: kiegroup/kogito-examples
     build-command: 
       current: |
-        mvn -f kogito-examples/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }}
-        mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }}
-        mvn -f kogito-examples-events/pom.xml clean install -Pevents ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }}
+        mvn -f kogito-examples/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
+        mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
+        mvn -f kogito-examples-events/pom.xml clean install -Pevents ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
     clone:
       - kogito-examples
       - kogito-examples-persistence
@@ -50,19 +50,19 @@ build:
   
   - project: kiegroup/optaweb-employee-rostering
     build-command: 
-      current: mvn clean install -f optaweb-employee-rostering/pom.xml ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} 
+      current: mvn clean install -f optaweb-employee-rostering/pom.xml ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAWEB_EMPLOYEE_ROSTERING_BUILD_MVN_OPTS }}
     clone:
       - optaweb-employee-rostering
 
   - project: kiegroup/optaweb-vehicle-routing
     build-command: 
-      current: mvn clean install -f optaweb-vehicle-routing/pom.xml ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} 
+      current: mvn clean install -f optaweb-vehicle-routing/pom.xml ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAWEB_VEHICLE_ROUTING_BUILD_MVN_OPTS }}
     clone:
       - optaweb-vehicle-routing
 
   - project: kiegroup/optaplanner-quickstarts
     build-command: 
-      current: mvn clean install -f optaplanner-quickstarts/pom.xml -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} 
+      current: mvn clean install -f optaplanner-quickstarts/pom.xml -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAPLANNER_QUICKSTARTS_BUILD_MVN_OPTS }}
     clone:
       - optaplanner-quickstarts
 
