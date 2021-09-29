@@ -28,6 +28,7 @@ if (Utils.isMainBranch(this)) {
     setupCreateIssueToolsJob()
     setupCleanOldNamespacesToolsJob()
     setupCleanOldNightlyImagesToolsJob()
+    setupBuildOperatorJenkinsNodeToolsJob()
 }
 
 // Nightly
@@ -69,6 +70,11 @@ void setupCleanOldNamespacesToolsJob() {
 void setupCleanOldNightlyImagesToolsJob(String jobFolder) {
     jobParams = getJobParams('kogito-clean-old-nightly-images', FolderUtils.getToolsFolder(this), "${JENKINSFILE_PATH}/Jenkinsfile.tools.clean-nightly-images")
     jobParams.triggers = [ cron : 'H 8 * * *' ]
+    KogitoJobTemplate.createPipelineJob(this, jobParams)
+}
+
+void setupBuildOperatorJenkinsNodeToolsJob(String jobFolder) {
+    jobParams = getJobParams('kogito-build-operator-jenkins-node', FolderUtils.getToolsFolder(this), "${JENKINSFILE_PATH}/Jenkinsfile.tools.build-operator-node")
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
