@@ -1,0 +1,10 @@
+name: org.kie.kogito.base
+version: "1.0"
+description: "Module used to configure base image"
+
+envs:
+  - name: DNF_INSTALL_OPTS
+    value: --setopt=tsflags=nodocs --disableplugin=subscription-manager --disablerepo=rhel-server-extras --disablerepo=rhel-server --disablerepo=rhel-fast-datapath --disablerepo=rhel-server-optional --disablerepo=rhel-server-ose --disablerepo=rhel-server-rhscl
+  
+execute:
+  - script: configure

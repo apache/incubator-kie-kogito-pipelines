@@ -2,12 +2,5 @@ name: org.kie.kogito.cekit
 version: "1.0"
 description: "Module used to install cekit and other related dependencies for cekit to correctly work"
 
-packages:
-  manager: dnf
-  install:
-    - python36-devel
-    - gcc
-    - krb5-devel
-  
 execute:
   - script: configure

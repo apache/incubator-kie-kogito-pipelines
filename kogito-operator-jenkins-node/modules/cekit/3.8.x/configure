@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+dnf install -y ${DNF_INSTALL_OPTS} python36-devel gcc krb5-devel
+
 python3 -m pip install --upgrade pip
 
 pip3 install cekit python-docker

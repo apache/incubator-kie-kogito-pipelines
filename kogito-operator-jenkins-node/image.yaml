@@ -3,18 +3,12 @@ version: "1.12.0"
 from: quay.io/openshift/origin-jenkins-agent-base
 description: Image used by dynamic jenkins node to build kogito-operator
 
-packages:
-  manager: dnf
-  install:
-    - gcc
-    - zlib-devel
-    - glibc-devel
-    - make
-
 modules:
   repositories:
     - path: modules
   install:
+    - name: org.kie.kogito.base
+      version: "1.0"
     - name: org.kie.kogito.golang.114
       version: "1.14"
     - name: org.kie.kogito.golang.116

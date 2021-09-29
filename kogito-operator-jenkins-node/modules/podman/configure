@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+dnf install -y ${DNF_INSTALL_OPTS} podman podman-docker buildah
+
 mkdir -p /etc/containers/
 cp /tmp/artifacts/containers.conf  /etc/containers/containers.conf
 
