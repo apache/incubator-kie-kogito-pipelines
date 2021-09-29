@@ -1,0 +1,50 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+pipeline {
+    agent {
+        label 'operator-slave'
+    }
+
+    options {
+        timeout(time: 60, unit: 'MINUTES')
+    }
+
+    // environment {
+    // Some generated env is also defined into ./dsl/jobs.groovy file
+    // }
+
+    stages {
+        stage('Checkout repo') {
+            steps {
+                script {
+                    deleteDir()
+                    // TODO to change
+                    checkout(githubscm.resolveRepository('kogito-pipelines', 'radtriste', 'update_slave_node', false))
+                }
+            }
+        }
+        stage('Build image') {
+            steps {
+                script {
+                    dir('kogito-operator-jenkins-node') {
+                        sh 'cekit -v build podman'
+                    }
+                }
+            }
+        }
+        stage('Tag and push') {
+            steps {
+                script {
+                    sh 'podman tag kogito-operator-jenkins-node:latest quay.io/tradisso/kogito-operator-jenkins-node:latest'
+
+                    withCredentials([usernamePassword(credentialsId: 'tradisso-quay', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PWD')]) {
+                        sh "podman login --tls-verify=false -u ${REGISTRY_USER} -p ${REGISTRY_PWD} quay.io"
+                    }
+                    sh 'podman push quay.io/tradisso/kogito-operator-jenkins-node:latest'
+                }
+            }
+        }
+    }
+}
