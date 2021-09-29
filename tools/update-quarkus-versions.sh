@@ -1,13 +1,13 @@
-#!/bin/sh
-set -euo pipefail
+#! env bash
+set -eo pipefail
  
 GITHUB_URL="https://github.com/"
 GITHUB_URL_SSH="git@github.com:"
 
 MAVEN_VERSION=3.6.2
 
-# kogito or optaplanner
-PROJECT=kogito
+# kogito-runtimes, optaplanner. kogito-examples or optaplanner-quickstarts
+REPO=kogito-runtimes
 DRY_RUN=false
 BRANCH=main
 
@@ -15,7 +15,7 @@ usage() {
     echo 'Usage: update-quarkus-versions.sh -p $PROJECT -s $QUARKUS_VERSION -m $MAVEN_VERSION -b $BASE_BRANCH -f $FORK [-s] [-n]'
     echo
     echo 'Options:'
-    echo '  -p $PROJECT          set kogito or optaplanner -- default is kogito'
+    echo '  -p $PROJECT          set kogito-runtimes, optaplanner. kogito-examples or optaplanner-quickstarts -- default is kogito-runtimes'
     echo '  -q $QUARKUS_VERSION  set version'
     echo '  -m $MAVEN_VERSION    set version'
     echo '  -s                   Use SSH to connect to GitHub'
@@ -45,7 +45,7 @@ do
         case "$i"
         in
                 -p)
-                        PROJECT=$2;
+                        REPO=$2;
                         shift;shift ;;
                 -q)
                         QUARKUS_VERSION=$2;
@@ -73,25 +73,33 @@ do
         esac
 done
 
-echo "PROJECT = $PROJECT"
+MODULES=
+QUARKUS_PROPERTIES=
+GRADLE_REGEX=
 
-# kogito-runtimes or optaplanner
-REPO=kogito-runtimes
-declare -a MODULES
-
-case $PROJECT in
-    kogito)
-        REPO=kogito-runtimes
+case $REPO in
+    kogito-runtimes)
         MODULES[0]=kogito-dependencies-bom
         MODULES[1]=kogito-build-parent
         MODULES[2]=kogito-quarkus-bom
+        QUARKUS_PROPERTIES[0]=version.io.quarkus
+        QUARKUS_PROPERTIES[1]=version.io.quarkus.quarkus-test-maven
         ;;
     optaplanner)
-        REPO=optaplanner
         MODULES[0]=optaplanner-build-parent
+        QUARKUS_PROPERTIES[0]=version.io.quarkus
+        ;;
+    kogito-examples)
+        QUARKUS_PROPERTIES[0]=quarkus-plugin.version
+        QUARKUS_PROPERTIES[1]=quarkus.platform.version
+        ;;
+    optaplanner-quickstarts)
+        QUARKUS_PROPERTIES[0]=quarkus.platform.version
+        GRADLE_REGEX[0]='id "io.quarkus" version'
+        GRADLE_REGEX[1]='def quarkusVersion ='
         ;;
     *)
-        >&2 echo ERROR: Unknown project: $PROJECT.
+        >&2 echo ERROR: Unknown project: $REPO.
         usage
 
         exit 2
@@ -114,12 +122,13 @@ if [ "$BRANCH" = "main" ]; then PREFIX=""; else PREFIX="${BRANCH}-"; fi
 # kogito-runtimes or optaplanner
 PR_BRANCH=${BRANCH}-bump-${PREFIX}quarkus-$QUARKUS_VERSION
 
-echo PROJECT......$PROJECT 
-echo ORIGIN.......$ORIGIN
-echo PR_FORK......$PR_FORK
-echo BRANCH.......$BRANCH
-echo PR_BRANCH....$PR_BRANCH
-echo VERSION......$QUARKUS_VERSION
+echo PROJECT................$REPO 
+echo ORIGIN.................$ORIGIN
+echo PR_FORK................$PR_FORK
+echo BRANCH.................$BRANCH
+echo PR_BRANCH..............$PR_BRANCH
+echo VERSION................$QUARKUS_VERSION
+echo QUARKUS_PROPERTIES.....${QUARKUS_PROPERTIES[@]}
 echo
 if [ "$DRY_RUN" = "true" ]; then
 echo DRY_RUN! No changes will be pushed!
@@ -136,37 +145,56 @@ git checkout $BRANCH
 
 # create branch named like version
 git checkout -b $PR_BRANCH
- 
-for i in "${MODULES[@]}"
-do
-  # align third-party dependencies with Quarkus
-  mvn versions:compare-dependencies \
-    -pl :${i} \
-    -DremotePom=io.quarkus:quarkus-bom:$QUARKUS_VERSION \
-    -DupdatePropertyVersions=true \
-    -DupdateDependencies=true \
-    -DgenerateBackupPoms=false
- 
-  # update Quarkus version
-  mvn -pl :${i} \
-     versions:set-property \
-     -Dproperty=version.io.quarkus \
-     -DnewVersion=$QUARKUS_VERSION \
-     -DgenerateBackupPoms=false
 
-  mvn -pl :${i} \
-     versions:set-property \
-     -Dproperty=version.io.quarkus.quarkus-test-maven \
-     -DnewVersion=$QUARKUS_VERSION \
-     -DgenerateBackupPoms=false
- 
-  # pin Maven version
-  mvn -pl :${i} \
-    versions:set-property \
-    -Dproperty=version.maven \
-    -DnewVersion=$MAVEN_VERSION \
-    -DgenerateBackupPoms=false
-done
+# update Quarkus version
+function update_quarkus_properties() {
+  for prop in "${QUARKUS_PROPERTIES[@]}"
+  do
+    local mvnArgs="versions:set-property \
+      -Dproperty=${prop} \
+      -DnewVersion=$QUARKUS_VERSION \
+      -DgenerateBackupPoms=false"
+    if [ ! -z $1 ]; then
+      mvnArgs="-pl :$1 ${mvnArgs}"
+    fi
+    mvn $mvnArgs
+  done
+}
+
+function update_gradle_regexps() {
+  for re in "${GRADLE_REGEX[@]}"
+  do
+    find . -name build.gradle -exec sed -i "s|${re}.*|${re}\"${QUARKUS_VERSION}\"|g" {} \;
+  done
+}
+
+if [ -z $MODULES ]; then
+  update_quarkus_properties
+else
+  for i in "${MODULES[@]}"
+  do
+    # align third-party dependencies with Quarkus
+    mvn versions:compare-dependencies \
+      -pl :${i} \
+      -DremotePom=io.quarkus:quarkus-bom:$QUARKUS_VERSION \
+      -DupdatePropertyVersions=true \
+      -DupdateDependencies=true \
+      -DgenerateBackupPoms=false
+  
+    update_quarkus_properties ${i}
+  
+    # pin Maven version
+    mvn -pl :${i} \
+      versions:set-property \
+      -Dproperty=version.maven \
+      -DnewVersion=$MAVEN_VERSION \
+      -DgenerateBackupPoms=false
+  done
+fi
+
+if [ ! -z $GRADLE_REGEX ]; then
+  update_gradle_regexps
+fi
  
 # commit all
 git commit -am "Bump Quarkus $QUARKUS_VERSION"
