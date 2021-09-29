@@ -1,4 +1,4 @@
-#!/bin/sh
+#! env bash
 set -eo pipefail
  
 GITHUB_URL="https://github.com/"
