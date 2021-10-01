@@ -36,13 +36,17 @@ def generate() {
         }
 
         stage('Test jobs') {
-            dir("${SEED_REPO}/${SEED_FOLDER}") {
-                try {
-                    sh './gradlew clean test'
-                } finally {
-                    junit 'build/test-results/**/*.xml'
-                    archiveArtifacts 'build/reports/**'
+            if (!params.SKIP_TESTS) {
+                dir("${SEED_REPO}/${SEED_FOLDER}") {
+                    try {
+                        sh './gradlew clean test'
+                    } finally {
+                        junit 'build/test-results/**/*.xml'
+                        archiveArtifacts 'build/reports/**'
+                    }
                 }
+            } else {
+                echo 'Tests are skipped'
             }
         }
 

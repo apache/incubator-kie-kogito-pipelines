@@ -17,6 +17,8 @@ pipelineJob("${JOB_NAME}") {
     parameters {
         booleanParam('DEBUG', false, 'Enable Debug capability')
 
+        booleanParam('SKIP_TESTS', false, 'Skip testing')
+
         stringParam('SEED_AUTHOR', "${SEED_AUTHOR}", 'If different from the default')
         stringParam('SEED_BRANCH', "${SEED_BRANCH}", 'If different from the default')
 

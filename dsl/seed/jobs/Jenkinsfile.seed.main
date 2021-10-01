@@ -164,6 +164,7 @@ void launchBranchSeedJob(String branch) {
 
     List jobParams = []
     jobParams.add(booleanParam(name: 'DEBUG', value: params.DEBUG))
+    jobParams.add(booleanParam(name: 'SKIP_TESTS', value: params.SKIP_TESTS))
     jobParams.add(stringParam(name: 'CUSTOM_REPOSITORIES', value: params.CUSTOM_REPOSITORIES))
     jobParams.add(stringParam(name: 'CUSTOM_AUTHOR', value: params.CUSTOM_AUTHOR))
     jobParams.add(stringParam(name: 'SEED_AUTHOR', value: params.SEED_AUTHOR))
