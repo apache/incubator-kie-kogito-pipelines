@@ -21,6 +21,8 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
     parameters {
         booleanParam('DEBUG', false, 'Enable Debug capability')
 
+        booleanParam('SKIP_TESTS', false, 'Skip testing')
+
         stringParam('CUSTOM_REPOSITORIES', "${CUSTOM_REPOSITORIES}", 'To generate only some custom repos... Comma list of `repo[:branch]`. Example: `kogito-pipelines:any_change`. If no branch is given, then `main` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
         stringParam('CUSTOM_AUTHOR', "${CUSTOM_AUTHOR}", 'To generate only some custom repos... Define from from which author the custom repositories are checked out. If none given, then `SEED_AUTHOR` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
 

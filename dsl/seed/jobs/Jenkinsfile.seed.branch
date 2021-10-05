@@ -152,6 +152,7 @@ void launchRepositorySeedJob(String repository) {
 
     List jobParams = []
     jobParams.add(booleanParam(name: 'DEBUG', value: params.DEBUG))
+    jobParams.add(booleanParam(name: 'SKIP_TESTS', value: params.SKIP_TESTS))
     jobParams.add(stringParam(name: 'SEED_AUTHOR', value: params.SEED_AUTHOR))
     jobParams.add(stringParam(name: 'SEED_BRANCH', value: params.SEED_BRANCH))
     jobParams.add(booleanParam(name: 'FORCE_REBUILD', value: true))
