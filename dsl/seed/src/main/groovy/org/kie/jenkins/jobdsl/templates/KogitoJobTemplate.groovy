@@ -503,9 +503,7 @@ class KogitoJobTemplate {
         jobParams.job.name = jobName
         jobParams.job.folder = jobFolder
         jobParams.jenkinsfile = jenkinsfileName
-        if (jobDescription) {
-            jobParams.job.description = jobDescription ?: jobParams.job.description
-        }
+        jobParams.job.description = jobDescription ?: jobParams.job.description
         return jobParams
     }
 
