@@ -1,5 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -euo pipefail
+
+script_dir_path=`dirname "${BASH_SOURCE[0]}"`
 
 GITHUB_URL="https://github.com/"
 GITHUB_URL_SSH="git@github.com:"
@@ -107,13 +109,8 @@ git checkout $BRANCH
 
 # create branch named like version
 git checkout -b $PR_BRANCH
- 
-# process versions
-mvn -pl :kogito-kie7-bom \
-versions:set-property \
--Dproperty=version.org.kie7 \
--DnewVersion=$KIE_VERSION \
--DgenerateBackupPoms=false
+
+${script_dir_path}/update-maven-module-property.sh 'version.org.kie7' ${KIE_VERSION} 'kogito-kie7-bom'
  
 # commit all
 git commit -am "[$BRANCH] Bump KIE $KIE_VERSION"

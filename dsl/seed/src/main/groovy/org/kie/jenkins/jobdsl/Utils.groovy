@@ -30,6 +30,10 @@ class Utils {
         return getBindingValue(script, 'LTS_QUARKUS_VERSION')
     }
 
+    static String getGenerationBranch(def script) {
+        return getBindingValue(script, 'GENERATION_BRANCH')
+    }
+
     static boolean isMainBranch(def script) {
         boolean result = getGitBranch(script) == getGitMainBranch(script)
         script.println("Branch=${getGitBranch(script)}. Main Branch=${getGitMainBranch(script)}. Is main branch ? => ${result}")
@@ -70,6 +74,10 @@ class Utils {
 
     static String getJenkinsConfigPath(def script, String repoName) {
         return getBindingValue(script, "${repoName.toUpperCase()}_JENKINS_CONFIG_PATH")
+    }
+
+    static String getJenkinsEmailCredsId(def script) {
+        return getBindingValue(script, 'JENKINS_EMAIL_CREDS_ID')
     }
 
 }

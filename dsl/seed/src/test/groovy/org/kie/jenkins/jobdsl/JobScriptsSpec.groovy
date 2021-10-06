@@ -42,6 +42,7 @@ class JobScriptsSpec extends Specification {
         envVars.put('DEBUG', false)
         envVars.put('JOB_NAME', 'JOB_NAME')
         envVars.put('GENERATION_BRANCH', 'GENERATION_BRANCH')
+        
         envVars.put('REPO_NAME', 'REPO_NAME')
         envVars.put('GIT_MAIN_BRANCH', 'GIT_MAIN_BRANCH')
         envVars.put('GIT_BRANCH', 'GIT_BRANCH')

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 set -euo pipefail
 
 GITHUB_URL="https://github.com/"
@@ -18,7 +18,7 @@ usage() {
     echo '  -n                   no execution: clones, creates the branch, but will not push or create the PR'
     echo '  COMMAND              may be `stage` or `finalize`'
     echo
-    echo 'Examples:'
+    echo 'Examples:'#!/bin/sh
     echo '  # Stage the PR'
     echo '  #  - Bump Kogito 1.7.0.Final + OptaPlanner 8.7.0.Final'
     echo '  #  - Add staging repositories'
@@ -182,6 +182,8 @@ finalize() {
 
     # undo patch to add repos
     echo "$DIFF_FILE" | patch -R pom.xml
+
+    mvn process-resources
 
     # overwrite old commit (no need to squash)
     git commit --amend --no-edit pom.xml

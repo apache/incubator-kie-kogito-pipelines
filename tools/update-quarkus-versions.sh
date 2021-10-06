@@ -1,5 +1,7 @@
-#! env bash
+#!/usr/bin/env bash
 set -eo pipefail
+
+script_dir_path=`dirname "${BASH_SOURCE[0]}"`
  
 GITHUB_URL="https://github.com/"
 GITHUB_URL_SSH="git@github.com:"
@@ -94,7 +96,7 @@ case $REPO in
         QUARKUS_PROPERTIES[1]=quarkus.platform.version
         ;;
     optaplanner-quickstarts)
-        QUARKUS_PROPERTIES[0]=quarkus.platform.version
+        QUARKUS_PROPERTIES[0]=version.io.quarkus
         GRADLE_REGEX[0]='id "io.quarkus" version'
         GRADLE_REGEX[1]='def quarkusVersion ='
         ;;
@@ -115,12 +117,9 @@ fi
 
 ORIGIN=kiegroup/$REPO
 PR_FORK=$FORK/$REPO
-PREFIX=""
-if [ "$BRANCH" = "" ]; then BRANCH=$DEFAULT_BRANCH; else PREFIX="${BRANCH}-"; fi
-if [ "$BRANCH" = "main" ]; then PREFIX=""; else PREFIX="${BRANCH}-"; fi
 
 # kogito-runtimes or optaplanner
-PR_BRANCH=${BRANCH}-bump-${PREFIX}quarkus-$QUARKUS_VERSION
+PR_BRANCH=${BRANCH}-bump-quarkus-$QUARKUS_VERSION
 
 echo PROJECT................$REPO 
 echo ORIGIN.................$ORIGIN
@@ -150,21 +149,14 @@ git checkout -b $PR_BRANCH
 function update_quarkus_properties() {
   for prop in "${QUARKUS_PROPERTIES[@]}"
   do
-    local mvnArgs="versions:set-property \
-      -Dproperty=${prop} \
-      -DnewVersion=$QUARKUS_VERSION \
-      -DgenerateBackupPoms=false"
-    if [ ! -z $1 ]; then
-      mvnArgs="-pl :$1 ${mvnArgs}"
-    fi
-    mvn $mvnArgs
+    ${script_dir_path}/update-maven-module-property.sh ${prop} ${QUARKUS_VERSION} $1
   done
 }
 
 function update_gradle_regexps() {
   for re in "${GRADLE_REGEX[@]}"
   do
-    find . -name build.gradle -exec sed -i "s|${re}.*|${re} \"${QUARKUS_VERSION}\"|g" {} \;
+    ${script_dir_path}/update-build-gradle-regex-line.sh "${re}" ${QUARKUS_VERSION}
   done
 }
 
@@ -173,26 +165,16 @@ if [ -z $MODULES ]; then
 else
   for i in "${MODULES[@]}"
   do
-    # align third-party dependencies with Quarkus
-    mvn versions:compare-dependencies \
-      -pl :${i} \
-      -DremotePom=io.quarkus:quarkus-bom:$QUARKUS_VERSION \
-      -DupdatePropertyVersions=true \
-      -DupdateDependencies=true \
-      -DgenerateBackupPoms=false
+    ${script_dir_path}/update-maven-compare-dependencies.sh 'io.quarkus:quarkus-bom' ${QUARKUS_VERSION} ${i}
   
     update_quarkus_properties ${i}
   
     # pin Maven version
-    mvn -pl :${i} \
-      versions:set-property \
-      -Dproperty=version.maven \
-      -DnewVersion=$MAVEN_VERSION \
-      -DgenerateBackupPoms=false
+    ${script_dir_path}/update-maven-module-property.sh 'version.maven' ${MAVEN_VERSION} ${i}
   done
 fi
 
-if [ ! -z "$GRADLE_REGEX" ]; then
+if [ ! -z "${GRADLE_REGEX}" ]; then
   update_gradle_regexps
 fi
  

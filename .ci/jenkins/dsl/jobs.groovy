@@ -6,7 +6,7 @@ import org.kie.jenkins.jobdsl.Utils
 JENKINSFILE_PATH = '.ci/jenkins'
 
 def getDefaultJobParams() {
-    return KogitoJobTemplate.getDefaultJobParams(this, 'kogito-pipelines')
+    return KogitoJobTemplate.getDefaultJobParams(this, KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
 }
 
 def getJobParams(String jobName, String jobFolder, String jenkinsfileName, String jobDescription = '') {

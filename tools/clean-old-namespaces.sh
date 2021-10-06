@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 IN=$(kubectl get namespace -o jsonpath='{range .items[*].metadata}{.name}{";"}{.creationTimestamp}{"\n"}{end}' | awk '/cucumber-/')
 projects=$(echo $IN | tr "\n" "\n")
