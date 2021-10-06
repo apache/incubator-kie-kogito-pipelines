@@ -4,7 +4,7 @@ set -eo pipefail
 GITHUB_URL="https://github.com/"
 GITHUB_URL_SSH="git@github.com:"
 
-MAVEN_VERSION=3.6.2
+MAVEN_VERSION=3.6.3
 
 # kogito-runtimes, optaplanner. kogito-examples or optaplanner-quickstarts
 REPO=kogito-runtimes
