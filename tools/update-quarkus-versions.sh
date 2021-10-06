@@ -192,7 +192,7 @@ else
   done
 fi
 
-if [ ! -z $GRADLE_REGEX ]; then
+if [ ! -z "$GRADLE_REGEX" ]; then
   update_gradle_regexps
 fi
  
