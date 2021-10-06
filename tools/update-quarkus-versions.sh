@@ -4,7 +4,7 @@ set -eo pipefail
 GITHUB_URL="https://github.com/"
 GITHUB_URL_SSH="git@github.com:"
 
-MAVEN_VERSION=3.6.2
+MAVEN_VERSION=3.6.3
 
 # kogito-runtimes, optaplanner. kogito-examples or optaplanner-quickstarts
 REPO=kogito-runtimes
@@ -161,7 +161,7 @@ function update_quarkus_properties() {
 function update_gradle_regexps() {
   for re in "${GRADLE_REGEX[@]}"
   do
-    find . -name build.gradle -exec sed -i "s|${re}.*|${re}\"${QUARKUS_VERSION}\"|g" {} \;
+    find . -name build.gradle -exec sed -i "s|${re}.*|${re} \"${QUARKUS_VERSION}\"|g" {} \;
   done
 }
 
@@ -189,7 +189,7 @@ else
   done
 fi
 
-if [ ! -z $GRADLE_REGEX ]; then
+if [ ! -z "$GRADLE_REGEX" ]; then
   update_gradle_regexps
 fi
  
