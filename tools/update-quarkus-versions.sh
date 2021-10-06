@@ -164,7 +164,7 @@ function update_quarkus_properties() {
 function update_gradle_regexps() {
   for re in "${GRADLE_REGEX[@]}"
   do
-    find . -name build.gradle -exec sed -i "s|${re}.*|${re}\"${QUARKUS_VERSION}\"|g" {} \;
+    find . -name build.gradle -exec sed -i "s|${re}.*|${re} \"${QUARKUS_VERSION}\"|g" {} \;
   done
 }
 
