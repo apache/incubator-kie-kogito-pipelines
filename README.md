@@ -42,9 +42,11 @@ Apart from this repository, pipelines are also concerning those repositories:
 
 Kogito has 2 main pipelines:
 
-* [Nightly pipeline](./.ci/jenkins/Jenkinsfile.nightly)  
-  is a multibranch pipeline which is run daily on each active branch
-* [Release pipeline](./.ci/jenkins/Jenkinsfile.release)  
+* [Artifacts Nightly pipeline](./.ci/jenkins/Jenkinsfile.nightly.artifacts)  
+  is run daily on each active branch
+* [Cloud Nightly pipeline](./.ci/jenkins/Jenkinsfile.nightly.cloud)  
+  is is run daily on each active branch
+* [Release pipeline](./.ci/jenkins/Jenkinsfile.release.run)  
   is a on-demand single pipeline job
 
 More information can be found [here](./docs/nightly_and_release.md).
@@ -65,7 +67,7 @@ A nightly check against Quarkus is done every night. Pipeline can be found in ht
 
 ### Mandrel check
 
-Quarkus and Native checks are also performed against Mandrel builder image (see config `mandrel.builder_image`).
+If the [Mandrel environment](./dsl/seed/config/branch.yaml) is enabled, then Native checks are also performed with given Mandrel builder image.
 
 ### PR checks
 

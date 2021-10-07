@@ -1,6 +1,10 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
 @Library('jenkins-pipeline-shared-libraries')_
 
 import org.kie.jenkins.MavenCommand
+
+pipelinesCommon = null
 
 pipeline {
     agent {
@@ -30,25 +34,24 @@ pipeline {
         stage('Initialization') {
             steps {
                 script {
-                    assert getNewVersion()
+                    cleanWs()
 
-                    currentBuild.displayName = getNewVersion()
+                    checkout scm
+                    pipelinesCommon = load "${WORKSPACE}/${PIPELINES_COMMON_SCRIPT_PATH}"
+                    
+                    assert getNewVersion()
+                    pipelinesCommon.init(getNewVersion())
 
                     checkout scm
 
-                    dir(getRepoName()) {
-                        deleteDir()
-                        checkout(githubscm.resolveRepository(getRepoName(), getGitAuthor(), getBuildBranch(), false))
-                    }
+                    pipelinesCommon.checkoutRepo()
                 }
             }
         }
         stage('Prepare for PR') {
             steps {
                 script {
-                    dir(getRepoName()) {
-                        githubscm.createBranch(getPRBranch())
-                    }
+                    pipelinesCommon.prepareForPR()
                 }
             }
         }
@@ -58,7 +61,7 @@ pipeline {
             }
             steps {
                 script {
-                    dir(getRepoName()) {
+                    dir(pipelinesCommon.getRepoName()) {
                         getMavenCompareDepsRemotePoms().each { remotePom ->
                             if (getMavenModules()) {
                                 getMavenModules().each { module ->
@@ -78,7 +81,7 @@ pipeline {
             }
             steps {
                 script {
-                    dir(getRepoName()) {
+                    dir(pipelinesCommon.getRepoName()) {
                         getMavenProperties().each { prop ->
                             if (getMavenModules()) {
                                 getMavenModules().each { module ->
@@ -98,7 +101,7 @@ pipeline {
             }
             steps {
                 script {
-                    dir(getRepoName()) {
+                    dir(pipelinesCommon.getRepoName()) {
                         getGradleRegex().each { regex ->
                             sh "${WORKSPACE}/tools/update-build-gradle-regex-line.sh '${regex}' ${getNewVersion()}"
                         }
@@ -109,15 +112,15 @@ pipeline {
         stage('Create PRs') {
             steps {
                 script {
-                    dir(getRepoName()) {
-                        String commitMsg = "[${getBuildBranch()}] Bump ${getDependencyName()} version to ${getNewVersion()}"
-                        githubscm.commitChanges(commitMsg)
-                        githubscm.pushObject('origin', getPRBranch(), getAuthorCredsId())
+                    dir(pipelinesCommon.getRepoName()) {
+                        String commitMsg = "[${pipelinesCommon.getGitBranch()}] Bump ${getDependencyName()} version to ${getNewVersion()}"
 
-                        String prLink = githubscm.createPR(commitMsg, 'Please review and merge', getBuildBranch(), getAuthorCredsId())
+                        pipelinesCommon.stageAllFiles()
+                        pipelinesCommon.commitChanges(commitMsg)
+                        String prLink = pipelinesCommon.createPR(commitMsg)
+
                         echo "Created PR ${prLink}"
-
-                        sendNotification("PR was created to update ${getDependencyName()} version to ${getNewVersion()}.\nPlease review and merge ${prLink}")
+                        pipelinesCommon.sendNotification("PR was created to update ${getDependencyName()} version to ${getNewVersion()}.\nPlease review and merge ${prLink}.\n\nJob URL: ${BUILD_URL}display/redirect")
                     }
                 }
             }
@@ -126,7 +129,7 @@ pipeline {
     post {
         unsuccessful {
             script {
-                sendErrorNotification()
+                pipelinesCommon.sendNotification("Error updating ${getDependencyName()} version to ${getNewVersion()}.\nPlease check job logs: ${BUILD_URL}display/redirect")
             }
         }
         cleanup {
@@ -135,30 +138,8 @@ pipeline {
     }
 }
 
-void sendNotification(String body) {
-    emailext body: "**${getDependencyName()} version update job**\n${body}",
-             subject: "[${getBuildBranch()}] ${getNotificationJobName()}",
-             to: env.KOGITO_CI_EMAIL_TO
-}
-
-void sendErrorNotification() {
-    sendNotification("Job #${BUILD_NUMBER} was: **${currentBuild.currentResult}**\nPlease look here: ${BUILD_URL}")
-}
-
 String getDependencyName() {
-    return "${DEPENDENCY_NAME}"
-}
-
-String getBuildBranch() {
-    return "${BUILD_BRANCH_NAME}"
-}
-
-String getGitAuthor() {
-    return "${GIT_AUTHOR}"
-}
-
-String getAuthorCredsId() {
-    return "${AUTHOR_CREDS_ID}"
+    return pipelinesCommon.getParamOrEnv('DEPENDENCY_NAME')
 }
 
 String getPRBranch() {
@@ -170,29 +151,21 @@ String getPRPrefixBranch() {
 }
 
 String getNewVersion() {
-    return "${NEW_VERSION}"
-}
-
-String getRepoName() {
-    return "${REPO_NAME}"
-}
-
-String getNotificationJobName() {
-    return "${NOTIFICATION_JOB_NAME}"
+    return pipelinesCommon.getParamOrEnv('NEW_VERSION')
 }
 
 List getMavenModules() {
-  return env.MAVEN_MODULES ? readJSON(text: env.MAVEN_MODULES) : []
+    return env.MAVEN_MODULES ? readJSON(text: env.MAVEN_MODULES) : []
 }
 
 List getMavenCompareDepsRemotePoms() {
-  return env.MAVEN_COMPARE_DEPS_REMOTE_POMS ? readJSON(text: env.MAVEN_COMPARE_DEPS_REMOTE_POMS) : []
+    return env.MAVEN_COMPARE_DEPS_REMOTE_POMS ? readJSON(text: env.MAVEN_COMPARE_DEPS_REMOTE_POMS) : []
 }
 
 List getMavenProperties() {
-  return env.MAVEN_PROPERTIES ? readJSON(text: env.MAVEN_PROPERTIES) : []
+    return env.MAVEN_PROPERTIES ? readJSON(text: env.MAVEN_PROPERTIES) : []
 }
 
 List getGradleRegex() {
-  return env.GRADLE_REGEX ? readJSON(text: env.GRADLE_REGEX) : []
+    return env.GRADLE_REGEX ? readJSON(text: env.GRADLE_REGEX) : []
 }

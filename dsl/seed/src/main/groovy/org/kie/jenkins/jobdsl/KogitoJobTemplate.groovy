@@ -105,6 +105,10 @@ class KogitoJobTemplate {
                 }
             }
 
+            jobParams.parametersClosures.each { paramsClosure ->
+                parameters(paramsClosure)
+            }
+
             if (jobParams.env || jobFolderEnv) {
                 environmentVariables {
                     jobFolderEnv.each {
@@ -332,7 +336,7 @@ class KogitoJobTemplate {
                 String buildChainCheckoutBranch = VersionUtils.getProjectTargetBranch(KogitoConstants.KOGITO_PIPELINES_REPOSITORY, jobParams.git.branch, jobParams.git.repository)
                 jobParams.pr.checkout_branch = buildChainCheckoutBranch
                 jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository ?: jobParams.git.repository}")
-                jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
+                jobParams.env.put('BUILDCHAIN_TYPE', 'pr')
                 jobParams.env.put('BUILDCHAIN_CONFIG_BRANCH', buildChainCheckoutBranch)
                 jobParams.env.put('NOTIFICATION_JOB_NAME', "(${testTypeId}) - ${jobCfg.repository ?: jobParams.git.repository}")
                 jobParams.git.repository = KogitoConstants.KOGITO_PIPELINES_REPOSITORY

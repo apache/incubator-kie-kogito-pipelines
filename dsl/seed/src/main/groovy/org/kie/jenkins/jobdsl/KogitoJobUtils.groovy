@@ -3,6 +3,7 @@ package org.kie.jenkins.jobdsl
 import groovy.json.JsonOutput
 
 import org.kie.jenkins.jobdsl.model.Folder
+import org.kie.jenkins.jobdsl.model.JobId
 import org.kie.jenkins.jobdsl.model.Environment
 import org.kie.jenkins.jobdsl.model.JobType
 import org.kie.jenkins.jobdsl.KogitoJobTemplate
@@ -29,6 +30,7 @@ class KogitoJobUtils {
                 token_credentials: Utils.getGitAuthorTokenCredsId(script)
             ],
             env: [:],
+            parametersClosures: [],
             pr: [
                 excluded_regions: [
                     'LICENSE',
@@ -70,9 +72,11 @@ class KogitoJobUtils {
 
             PR_PREFIX_BRANCH: Utils.getGenerationBranch(script),
 
-            BUILD_BRANCH_NAME: Utils.getGitBranch(script),
+            GIT_BRANCH_NAME: Utils.getGitBranch(script),
             GIT_AUTHOR:  Utils.getGitAuthor(script),
-            AUTHOR_CREDS_ID: Utils.getGitAuthorCredsId(script),
+            GIT_AUTHOR_CREDS_ID: Utils.getGitAuthorCredsId(script),
+
+            PIPELINES_COMMON_SCRIPT_PATH: Utils.getPipelinesJenkinsHelperScript(script),
         ])
         if (mavenUpdate) {
             mavenUpdate.modules ? jobParams.env.put('MAVEN_MODULES',  JsonOutput.toJson(mavenUpdate.modules)) : null
@@ -88,6 +92,7 @@ class KogitoJobUtils {
                 stringParam('NEW_VERSION', '', 'Which version to set ?')
             }
         }
+        return job
     }
 
     static def createQuarkusUpdateToolsJob(def script, String repository, def mavenUpdate = [:], def gradleUpdate = [:]) {
@@ -98,43 +103,259 @@ class KogitoJobUtils {
         return createPerEnvPerRepoPRJobs(script, Environment.getActiveEnvironments(script), jobsRepoConfigGetter, defaultParamsGetter)
     }
 
-    static List createPerEnvPerRepoPRJobs(def script, List<Environment> environments, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
+    static List createPerEnvPerRepoPRJobs(def script, List<Environment> environments, Closure jobsRepoConfigGetter, Closure defaultJobParamsGetter = null) {
         List allJobs = []
 
-        Folder.getAllFoldersByJobTypeAndEnvironments(script, JobType.PULLREQUEST, environments)
-            .findAll { folder -> folder.shouldAutoGenerateJobs() }
-            .each { folder ->
-                if (folder.environment.isOptional()) {
-                    allJobs.addAll(KogitoJobTemplate.createPerRepoPRJobs(script, folder, getOptionalJobsRepoConfigClosure(jobsRepoConfigGetter), defaultParamsGetter))
-                } else {
-                    allJobs.addAll(KogitoJobTemplate.createPerRepoPRJobs(script, folder, jobsRepoConfigGetter, defaultParamsGetter))
-                }
+        applyInAllPullRequestFolders(script, environments) { folder ->
+            if (folder.environment.isOptional()) {
+                allJobs.addAll(KogitoJobTemplate.createPerRepoPRJobs(script, folder, getOptionalJobsRepoConfigClosure(jobsRepoConfigGetter), defaultJobParamsGetter))
+            } else {
+                allJobs.addAll(KogitoJobTemplate.createPerRepoPRJobs(script, folder, jobsRepoConfigGetter, defaultJobParamsGetter))
             }
+        }
 
         return allJobs
     }
 
-    static List createDefaultPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
-        return createPerEnvPerRepoPRJobs(script, [ Environment.DEFAULT ], jobsRepoConfigGetter, defaultParamsGetter)
+    static List createDefaultPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultJobParamsGetter = null) {
+        return createPerEnvPerRepoPRJobs(script, [ Environment.DEFAULT ], jobsRepoConfigGetter, defaultJobParamsGetter)
     }
 
-    static def createNativePerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
-        return createPerEnvPerRepoPRJobs(script, [ Environment.NATIVE ], jobsRepoConfigGetter, defaultParamsGetter)
+    static def createNativePerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultJobParamsGetter = null) {
+        return createPerEnvPerRepoPRJobs(script, [ Environment.NATIVE ], jobsRepoConfigGetter, defaultJobParamsGetter)
     }
 
-    static def createMandrelPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
-        return createPerEnvPerRepoPRJobs(script, [ Environment.MANDREL ], jobsRepoConfigGetter, defaultParamsGetter)
+    static def createMandrelPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultJobParamsGetter = null) {
+        return createPerEnvPerRepoPRJobs(script, [ Environment.MANDREL ], jobsRepoConfigGetter, defaultJobParamsGetter)
     }
 
-    static def createQuarkusMainPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
-        return createPerEnvPerRepoPRJobs(script, [ Environment.QUARKUS_MAIN ], jobsRepoConfigGetter, defaultParamsGetter)
+    static def createQuarkusMainPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultJobParamsGetter = null) {
+        return createPerEnvPerRepoPRJobs(script, [ Environment.QUARKUS_MAIN ], jobsRepoConfigGetter, defaultJobParamsGetter)
     }
 
-    static def createQuarkusBranchPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
-        return createPerEnvPerRepoPRJobs(script, [ Environment.QUARKUS_BRANCH ], jobsRepoConfigGetter, defaultParamsGetter)
+    static def createQuarkusBranchPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultJobParamsGetter = null) {
+        return createPerEnvPerRepoPRJobs(script, [ Environment.QUARKUS_BRANCH ], jobsRepoConfigGetter, defaultJobParamsGetter)
     }
 
-    // Add optional information to per repo config
+    /**
+    *   Create Build Chain Build&Test jobs for all needed environments (nightlies & release)
+    */
+    static List createAllEnvsBuildChainBuildAndTestJobs(def script) {
+        createPerEnvBuildChainBuildAndTestJobs(script, Environment.getActiveEnvironments(script))
+    }
+
+    /**
+    *   Create Build Chain Build&Test jobs for given environments (nightlies & release)
+    */
+    static List createPerEnvBuildChainBuildAndTestJobs(def script, List<Environment> environments) {
+        List allJobs = []
+
+        // Nightlies
+        applyInAllNightlyFolders(script, environments) { folder ->
+            allJobs.add(createBuildChainBuildAndTestJob(script, folder))
+        }
+
+        // TODO release
+        // if (!Utils.isMainBranch(this)) {
+
+        return allJobs
+    }
+
+    static def createBuildChainBuildAndTestJob(def script, Folder jobFolder) {
+        String repository = Utils.getRepoName(script)
+
+        def jobParams = getBasicJobParams(script, "${repository}.${JobId.BUILD_AND_TEST.toId()}", jobFolder,
+                                                Utils.getPipelinesJenkinsfilePath(script, KogitoConstants.BUILDCHAIN_JENKINSFILE),
+                                                "Build & Test for ${repository} using the build-chain") {
+                                                    return getDefaultJobParams(script, KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
+                                                }
+        // Setup correct checkout branch for pipelines
+        jobParams.git.branch = VersionUtils.getProjectTargetBranch(KogitoConstants.KOGITO_PIPELINES_REPOSITORY, jobParams.git.branch, jobParams.git.repository)
+
+        def job = KogitoJobTemplate.createPipelineJob(script, jobParams)
+        job.with {
+            parameters {
+                stringParam('DISPLAY_NAME', '', 'Setup a specific build display name')
+
+                stringParam('GIT_BRANCH_NAME', Utils.getGitBranch(script), 'Set the Git branch to test')
+
+                booleanParam('SKIP_TESTS', false, 'Skip tests')
+                booleanParam('SKIP_IT_TESTS', false, 'Skip IT tests') // TODO Optaweb skip integration testing ?
+            }
+
+            environmentVariables {
+                env('REPO_NAME', "${repository}")
+
+                env('GIT_AUTHOR',  Utils.getGitAuthor(script))
+
+                env('BUILDCHAIN_PROJECT', "kiegroup/${repository}")
+                env('BUILDCHAIN_TYPE', 'branch')
+                env('BUILDCHAIN_CONFIG_BRANCH', jobParams.git.branch)
+
+                env('MAVEN_SETTINGS_CONFIG_FILE_ID', Utils.getBindingValue(script, 'MAVEN_SETTINGS_FILE_ID'))
+
+                if (jobFolder.isPullRequest()) {
+                    env('MAVEN_DEPENDENCIES_REPOSITORY', Utils.getBindingValue(script, 'MAVEN_PR_CHECKS_REPOSITORY_URL'))
+                } else {
+                    env('MAVEN_DEPENDENCIES_REPOSITORY', Utils.getBindingValue(script, 'MAVEN_ARTIFACTS_REPOSITORY'))
+                }
+            }
+        }
+        return job
+    }
+
+    /**
+    *   Create Deploy artifacts jobs for all needed environments (nightlies, update-version & release)
+    */
+    static List createAllEnvsDeployArtifactsJobs(def script, Closure defaultJobParamsGetter = null) {
+        createPerEnvDeployArtifactsJobs(script, Environment.getActiveEnvironments(script), defaultJobParamsGetter)
+    }
+
+    /**
+    *   Create Deploy artifacts jobs for given environments (nightlies, update-version & release)
+    */
+    static List createPerEnvDeployArtifactsJobs(def script, List<Environment> environments, Closure defaultJobParamsGetter = null) {
+        List allJobs = []
+
+        // Nightlies
+        applyInAllNightlyFolders(script, environments) { folder ->
+            allJobs.add(createDeployArtifactsJob(script, folder, defaultJobParamsGetter))
+        }
+
+        // Update-version
+        allJobs.add(createDeployArtifactsJob(script, Folder.UPDATE_VERSION, defaultJobParamsGetter))
+
+        // TODO release
+        // if (!Utils.isMainBranch(this)) {
+
+        return allJobs
+    }
+
+    static def createDeployArtifactsJob(def script, Folder jobFolder, Closure defaultJobParamsGetter = null) {
+        def jobParams = getCommonRunSimpleJobParams(script, jobFolder, JobId.DEPLOY_ARTIFACTS, defaultJobParamsGetter)
+
+        jobParams.parametersClosures.add({
+            booleanParam('SKIP_TESTS', true, 'Skip tests when deploying')
+        })
+
+        def jobEnv = [ MAVEN_SETTINGS_CONFIG_FILE_ID: Utils.getBindingValue(script, 'MAVEN_SETTINGS_FILE_ID') ]
+        if (jobFolder.isPullRequest()) {
+            jobEnv.put('MAVEN_DEPENDENCIES_REPOSITORY', Utils.getBindingValue(script, 'MAVEN_PR_CHECKS_REPOSITORY_URL'))
+            jobEnv.put('MAVEN_DEPLOY_REPOSITORY', Utils.getBindingValue(script, 'MAVEN_PR_CHECKS_REPOSITORY_URL'))
+            jobEnv.put('MAVEN_REPO_CREDS_ID', Utils.getBindingValue(script, 'MAVEN_PR_CHECKS_REPOSITORY_CREDS_ID'))
+        } else {
+            jobEnv.put('MAVEN_DEPENDENCIES_REPOSITORY', Utils.getBindingValue(script, 'MAVEN_ARTIFACTS_REPOSITORY'))
+            jobEnv.put('MAVEN_DEPLOY_REPOSITORY', Utils.getBindingValue(script, 'MAVEN_ARTIFACTS_REPOSITORY'))
+            if (jobFolder.isRelease()) {
+                jobEnv.put('NEXUS_RELEASE_URL', Utils.getBindingValue(script, 'MAVEN_NEXUS_RELEASE_URL'))
+                jobEnv.put('NEXUS_RELEASE_REPOSITORY_ID', Utils.getBindingValue(script, 'MAVEN_NEXUS_RELEASE_REPOSITORY'))
+                jobEnv.put('NEXUS_STAGING_PROFILE_ID', Utils.getBindingValue(script, 'MAVEN_NEXUS_STAGING_PROFILE_ID'))
+                jobEnv.put('NEXUS_BUILD_PROMOTION_PROFILE_ID', Utils.getBindingValue(script, 'MAVEN_NEXUS_BUILD_PROMOTION_PROFILE_ID'))
+            }
+        }
+        jobParams.env.putAll(jobEnv)
+
+        return KogitoJobTemplate.createPipelineJob(script, jobParams)
+    }
+
+    /**
+    *   Create Update version jobs for all needed environments (update-version & release)
+    */
+    static List createAllEnvsUpdateVersionJobs(def script, List neededProjectVersions, Closure defaultJobParamsGetter = null) {
+        createPerEnvUpdateVersionJobs(script, Environment.getActiveEnvironments(script), neededProjectVersions, defaultJobParamsGetter)
+    }
+
+    /**
+    *   Create Update version jobs for given environments (update-version & release)
+    */
+    static List createPerEnvUpdateVersionJobs(def script, List<Environment> environments, List neededProjectVersions, Closure defaultJobParamsGetter = null) {
+        List allJobs = []
+
+        // Update-version
+        allJobs.add(createUpdateVersionJob(script, Folder.UPDATE_VERSION, neededProjectVersions, defaultJobParamsGetter))
+
+        // TODO release
+        // if (!Utils.isMainBranch(this)) {
+
+        return allJobs
+    }
+
+    static def createUpdateVersionJob(def script, Folder jobFolder, List neededProjectVersions, Closure defaultJobParamsGetter = null) {
+        def jobParams = getCommonRunWithGitJobParams(script, jobFolder, JobId.UPDATE_VERSION, defaultJobParamsGetter)
+        jobParams.parametersClosures.add({
+            neededProjectVersions.each { vs ->
+                stringParam("${vs}_VERSION".toUpperCase(), '', "Set the ${vs} Version")
+            }
+        })
+        return KogitoJobTemplate.createPipelineJob(script, jobParams)
+    }
+
+    /**
+    *   Create Maven update version jobs for all needed environments (update-version & release)
+    */
+    static List createAllEnvsMavenUpdateVersionJobs(def script, List neededProjectVersions, Closure defaultJobParamsGetter = null) {
+        createPerEnvMavenUpdateVersionJobs(script, Environment.getActiveEnvironments(script), neededProjectVersions, defaultJobParamsGetter)
+    }
+
+    /**
+    *   Create Maven update version jobs for given environments (update-version & release)
+    */
+    static List createPerEnvMavenUpdateVersionJobs(def script, List<Environment> environments, List neededProjectVersions, Closure defaultJobParamsGetter = null) {
+        List allJobs = []
+
+        // Update-version
+        allJobs.add(createUpdateVersionJob(script, Folder.UPDATE_VERSION, neededProjectVersions, defaultJobParamsGetter))
+
+        // TODO release
+        // if (!Utils.isMainBranch(this)) {
+
+        return allJobs
+    }
+
+    static def createMavenUpdateVersionJob(def script, Folder jobFolder, List neededProjectVersions, Closure defaultJobParamsGetter = null) {
+        def job = createUpdateVersionJob(script, jobFolder, neededProjectVersions, defaultJobParamsGetter)
+        job.with {
+            environmentVariables {
+                env('MAVEN_SETTINGS_CONFIG_FILE_ID', Utils.getBindingValue(script, 'MAVEN_SETTINGS_FILE_ID'))
+                env('MAVEN_DEPENDENCIES_REPOSITORY', Utils.getBindingValue(script, 'MAVEN_ARTIFACTS_REPOSITORY'))
+            }
+        }
+        return job
+    }
+
+    static def createAllJobsForArtifactsRepository(def script, List neededProjectVersions, Map jobDisabled = [:], Closure defaultJobParamsGetter = null) {
+        if (!jobDisabled.build) {
+            createAllEnvsBuildChainBuildAndTestJobs(script)
+        }
+
+        if (!jobDisabled.deploy) {
+            createAllEnvsDeployArtifactsJobs(script, defaultJobParamsGetter)
+        }
+
+        if (!jobDisabled.update_version) {
+            createAllEnvsMavenUpdateVersionJobs(script, neededProjectVersions, defaultJobParamsGetter)
+        }
+    }
+
+    // static def createAllJobsForDefaultRepository(def script, List neededProjectVersions, Map jobDisabled = [:], Closure defaultJobParamsGetter = null) {
+    //     if (!jobDisabled.build) {
+    //         // TODO createAllDefaultBuildAndTestJobs
+    //         createAllEnvsDefaultBuildAndTestJobs(script, defaultJobParamsGetter)
+    //     }
+
+    //     if (!jobDisabled.deploy) {
+    //         // TODO createAllDefaultDeployJobs
+    //         createAllEnvsDefaultDeployJobs(script, defaultJobParamsGetter)
+    //     }
+
+    //     if (!jobDisabled.update_version) {
+    //         createAllEnvsMavenUpdateVersionJobs(script, neededProjectVersions, defaultJobParamsGetter)
+    //     }
+    // }
+
+    /* 
+    * Add optional information to per repo config
+    */ 
     private static Closure getOptionalJobsRepoConfigClosure(Closure jobsRepoConfigGetter) {
         return { jobFolder ->
             Map jobsRepoConfig = jobsRepoConfigGetter(jobFolder)
@@ -145,6 +366,80 @@ class KogitoJobUtils {
             }
             return jobsRepoConfig
         }
+    }
+
+    /*
+    *  Get Job Params for a simple script run (see /.ci/jenkins/Jenkinsfile.repo.run-simple-script)
+    */ 
+    static Map getCommonRunSimpleJobParams(def script, Folder jobFolder, JobId jobId, Closure defaultJobParamsGetter = null) {
+        String stageName = Utils.allFirstLetterUpperCase(jobId.toId())
+        String repository = Utils.getRepoName(script)
+
+        def jobParams = getBasicJobParams(script, 
+                                                "${repository}.${jobId.toId()}", 
+                                                jobFolder,
+                                                Utils.getPipelinesJenkinsfilePath(script, 'Jenkinsfile.repo.run-simple-script'),
+                                                "${stageName} for ${repository}",
+                                                defaultJobParamsGetter)
+        // Setup correct checkout branch for pipelines
+        jobParams.git.branch = VersionUtils.getProjectTargetBranch(KogitoConstants.KOGITO_PIPELINES_REPOSITORY, jobParams.git.branch, repository)
+
+        jobParams.env.putAll([
+            REPO_NAME : repository,
+            SCRIPT_ID: jobId.toId(),
+            MAIN_STAGE_NAME: stageName,
+            GIT_AUTHOR: Utils.getGitAuthor(script),
+            PIPELINES_COMMON_SCRIPT_PATH: Utils.getPipelinesJenkinsHelperScript(script)
+        ])
+
+        jobParams.parametersClosures.add({
+            stringParam('DISPLAY_NAME', '', 'Setup a specific build display name')
+            stringParam('GIT_BRANCH_NAME', Utils.getGitBranch(script), 'Which branch to update ?')
+        })
+
+        return jobParams
+    }
+
+    /*
+    *  Get Job Params for a run with git script run (see /.ci/jenkins/Jenkinsfile.repo.run-script-with-git)
+    */ 
+    static Map getCommonRunWithGitJobParams(def script, Folder jobFolder, JobId jobId, Closure defaultJobParamsGetter = null) {
+        def jobParams = getCommonRunSimpleJobParams(script, jobFolder, jobId, defaultJobParamsGetter)
+
+        jobParams.jenkinsfile = Utils.getPipelinesJenkinsfilePath(script, 'Jenkinsfile.repo.run-script-with-git')
+        jobParams.env.putAll([
+            GIT_AUTHOR_CREDS_ID: Utils.getGitAuthorCredsId(script),
+        ])
+
+        jobParams.parametersClosures.add({
+            booleanParam('CREATE_PR', false, 'Should we create a PR with the changes ?')
+            booleanParam('MERGE_PR_AUTOMATICALLY', false, 'Should the created PR be merged automatically ?')
+            stringParam('GIT_TAG', '', 'If you also need to tag the repository. Empty will not do anything.')
+        })
+
+        return jobParams
+    }
+
+    static void applyInAllNightlyFolders(def script, Closure applyInFolderClosure) {
+        applyInAllNightlyFolders(script, Environment.getActiveEnvironments(script), applyInFolderClosure)
+    }
+
+    static void applyInAllNightlyFolders(def script, List<Environment> environments, Closure applyInFolderClosure) {
+        applyInAllFolders(script, JobType.NIGHTLY, environments, applyInFolderClosure)
+    }
+
+    static void applyInAllPullRequestFolders(def script, Closure applyInFolderClosure) {
+        applyInAllPullRequestFolders(script, Environment.getActiveEnvironments(script), applyInFolderClosure)
+    }
+
+    static void applyInAllPullRequestFolders(def script, List<Environment> environments, Closure applyInFolderClosure) {
+        applyInAllFolders(script, JobType.PULLREQUEST, environments, applyInFolderClosure)
+    }
+
+    static void applyInAllFolders(def script, JobType jobType, List<Environment> environments, Closure applyInFolderClosure) {
+        Folder.getAllFoldersByJobTypeAndEnvironments(script, jobType, environments)
+            .findAll { folder -> folder.shouldAutoGenerateJobs() }
+            .each { folder -> applyInFolderClosure(folder) } 
     }
 
 }

@@ -11,7 +11,7 @@ OPTAPLANNER_QUICKSTARTS_REPO = 'optaplanner-quickstarts'
 PIPELINE_REPOS = ["${PIPELINE_REPO}"]
 DROOLS_REPOS = ["drools"]
 RUNTIMES_REPOS = ['kogito-runtimes', 'kogito-apps', 'kogito-examples']
-OPTAPLANNER_REPOS = ["${OPTAPLANNER_REPO}", 'optaweb-vehicle-routing', 'optaweb-employee-rostering', "${OPTAPLANNER_QUICKSTARTS_REPO}:development"]
+OPTAPLANNER_REPOS = ["${OPTAPLANNER_REPO}", 'optaweb-vehicle-routing', 'optaweb-employee-rostering', "${OPTAPLANNER_QUICKSTARTS_REPO}"]
 IMAGES_REPOS = ['kogito-images']
 OPERATOR_REPOS = ['kogito-operator']
 
@@ -121,6 +121,8 @@ pipeline {
 
                         def branchConfig = readYaml file: "${branchConfigFile}"
                         branchConfig.repositories = repositories
+                        branchConfig.quarkus.main.check_enabled = params.IS_LTS_VERSION
+                        branchConfig.mandrel.enabled = params.IS_LTS_VERSION
 
                         echo "Write dsl branch_config => ${branchConfig}"
                         sh "rm -f ${branchConfigFile}"

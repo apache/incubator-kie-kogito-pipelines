@@ -1,0 +1,289 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+// Deploy jobs
+IMAGES_DEPLOY = 'kogito-images-deploy'
+EXAMPLES_IMAGES_DEPLOY = 'kogito-examples-images-deploy'
+OPERATOR_DEPLOY = 'kogito-operator-deploy'
+
+// Map of executed jobs
+// See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
+// for more options on built job entity
+JOBS = [:]
+
+defaultImageParamsPrefix = 'IMAGE'
+kogitoImagesParamsPrefix = 'KOGITO_IMAGES'
+examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
+baseImageParamsPrefix = 'BASE_IMAGE'
+promoteImageParamsPrefix = 'PROMOTE_IMAGE'
+
+// Should be multibranch pipeline
+pipeline {
+    agent {
+        label 'kie-rhel7 && !master'
+    }
+
+    options {
+        timeout(time: 1380, unit: 'MINUTES')
+    }
+
+    // parameters {
+    // For parameters, check into ./dsl/jobs.groovy file
+    // }
+
+    environment {
+        // Some generated env is also defined into ./dsl/jobs.groovy file
+
+        KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+
+        IMAGE_NAME_NIGHTLY_SUFFIX = 'nightly'
+
+        // Use branch name in nightly tag as we may have parallel main and release branch builds
+        NIGHTLY_TAG = """${getBuildBranch()}-${sh(
+                returnStdout: true,
+                script: 'date -u "+%Y-%m-%d"'
+            ).trim()}"""
+}
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    echo "nightly tag is ${env.NIGHTLY_TAG}"
+
+                    currentBuild.displayName = env.NIGHTLY_TAG
+                }
+            }
+        }
+
+        stage('Build & Deploy Images') {
+            when {
+                expression { return isImagesDeploy() }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                    addDeployImageWithLatestTagParam(buildParams)
+
+                    // For testing
+                    addSkipTestsParam(buildParams)
+                    addExamplesParam(buildParams)
+
+                    // Ask to create the PR with changes occuring in this
+                    addBooleanParam(buildParams, 'CREATE_PR', true)
+
+                    buildJob(IMAGES_DEPLOY, buildParams)
+                }
+            }
+        }
+
+        stage('Build & Deploy Examples Images') {
+            when {
+                expression { return isExamplesImagesDeploy() }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+                    if (env.NATIVE) {
+                        if (env.NATIVE_BUILDER_IMAGE) {
+                            addDisplayNameParam(buildParams, 'lts')
+                            addImageBuildParams(buildParams, env.NIGHTLY_TAG, defaultImageParamsPrefix, 'lts')
+                        } else {
+                            addDisplayNameParam(buildParams, 'native')
+                        }
+                    } else {
+                        addDeployImageWithLatestTagParam(buildParams)
+                    }
+
+                    // For BDD tests
+                    addSkipTestsParam(buildParams)
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+                    if (env.NATIVE) {
+                        addBooleanParam(buildParams, 'SKIP_NON_NATIVE_TESTS', true)
+                        if (env.NATIVE_BUILDER_IMAGE) {
+                            addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getLTSNativeBuilderImage())
+                            addStringParam(buildParams, 'BDD_TEST_TAGS', '~@ignorelts')
+                        }
+                    } else {
+                        addBooleanParam(buildParams, 'SKIP_NATIVE_TESTS', true)
+                    }
+                    addExamplesParam(buildParams)
+
+                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams)
+                }
+            }
+        }
+        stage('Build & Deploy Operator') {
+            when {
+                expression { return isOperatorDeploy() }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                    if (env.NATIVE) {
+                        addBooleanParam(buildParams, 'SKIP_DEPLOY', true)
+                        if (env.NATIVE_BUILDER_IMAGE) {
+                            addDisplayNameParam(buildParams, 'lts')
+                        } else {
+                            addDisplayNameParam(buildParams, 'native')
+                        }
+                    }
+                    addDeployImageWithLatestTagParam(buildParams)
+
+                    // For BDD tests
+                    addSkipTestsParam(buildParams)
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix)
+                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
+                    if (env.NATIVE) {
+                        addBooleanParam(buildParams, 'SKIP_NON_NATIVE_TESTS', true)
+                        if (env.NATIVE_BUILDER_IMAGE) {
+                            addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getLTSNativeBuilderImage())
+                            addStringParam(buildParams, 'BDD_TEST_TAGS', '~@ignorelts')
+                            addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix, 'lts')
+                        }
+                    } else {
+                        addBooleanParam(buildParams, 'SKIP_NATIVE_TESTS', true)
+                    }
+                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
+                    addExamplesParam(buildParams)
+
+                    buildJob(OPERATOR_DEPLOY, buildParams)
+                }
+            }
+        }
+    }
+    post {
+        failure {
+            mailer.sendMarkdownTestSummaryNotification('Nightly artifacts pipeline', "[${getGitBranch()}] Nightly pipeline", [env.KOGITO_CI_EMAIL_TO])
+        }
+        aborted {
+            mailer.sendMarkdownTestSummaryNotification('Nightly artifacts pipeline', "[${getGitBranch()}] Nightly pipeline", [env.KOGITO_CI_EMAIL_TO])
+        }
+    }
+}
+
+def buildJob(String jobName, Map buildParams, String jobKey = jobName) {
+    echo "Build ${jobName} with params ${buildParams.values()}"
+
+    def job = build(job: "${jobName}", wait: true, parameters: buildParams.values(), propagate: false)
+    registerJob(jobName, job)
+
+    // Set Unstable if job did not succeed
+    if (!isJobSucceeded(jobName)) {
+        unstable("Job ${jobName} finished with result ${job.getResult()}")
+        sendJobNotification(jobName, repo)
+    }
+    return job
+}
+
+def registerJob(String jobName, def job) {
+    JOBS[jobName] = job
+}
+
+def getJob(String jobName) {
+    return JOBS[jobName]
+}
+
+String getJobUrl(String jobName) {
+    echo "getJobUrl for ${jobName}"
+    return getJob(jobName)?.absoluteUrl ?: ''
+}
+
+String getJobResult(String jobName) {
+    echo "getJobResult for ${jobName}"
+    return getJob(jobName)?.result ?: ''
+}
+
+boolean isJobSucceeded(String jobName) {
+    return getJobResult(jobName) == 'SUCCESS'
+}
+
+void sendJobNotification(String jobName, String repo) {
+    mailer.sendMarkdownTestSummaryNotification("Nightly ${jobName}", "[${getGitBranch()}] ${getRepoNameCamelCase(repo)}", [env.KOGITO_CI_EMAIL_TO], '', getJobUrl(jobKey))
+}
+
+String getLTSJobKey(String jobName) {
+    return "${jobName}-lts"
+}
+
+List getDefaultBuildParams() {
+    List params = [:]
+    addDisplayNameParam(params)
+    addBooleanParam(params, 'SEND_NOTIFICATION', true)
+    return params
+}
+
+void addDisplayNameParam(buildParams, String key = '') {
+    addStringParam(params, 'DISPLAY_NAME', "${key ? "${key}-" : ''}${env.NIGHTLY_TAG}")
+}
+
+void addSkipTestsParam(buildParams) {
+    addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
+}
+
+void addExamplesParam(buildParams) {
+    addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
+    addStringParam(buildParams, 'EXAMPLES_REF', "nightly-${getBuildBranch()}")
+}
+
+void addImageBuildParams(List buildParams, String tag, String paramsPrefix = defaultImageParamsPrefix, String extraSuffix = '') {
+    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'NAME_SUFFIX'), (extraSuffix ? "${extraSuffix}-" : '') + env.IMAGE_NAME_NIGHTLY_SUFFIX)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)
+}
+
+void addDeployImageWithLatestTagParam(buildParams) {
+    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
+}
+
+void addStringParam(List params, String key, String value) {
+    params.put(key, string(name: key, value: value))
+}
+
+void addBooleanParam(List params, String key, boolean value) {
+    params.put(key, booleanParam(name: key, value: value))
+}
+
+String constructKey(String prefix, String paramId) {
+    return prefix ? "${prefix}_${paramId}" : paramId
+}
+
+String getBuildBranch() {
+    return env.GIT_BRANCH_NAME
+}
+
+String getGitAuthor() {
+    return env.GIT_AUTHOR
+}
+
+boolean isDeployImagesLatestTag() {
+    return getBuildBranch() == env.BRANCH_FOR_LATEST
+}
+
+boolean isImagesDeploy() {
+    return !params.SKIP_IMAGES
+}
+
+boolean isExamplesImagesDeploy() {
+    return !params.SKIP_EXAMPLES_IMAGES
+}
+
+boolean isOperatorDeploy() {
+    return !params.SKIP_OPERATOR
+}
+
+String getNativeBuilderImage() {
+    return env.NATIVE_BUILDER_IMAGE
+}
+
+String getArtifactsRepositoryParam() {
+    return env['ARTIFACTS_REPOSITORY'] ?: ''
+}

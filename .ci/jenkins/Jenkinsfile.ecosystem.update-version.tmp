@@ -1,0 +1,449 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+ARTIFACTS_REPOSITORIES = [
+    'drools' : [:],
+    'kogito-runtimes' : [:],
+    // 'kogito-apps' : [:],
+    // 'kogito-examples' : [
+    //     deploy : [
+    //         extraParams : [ booleanParam(name: 'UPDATE_NIGHTLY_BRANCH', value: true) ]
+    //     ]
+    // ],
+    // 'optaplanner' : [:],
+    // 'optaweb-vehicle-routing' : [:],
+    // 'optaweb-employee-rostering' : [:],
+    // 'optaplanner-quickstarts' : [
+    //     deploy : [
+    //         disabled : true
+    //     ]
+    // ]
+]
+
+UPDATE_VERSION_JOB_ID = 'update-version'
+
+// Map of executed jobs
+// See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
+// for more options on built job entity
+JOBS = [:]
+
+FAILED_STAGES = [:]
+UNSTABLE_STAGES = [:]
+
+pipeline {
+    // agent {
+    //     label 'kie-rhel7 && !master'
+    // }
+    agent any
+
+    options {
+        timeout(time: 240, unit: 'MINUTES')
+    }
+
+    // parameters {
+    // For parameters, check into ./dsl/jobs.groovy file
+    // }
+
+    environment {
+        // Some generated env is also defined into ./dsl/jobs.groovy file
+
+        KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+
+        IMAGE_NAME_NIGHTLY_SUFFIX = 'nightly'
+
+        // Use branch name in nightly tag as we may have parallel main and release branch builds
+        NIGHTLY_TAG = """${getGitBranch()}-${sh(
+                returnStdout: true,
+                script: 'date -u "+%Y-%m-%d"'
+            ).trim()}"""
+}
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    echo "nightly tag is ${env.NIGHTLY_TAG}"
+
+                    currentBuild.displayName = env.NIGHTLY_TAG
+                }
+            }
+        }
+
+        // Parallel on all artifacts jobs (they should be using the build-chain)
+        // Build and test and if ok, deploy
+        stage('Build & Deploy artifacts') {
+            when {
+                expression { return isArtifactsDeploy() }
+            }
+            steps {
+                script {
+                    Map parallelJobs = [:]
+
+                    ARTIFACTS_REPOSITORIES.each { repo, repoConfig ->
+                        parallelJobs.put("Build & Deploy ${repo}", {
+                            boolean buildOk = true
+
+                            if (!repoConfig.build?.disabled) {
+                                stage("Build&Test ${repo}") {
+                                    // Call build & test job
+                                    def buildParams = getDefaultBuildParams()
+                                    addSkipTestsParam(buildParams)
+                                    addSkipIntegrationTestsParam(buildParams)
+                                    if (repoConfig.build?.extraParams) {
+                                        buildParams.addAll(repoConfig.deploy.extraParams)
+                                    }
+
+                                    buildOk = buildJob(repo, BUILD_AND_TEST_JOB_ID, buildParams)
+                                }
+                            }
+
+                            if (buildOk && !repoConfig.deploy?.disabled) {
+                                stage("Deploy ${repo}") {
+                                    // Call deploy artifacts job
+                                    def buildParams = getDefaultBuildParams()
+                                    if (repoConfig.deploy?.extraParams) {
+                                        buildParams.addAll(repoConfig.deploy.extraParams)
+                                    }
+
+                                    buildJob(repo, DEPLOY_ARTIFACTS_JOB_ID, buildParams)
+                                }
+                            }
+                        })
+                    }
+
+                    // Launch in parallel
+                    parallel parallelJobs
+                }
+            }
+        }
+
+        // stage('Build & Deploy Images') {
+        //     when {
+        //         expression { return isImagesDeploy() }
+        //     }
+        //     stages {
+        //         stage('Build&Test images') {
+        //             steps {
+        //                 script {
+        //                     // Images build&test
+        //                     // This build and test images and push them with NIGHTLY_TAG
+        //                     // pipeline.properties will contain this info
+        //                     // image.{name}.full_name = ...
+        //                     // image.{name}.tag = ...
+        //                     // image.{name}.full_tag = ...
+        //                     // image.{name}.build = true|false
+        //                     // image.{name}.test = true|false
+        //                     // This job does also create the PR with updated artifacts
+
+        //                     def buildParams = getDefaultBuildParams()
+        //                     addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+
+        //                     // For testing
+        //                     addSkipTestsParam(buildParams)
+        //                     addExamplesParam(buildParams)
+
+        //                     // Ask to create the PR with changes occuring in this
+        //                     addBooleanParam(buildParams, 'CREATE_PR', true)
+
+        //                     buildJob('kogito-images', BUILD_AND_TEST_JOB_ID, buildParams)
+        //                 }
+        //             }
+        //         }
+        //         stage('Deploy images') {
+        //             steps {
+        //                 script {
+        //                     // Images Deploy
+        //                     // Send list of successfully build&test images
+        //                     // Pull images with NIGHTLY_TAG and push with Major.minor and latest tags
+
+        //                     // TODO retrieve list of successful build&test images
+
+        //                     def buildParams = getDefaultBuildParams()
+        //                     addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+        //                     addDeployImageWithLatestTagParam(buildParams)
+
+        //                     buildJob('kogito-images', DEPLOY_IMAGES_JOB_NAME_SUFFIX, buildParams)
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        // // LTS and main will be in separate nightlies
+        // // Like images, Operator and Examples images will be pushed with NIGHTLY_TAG in build&test and deploy will set the Major.minor and latest tags
+        // // Examples images will soon be deprecated (see 7.13 issues about having image built automatically in example)
+        // stage('Build & Deploy Examples Images') {
+        //     when {
+        //         expression { return isExamplesImagesDeploy() }
+        //     }
+        //     stages {
+        //         stage('Build&Test examples images') {
+        //             steps {
+        //                 script {
+        //                     // Examples Images build&test
+        //                     // This build and test images and push them with NIGHTLY_TAG
+        //                     // pipeline.properties will contain this info
+        //                     // image.{name}.full_name = ...
+        //                     // image.{name}.tag = ...
+        //                     // image.{name}.full_tag = ...
+
+        //                     def buildParams = getDefaultBuildParams()
+        //                     addSkipTestsParam(buildParams)
+        //                     addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+        //                     addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+
+        //                     // For BDD tests
+        //                     addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+        //                     addExamplesParam(buildParams)
+
+        //                     buildJob('kogito-examples-images', BUILD_AND_TEST_JOB_ID, buildParams)
+        //                 }
+        //             }
+        //         }
+        //         stage('Deploy examples images') {
+        //             steps {
+        //                 script {
+        //                     // Examples Images Deploy
+        //                     // Send list of successfully build&test images
+        //                     // Pull images with NIGHTLY_TAG and push with Major.minor and latest tags
+
+        //                     // TODO retrieve list of successful build&test images
+
+        //                     def buildParams = getDefaultBuildParams()
+        //                     addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+        //                     addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+        //                     addDeployImageWithLatestTagParam(buildParams)
+
+        //                     buildJob('kogito-examples-images', DEPLOY_IMAGES_JOB_NAME_SUFFIX, buildParams)
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        // stage('Build & Deploy Operator') {
+        //     when {
+        //         expression { return isOperatorDeploy() }
+        //     }
+        //     stages {
+        //         stage('Build&Test operator') {
+        //             steps {
+        //                 script {
+        //                     // Operator build&test
+        //                     // This build and test images and push them with NIGHTLY_TAG
+        //                     // pipeline.properties will contain this info
+        //                     // image.{name}.full_name = ...
+        //                     // image.{name}.tag = ...
+        //                     // image.{name}.full_tag = ...
+
+        //                     def buildParams = getDefaultBuildParams()
+        //                     addSkipTestsParam(buildParams)
+        //                     addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+
+        //                     // For BDD tests
+        //                     addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+        //                     addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix)
+        //                     addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
+        //                     addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
+        //                     addExamplesParam(buildParams)
+
+        //                     buildJob('kogito-operator', BUILD_AND_TEST_JOB_ID, buildParams)
+        //                 }
+        //             }
+        //         }
+        //         stage('Deploy operator') {
+        //             steps {
+        //                 script {
+        //                     // Operator Deploy
+        //                     // Send list of successfully build&test images
+        //                     // Pull images with NIGHTLY_TAG and push with Major.minor and latest tags
+
+        //                     // TODO retrieve list of successful build&test images
+
+        //                     def buildParams = getDefaultBuildParams()
+        //                     addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+        //                     addDeployImageWithLatestTagParam(buildParams)
+
+    //                         buildJob('kogito-operator', DEPLOY_IMAGES_JOB_NAME_SUFFIX, buildParams)
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+    }
+    post {
+        unsuccessful {
+            sendPipelineErrorNotification()
+        }
+    }
+}
+
+boolean buildJob(String repo, String jobNameSuffix, List buildParams) {
+    String jobName = constructJobName(repo, jobNameSuffix)
+    echo "Build ${jobName} with params ${buildParams}"
+
+    def job = build(job: "${jobName}", wait: true, parameters: buildParams, propagate: false)
+    JOBS[jobName] = job
+
+    // Set Unstable if job did not succeed
+    if (!isJobSucceeded(jobName)) {
+        addUnstableStage(jobName)
+        unstable("Job ${jobName} finished with result ${getJobResult(jobName)}")
+        sendJobNotification(jobName, repo)
+        return false
+    }
+
+    return true
+}
+
+String constructJobName(repo, jobNameSuffix) {
+    return "${repo}.${jobNameSuffix}"
+}
+
+def getJob(String jobKey) {
+    return JOBS[jobKey]
+}
+
+String getJobUrl(String jobKey) {
+    echo "getJobUrl for ${jobKey}"
+    return getJob(jobKey)?.absoluteUrl ?: ''
+}
+
+String getJobResult(String jobKey) {
+    echo "getJobResult for ${jobKey}"
+    return getJob(jobKey)?.result ?: ''
+}
+
+String getJobBuildNumber(String jobKey) {
+    echo "getJobBuildNumber for ${jobKey}"
+    return getJob(jobKey)?.number ?: ''
+}
+
+boolean isJobSucceeded(String jobKey) {
+    return getJobResult(jobKey) == 'SUCCESS'
+}
+
+void addFailedStage(String jobKey = '') {
+    FAILED_STAGES.put("${STAGE_NAME}", jobKey)
+}
+void addUnstableStage(String jobKey = '') {
+    UNSTABLE_STAGES.put("${STAGE_NAME}", jobKey)
+}
+
+void sendJobNotification(String jobKey, String repo) {
+    String msgBody = "**Nightly ${jobKey} job** #${getJobBuildNumber(jobKey)} was: ${getJobResult(jobKey)}\nPlease look here: ${getJobUrl(jobKey)}"
+    String subject = "[${getGitBranch()}] ${getRepoNameCamelCase(repo)}"
+    echo "sendJobNotification with subject ${subject} and body ${msgBody}"
+    emailext body: msgBody,
+             subject: subject,
+             to: env.KOGITO_CI_EMAIL_TO
+}
+
+void sendPipelineErrorNotification() {
+    String bodyMsg = "Kogito nightly job #${BUILD_NUMBER} was: ${currentBuild.currentResult}"
+
+    paramsStr = ''
+    if (params.SKIP_TESTS) {
+        paramsStr += '\n- Tests skipped'
+    }
+    if (params.SKIP_ARTIFACTS) {
+        paramsStr += '\n- Artifacts skipped'
+    }
+    if (params.SKIP_IMAGES) {
+        paramsStr += '\n- Images skipped'
+    }
+    if (params.SKIP_OPERATOR) {
+        paramsStr += '\n- Operator skipped'
+    }
+    bodyMsg += paramsStr ? "\n\nConfiguration:${paramsStr}" : '\n'
+
+    if (FAILED_STAGES.size() > 0) {
+        bodyMsg += '\nFailed stages: \n- '
+        bodyMsg += FAILED_STAGES.collect { "${it.key} => ${getJobUrl(it.value)}" }.join('\n- ')
+    }
+    bodyMsg += '\n'
+    if (UNSTABLE_STAGES.size() > 0) {
+        bodyMsg += '\nUnstable stages: \n- '
+        bodyMsg += UNSTABLE_STAGES.collect { "${it.key} => ${getJobUrl(it.value)}" }.join('\n- ')
+    }
+    bodyMsg += '\n'
+    bodyMsg += "\nPlease look here: ${BUILD_URL}"
+    emailext body: bodyMsg, subject: "[${getGitBranch()}][d] Full Pipeline",
+                to: env.KOGITO_CI_EMAIL_TO
+}
+
+List getDefaultBuildParams(String key = '') {
+    List params = []
+    addStringParam(params, 'DISPLAY_NAME', "${key ? "${key}-" : ''}${env.NIGHTLY_TAG}")
+    return params
+}
+
+void addSkipTestsParam(buildParams) {
+    addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
+}
+
+void addSkipIntegrationTestsParam(buildParams) {
+    addBooleanParam(buildParams, 'SKIP_INTEGRATION_TESTS', params.SKIP_TESTS)
+}
+
+void addExamplesParam(buildParams) {
+    addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
+    addStringParam(buildParams, 'EXAMPLES_REF', "nightly-${getGitBranch()}")
+}
+
+void addImageBuildParams(List buildParams, String tag, String paramsPrefix = defaultImageParamsPrefix, String extraSuffix = '') {
+    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'NAME_SUFFIX'), (extraSuffix ? "${extraSuffix}-" : '') + env.IMAGE_NAME_NIGHTLY_SUFFIX)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)
+}
+
+void addDeployImageWithLatestTagParam(buildParams) {
+    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
+}
+
+void addStringParam(List params, String key, String value) {
+    params.add(string(name: key, value: value))
+}
+
+void addBooleanParam(List params, String key, boolean value) {
+    params.add(booleanParam(name: key, value: value))
+}
+
+String constructKey(String prefix, String paramId) {
+    return prefix ? "${prefix}_${paramId}" : paramId
+}
+
+String getGitBranch() {
+    return env.GIT_BRANCH_NAME
+}
+
+String getGitAuthor() {
+    return env.GIT_AUTHOR
+}
+
+boolean isDeployImagesLatestTag() {
+    return getGitBranch() == env.BRANCH_FOR_LATEST
+}
+
+boolean isArtifactsDeploy() {
+    return !params.SKIP_ARTIFACTS
+}
+
+boolean isImagesDeploy() {
+    return !params.SKIP_IMAGES
+}
+
+boolean isExamplesImagesDeploy() {
+    return !params.SKIP_EXAMPLES_IMAGES
+}
+
+boolean isOperatorDeploy() {
+    return !params.SKIP_OPERATOR
+}
+
+String getRepoNameCamelCase(String repoName) {
+    List words = repoName.split('-') as List
+    return words.collect { it.isEmpty() ? it : it.substring(0, 1).toUpperCase() + it.substring(1).toLowerCase() }.join(' ')
+}

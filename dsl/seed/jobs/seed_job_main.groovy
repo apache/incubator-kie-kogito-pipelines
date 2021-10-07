@@ -78,7 +78,7 @@ pipelineJob('0-seed-job') {
 def jobParams = KogitoJobUtils.getDefaultJobParams(this, KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
 jobParams.job.name = '0-prepare-release-branch'
 jobParams.job.folder = ''
-jobParams.jenkinsfile = '.ci/jenkins//Jenkinsfile.release.prepare'
+jobParams.jenkinsfile = '.ci/jenkins/Jenkinsfile.release.prepare'
 jobParams.job.description = 'Prepare env for a release'
 KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
     parameters {

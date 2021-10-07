@@ -14,7 +14,7 @@ enum JobType {
     NIGHTLY(
         optional: true,
     ),
-    // UPDATE_VERSION,
+    UPDATE_VERSION,
     RELEASE(
         optional: true,
         isActiveClosure: { script -> !Utils.isMainBranch(script) }

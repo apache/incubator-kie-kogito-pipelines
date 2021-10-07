@@ -30,9 +30,6 @@ jobs:
       with:
         java-version: 1.8
 
-    - name: Setup pipeline env
-      run: cd $GITHUB_WORKSPACE/main/.ci/jenkins/tests && ./setup_pipeline_env.sh
-
     - name: Test pipelines
       run: cd $GITHUB_WORKSPACE/main/.ci/jenkins/tests && mvn -B clean test
 

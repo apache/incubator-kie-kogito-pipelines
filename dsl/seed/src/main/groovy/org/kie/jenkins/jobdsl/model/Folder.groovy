@@ -67,10 +67,10 @@ enum Folder {
         ],
     ),
 
-    // UPDATE_VERSION(
-    //     jobType: JobType.UPDATE_VERSION,
-    //     environment: Environment.DEFAULT,
-    // ),
+    UPDATE_VERSION(
+        jobType: JobType.UPDATE_VERSION,
+        environment: Environment.DEFAULT,
+    ),
 
     TOOLS(
         jobType: JobType.TOOLS,
@@ -122,9 +122,9 @@ enum Folder {
         return this.jobType == JobType.PULLREQUEST
     }
 
-    // boolean isUpdateVersion() {
-    //     return this.jobType == JobType.UPDATE_VERSION
-    // }
+    boolean isUpdateVersion() {
+        return this.jobType == JobType.UPDATE_VERSION
+    }
 
     boolean isTools() {
         return this.jobType == JobType.TOOLS
@@ -159,12 +159,6 @@ enum Folder {
     // OR
     // - it is active and the environment is also active
     boolean isActive(def script) {
-        // script.println("isActive call for folder ${this.name()}")
-        // script.println("isActive call for folder ${this.name()}: jobtype name ? ${this.jobType.name()}")
-        // script.println("isActive call for folder ${this.name()}: jobtype optional ? ${this.jobType.isOptional()}")
-        // script.println("isActive call for folder ${this.name()}: jobtype active ? ${this.jobType.isActive(script)}")
-        // script.println("isActive call for folder ${this.name()}: environment name ? ${this.environment.name()}")
-        // script.println("isActive call for folder ${this.name()}: environment active ? ${this.environment.isActive(script)}")
         return !this.jobType.isOptional() || (this.jobType.isActive(script) && this.environment.isActive(script))
     }
 
@@ -173,8 +167,8 @@ enum Folder {
             getAllPullRequestFolders(script) +
             getAllReleaseFolders(script) +
             getAllToolsFolders(script) +
-            getAllOtherFolders(script)
-    // Folder.UPDATE_VERSION,
+            getAllOtherFolders(script) +
+            getAllUpdateVersionFolders(script)
     }
 
     static List<Folder> getAllActiveFolders(def script) {
@@ -187,6 +181,10 @@ enum Folder {
 
     static List<Folder> getAllPullRequestFolders(def script) {
         return getAllFoldersByJobTypeAndEnvironments(script, JobType.PULLREQUEST, Environment.getActiveEnvironments(script))
+    }
+
+    static List<Folder> getAllUpdateVersionFolders(def script) {
+        return getAllFoldersByJobTypeAndEnvironments(script, JobType.UPDATE_VERSION, Environment.getActiveEnvironments(script))
     }
 
     static List<Folder> getAllReleaseFolders(def script) {

@@ -1,0 +1,122 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+import org.kie.jenkins.MavenCommand
+
+pipelinesCommon = null
+agentLabel = "${env.AGENT_LAVEL?.trim() ?: 'kie-rhel7'} && !master"
+timeoutValue = "${env.ADDITIONAL_TIMEOUT?.trim() ?: 60}"
+
+pipeline {
+    agent {
+        label agentLabel
+    }
+
+    tools {
+        maven 'kie-maven-3.6.3'
+        jdk 'kie-jdk11'
+    }
+
+    options {
+        timestamps()
+        timeout(time: timeoutValue, unit: 'MINUTES')
+    }
+
+    // parameters {
+    // Parameters should be defined into the DSL environment
+    // }
+
+    // environment {
+    // SCRIPT_ID should be define into the DSL job env
+    // MAIN_STAGE_NAME should be define into the DSL job env
+    // }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    cleanWs()
+
+                    checkout scm
+                    pipelinesCommon = load "${WORKSPACE}/${PIPELINES_COMMON_SCRIPT_PATH}"
+                    pipelinesCommon.init()
+                    pipelinesCommon.checkoutRepo()
+
+                    pipelinesCommon.executeInitializeScriptIfExists()
+                }
+            }
+        }
+        stage('Prepare for PR') {
+            when {
+                expression { return pipelinesCommon.isCreatePR() }
+            }
+            steps {
+                script {
+                    pipelinesCommon.prepareForPR()
+                }
+            }
+        }
+        stage('Run main script') {
+            steps {
+                script {
+                    pipelinesCommon.executeBeforeMainScriptIfExists()
+                    pipelinesCommon.executeMainScriptIfExists()
+                    pipelinesCommon.executeAfterMainScriptIfExists() // Here we could add post checks on version
+                }
+            }
+        }
+        stage('Create PR') {
+            when {
+                expression { return pipelinesCommon.isCreatePR() }
+            }
+            steps {
+                script {
+                    msg = pipelinesCommon.getCommitMessageForVersionUpdate()
+
+                    if (pipelinesCommon.isGitStageFilesScriptExisting()) {
+                        pipelinesCommon.executeGitStageFilesScriptIfExists()
+                    } else {
+                        pipelinesCommon.stageAllFiles()
+                    }
+                    pipelinesCommon.commitChanges(msg)
+                    pipelinesCommon.createPR(msg, pipelinesCommon.isPRMergedAutomatically())
+                }
+            }
+        }
+        stage('Merge PR') {
+            when {
+                expression { return pipelinesCommon.isPRMergedAutomatically() }
+            }
+            steps {
+                script {
+                    pipelinesCommon.checkoutRepo()
+                    pipelinesCommon.mergeAndPushPR()
+                }
+            }
+        }
+        stage('Tag repository') {
+            when {
+                expression { return pipelinesCommon.getGitTag() }
+            }
+            steps {
+                script {
+                    pipelinesCommon.tagRepository()
+                }
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                pipelinesCommon.archivePipelineProperties()
+                pipelinesCommon.executePostScriptIfExists()
+            }
+        }
+        cleanup {
+            script {
+                util.cleanNode('docker')
+            }
+        }
+    }
+}

@@ -1,21 +1,55 @@
-import org.kie.jenkins.jobdsl.KogitoJobTemplate
 import org.kie.jenkins.jobdsl.model.Folder
+import org.kie.jenkins.jobdsl.KogitoConstants
+import org.kie.jenkins.jobdsl.KogitoJobTemplate
 import org.kie.jenkins.jobdsl.KogitoJobUtils
 import org.kie.jenkins.jobdsl.Utils
 
 JENKINSFILE_PATH = '.ci/jenkins'
 
-// PRs
-setupKogitoRuntimesBDDPrJob()
+////////////////////////////
+// Test purpose
+// TODO to remove
+// Map getMultijobPRConfig(Folder jobFolder) {
+//     return [
+//         parallel: true,
+//         buildchain: true,
+//         jobs : [
+//             [
+//                 id: 'kogito-runtimes',
+//                 primary: true,
+//                 env : [
+//                     // Sonarcloud analysis only on main branch
+//                     // As we have only Community edition
+//                     DISABLE_SONARCLOUD: !Utils.isMainBranch(this),
+//                 ]
+//             ], [
+//                 id: 'kogito-apps',
+//                 dependsOn: 'kogito-runtimes',
+//                 repository: 'kogito-apps',
+//                 env : [
+//                     ADDITIONAL_TIMEOUT: jobFolder.isNative() ? '360' : '210',
+//                 ]
+//             ], [
+//                 id: 'kogito-examples',
+//                 dependsOn: 'kogito-runtimes',
+//                 repository: 'kogito-examples'
+//             ]
+//         ],
+//     ]
+// }
+// KogitoJobUtils.createAllEnvsPerRepoPRJobs(this, { jobFolder -> getMultijobPRConfig(jobFolder) })
 
-// Tools
-setupCreateIssueToolsJob()
-setupCleanOldNamespacesToolsJob()
-setupCleanOldNightlyImagesToolsJob()
-setupUpdateQuarkusToolsJob()
+// KogitoJobUtils.createAllJobsForArtifactsRepository(this, ['kogito', 'drools'])
+
+// KogitoJobUtils.createAllEnvsBuildChainBuildAndTestJobs(this)
+// KogitoJobUtils.createAllEnvsDeployArtifactsJobs(this)
+// KogitoJobUtils.createAllEnvsUpdateVersionJobs(this, ['kogito', 'drools'])
+// KogitoJobUtils.createAllEnvsMavenUpdateVersionJobs(this, ['kogito', 'drools'])
+////////////////////////////
 
 // Nightly
-setupNightlyJob()
+setupAllArtifactsNightlyJobs()
+setupAllCloudNightlyJobs()
 
 // Release
 setupReleaseJob()
@@ -40,7 +74,7 @@ void setupKogitoRuntimesBDDPrJob() {
 }
 
 void setupUpdateQuarkusToolsJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'update-quarkus-all', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.update-quarkus")
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'update-quarkus-all', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.ecosystem.update-quarkus")
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
@@ -86,54 +120,53 @@ void setupCreateIssueToolsJob() {
     }
 }
 
-void setupNightlyJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-nightly', Folder.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly", 'Kogito Nightly')
-    jobParams.triggers = [cron : '@midnight']
-    jobParams.env.putAll([
-        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+void setupAllArtifactsNightlyJobs() {
+    KogitoJobUtils.applyInAllNightlyFolders(this) { jobFolder ->
+        def jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-nightly.artifacts', jobFolder, "${JENKINSFILE_PATH}/Jenkinsfile.nightly.artifacts", 'Kogito Nightly')
+        jobParams.triggers = [cron : '@midnight']
+        jobParams.env.putAll([
+            JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+            GIT_BRANCH_NAME: "${GIT_BRANCH}",
+        ])
+        KogitoJobTemplate.createPipelineJob(this, jobParams).with {
+            parameters {
+                booleanParam('SKIP_TESTS', false, 'Skip all tests')
+            }
+        }
+    }
+}
 
-        GIT_BRANCH_NAME: "${GIT_BRANCH}",
-        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
+void setupAllCloudNightlyJobs() {
+    KogitoJobUtils.applyInAllNightlyFolders(this) { jobFolder ->
+        def jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-nightly.artifacts', jobFolder, "${JENKINSFILE_PATH}/Jenkinsfile.nightly.artifacts", 'Kogito Nightly')
+        // jobParams.triggers = [cron : '@midnight'] // TODO should be triggered by Artifacts pipeline once finished
+        jobParams.env.putAll([
+            JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
-        IMAGE_REGISTRY_CREDENTIALS: "${CLOUD_IMAGE_REGISTRY_CREDENTIALS_NIGHTLY}",
-        IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
-        IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
-        BRANCH_FOR_LATEST: "${CLOUD_IMAGE_LATEST_GIT_BRANCH}",
+            GIT_BRANCH_NAME: "${GIT_BRANCH}",
+            GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
 
-        MAVEN_SETTINGS_CONFIG_FILE_ID: "${MAVEN_SETTINGS_FILE_ID}",
-        ARTIFACTS_REPOSITORY: "${MAVEN_ARTIFACTS_REPOSITORY}",
-    ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
-        parameters {
-            booleanParam('SKIP_TESTS', false, 'Skip all tests')
+            IMAGE_REGISTRY_CREDENTIALS: "${CLOUD_IMAGE_REGISTRY_CREDENTIALS_NIGHTLY}",
+            IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
+            IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
+            BRANCH_FOR_LATEST: "${CLOUD_IMAGE_LATEST_GIT_BRANCH}",
+        ])
+        KogitoJobTemplate.createPipelineJob(this, jobParams).with {
+            parameters {
+                booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
-            booleanParam('SKIP_ARTIFACTS', false, 'To skip Artifacts (runtimes, examples, optaplanner) Deployment')
-            booleanParam('SKIP_IMAGES', false, 'To skip Images Deployment')
-            booleanParam('SKIP_EXAMPLES_IMAGES', false, 'To skip Examples Images Deployment')
-            booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
+                booleanParam('SKIP_IMAGES', false, 'To skip Images Deployment')
+                booleanParam('SKIP_EXAMPLES_IMAGES', false, 'To skip Examples Images Deployment')
+                booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
 
-            booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
+                booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
+            }
         }
     }
 }
 
 void setupReleaseJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-release', Folder.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release", 'Kogito Release')
-    jobParams.env.putAll([
-        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
-
-        GIT_BRANCH_NAME: "${GIT_BRANCH}",
-        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
-
-        IMAGE_REGISTRY_CREDENTIALS: "${CLOUD_IMAGE_REGISTRY_CREDENTIALS_RELEASE}",
-        IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
-        IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
-        BRANCH_FOR_LATEST: "${CLOUD_IMAGE_LATEST_GIT_BRANCH}",
-
-        DEFAULT_STAGING_REPOSITORY: "${MAVEN_NEXUS_STAGING_PROFILE_URL}",
-        ARTIFACTS_REPOSITORY: "${MAVEN_ARTIFACTS_REPOSITORY}",
-    ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
+    KogitoJobTemplate.createPipelineJob(this, KogitoJobUtils.getBasicJobParams(this, 'kogito-release', Folder.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release.run", 'Kogito Release'))?.with {
         parameters {
             stringParam('RESTORE_FROM_PREVIOUS_JOB', '', 'URL to a previous stopped release job which needs to be continued')
 

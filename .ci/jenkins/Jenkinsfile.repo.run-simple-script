@@ -1,0 +1,71 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+pipelinesCommon = null
+agentLabel = "${env.AGENT_LAVEL?.trim() ?: 'kie-rhel7'} && !master"
+timeoutValue = "${env.ADDITIONAL_TIMEOUT?.trim() ?: 60}"
+
+pipeline {
+    agent {
+        label agentLabel
+    }
+
+    tools {
+        maven 'kie-maven-3.6.3'
+        jdk 'kie-jdk11'
+    }
+
+    options {
+        timestamps()
+        timeout(time: timeoutValue, unit: 'MINUTES')
+    }
+
+    // parameters {
+    // Parameters should be defined into the DSL environment
+    // }
+
+    // environment {
+    // SCRIPT_ID should be define into the DSL job env
+    // MAIN_STAGE_NAME should be define into the DSL job env
+    // }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    cleanWs()
+
+                    checkout scm
+                    pipelinesCommon = load "${WORKSPACE}/${PIPELINES_COMMON_SCRIPT_PATH}"
+                    pipelinesCommon.init()
+                    pipelinesCommon.checkoutRepo()
+
+                    pipelinesCommon.executeInitializeScriptIfExists()
+                }
+            }
+        }
+        stage('Run main script') {
+            steps {
+                script {
+                    pipelinesCommon.executeBeforeMainScriptIfExists()
+                    pipelinesCommon.executeMainScriptIfExists()
+                    pipelinesCommon.executeAfterMainScriptIfExists()
+                }
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                pipelinesCommon.archivePipelineProperties()
+                pipelinesCommon.executePostScriptIfExists()
+            }
+        }
+        cleanup {
+            script {
+                util.cleanNode('docker')
+            }
+        }
+    }
+}
