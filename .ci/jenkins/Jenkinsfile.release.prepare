@@ -14,8 +14,6 @@ OPTAPLANNER_REPOS = ["${OPTAPLANNER_REPO}", 'optaweb-vehicle-routing', 'optaweb-
 IMAGES_REPOS = ['kogito-images']
 OPERATOR_REPOS = ['kogito-operator']
 
-KOGITO_PRODUCT_REPOS = ['rhpam-kogito-operator']
-
 JOBS = [:]
 
 pipeline {
@@ -63,10 +61,6 @@ pipeline {
                     repositories += IMAGES_REPOS
                     repositories += OPERATOR_REPOS
 
-                    if (params.BRANCH_PRODUCT_REPOSITORIES) {
-                        repositories += KOGITO_PRODUCT_REPOS
-                    }
-
                     echo "Create ${getKogitoReleaseBranch()} on repositories ${repositories}"
                     createBranches(repositories, getKogitoReleaseBranch())
 
@@ -104,10 +98,6 @@ pipeline {
                         repositories.addAll(collectRepos(IMAGES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(OPTAPLANNER_REPOS, getOptaPlannerReleaseBranch()))
-
-                        if (params.BRANCH_PRODUCT_REPOSITORIES) {
-                            repositories.addAll(collectRepos(KOGITO_PRODUCT_REPOS, getKogitoReleaseBranch()))
-                        }
 
                         def branchConfig = readYaml file: "${branchConfigFile}"
                         branchConfig.repositories = repositories
