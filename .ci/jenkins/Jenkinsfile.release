@@ -2,6 +2,7 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 @Library('jenkins-pipeline-shared-libraries')_
 
+DROOLS_DEPLOY = 'drools-deploy'
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
 OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
 APPS_DEPLOY = 'kogito-apps-deploy'
@@ -9,6 +10,8 @@ EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 EXAMPLES_IMAGES_DEPLOY = 'kogito-examples-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
+
+DROOLS_PROMOTE = 'drools-promote'
 RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
 OPTAPLANNER_PROMOTE = 'optaplanner-promote'
 APPS_PROMOTE = 'kogito-apps-promote'
@@ -64,6 +67,7 @@ pipeline {
                     assert getKogitoArtifactsVersion()
                     if (isArtifactsDeploy() || isArtifactsPromote()) {
                         assert getOptaPlannerVersion()
+                        assert getDroolsVersion()
                     }
 
                     currentBuild.displayName = getDisplayName()
@@ -79,6 +83,8 @@ pipeline {
             }
             post {
                 always {
+                    setReleasePropertyIfneeded('drools.version', getDroolsVersion())
+                    setReleasePropertyIfneeded('drools.branch', getDroolsReleaseBranch())
                     setReleasePropertyIfneeded('kogito.version', getKogitoArtifactsVersion())
                     setReleasePropertyIfneeded('kogito.images.version', getKogitoImagesVersion())
                     setReleasePropertyIfneeded('kogito.operator.version', getKogitoOperatorVersion())
@@ -89,14 +95,29 @@ pipeline {
             }
         }
 
+        stage('Build & Deploy Drools') {
+            when {
+                expression { return isArtifactsDeploy() }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams(getDroolsVersion())
+                    addSkipTestsParam(buildParams)
+
+                    buildJob(DROOLS_DEPLOY, buildParams)
+                }
+            }
+        }
+
         stage('Build & Deploy Kogito Runtimes') {
             when {
                 expression { return isArtifactsDeploy() }
             }
             steps {
                 script {
-                    def buildParams = getDefaultBuildParams()
+                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
                     addSkipTestsParam(buildParams)
+                    addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
 
                     buildJob(RUNTIMES_DEPLOY, buildParams)
                 }
@@ -125,7 +146,7 @@ pipeline {
             }
             steps {
                 script {
-                    def buildParams = getDefaultBuildParams()
+                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
                     addSkipTestsParam(buildParams)
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
 
@@ -140,7 +161,7 @@ pipeline {
             }
             steps {
                 script {
-                    def buildParams = getDefaultBuildParams()
+                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
                     addSkipTestsParam(buildParams)
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
 
@@ -266,14 +287,29 @@ pipeline {
             }
         }
 
+        stage('Promote Drools') {
+            when {
+                expression { return isArtifactsPromote() && isJobConsideredOk(DROOLS_DEPLOY) }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams(getDroolsVersion())
+                    addDeployBuildUrlParam(buildParams, DROOLS_DEPLOY)
+
+                    buildJob(DROOLS_PROMOTE, buildParams)
+                }
+            }
+        }
+
         stage('Promote Kogito Runtimes') {
             when {
                 expression { return isArtifactsPromote() && isJobConsideredOk(RUNTIMES_DEPLOY) }
             }
             steps {
                 script {
-                    def buildParams = getDefaultBuildParams()
+                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
                     addDeployBuildUrlParam(buildParams, RUNTIMES_DEPLOY)
+                    addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
 
                     buildJob(RUNTIMES_PROMOTE, buildParams)
                 }
@@ -301,7 +337,7 @@ pipeline {
             }
             steps {
                 script {
-                    def buildParams = getDefaultBuildParams()
+                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
                     addDeployBuildUrlParam(buildParams, APPS_DEPLOY)
 
@@ -316,7 +352,7 @@ pipeline {
             }
             steps {
                 script {
-                    def buildParams = getDefaultBuildParams()
+                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
                     addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
                     addDeployBuildUrlParam(buildParams, EXAMPLES_DEPLOY)
                     addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', isDeployAsLatest())
@@ -350,7 +386,7 @@ pipeline {
             }
             steps {
                 script {
-                    def buildParams = getDefaultBuildParams()
+                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
 
                     addDeployBuildUrlParamOrClosure(buildParams, EXAMPLES_IMAGES_DEPLOY)  {
                         addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag(), false, baseImageParamsPrefix)
@@ -557,9 +593,7 @@ def readPropertiesFromUrl(String url, String propsFilename) {
     return props
 }
 
-List getDefaultBuildParams(String version = '') {
-    version = version ?: getKogitoArtifactsVersion()
-
+List getDefaultBuildParams(String version) {
     List buildParams = []
     addDisplayNameParam(buildParams, getDisplayName(version))
     addStringParam(buildParams, 'PROJECT_VERSION', version)
@@ -626,7 +660,7 @@ String getDisplayName(version = '') {
 }
 
 String getKogitoArtifactsVersion() {
-    return params.PROJECT_VERSION ?: getReleaseProperty('kogito.version')
+    return params.KOGITO_VERSION ?: getReleaseProperty('kogito.version')
 }
 
 String getKogitoImagesVersion() {
@@ -641,6 +675,10 @@ String getOptaPlannerVersion() {
     return params.OPTAPLANNER_VERSION ?: getReleaseProperty('optaplanner.version')
 }
 
+String getDroolsVersion() {
+    return params.DROOLS_VERSION ?: getReleaseProperty('drools.version')
+}
+
 String getGitAuthor() {
     return env.GIT_AUTHOR
 }
@@ -651,6 +689,10 @@ String getArtifactsRepositoryParam() {
 
 String getOptaPlannerReleaseBranch() {
     return params.OPTAPLANNER_RELEASE_BRANCH ?: (getReleaseProperty('optaplanner.branch') ?: util.getReleaseBranchFromVersion(getOptaPlannerVersion()))
+}
+
+String getDroolsReleaseBranch() {
+    return params.DROOLS_RELEASE_BRANCH ?: (getReleaseProperty('drools.branch') ?: util.getReleaseBranchFromVersion(getDroolsVersion()))
 }
 
 String getStagingRepository() {
