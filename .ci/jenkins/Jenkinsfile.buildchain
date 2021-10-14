@@ -49,7 +49,7 @@ pipeline {
 
                     configFileProvider([configFile(fileId: getSettingsXmlId(), variable: 'MAVEN_SETTINGS_FILE')]) {
                         withCredentials([string(credentialsId: 'kie-ci1-token', variable: 'GITHUB_TOKEN')]) {
-                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/${getBuildChainConfigBranch()}/.ci/${buildChainActionInfo.file}' -folder='bc' build ${buildChainActionInfo.action} -url=${env.ghprbPullLink} ${buildChainActionInfo.arguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true'"
+                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/${getBuildChainConfigBranch()}/.ci/${buildChainActionInfo.file}' -folder='bc' build ${buildChainActionInfo.action} ${buildChainActionInfo.arguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true'"
                         }
                     }
                 }
@@ -85,6 +85,7 @@ pipeline {
         always {
             sh '$WORKSPACE/trace.sh'
             junit '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml'
+            archiveArtifacts(artifacts: '**/cypress/screenshots/**,**/cypress/videos/**', fingerprint: false, allowEmptyArchive: true)
         }
         failure {
             script {
@@ -126,41 +127,47 @@ String getMavenTool() {
     return env.BUILD_MAVEN_TOOL?.trim() ?: 'kie-maven-3.8.1'
 }
 
-String getPrType() {
+String getBuildChainType() {
     return env.BUILDCHAIN_PR_TYPE?.trim() ?: 'pr'
 }
 
-boolean isPR() {
-    return getPrType() == 'pr'
+boolean isPRBuildChainType() {
+    return getBuildChainType() == 'pr'
 }
 
-boolean isFDB() {
-    return getPrType() == 'fdb'
+boolean isFDBBuildChainType() {
+    return getBuildChainType() == 'fdb'
 }
 
-boolean isSingle() {
-    return getPrType() == 'single'
+boolean isBranchBuildChainType() {
+    return getBuildChainType() == 'branch'
 }
 
 def getBuildChainActionInfo() {
     def definitionFile = isNative() ? 'pull-request-native-config.yaml' :
                          isLts() ? 'pull-request-lts-config.yaml' :
                          'pull-request-config.yaml'
-    return isFDB() ? [action: 'fd', file: definitionFile, arguments: getBuildChainAdditionalArguments()] :
-                     isSingle() ? [action: 'single', file: definitionFile, arguments: getBuildChainAdditionalArguments()] :
-                     [action: 'pr', file: definitionFile, arguments: getBuildChainAdditionalArguments()]
-}
+    List arguments = []
+    if (env.BUILDCHAIN_PROJECT) {
+        arguments.add("-sp=${env.BUILDCHAIN_PROJECT.trim()}")
+    }
+    if (isBranchBuildChainType()) {
+        arguments.add("-p=${env.BUILDCHAIN_PROJECT.trim()}")
+        arguments.add("-b=${env.BUILDCHAIN_BRANCH.trim()}")
+        arguments.add("-g=${env.BUILDCHAIN_AUTHOR.trim()}")
+    } else {
+        arguments.add("-url=${env.ghprbPullLink} ")
+    }
 
-def getBuildChainAdditionalArguments() {
-    return env.BUILDCHAIN_PROJECT ? "-sp=${env.BUILDCHAIN_PROJECT.trim()}" : ''
+    return [action: getBuildChainType(), file: definitionFile, arguments: getBuildChainAdditionalArguments()]
 }
 
 String getBuildChainConfigBranch() {
     return env.BUILDCHAIN_CONFIG_BRANCH ?: 'main'
 }
 
-String getSettingsXmlId() { 
-    return isPR() || isFDB() ? 'kogito_pr_settings' : 'kogito_release_settings'
+String getSettingsXmlId() {
+    return isPRBuildChainType() || isFDBBuildChainType() ? 'kogito_pr_settings' : 'kogito_release_settings'
 }
 
 boolean isDefaultCheck() {
@@ -179,7 +186,7 @@ boolean isSonarCloudAnalysis() {
     if (env.DISABLE_SONARCLOUD?.toBoolean()) {
         return false
     }
-    if (isPR()) {
+    if (isPRBuildChainType()) {
         return isDefaultCheck() && !env.DOWNSTREAM_BUILD?.toBoolean()
     }
     return false

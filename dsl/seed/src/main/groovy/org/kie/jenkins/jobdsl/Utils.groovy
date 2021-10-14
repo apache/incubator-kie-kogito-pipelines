@@ -76,6 +76,10 @@ class Utils {
         return getBindingValue(script, "${repoName.toUpperCase()}_JENKINS_CONFIG_PATH")
     }
 
+    static String getPipelinesJenkinsConfigPath(def script) {
+        return getJenkinsConfigPath(script, KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
+    }
+
     static String getJenkinsEmailCredsId(def script) {
         return getBindingValue(script, 'JENKINS_EMAIL_CREDS_ID')
     }

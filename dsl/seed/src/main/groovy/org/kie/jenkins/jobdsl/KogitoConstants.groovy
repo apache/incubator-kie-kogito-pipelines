@@ -7,6 +7,7 @@ class KogitoConstants {
 
   static String KOGITO_PIPELINES_REPOSITORY = 'kogito-pipelines'
 
-  static String BUILDCHAIN_JENKINSFILE_PATH = '.ci/jenkins/Jenkinsfile.buildchain'
+  static String BUILDCHAIN_JENKINSFILE = 'Jenkinsfile.buildchain'
+  static String BUILDCHAIN_JENKINSFILE_PATH = ".ci/jenkins/${BUILDCHAIN_JENKINSFILE}"
   static String BUILDCHAIN_REPOSITORY = KOGITO_PIPELINES_REPOSITORY
 }

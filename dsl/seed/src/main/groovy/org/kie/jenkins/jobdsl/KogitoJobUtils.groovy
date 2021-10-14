@@ -61,4 +61,32 @@ class KogitoJobUtils {
         return createVersionUpdateToolsJob(script, repository, 'Quarkus', notificationProject, mavenUpdate, gradleUpdate)
     }
 
+    static def createBuildChainBranchJob(def script, def jobParams) {
+        String checkedRepository = jobParams.git.repository
+        
+        // Setup correct values for build-chain checkout
+        jobParams.git.repository = KogitoConstants.KOGITO_PIPELINES_REPOSITORY
+        jobParams.git.branch = VersionUtils.getProjectTargetBranch(KogitoConstants.KOGITO_PIPELINES_REPOSITORY, jobParams.git.branch, checkedRepository)
+        jobParams.jenkinsfile = Utils.getPipelinesJenkinsfilePath(script, KogitoConstants.BUILDCHAIN_JENKINSFILE)
+
+        return KogitoJobTemplate.createPipelineJob(script, jobParams).with {
+            parameters {
+                stringParam('DISPLAY_NAME', '', 'Setup a specific build display name')
+
+                stringParam('BUILDCHAIN_BRANCH', Utils.getGitBranch(script), 'Set the Git branch to test')
+                stringParam('BUILDCHAIN_AUTHOR', Utils.getGitAuthor(script), 'Set the Git author to test')
+            }
+
+            environmentVariables {
+                env('REPO_NAME', "${checkedRepository}")
+
+                env('BUILDCHAIN_PROJECT', "kiegroup/${checkedRepository}")
+                env('BUILDCHAIN_PR_TYPE', 'branch')
+                env('BUILDCHAIN_CONFIG_BRANCH', jobParams.git.branch)
+
+                env('MAVEN_SETTINGS_CONFIG_FILE_ID', Utils.getBindingValue(script, 'MAVEN_SETTINGS_FILE_ID'))
+                env('MAVEN_DEPENDENCIES_REPOSITORY', Utils.getBindingValue(script, 'MAVEN_ARTIFACTS_REPOSITORY'))
+            }
+        }
+    }
 }

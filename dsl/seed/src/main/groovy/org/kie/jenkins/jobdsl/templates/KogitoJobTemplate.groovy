@@ -498,8 +498,12 @@ class KogitoJobTemplate {
         ]
     }
 
-    static def getCompletedJobParams(def script, String repository, String jobName, String jobFolder, String jenkinsfileName, String jobDescription = '') {
-        def jobParams = getDefaultJobParams(script, repository)
+    static def getCompletedJobParams(def script, String repository, String jobName, String jobFolder, String jenkinsfileName = '', String jobDescription = '') {
+        return getCompletedJobParams(script, { getDefaultJobParams(script, repository) }, jobName, jobFolder, jenkinsfileName, jobDescription)
+    }
+
+    static def getCompletedJobParams(def script, Closure defaultJobParamsGetter, String jobName, String jobFolder, String jenkinsfileName = '', String jobDescription = '') {
+        def jobParams = defaultJobParamsGetter()
         jobParams.job.name = jobName
         jobParams.job.folder = jobFolder
         jobParams.jenkinsfile = jenkinsfileName
