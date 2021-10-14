@@ -17,6 +17,7 @@ pipeline {
         string(description: 'The product version', name: 'PRODUCT_VERSION')
         string(description: 'The optaplanner product version', name: 'OPTAPLANNER_PRODUCT_VERSION')
         string(description: 'The config repository branch', name: 'DEFAULT_CONFIG_BRANCH', defaultValue: 'main')
+        string(description: 'The RHBA release version. Something like 7.12 or main', name: 'RHBA_RELEASE_VERSION')
     }
     options {
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')
@@ -60,7 +61,7 @@ pipeline {
                         def pipelineHelper = new PipelineHelper(this)
                         pipelineHelper.retry(
                         {
-                            def SETTINGS_XML_ID = 'kogito-nightly-main'
+                            def SETTINGS_XML_ID = RHBA_RELEASE_VERSION ? 'kogito-nightly-version' : 'kogito-nightly-main'
                             def projectCollection = ['kogito-runtimes', 'optaplanner', 'kogito-examples', 'optaplanner-quickstarts', 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'jboss-integration/kogito-rhba']
                             def projectVariableMap = [:]
                             def additionalVariables = ['optaplannerProductVersion': env.OPTAPLANNER_PRODUCT_VERSION, 'optaplanner-quickstarts-scmRevision': 'stable', 'rhbaProductVersion': env.RHBA_LASTEST_PRODUCT_VERSION]
