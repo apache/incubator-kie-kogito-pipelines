@@ -6,6 +6,11 @@ pipeline {
     agent {
         label 'kie-rhel7 && !master'
     }
+    
+    tools {
+        maven 'kie-maven-3.6.3'
+        jdk 'kie-jdk11'
+    }
 
     options {
         timeout(time: 30, unit: 'MINUTES')
