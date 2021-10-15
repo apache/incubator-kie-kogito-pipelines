@@ -8,9 +8,9 @@ class VersionUtils {
             return 'main'
         }
         if (isKogitoProject(project)) {
-            return getTargetBranch(branch, isOldKieProject(upstreamProject) ? -7 : 0)
-        } else if (isOldKieProject(project)) {
-            return getTargetBranch(branch, isOldKieProject(upstreamProject) ? 0 : 7)
+            return getTargetBranch(branch, isDroolsOrOptaPlannerProject(upstreamProject) ? -7 : 0)
+        } else if (isDroolsOrOptaPlannerProject(project)) {
+            return getTargetBranch(branch, isDroolsOrOptaPlannerProject(upstreamProject) ? 0 : 7)
         } else {
             throw new Exception()
         }
@@ -42,7 +42,7 @@ class VersionUtils {
         return project.startsWith('drools')
     }
 
-    static boolean isOldKieProject(String project) {
+    static boolean isDroolsOrOptaPlannerProject(String project) {
         return isOptaplannerProject(project) || isDroolsProject(project)
     }
 
