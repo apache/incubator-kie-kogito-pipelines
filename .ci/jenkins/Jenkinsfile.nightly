@@ -261,7 +261,8 @@ pipeline {
 
                                     // For BDD tests
                                     addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getLTSNativeBuilderImage())
-                                    addStringParam(buildParams, 'BDD_TEST_TAGS', '@native && ~@nonnativelts')
+                                    addStringParam(buildParams, 'BDD_TEST_TAGS', '~@ignorelts')
+                                    addBooleanParam(buildParams, 'SKIP_NON_NATIVE_TESTS', true)
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
                                     addExamplesParam(buildParams)
 
@@ -286,7 +287,8 @@ pipeline {
 
                                     // For BDD tests
                                     addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getLTSNativeBuilderImage())
-                                    addStringParam(buildParams, 'BDD_TEST_TAGS', '@native && ~@nonnativelts')
+                                    addStringParam(buildParams, 'BDD_TEST_TAGS', '~@ignorelts')
+                                    addBooleanParam(buildParams, 'SKIP_NON_NATIVE_TESTS', true)
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix, 'lts')
                                     addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
