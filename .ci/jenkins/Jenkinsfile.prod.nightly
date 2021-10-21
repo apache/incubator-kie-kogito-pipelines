@@ -80,7 +80,7 @@ pipeline {
                         def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
 
                         build job: env.KOGITO_PROPERTIES_GENERATOR_PATH, parameters: [
-                            [$class: 'BooleanParameterValue', name: 'IS_PROD', value: false],
+                            [$class: 'BooleanParameterValue', name: 'IS_RELEASE', value: false],
                             [$class: 'StringParameterValue', name: 'BRANCH_NAME', value: env.BRANCH_NAME],
                             [$class: 'StringParameterValue', name: 'KOGITO_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['productVersion']],
                             [$class: 'StringParameterValue', name: 'OPTAPLANNER_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['optaplannerProductVersion']],
