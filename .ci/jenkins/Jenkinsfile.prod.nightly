@@ -181,8 +181,7 @@ def treatGitHashes(String gitInformationHashes) {
 }
 
 String getOptaPlannerBranch() {
-    def branch = calculateOptaplannerRepoBranch(env.CHANGE_BRANCH ?: BRANCH_NAME)
-    return branch
+    return calculateOptaplannerRepoBranch(env.CHANGE_BRANCH ?: BRANCH_NAME)
 }
 
 String getOptaPlannerQuickstartsBranch() {
