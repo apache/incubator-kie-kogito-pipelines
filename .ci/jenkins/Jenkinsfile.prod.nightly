@@ -193,7 +193,6 @@ String getOptaPlannerBranch() {
 String getOptaPlannerQuickstartsBranch() {
     def branch = env.CHANGE_BRANCH ?: BRANCH_NAME
     return branch == 'main' ? 'development' : calculateOptaplannerRepoBranch(branch)
-    return branch == 'main' ? 'development' : branch
 }
 
 String calculateOptaplannerRepoBranch(String branch) {
