@@ -34,7 +34,7 @@ usage() {
 }
 
 args=`getopt v:f:snh $*`
-if [ $? != 0 ]; then
+if [ "$#" -eq 0 -o $? != 0 ]; then
     >&2 echo ERROR: no args given.
 
     usage
@@ -195,14 +195,13 @@ finalize() {
 }
 
 DIFF_FILE='diff --git a/pom.xml b/pom.xml
-index cb78f5b..ffd401d 100644
+index 98dcf3da..2d927f65 100644
 --- a/pom.xml
 +++ b/pom.xml
-@@ -79,6 +79,25 @@
-         </overridesfile>
-     </properties>
- 
-+    <repositories>
+@@ -478,6 +478,15 @@
+     </build>
+
+     <repositories>
 +        <repository>
 +            <snapshots>
 +                <enabled>false</enabled>
@@ -211,21 +210,10 @@ index cb78f5b..ffd401d 100644
 +            <name>kogito</name>
 +            <url>https://repository.jboss.org/nexus/content/groups/kogito-public/</url>
 +        </repository>
-+        <repository>
-+            <snapshots>
-+            <enabled>false</enabled>
-+            </snapshots>
-+            <id>central</id>
-+            <name>Maven Central</name>
-+            <url>https://repo.maven.apache.org/maven2</url>
-+        </repository>
-+    </repositories>
 +
-     <distributionManagement>
-         <snapshotRepository>
-             <id>sonatype-nexus-snapshots</id>
-
-}
+         <repository>
+             <id>confluent</id>
+             <url>https://packages.confluent.io/maven/</url>
 '
 # execute
 $COMMAND
