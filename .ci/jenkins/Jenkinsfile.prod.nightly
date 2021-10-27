@@ -41,19 +41,6 @@ pipeline {
                 }
             }
         }
-        stage('Get latest RHBA product version') {
-            steps {
-                script {
-                    env.RHBA_LASTEST_PRODUCT_VERSION = maven.getLatestArtifactVersionPrefixFromRepository(RHBA_MAVEN_REPO_URL, 'org.drools', 'drools', RHBA_VERSION_PREFIX)
-                    println "[INFO] RHBA latest product version ${env.RHBA_LASTEST_PRODUCT_VERSION} from ${RHBA_MAVEN_REPO_URL}. Filtered by ${RHBA_VERSION_PREFIX}"
-                    if([null, 'null'].contains(env.RHBA_LASTEST_PRODUCT_VERSION)) {
-                        def errorMessage = "[ERROR] There's no RHBA product for ${RHBA_VERSION_PREFIX} prefix"
-                        println errorMessage
-                        error(errorMessage)
-                    }
-                }
-            }
-        }
         stage('Build Nightly projects') {
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE')
@@ -72,8 +59,7 @@ pipeline {
                                 'optaplanner-scmRevision': getOptaPlannerBranch(), 
                                 'optaplanner-quickstarts-scmRevision': getOptaPlannerQuickstartsBranch(), 
                                 'optaweb-vehicle-routing-scmRevision': getOptaPlannerBranch(), 
-                                'optaweb-employee-rostering-scmRevision': getOptaPlannerBranch(), 
-                                'rhbaProductVersion': env.RHBA_LASTEST_PRODUCT_VERSION
+                                'optaweb-employee-rostering-scmRevision': getOptaPlannerBranch(),
                             ]
                             configFileProvider([configFile(fileId: '49737697-ebd6-4396-9c22-11f7714808eb', variable: 'PRODUCTION_PROJECT_LIST')]) {
                                 pmebuild.buildProjects(projectCollection, "${SETTINGS_XML_ID}", "$WORKSPACE/build_config/kogito/nightly", "${env.PME_CLI_PATH}", projectVariableMap, additionalVariables, [:])
