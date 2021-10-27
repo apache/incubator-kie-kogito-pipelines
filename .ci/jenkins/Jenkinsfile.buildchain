@@ -117,7 +117,7 @@ String getAgentLabel() {
 }
 
 String getTimeoutValue() {
-    return "${env.ADDITIONAL_TIMEOUT?.trim() ?: (isNative() ? 360 : 180)}"
+    return "${env.ADDITIONAL_TIMEOUT?.trim() ?: (isNative() ? 720 : 180)}"
 }
 
 String getJdkTool() {
