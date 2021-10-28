@@ -158,7 +158,7 @@ def getBuildChainAdditionalArguments() {
 }
 
 String getBuildChainConfigBranch() {
-    return env.BUILDCHAIN_CONFIG_BRANCH ?: 'main'
+    return env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
 }
 
 String getSettingsXmlId() { 
