@@ -12,7 +12,7 @@ default:
     upstream: mvn clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }}
     after:
       current: |
-        docker system prune -f
+        docker info
 
 build:
   - project: kiegroup/drools
