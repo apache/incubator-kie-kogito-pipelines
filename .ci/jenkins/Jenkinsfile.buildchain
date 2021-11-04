@@ -1,5 +1,7 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
+buildChainVersion = '2.3.21'
+
 pipeline {
     agent {
         label getAgentLabel()
@@ -32,6 +34,13 @@ pipeline {
             steps {
                 script {
                     util.spaceLeft()
+                }
+            }
+        }
+        stage('Install build-chain tool') {
+            steps {
+                script {
+                    sh "npm install -g @kie/build-chain-action@${buildChainVersion} -registry=${NPM_REGISTRY_URL}"
                 }
             }
         }
