@@ -1,7 +1,5 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
-buildChainVersion = '2.3.21'
-
 pipeline {
     agent {
         label getAgentLabel()
@@ -40,6 +38,14 @@ pipeline {
         stage('Install build-chain tool') {
             steps {
                 script {
+                    println "[INFO] Recovering build-chain version from composite action file"
+                    def buildChainVersion = buildChain.getBuildChainVersionFromCompositeActionFile()
+                    if([null, 'null'].contains(buildChainVersion)) {
+                        def errorMessage = "[ERROR] The build-chain version can't be recovered. Please contact administrator"
+                        println errorMessage
+                        error(errorMessage)
+                    }
+                    println "[INFO] build-chain version recovered '${buildChainVersion}'"
                     sh "npm install -g @kie/build-chain-action@${buildChainVersion} -registry=${NPM_REGISTRY_URL}"
                 }
             }
