@@ -9,7 +9,7 @@ inputs:
     description: "the maven version"
     default: "3.8.1"
     required: false
-  key-prefix:
+  cache-key-prefix:
     description: "the cache key"
     required: false
 
@@ -26,5 +26,5 @@ runs:
       uses: actions/cache@v2
       with:
         path:  ~/.m2
-        key: ${{ inputs.key-prefix }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys:  ${{ inputs.key-prefix }}-m2
+        key: ${{ inputs.cache-key-prefix }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys:  ${{ inputs.cache-key-prefix }}-m2
