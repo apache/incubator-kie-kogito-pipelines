@@ -9,6 +9,9 @@ inputs:
     description: "the maven version"
     default: "3.8.1"
     required: false
+  key-prefix:
+    description: "the cache key"
+    required: true
 
 runs:
   using: "composite"
@@ -18,3 +21,10 @@ runs:
       with:
         java-version: ${{ inputs.java-version }}
         maven-version: ${{ inputs.maven-version }}
+    # See https://docs.github.com/en/actions/guides/building-and-testing-java-with-maven#caching-dependencies
+    - name: Cache Maven packages
+     uses: actions/cache@v2
+       with:
+         path:  ~/.m2
+         key: ${{ inputs.key-prefix }}-m2-${{ hashFiles('**/pom.xml') }}
+         restore-keys:  ${{ inputs.key-prefix }}-m2
