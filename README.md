@@ -8,9 +8,11 @@ This repository contains some of the pipelines of Kogito project.
   * [Nightly & Release pipelines](#nightly--release-pipelines)
   * [Tools pipelines](#tools-pipelines)
   * [Repositories' specific pipelines](#repositories-specific-pipelines)
-    * [Kogito Runtimes' other jobs](#kogito-runtimes-other-jobs)
+    * [Native checks](#native-checks)
+    * [Quarkus check](#quarkus-check)
+    * [LTS check](#lts-check)
     * [PR checks](#pr-checks)
-      * [Jenkins checks](#jenkins-checks)
+      * [Jenkins artifacts PR checks](#jenkins-artifacts-pr-checks)
       * [GitHub Action checks](#github-action-checks)
     * [Sonar cloud](#sonar-cloud)
 * [Configuration of pipelines](#configuration-of-pipelines)
@@ -23,12 +25,16 @@ This repository contains some of the pipelines of Kogito project.
 
 Apart from this repository, pipelines are also concerning those repositories:
 
+* [drools](https://github.com/kiegroup/drools)
 * [kogito-runtimes](https://github.com/kiegroup/kogito-runtimes)
 * [optaplanner](https://github.com/kiegroup/optaplanner)
 * [kogito-apps](https://github.com/kiegroup/kogito-apps)
 * [kogito-examples](https://github.com/kiegroup/kogito-examples)
 * [kogito-images](https://github.com/kiegroup/kogito-images)
 * [kogito-operator](https://github.com/kiegroup/kogito-operator)
+* [optaweb-employee-rostering](https://github.com/kiegroup/optaweb-employee-rostering)
+* [optaweb-vehicle-routing](https://github.com/kiegroup/optaweb-vehicle-routing)
+* [optaplanner-quickstarts](https://github.com/kiegroup/optaplanner-quickstarts)
 
 # The different Kogito pipelines
 
@@ -49,54 +55,62 @@ This is a set of cleanup utils jobs.
 
 ## Repositories' specific pipelines
 
-### Kogito Runtimes' other jobs
+### Native checks
 
-Those jobs can be found into the `kogito-runtimes` repository.  
-They are daily run jobs:
+In some of the Kogito repositories, you can find native checks. If that is the case, the pipeline can be found in `.ci/jenkins/Jenkinsfile.native`.
 
-* [kogito-native](https://github.com/kiegroup/kogito-runtimes/blob/main/.ci/jenkins/Jenkinsfile.native)  
-  Perform a daily native build&test of runtimes.
-* [kogito-quarkus](https://github.com/kiegroup/kogito-runtimes/blob/main/.ci/jenkins/Jenkinsfile.quarkus)  
-  Perform a daily check of runtimes against latest snapshot of Quarkus.
-* [kogito-drools-snapshot](https://github.com/kiegroup/kogito-runtimes/blob/main/.ci/jenkins/Jenkinsfile.drools)  
-  Perform a daily check of runtimes against latest snapshot of Drools.
+### Quarkus check
+
+A nightly check against Quarkus is done every night. Pipeline can be found in https://github.com/kiegroup/kogito-runtimes/blob/main/.ci/jenkins/Jenkinsfile.quarkus.
+
+### LTS check
+
+If the [LTS check](./dsl/seed/config/branch.yaml) is enabled, then Quarkus and Native checks are also performed against LTS version of Quarkus (see config `lts.quarkus_version`) and Quarkus native LTS builder image (see config `lts.native_builder_image`).
 
 ### PR checks
 
-For each PR there are two different CI builds, one using internal Jenkins executor and another one that leverage GitHub actions.
+PR checks are using the [build-chain](https://github.com/kiegroup/github-action-build-chain) for artifacts and its configuration can be found in [.ci](./.ci) folder.  
+They are run on both Jenkins and GHA with some slight differences.
 
-#### Jenkins checks
+There is one check per downstream repository. This allows parallelization and more flexibility in restart of a specific downstream repo.
 
-Each repository has a `Jenkinsfile` for the PR check.
+`kogito-images` is run only on Jenkins and is using its own `.ci/jenkins/Jenkinsfile`.
 
-The jobs are located into the `pullrequest` folder in Jenkins.  
-Only the Operator PR check is not yet in this folder as it is still on another Jenkins
+`kogito-operator` is run on another Jenkins and is using its own `.ci/jenkins/Jenkinsfile`.
+
+#### Jenkins artifacts PR checks
+
+The jobs can be found into the `{branch}/pullrequest` folder in Jenkins.  
+
+Each repository contains the needed DSL configuration (can be found in `.ci/jenkins/dsl`) and will most of the time use the [KogitoTemplate](./dsl/seed/src/main/java/../groovy/org/kie/jenkins/jobdsl/templates/KogitoJobTemplate.groovy) method `createMultijobPRJobs`.  
+This will generate all the needed PR checks and make use of the [Jenkinsfile.buildchain](./.ci/jenkins/Jenkinsfile.buildchain) file.
+
+Jenkins PR checks are of 3 different types:
+
+* Simple build&test (automatic)  
+  Regular testing
+* Native build&test (optional, can be launched with comment `jenkins run native`)  
+  Test all native parts of the repository
+* LTS build&test (optional, can be launched with comment `jenkins run LTS`)  
+  Test against quarkus LTS version (see above)
 
 #### GitHub Action checks
 
-Each repository has a `ci-pr.yaml` file in `.github/workflows` folder to configure the workflow.
-The `kogito-runtimes` repo has a different configuration, see additional notes at the end of this paragraph.
-
-Repo dependencies and build commands are configured in the centralized [`.ci` folder](https://github.com/kiegroup/kogito-pipelines/tree/main/.ci) in this repo.
-
-Build execution is performed using the [`github-action-chain`](https://github.com/kiegroup/github-action-build-chain) action that automatically performs cross repo builds.
+Each repository has a different yaml files in `.github/workflows` folder to configure the workflow.
 
 We are additionally using [`composite actions`](https://docs.github.com/en/actions/creating-actions/creating-a-composite-action) to centralized most common steps used by the different Kogito repositories' jobs. You can check the different kind of composite actions we have available at [`.ci/actions` folder](https://github.com/kiegroup/kogito-pipelines/tree/main/.ci/actions).
 
 After the build, test results are parsed and logged using the [`action-surefire-report`](https://github.com/ScaCap/action-surefire-report) action.
 
-Additional notes about `kogito-runtimes` build: this repo requires a full downstream build of all the repositories so to minimize disk usage and execution time the repo has been configured to use multiple jobs in parallel, one for each repo.
-This means that instead of a single `ci-pr.yaml` file, there are four of them: `runtimes-pr.yaml`, `optaplanner-pr.yaml`, `apps-pr.yaml` and `examples-pr.yaml`. For each of them all upstream repos are just compiled without test execution.
-
 ### Sonar cloud
 
-NOTE: test coverage analysis is executed only by Jenkins PR build and not while using GitHub action
+NOTE: test coverage analysis is executed only by **Jenkins PR simple build&test** and not while using GitHub action.
 
 # Configuration of pipelines
 
 ## Jenkins
 
-All pipelines can be found in [kogito Jenkins folder](https://eng-jenkins-csb-business-automation.apps.ocp4.prod.psi.redhat.com/job/KIE/job/kogito).
+All pipelines can be found in [kogito Jenkins folder](https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito).
 
 ### Jenkins jobs generation
 
