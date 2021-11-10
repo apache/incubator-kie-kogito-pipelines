@@ -17,6 +17,8 @@ Those jobs should be present at the same level as the nightly and/or release job
 
 Here is the list of jobs and link to Jenkinsfiles:
 
+* [drools-deploy](https://github.com/kiegroup/drools/blob/main/Jenkinsfile.deploy)
+* [drools-promote](https://github.com/kiegroup/drools/blob/main/Jenkinsfile.promote)
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.promote)
 * [optaplanner-deploy](https://github.com/kiegroup/optaplanner/blob/main/Jenkinsfile.deploy)
