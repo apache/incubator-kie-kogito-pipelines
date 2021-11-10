@@ -1,0 +1,56 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+REPOS = [ 'kogito-runtimes', 'kogito-examples', 'optaplanner', 'optaplanner-quickstarts' ]
+
+pipeline {
+    agent {
+        label 'kie-rhel7 && !master'
+    }
+
+    // parameters {
+    // For parameters, check into ./dsl/jobs.groovy file
+    // }
+
+    // environment {
+    // Some generated env is also defined into ./dsl/jobs.groovy file
+    // }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    assert getNewVersion()
+
+                    currentBuild.displayName = getNewVersion()
+                }
+            }
+        }
+
+        stage('Call update quarkus jobs') {
+            steps {
+                script {
+                    REPOS.each { repo ->
+                        launchUpdateQuarkusJob(repo)
+                    }
+                }
+            }
+        }
+    }
+}
+
+void launchUpdateQuarkusJob() {
+    println "[INFO] Launch Update quarkus job for repo ${repo}"
+
+    String jobName = "update-quarkus-${repo}"
+    List jobParams = []
+    jobParams.add(booleanParam(name: 'NEW_VERSION', value: getNewVersion()))
+
+    echo "Build ./${jobName} with parameters ${jobParams}"
+    build(job: "./${jobName}", parameters: jobParams, wait: false)
+}
+
+String getNewVersion() {
+    return params.NEW_VERSION
+}
