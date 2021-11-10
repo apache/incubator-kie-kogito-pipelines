@@ -2,8 +2,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 @Library('jenkins-pipeline-shared-libraries')_
 
-REPOS = [ 'kogito-runtimes', 'kogito-examples', 'optaplanner', 'optaplanner-quickstarts' ]
-
 pipeline {
     agent {
         label 'kie-rhel7 && !master'
@@ -31,7 +29,7 @@ pipeline {
         stage('Call update quarkus jobs') {
             steps {
                 script {
-                    REPOS.each { repo ->
+                    [ 'kogito-runtimes', 'kogito-examples', 'optaplanner', 'optaplanner-quickstarts' ].each { repo ->
                         launchUpdateQuarkusJob(repo)
                     }
                 }
