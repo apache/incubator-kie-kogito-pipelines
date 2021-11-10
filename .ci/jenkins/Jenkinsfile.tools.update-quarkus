@@ -40,7 +40,7 @@ pipeline {
     }
 }
 
-void launchUpdateQuarkusJob() {
+void launchUpdateQuarkusJob(String repo) {
     println "[INFO] Launch Update quarkus job for repo ${repo}"
 
     String jobName = "update-quarkus-${repo}"
