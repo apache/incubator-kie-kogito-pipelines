@@ -41,6 +41,8 @@ if (Utils.isMainBranch(this)) {
     setupReleaseJob()
 }
 
+setupUpdateQuarkusToolsJob()
+
 /////////////////////////////////////////////////////////////////
 // Methods
 /////////////////////////////////////////////////////////////////
@@ -58,6 +60,15 @@ void setupKogitoRuntimesBDDPrJob() {
     ]
     jobParams.disable_concurrent = true
     KogitoJobTemplate.createPRJob(this, jobParams)
+}
+
+void setupUpdateQuarkusToolsJob() {
+    def jobParams = getJobParams('update-quarkus-all', FolderUtils.getToolsFolder(this), "${JENKINSFILE_PATH}/Jenkinsfile.tools.update-quarkus")
+    KogitoJobTemplate.createPipelineJob(this, jobParams).with {
+        parameters {
+            stringParam('NEW_VERSION', '', 'Which version to set ?')
+        }
+    }
 }
 
 void setupCleanOldNamespacesToolsJob() {
