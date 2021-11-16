@@ -1,5 +1,7 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
+NOT_KOGITO_PROJECTS = ['optaplanner', 'optaweb-employee-rostering', 'optaweb-vehicle-routing', 'drools']
+
 pipeline {
     agent {
         label getAgentLabel()
@@ -177,7 +179,7 @@ def getBuildChainAdditionalArguments() {
 }
 
 String getBuildChainConfigBranch() {
-    return env.BUILDCHAIN_CONFIG_BRANCH ?: ['optaplanner', 'optaweb-employee-rostering', 'optaweb-vehicle-routing', 'drools'].contains(getProject()) ? '%{process.env.GITHUB_BASE_REF.replace(/(\d*)\.(.*)\.(.*)/g, (m, n1, n2, n3) => `\${+n1-7}.\${n2}.\${n3}`)}' : '\${BRANCH:main}'
+    return env.BUILDCHAIN_CONFIG_BRANCH ?: NOT_KOGITO_PROJECTS.contains(getProject()) ? '%{process.env.GITHUB_BASE_REF.replace(/(\d*)\.(.*)\.(.*)/g, (m, n1, n2, n3) => `\${+n1-7}.\${n2}.\${n3}`)}' : '\${BRANCH:main}'
 }
 
 String getSettingsXmlId() { 
