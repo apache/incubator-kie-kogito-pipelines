@@ -78,7 +78,7 @@ pipeline {
             steps {
                 script {
                     if (isSonarCloudAnalysis()) {
-                        def project = (env.BUILDCHAIN_PROJECT ? util.getProjectGroupName(env.BUILDCHAIN_PROJECT) : util.getProjectTriggeringJob())[1]
+                        def project = getProject()
                         // Project should define a `clone` for the current command so that the pom can be found for sonarcloud analysis
                         // Else this next step will fail
                         dir("bc/kiegroup_${project.replaceAll('-', '_')}/${project}") {
@@ -143,6 +143,10 @@ String getMavenTool() {
     return env.BUILD_MAVEN_TOOL?.trim() ?: 'kie-maven-3.8.1'
 }
 
+String getProject() {
+    return (env.BUILDCHAIN_PROJECT ? util.getProjectGroupName(env.BUILDCHAIN_PROJECT) : util.getProjectTriggeringJob())[1]
+}
+
 String getPrType() {
     return env.BUILDCHAIN_PR_TYPE?.trim() ?: 'pr'
 }
@@ -173,7 +177,7 @@ def getBuildChainAdditionalArguments() {
 }
 
 String getBuildChainConfigBranch() {
-    return env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
+    return env.BUILDCHAIN_CONFIG_BRANCH ?: ['optaplanner', 'optaweb-employee-rostering', 'optaweb-vehicle-routing', 'drools'].contains(getProject()) ? '%{process.env.GITHUB_BASE_REF.replace(/(\d*)\.(.*)\.(.*)/g, (m, n1, n2, n3) => `\${+n1-7}.\${n2}.\${n3}`)}' : '\${BRANCH:main}'
 }
 
 String getSettingsXmlId() { 
