@@ -112,7 +112,7 @@ pipeline {
             steps {
                 script {
                     dir(getRepoName()) {
-                        String commitMsg = "Bump ${getDependencyName()} version to ${getNewVersion()}"
+                        String commitMsg = "[${getBuildBranch()}] Bump ${getDependencyName()} version to ${getNewVersion()}"
                         githubscm.commitChanges(commitMsg)
                         githubscm.pushObject('origin', getPRBranch(), getAuthorCredsId())
 
