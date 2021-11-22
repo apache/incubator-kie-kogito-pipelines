@@ -453,7 +453,7 @@ class KogitoJobTemplate {
     static def createMultijobNativePRJobs(def script, Map multijobConfig, Closure defaultParamsGetter) {
         multijobConfig.testType = 'native'
         multijobConfig.extraEnv = multijobConfig.extraEnv ?: [:]
-        multijobConfig.extraEnv.putAll(
+        multijobConfig.extraEnv.putAll([
             DISABLE_SONARCLOUD: true
         ])
         if (!multijobConfig.extraEnv.contains('BUILD_MVN_OPTS_CURRENT')) {
