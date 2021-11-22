@@ -58,7 +58,7 @@ pipeline {
             steps {
                 script {
                     env.BUILD_MVN_OPTS_CURRENT += isSonarCloudAnalysis() ? ' -Prun-code-coverage' : ''
-                    env.BUILD_MVN_OPTS_CURRENT += getMavenProfiles() ? " -P${getMavenProfiles()}" : ''
+
                     def buildChainActionInfo = getBuildChainActionInfo()
 
                     configFileProvider([configFile(fileId: getSettingsXmlId(), variable: 'MAVEN_SETTINGS_FILE')]) {
@@ -179,10 +179,6 @@ String getSettingsXmlId() {
 
 boolean isLts() {
     return env.LTS ? env.LTS.toBoolean() : false
-}
-
-String getMavenProfiles() {
-    return env.MAVEN_PROFILES
 }
 
 boolean isSonarCloudAnalysis() {
