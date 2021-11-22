@@ -456,10 +456,10 @@ class KogitoJobTemplate {
         multijobConfig.extraEnv.putAll([
             DISABLE_SONARCLOUD: true
         ])
-        if (!multijobConfig.extraEnv.contains('BUILD_MVN_OPTS_CURRENT')) {
+        if (!multijobConfig.extraEnv.containsKey('BUILD_MVN_OPTS_CURRENT')) {
             multijobConfig.extraEnv.put('BUILD_MVN_OPTS_CURRENT', "-Pnative ${KogitoConstants.DEFAULT_NATIVE_CONTAINER_PARAMS}")
         }
-        if (!multijobConfig.extraEnv.contains('ADDITIONAL_TIMEOUT')) {
+        if (!multijobConfig.extraEnv.containsKey('ADDITIONAL_TIMEOUT')) {
             multijobConfig.extraEnv.put('ADDITIONAL_TIMEOUT', '720')
         }
         multijobConfig.optional = true
