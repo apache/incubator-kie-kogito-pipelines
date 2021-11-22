@@ -57,6 +57,7 @@ pipeline {
             }
             steps {
                 script {
+                    env.BUILD_MVN_OPTS_CURRENT = env.BUILD_MVN_OPTS_CURRENT ?: ''
                     env.BUILD_MVN_OPTS_CURRENT += isSonarCloudAnalysis() ? ' -Prun-code-coverage' : ''
 
                     def buildChainActionInfo = getBuildChainActionInfo()
