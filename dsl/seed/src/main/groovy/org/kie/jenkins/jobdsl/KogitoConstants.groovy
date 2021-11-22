@@ -9,4 +9,6 @@ class KogitoConstants {
 
   static String BUILDCHAIN_JENKINSFILE_PATH = '.ci/jenkins/Jenkinsfile.buildchain'
   static String BUILDCHAIN_REPOSITORY = KOGITO_PIPELINES_REPOSITORY
+
+  static String DEFAULT_NATIVE_CONTAINER_PARAMS = '-Dquarkus.native.container-build=true -Dnative'
 }

@@ -431,7 +431,8 @@ class KogitoJobTemplate {
         multijobConfig.extraEnv = multijobConfig.extraEnv ?: [:]
         multijobConfig.extraEnv.putAll([
             QUARKUS_BRANCH: Utils.getQuarkusLTSVersion(script),
-            LTS: true
+            LTS: true,
+            DISABLE_SONARCLOUD: true
         ])
         multijobConfig.optional = true
         multijobConfig.primaryTriggerPhrase = KogitoConstants.KOGITO_LTS_PR_TRIGGER_PHRASE
@@ -445,14 +446,22 @@ class KogitoJobTemplate {
     *
     * Overriden config:
     *   testType => 'native'
-    *   extraEnv => added `NATIVE`
+    *   extraEnv => added `NATIVE`, `BUILD_MVN_OPTS_CURRENT` and `NATIVE_PROFILE` if not set already
     *   optional => true
     *   primaryTriggerPhrase => '.*[j|J]enkins,? run native[ tests]?.*'
     */
     static def createMultijobNativePRJobs(def script, Map multijobConfig, Closure defaultParamsGetter) {
         multijobConfig.testType = 'native'
         multijobConfig.extraEnv = multijobConfig.extraEnv ?: [:]
-        multijobConfig.extraEnv.putAll([ NATIVE: true ])
+        multijobConfig.extraEnv.putAll(
+            DISABLE_SONARCLOUD: true
+        ])
+        if (!multijobConfig.extraEnv.contains('BUILD_MVN_OPTS_CURRENT')) {
+            multijobConfig.extraEnv.put('BUILD_MVN_OPTS_CURRENT', "-Pnative ${KogitoConstants.DEFAULT_NATIVE_CONTAINER_PARAMS}")
+        }
+        if (!multijobConfig.extraEnv.contains('ADDITIONAL_TIMEOUT')) {
+            multijobConfig.extraEnv.put('ADDITIONAL_TIMEOUT', '720')
+        }
         multijobConfig.optional = true
         multijobConfig.primaryTriggerPhrase = KogitoConstants.KOGITO_NATIVE_PR_TRIGGER_PHRASE
         createMultijobPRJobs(script, multijobConfig, defaultParamsGetter)
