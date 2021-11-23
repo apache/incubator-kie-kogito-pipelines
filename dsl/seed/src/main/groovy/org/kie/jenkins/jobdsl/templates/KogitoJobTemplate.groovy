@@ -404,11 +404,16 @@ class KogitoJobTemplate {
             }
 
             // Update env
-            if (jobCfg.env) {
-                jobParams.env.putAll(jobCfg.env)
+            // Job env overrides always any value
+            jobCfg.env.each { key, value ->
+                jobParams.env.put(key,value)
             }
-            if (multijobConfig.extraEnv) {
-                jobParams.env.putAll(multijobConfig.extraEnv)
+
+            // Multijob config env overrides only if not exists already
+            multijobConfig.extraEnv.each { key, value ->
+                if (!jobParams.env.containsKey(key)) {
+                    jobParams.env.put(key,value)
+                }
             }
 
             createPRJob(script, jobParams)
