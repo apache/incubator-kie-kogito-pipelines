@@ -314,7 +314,6 @@ class KogitoJobTemplate {
     *     dependsOn: (optional) which job should be executed before that one ? Ignored if `primary` is set (only considered for non-parallel jobs)
     *     jenkinsfile: (optional) where to lookup the jenkinsfile. else it will take the default one
     *   testType: (optional) Name of the tests. Used for the trigger phrase and commitContext. Default is `tests`.
-    *   extraEnv: (optional) Environment variables to set to all the jobs
     *   primaryTriggerPhrase: Redefined default primary trigger phrase
     */
     static def createMultijobPRJobs(def script, Map multijobConfig, Closure defaultParamsGetter) {
@@ -406,14 +405,7 @@ class KogitoJobTemplate {
             // Update env
             // Job env overrides always any value
             jobCfg.env.each { key, value ->
-                jobParams.env.put(key,value)
-            }
-
-            // Multijob config env overrides only if not exists already
-            multijobConfig.extraEnv.each { key, value ->
-                if (!jobParams.env.containsKey(key)) {
-                    jobParams.env.put(key,value)
-                }
+                jobParams.env.put(key, value)
             }
 
             createPRJob(script, jobParams)
@@ -427,18 +419,18 @@ class KogitoJobTemplate {
     *
     * Overriden config:
     *   testType => 'LTS'
-    *   extraEnv => added `QUARKUS_BRANCH`
+    *   jobs.env => added `QUARKUS_BRANCH`, `LTS` and `DISABLE_SONARCLOUD`
     *   optional => true
     *   primaryTriggerPhrase => '.*[j|J]enkins,? run LTS[ tests]?.*'
     */
     static def createMultijobLTSPRJobs(def script, Map multijobConfig, Closure defaultParamsGetter) {
         multijobConfig.testType = 'LTS'
-        multijobConfig.extraEnv = multijobConfig.extraEnv ?: [:]
-        multijobConfig.extraEnv.putAll([
-            QUARKUS_BRANCH: Utils.getQuarkusLTSVersion(script),
-            LTS: true,
-            DISABLE_SONARCLOUD: true
-        ])
+        multijobConfig.jobs.each { job ->
+            job.env = job.env ?: [:]
+            job.env.QUARKUS_BRANCH = Utils.getQuarkusLTSVersion(script)
+            job.env.LTS = true
+            job.env.DISABLE_SONARCLOUD = true
+        }
         multijobConfig.optional = true
         multijobConfig.primaryTriggerPhrase = KogitoConstants.KOGITO_LTS_PR_TRIGGER_PHRASE
         createMultijobPRJobs(script, multijobConfig, defaultParamsGetter)
@@ -451,21 +443,17 @@ class KogitoJobTemplate {
     *
     * Overriden config:
     *   testType => 'native'
-    *   extraEnv => added `NATIVE`, `BUILD_MVN_OPTS_CURRENT` and `NATIVE_PROFILE` if not set already
+    *   jobs.env => added `DISABLE_SONARCLOUD` and then `BUILD_MVN_OPTS_CURRENT` and `NATIVE_PROFILE` if not set already
     *   optional => true
     *   primaryTriggerPhrase => '.*[j|J]enkins,? run native[ tests]?.*'
     */
     static def createMultijobNativePRJobs(def script, Map multijobConfig, Closure defaultParamsGetter) {
         multijobConfig.testType = 'native'
-        multijobConfig.extraEnv = multijobConfig.extraEnv ?: [:]
-        multijobConfig.extraEnv.putAll([
-            DISABLE_SONARCLOUD: true
-        ])
-        if (!multijobConfig.extraEnv.containsKey('BUILD_MVN_OPTS_CURRENT')) {
-            multijobConfig.extraEnv.put('BUILD_MVN_OPTS_CURRENT', "-Pnative ${KogitoConstants.DEFAULT_NATIVE_CONTAINER_PARAMS}")
-        }
-        if (!multijobConfig.extraEnv.containsKey('ADDITIONAL_TIMEOUT')) {
-            multijobConfig.extraEnv.put('ADDITIONAL_TIMEOUT', '720')
+        multijobConfig.jobs.each { job ->
+            job.env = job.env ?: [:]
+            job.env.DISABLE_SONARCLOUD = true
+            job.env.BUILD_MVN_OPTS_CURRENT = job.env.BUILD_MVN_OPTS_CURRENT ?: "-Pnative ${KogitoConstants.DEFAULT_NATIVE_CONTAINER_PARAMS}"
+            job.env.ADDITIONAL_TIMEOUT = job.env.ADDITIONAL_TIMEOUT ?: '720'
         }
         multijobConfig.optional = true
         multijobConfig.primaryTriggerPhrase = KogitoConstants.KOGITO_NATIVE_PR_TRIGGER_PHRASE
