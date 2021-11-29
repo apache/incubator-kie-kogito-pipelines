@@ -38,9 +38,9 @@ pipeline {
         stage('Install build-chain tool') {
             steps {
                 script {
-                    println "[INFO] Getting build-chain version from composite action file"
+                    println '[INFO] Getting build-chain version from composite action file'
                     def buildChainVersion = buildChain.getBuildChainVersionFromCompositeActionFile()
-                    if([null, 'null'].contains(buildChainVersion)) {
+                    if ([null, 'null'].contains(buildChainVersion)) {
                         def errorMessage = "[ERROR] The build-chain version can't be recovered. Please contact administrator"
                         println errorMessage
                         error(errorMessage)
@@ -57,9 +57,9 @@ pipeline {
             }
             steps {
                 script {
-                    if (isSonarCloudAnalysis()) {
-                        env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} -Prun-code-coverage"
-                    }
+                    env.BUILD_MVN_OPTS_CURRENT = env.BUILD_MVN_OPTS_CURRENT ?: ''
+                    env.BUILD_MVN_OPTS_CURRENT += isSonarCloudAnalysis() ? ' -Prun-code-coverage' : ''
+
                     def buildChainActionInfo = getBuildChainActionInfo()
 
                     configFileProvider([configFile(fileId: getSettingsXmlId(), variable: 'MAVEN_SETTINGS_FILE')]) {
@@ -132,7 +132,7 @@ String getAgentLabel() {
 }
 
 String getTimeoutValue() {
-    return "${env.ADDITIONAL_TIMEOUT?.trim() ?: (isNative() ? 720 : 180)}"
+    return "${env.ADDITIONAL_TIMEOUT?.trim() ?: 180}"
 }
 
 String getJdkTool() {
@@ -160,9 +160,7 @@ boolean isSingle() {
 }
 
 def getBuildChainActionInfo() {
-    def definitionFile = isNative() ? 'pull-request-native-config.yaml' :
-                         isLts() ? 'pull-request-lts-config.yaml' :
-                         'pull-request-config.yaml'
+    def definitionFile = isLts() ? 'pull-request-lts-config.yaml' : 'pull-request-config.yaml'
     return isFDB() ? [action: 'fd', file: definitionFile, arguments: getBuildChainAdditionalArguments()] :
                      isSingle() ? [action: 'single', file: definitionFile, arguments: getBuildChainAdditionalArguments()] :
                      [action: 'pr', file: definitionFile, arguments: getBuildChainAdditionalArguments()]
@@ -176,16 +174,8 @@ String getBuildChainConfigBranch() {
     return env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
 }
 
-String getSettingsXmlId() { 
+String getSettingsXmlId() {
     return isPR() || isFDB() ? 'kogito_pr_settings' : 'kogito_release_settings'
-}
-
-boolean isDefaultCheck() {
-    return !isNative() && !isLts()
-}
-
-boolean isNative() {
-    return env.NATIVE ? env.NATIVE.toBoolean() : false
 }
 
 boolean isLts() {
@@ -197,7 +187,7 @@ boolean isSonarCloudAnalysis() {
         return false
     }
     if (isPR()) {
-        return isDefaultCheck() && !env.DOWNSTREAM_BUILD?.toBoolean()
+        return !env.DOWNSTREAM_BUILD?.toBoolean()
     }
     return false
 }
