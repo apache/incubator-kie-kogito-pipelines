@@ -6,15 +6,17 @@ GITHUB_URL_SSH="git@github.com:"
 
 MINOR_VERSION=
 DRY_RUN=false
+BRANCH=main
 
 usage() {
-    echo 'Usage: update-quarkus-platform.sh -v $MINOR_VERSION -f $FORK [-s] [-n] COMMAND'
+    echo 'Usage: update-quarkus-platform.sh -v $MINOR_VERSION -f $FORK [-s] [-b] [-n] COMMAND'
     echo
     echo 'Options:'
     echo '  -v $MINOR_VERSION    set MINOR version'
     echo '                       e.g. 6.0.Final for Kogito 1.6.0.Final and OptaPlanner 8.6.0.Final'
     echo '  -f $FORK             GH account where the branch should be pushed'
     echo '  -s                   Use SSH to connect to GitHub'
+    echo '  -b $BRANCH           Quarkus Platform branch (optional. Default is `main`)'
     echo '  -n                   no execution: clones, creates the branch, but will not push or create the PR'
     echo '  COMMAND              may be `stage` or `finalize`'
     echo
@@ -33,7 +35,7 @@ usage() {
     echo '  sh update-quarkus-platform.sh -v 7.0.Final -f evacchi -n finalize'
 }
 
-args=`getopt v:f:snh $*`
+args=`getopt v:f:b:snh $*`
 if [ "$#" -eq 0 -o $? != 0 ]; then
     >&2 echo ERROR: no args given.
 
@@ -54,6 +56,9 @@ do
                 -s)     
                         GITHUB_URL=${GITHUB_URL_SSH}
                         shift;;
+                -b)     
+                        BRANCH=$2
+                        shift;shift ;;
                 -n)     
                         DRY_RUN=true
                         shift;;
@@ -102,7 +107,6 @@ esac
 REPO=quarkus-platform
 PR_FORK=$FORK/$REPO
 ORIGIN=quarkusio/$REPO
-BRANCH=main
 
 KOGITO_VERSION=1.$MINOR_VERSION
 OPTAPLANNER_VERSION=8.$MINOR_VERSION
@@ -136,24 +140,24 @@ stage() {
     # create branch
     git checkout -b $PR_BRANCH
     # process versions
-    mvn \
+    ./mvnw \
     versions:set-property \
     -Dproperty=kogito-quarkus.version \
     -DnewVersion=$KOGITO_VERSION \
     -DgenerateBackupPoms=false
-    mvn \
+    ./mvnw \
     versions:set-property \
     -Dproperty=optaplanner-quarkus.version \
     -DnewVersion=$OPTAPLANNER_VERSION \
     -DgenerateBackupPoms=false
     
     # update pom metadata
-    mvn validate -Pregen-kogito -N
+    ./mvnw validate -Pregen-kogito -N
     
     # add custom repositories
     echo "$DIFF_FILE" | patch pom.xml
 
-    mvn process-resources
+    ./mvnw -Dsync
     
     # commit all
     git commit -am "Kogito $KOGITO_VERSION + OptaPlanner $OPTAPLANNER_VERSION"
@@ -183,7 +187,7 @@ finalize() {
     # undo patch to add repos
     echo "$DIFF_FILE" | patch -R pom.xml
 
-    mvn process-resources
+    ./mvnw process-resources
 
     # overwrite old commit (no need to squash)
     git commit --amend --no-edit pom.xml
