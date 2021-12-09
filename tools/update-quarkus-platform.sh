@@ -136,24 +136,24 @@ stage() {
     # create branch
     git checkout -b $PR_BRANCH
     # process versions
-    mvn \
+    ./mvnw \
     versions:set-property \
     -Dproperty=kogito-quarkus.version \
     -DnewVersion=$KOGITO_VERSION \
     -DgenerateBackupPoms=false
-    mvn \
+    ./mvnw \
     versions:set-property \
     -Dproperty=optaplanner-quarkus.version \
     -DnewVersion=$OPTAPLANNER_VERSION \
     -DgenerateBackupPoms=false
     
     # update pom metadata
-    mvn validate -Pregen-kogito -N
+    ./mvnw validate -Pregen-kogito -N
     
     # add custom repositories
     echo "$DIFF_FILE" | patch pom.xml
 
-    mvn process-resources
+    ./mvnw -Dsync
     
     # commit all
     git commit -am "Kogito $KOGITO_VERSION + OptaPlanner $OPTAPLANNER_VERSION"
@@ -183,7 +183,7 @@ finalize() {
     # undo patch to add repos
     echo "$DIFF_FILE" | patch -R pom.xml
 
-    mvn process-resources
+    ./mvnw process-resources
 
     # overwrite old commit (no need to squash)
     git commit --amend --no-edit pom.xml
