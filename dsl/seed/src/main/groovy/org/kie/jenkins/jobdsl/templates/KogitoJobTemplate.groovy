@@ -202,13 +202,17 @@ class KogitoJobTemplate {
                                 }
                                 ghprbBuildStatus {
                                     messages {
-                                        ghprbBuildResultMessage {
-                                            result('ERROR')
-                                            message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **an error**. Please check [the logs](\${BUILD_URL}display/redirect).")
+                                        if (!jobParams.pr.disable_status_message_error) {
+                                            ghprbBuildResultMessage {
+                                                result('ERROR')
+                                                message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **an error**. Please check [the logs](\${BUILD_URL}display/redirect).")
+                                            }
                                         }
-                                        ghprbBuildResultMessage {
-                                            result('FAILURE')
-                                            message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **failed**. Please check [the logs](\${BUILD_URL}display/redirect).")
+                                        if (!jobParams.pr.disable_status_message_failure) {
+                                            ghprbBuildResultMessage {
+                                                result('FAILURE')
+                                                message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **failed**. Please check [the logs](\${BUILD_URL}display/redirect).")
+                                            }
                                         }
                                     }
                                 }
@@ -372,6 +376,12 @@ class KogitoJobTemplate {
                 jobParams.env.put('BUILDCHAIN_CONFIG_BRANCH', buildChainCheckoutBranch)
                 jobParams.git.repository = KogitoConstants.BUILDCHAIN_REPOSITORY
                 jobParams.jenkinsfile = KogitoConstants.BUILDCHAIN_JENKINSFILE_PATH
+
+                // Status messages are sent directly by the pipeline as comments
+                jobParams.pr.putAll([
+                    disable_status_message_error: true,
+                    disable_status_message_failure: true,
+                ])
             }
             jobParams.job.name += ".${jobCfg.id.toLowerCase()}"
 
