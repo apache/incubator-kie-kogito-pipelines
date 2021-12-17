@@ -102,6 +102,7 @@ pipeline {
         always {
             sh '$WORKSPACE/trace.sh'
             junit '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml'
+            archiveArtifacts artifacts: '**/*.log,**/cypress/screenshots/**,**/cypress/videos/**', allowEmptyArchive: true
         }
         failure {
             script {
