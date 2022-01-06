@@ -336,7 +336,19 @@ class KogitoJobTemplate {
                 jobParams.jenkinsfile = jobCfg.jenkinsfile
             }
 
-            jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
+            // TODO remove after testing
+            jobParams.pr.putAll([
+                run_only_for_labels: ['wip'],
+                run_only_for_branches: [ 'main' ],
+                authorized_users: [ 'kiegroup' ],
+                authorized_groups: [ 'kiegroup' ],
+            ])
+            // TODO remove after testing
+
+            // TODO set back after testing
+            // jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
+            jobParams.git.project_url = "https://github.com/kiegroup/${jobParams.git.repository}/"
+            // TODO set back after testing
 
             if (jobCfg.repository && jobCfg.repository != jobParams.git.repository ) { // Downstream job
                 jobParams.env.put('DOWNSTREAM_BUILD', true)
@@ -365,9 +377,12 @@ class KogitoJobTemplate {
             if (useBuildChain) {
                 // Buildchain uses centralized configuration for Jenkinsfile.buildchain to checkout
                 // Overrides configuration already done
-                String buildChainCheckoutBranch = VersionUtils.getProjectTargetBranch(KogitoConstants.BUILDCHAIN_REPOSITORY, jobParams.git.branch, jobParams.git.repository)
+                // String buildChainCheckoutBranch = VersionUtils.getProjectTargetBranch(KogitoConstants.BUILDCHAIN_REPOSITORY, jobParams.git.branch, jobParams.git.repository)
+                String buildChainCheckoutBranch = 'PR-MONOREPO-MIGRATION'
+                // TODO Test -> to change back
                 jobParams.pr.checkout_branch = buildChainCheckoutBranch
-                jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository ?: jobParams.git.repository}")
+                // jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository ?: jobParams.git.repository}")
+                jobParams.env.put('BUILDCHAIN_PROJECT', "kiegroup/${jobCfg.repository ?: jobParams.git.repository}")
                 jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
                 jobParams.env.put('BUILDCHAIN_CONFIG_BRANCH', buildChainCheckoutBranch)
                 jobParams.git.repository = KogitoConstants.BUILDCHAIN_REPOSITORY
@@ -486,14 +501,15 @@ class KogitoJobTemplate {
             ],
             env: [:],
             pr: [
+                // TODO set back after testing
                 excluded_regions: [
                     'LICENSE',
                     '\\.gitignore',
                     '.*\\.md',
                     '.*\\.adoc',
                     '.*\\.txt',
-                    '\\.github/.*',
-                    '\\.ci/jenkins/.*',
+                    // '\\.github/.*',
+                    // '\\.ci/jenkins/.*',
                 ],
                 ignore_for_labels: [ 'skip-ci', 'dsl-test' ],
             ]
