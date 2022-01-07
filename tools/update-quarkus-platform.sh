@@ -1,202 +1,126 @@
 #!/usr/bin/env bash
-set -euo pipefail
-
-GITHUB_URL="https://github.com/"
-GITHUB_URL_SSH="git@github.com:"
-
-MINOR_VERSION=
-DRY_RUN=false
-BRANCH=main
+set -e
 
 usage() {
-    echo 'Usage: update-quarkus-platform.sh -v $MINOR_VERSION -f $FORK [-s] [-b] [-n] COMMAND'
+    echo 'Usage: update-quarkus-platform.sh -v $MINOR_VERSION COMMAND'
     echo
     echo 'Options:'
     echo '  -v $MINOR_VERSION    set MINOR version'
     echo '                       e.g. 6.0.Final for Kogito 1.6.0.Final and OptaPlanner 8.6.0.Final'
-    echo '  -f $FORK             GH account where the branch should be pushed'
-    echo '  -s                   Use SSH to connect to GitHub'
-    echo '  -b $BRANCH           Quarkus Platform branch (optional. Default is `main`)'
-    echo '  -n                   no execution: clones, creates the branch, but will not push or create the PR'
     echo '  COMMAND              may be `stage` or `finalize`'
     echo
-    echo 'Examples:'#!/bin/sh
+    echo 'Examples:'
     echo '  # Stage the PR'
     echo '  #  - Bump Kogito 1.7.0.Final + OptaPlanner 8.7.0.Final'
     echo '  #  - Add staging repositories'
-    echo '  #  - Push the branch to evacchi/quarkus-platform'
-    echo '  #  - Dry Run'
-    echo '  sh update-quarkus-platform.sh -v 7.0.Final -f evacchi -n stage'
+    echo '  sh update-quarkus-platform.sh -v 7.0.Final stage'
     echo
     echo '  # Finalize the PR:'
     echo '  #  - Remove staging repositories'
-    echo '  #  - Force-push the branch to evacchi/quarkus-platform'
-    echo '  #  - Dry Run'
-    echo '  sh update-quarkus-platform.sh -v 7.0.Final -f evacchi -n finalize'
+    echo '  sh update-quarkus-platform.sh -v 7.0.Final finalize'
 }
 
-args=`getopt v:f:b:snh $*`
-if [ "$#" -eq 0 -o $? != 0 ]; then
-    >&2 echo ERROR: no args given.
+parseArgsAsEnv() {
+    local OPTIND minor_version command
 
-    usage
-    exit 2
-fi
-set -- $args
-for i
-do
+    while getopts "v:h" i
+    do
         case "$i"
         in
-                -v)
-                        MINOR_VERSION=$2;
-                        shift;shift ;;
-                -f)
-                        FORK=$2
-                        shift;shift ;;
-                -s)     
-                        GITHUB_URL=${GITHUB_URL_SSH}
-                        shift;;
-                -b)     
-                        BRANCH=$2
-                        shift;shift ;;
-                -n)     
-                        DRY_RUN=true
-                        shift;;
-                -h)     
-                        usage;
-                        exit 0;
-                        ;;
-                --)
-                        COMMAND=$2
-                        shift; shift
-                        ;;
-                            
+            v) minor_version=${OPTARG} ;;
+            h) usage; exit 0 ;;
+            \?) usage; exit 1 ;;
         esac
-done
+    done
+    shift "$((OPTIND-1))"
 
-
-if [ "$MINOR_VERSION" = "" ]; then 
-        >&2 echo ERROR: no version specified.
+    if [ "${minor_version}" = "" ]; then 
+        >&2 echo ERROR: no minor version specified.
         usage
 
         exit 2
-fi
+    fi
 
-if [ "$FORK" = "" ]; then 
-        >&2 echo ERROR: no fork specified.
-        usage
+    command=$1
+    case "${command}"
+    in
+        stage)
+            command='stage'
+            ;;
+        finalize)
+            command='finalize'
+            ;;
+        *)
+            >&2 echo ERROR: invalid command $command.
 
-        exit 2
-fi
+            exit 2
+    esac
 
-case "$COMMAND"
-in
-    stage)
-        COMMAND=stage
-        ;;
-    finalize)
-        COMMAND=finalize
-        ;;
-    *)
-        >&2 echo ERROR: invalid command $COMMAND.
-        usage
+    echo "export KOGITO_VERSION=1.${minor_version};"
+    echo "export OPTAPLANNER_VERSION=8.${minor_version};"
+    echo "export COMMAND=${command};"
+}
 
-        exit 2
-esac
-
-REPO=quarkus-platform
-PR_FORK=$FORK/$REPO
-ORIGIN=quarkusio/$REPO
-
-KOGITO_VERSION=1.$MINOR_VERSION
-OPTAPLANNER_VERSION=8.$MINOR_VERSION
-
-PR_BRANCH=bump-kogito-$KOGITO_VERSION+optaplanner-$OPTAPLANNER_VERSION
-
-
-echo GITHUB_URL...............$GITHUB_URL
-echo ORIGIN...................$ORIGIN
-echo PR_FORK..................$PR_FORK
-echo BRANCH...................$BRANCH
-echo PR_BRANCH................$PR_BRANCH
-echo KOGITO_VERSION...........$KOGITO_VERSION
-echo OPTAPLANNER_VERSION......$OPTAPLANNER_VERSION
-echo COMMAND..................$COMMAND
-echo
-if [ "$DRY_RUN" = "true" ]; then
-echo DRY_RUN! No changes will be pushed!
-echo
-fi
-
+retrieveGitDefaultValuesAsEnv() {
+    echo "export DEFAULT_GIT_REPOSITORY=quarkus-platform;"
+    echo "export DEFAULT_GIT_PR_BRANCH=bump-kogito-${KOGITO_VERSION}+optaplanner-${OPTAPLANNER_VERSION};"
+    if [ "${COMMAND}" = "stage" ]; then
+        echo "export DEFAULT_GIT_ORIGIN=quarkusio;"
+        echo "export DEFAULT_GIT_COMMIT_MESSAGE='Kogito ${KOGITO_VERSION} + OptaPlanner ${OPTAPLANNER_VERSION}';" 
+    elif [ "${COMMAND}" = "finalize" ]; then
+        echo "export DEFAULT_GIT_CHECKOUT_BRANCH=${DEFAULT_GIT_PR_BRANCH};"
+        echo "export DEFAULT_GIT_COMMIT_MESSAGE='Updated maven config';" 
+    fi
+}
 
 stage() {
     set -x
 
-    git clone ${GITHUB_URL}${ORIGIN}
-    cd $REPO
-
-    # ensure main branch
-    git checkout $BRANCH
-    # create branch
-    git checkout -b $PR_BRANCH
-    
     # add custom repositories
     echo "$DIFF_FILE" | patch .github/mvn-settings.xml
-    
+
     # process versions
     ./mvnw \
-    -s .github/mvn-settings.xml \
-    versions:set-property \
-    -Dproperty=kogito-quarkus.version \
-    -DnewVersion=$KOGITO_VERSION \
-    -DgenerateBackupPoms=false
+        -s .github/mvn-settings.xml \
+        versions:set-property \
+        -Dproperty=kogito-quarkus.version \
+        -DnewVersion=$KOGITO_VERSION \
+        -DgenerateBackupPoms=false
     ./mvnw \
-    -s .github/mvn-settings.xml \
-    versions:set-property \
-    -Dproperty=optaplanner-quarkus.version \
-    -DnewVersion=$OPTAPLANNER_VERSION \
-    -DgenerateBackupPoms=false
+        -s .github/mvn-settings.xml \
+        versions:set-property \
+        -Dproperty=optaplanner-quarkus.version \
+        -DnewVersion=$OPTAPLANNER_VERSION \
+        -DgenerateBackupPoms=false
     
     # update pom metadata
     ./mvnw -s .github/mvn-settings.xml validate -Pregen-kogito -N
 
     ./mvnw -s .github/mvn-settings.xml -Dsync
-    
-    # commit all
-    git commit -am "Kogito $KOGITO_VERSION + OptaPlanner $OPTAPLANNER_VERSION"
 
-    if [ "$DRY_RUN" = "false" ]; then
-        # push the branch to a remote
-        git push -u ${GITHUB_URL}$PR_FORK $PR_BRANCH
-        # Open a PR to kogito-runtimes using the commit as a title
-        gh pr create --fill --base $BRANCH -R $ORIGIN
-    fi
+    set +x
 }
 
 finalize() {
     set -x
-
-    if [ -d "$REPO" ]; then
-        cd $REPO
-    else
-        git clone ${GITHUB_URL}$PR_FORK
-        cd $REPO;
-    fi
-
-    git checkout $PR_BRANCH
 
     # undo patch to add repos
     echo "$DIFF_FILE" | patch -R .github/mvn-settings.xml
 
     ./mvnw -Dsync
 
-    # overwrite old commit (no need to squash)
-    git commit --amend --no-edit pom.xml
-    
-    if [ "$DRY_RUN" = "false" ]; then
-        # push forced (we are overwriting the old commit)
-        git push --force-with-lease
-    fi
+    set +x
+}
+
+showEnv() {
+    echo "KOGITO_VERSION...........${KOGITO_VERSION}"
+    echo "OPTAPLANNER_VERSION......${OPTAPLANNER_VERSION}"
+    echo "COMMAND..................${COMMAND}"
+    echo
+}
+
+execute() {
+    $COMMAND
 }
 
 DIFF_FILE='diff --git a/.github/mvn-settings.xml b/.github/mvn-settings.xml
@@ -219,5 +143,14 @@ index d5e4664b..b03cc023 100644
        <pluginRepositories>
          <pluginRepository>
 '
-# execute
-$COMMAND
+
+if [ "$1" != "" ]; then
+    # parseArgsAsEnv $@
+    args=$(parseArgsAsEnv $@)
+    status=$?
+    if [ "$status" != "0" ]; then
+        exit status
+    fi
+    eval $args
+    execute
+fi

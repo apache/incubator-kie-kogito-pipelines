@@ -56,7 +56,7 @@ class KogitoJobUtils {
 
     static def createVersionUpdateToolsJob(def script, String repository, String dependencyName, def mavenUpdate = [:], def gradleUpdate = [:]) {
         def jobParams = getBasicJobParams(script, "update-${dependencyName.toLowerCase()}-${repository}", Folder.TOOLS,
-                                                Utils.getPipelinesJenkinsfilePath(script, 'Jenkinsfile.tools.update-dependency-version'), "Update ${dependencyName} version for ${repository}") {
+                                                Utils.getPipelinesJenkinsfilePath(script, 'Jenkinsfile.tools.update-project-dependencies'), "Update ${dependencyName} version for ${repository}") {
                                                     return getDefaultJobParams(script, KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
                                                 }
         // Setup correct checkout branch for pipelines
@@ -149,5 +149,4 @@ class KogitoJobUtils {
             return jobsRepoConfig
         }
     }
-
 }

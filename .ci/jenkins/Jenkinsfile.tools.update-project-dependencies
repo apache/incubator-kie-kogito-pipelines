@@ -6,7 +6,7 @@ pipeline {
     agent {
         label 'kie-rhel7 && !master'
     }
-    
+
     tools {
         maven 'kie-maven-3.8.1'
         jdk 'kie-jdk11'
@@ -52,56 +52,17 @@ pipeline {
                 }
             }
         }
-        stage('Update Maven dependencies') {
-            when {
-                expression { return getMavenCompareDepsRemotePoms() }
-            }
+        stage('Update project dependencies') {
             steps {
                 script {
                     dir(getRepoName()) {
-                        getMavenCompareDepsRemotePoms().each { remotePom ->
-                            if (getMavenModules()) {
-                                getMavenModules().each { module ->
-                                    sh "${WORKSPACE}/tools/update-maven-compare-dependencies.sh ${remotePom} ${getNewVersion()} ${module}"
-                                }
-                            } else {
-                                sh "${WORKSPACE}/tools/update-maven-compare-dependencies.sh ${remotePom} ${getNewVersion()}"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        stage('Update Maven properties') {
-            when {
-                expression { return getMavenProperties() }
-            }
-            steps {
-                script {
-                    dir(getRepoName()) {
-                        getMavenProperties().each { prop ->
-                            if (getMavenModules()) {
-                                getMavenModules().each { module ->
-                                    sh "${WORKSPACE}/tools/update-maven-module-property.sh ${prop} ${getNewVersion()} ${module}"
-                                }
-                            } else {
-                                sh "${WORKSPACE}/tools/update-maven-module-property.sh ${prop} ${getNewVersion()}"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        stage('Update Gradle properties') {
-            when {
-                expression { return getGradleRegex() }
-            }
-            steps {
-                script {
-                    dir(getRepoName()) {
-                        getGradleRegex().each { regex ->
-                            sh "${WORKSPACE}/tools/update-build-gradle-regex-line.sh '${regex}' ${getNewVersion()}"
-                        }
+                        List updateDepsOptions = [ '-v', getNewVersion() ]
+                        updateDepsOptions.addAll(getMavenModules().collect { "-m '${it}'" })
+                        updateDepsOptions.addAll(getMavenCompareDepsRemotePoms().collect { "-c '${it}'" })
+                        updateDepsOptions.addAll(getMavenProperties().collect { "-p '${it}'" })
+                        updateDepsOptions.addAll(getGradleRegex().collect { "-g '${it}'" })
+
+                        sh "${WORKSPACE}/tools/update-project-dependencies.sh ${updateDepsOptions.join(' ')}"
                     }
                 }
             }
@@ -182,17 +143,17 @@ String getNotificationJobName() {
 }
 
 List getMavenModules() {
-  return env.MAVEN_MODULES ? readJSON(text: env.MAVEN_MODULES) : []
+    return env.MAVEN_MODULES ? readJSON(text: env.MAVEN_MODULES) : []
 }
 
 List getMavenCompareDepsRemotePoms() {
-  return env.MAVEN_COMPARE_DEPS_REMOTE_POMS ? readJSON(text: env.MAVEN_COMPARE_DEPS_REMOTE_POMS) : []
+    return env.MAVEN_COMPARE_DEPS_REMOTE_POMS ? readJSON(text: env.MAVEN_COMPARE_DEPS_REMOTE_POMS) : []
 }
 
 List getMavenProperties() {
-  return env.MAVEN_PROPERTIES ? readJSON(text: env.MAVEN_PROPERTIES) : []
+    return env.MAVEN_PROPERTIES ? readJSON(text: env.MAVEN_PROPERTIES) : []
 }
 
 List getGradleRegex() {
-  return env.GRADLE_REGEX ? readJSON(text: env.GRADLE_REGEX) : []
+    return env.GRADLE_REGEX ? readJSON(text: env.GRADLE_REGEX) : []
 }
