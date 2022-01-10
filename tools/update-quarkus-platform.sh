@@ -155,7 +155,7 @@ stage() {
     ./mvnw validate -Pregen-kogito -N
     
     # add custom repositories
-    echo "$DIFF_FILE" | patch pom.xml
+    echo "$DIFF_FILE" | patch .github/mvn-settings.xml
 
     ./mvnw -Dsync
     
@@ -185,9 +185,9 @@ finalize() {
 
 
     # undo patch to add repos
-    echo "$DIFF_FILE" | patch -R pom.xml
+    echo "$DIFF_FILE" | patch -R .github/mvn-settings.xml
 
-    ./mvnw process-resources
+    ./mvnw -Dsync
 
     # overwrite old commit (no need to squash)
     git commit --amend --no-edit pom.xml
@@ -198,26 +198,25 @@ finalize() {
     fi
 }
 
-DIFF_FILE='diff --git a/pom.xml b/pom.xml
-index 98dcf3da..2d927f65 100644
---- a/pom.xml
-+++ b/pom.xml
-@@ -478,6 +478,15 @@
-     </build>
-
-     <repositories>
+DIFF_FILE='diff --git a/.github/mvn-settings.xml b/.github/mvn-settings.xml
+index d5e4664b..b03cc023 100644
+--- a/.github/mvn-settings.xml
++++ b/.github/mvn-settings.xml
+@@ -14,6 +14,14 @@
+             <enabled>false</enabled>
+           </snapshots>
+         </repository>
 +        <repository>
-+            <snapshots>
-+                <enabled>false</enabled>
-+            </snapshots>
-+            <id>kogito</id>
-+            <name>kogito</name>
-+            <url>https://repository.jboss.org/nexus/content/groups/kogito-public/</url>
++          <snapshots>
++              <enabled>false</enabled>
++          </snapshots>
++          <id>kogito</id>
++          <name>kogito</name>
++          <url>https://repository.jboss.org/nexus/content/groups/kogito-public/</url>
 +        </repository>
-+
-         <repository>
-             <id>confluent</id>
-             <url>https://packages.confluent.io/maven/</url>
+       </repositories>
+       <pluginRepositories>
+         <pluginRepository>
 '
 # execute
 $COMMAND
