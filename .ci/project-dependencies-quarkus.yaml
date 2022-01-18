@@ -24,6 +24,25 @@ dependencies:
         - kiegroup/optaweb-vehicle-routing
         - kiegroup/optaplanner-quickstarts
 
+  - project: kiegroup/optaplanner
+    dependencies:
+      - project: kiegroup/drools
+    mapping:
+      dependencies:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
+      dependant:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
+      exclude:
+        - quarkusio/quarkus
+        - kiegroup/drools
+        - kiegroup/optaweb-employee-rostering
+        - kiegroup/optaweb-vehicle-routing
+        - kiegroup/optaplanner-quickstarts
+
   - project: kiegroup/kogito-runtimes
     dependencies:
       - project: quarkusio/quarkus
@@ -42,25 +61,6 @@ dependencies:
         - kiegroup/kogito-examples
         - kiegroup/kogito-apps
   
-  - project: kiegroup/optaplanner
-    dependencies:
-      - project: kiegroup/kogito-runtimes
-    mapping:
-      dependencies:
-        default:
-          - source: (\d*)\.(.*)\.(.*)
-            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
-      dependant:
-        default:
-          - source: (\d*)\.(.*)\.(.*)
-            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
-      exclude:
-        - quarkusio/quarkus
-        - kiegroup/drools
-        - kiegroup/optaweb-employee-rostering
-        - kiegroup/optaweb-vehicle-routing
-        - kiegroup/optaplanner-quickstarts
-
   - project: kiegroup/kogito-apps
     dependencies:
       - project: kiegroup/kogito-runtimes
