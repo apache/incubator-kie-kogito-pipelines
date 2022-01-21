@@ -469,6 +469,7 @@ def buildJob(String jobName, List buildParams) {
         sendStageNotification()
         echo "Build ${jobName} with params ${buildParams}"
         def job = build(job: "./${jobName}", wait: true, parameters: buildParams, propagate: false)
+        removeJobDecision(jobName)
         registerJobExecution(jobName, job.result, job.absoluteUrl)
     } else {
         echo 'Job was already executed. Retrieving information...'
@@ -524,6 +525,11 @@ def registerJobExecution(String jobName, String result, String absoluteUrl) {
 def registerJobDecision(String jobName, String decision, String message = '') {
     setReleasePropertyIfneeded(getJobPropertyKey(jobName, JOB_DECISION_PROPERTY_KEY), decision)
     setReleasePropertyIfneeded(getJobPropertyKey(jobName, JOB_DECISION_MESSAGE_PROPERTY_KEY), message)
+}
+
+def removeJobDecision(String jobName) {
+    removeReleaseProperty(getJobPropertyKey(jobName, JOB_DECISION_PROPERTY_KEY))
+    removeReleaseProperty(getJobPropertyKey(jobName, JOB_DECISION_MESSAGE_PROPERTY_KEY))
 }
 
 List getAllJobNames() {
@@ -769,6 +775,12 @@ String removeVersionSuffixIfExist(String version) {
 void setReleasePropertyIfneeded(String key, def value) {
     if (value) {
         releaseProperties[key] = value
+    }
+}
+
+void removeReleaseProperty(String key) {
+    if (hasReleaseProperty(key)) {
+        releaseProperties.remove(key)
     }
 }
 
