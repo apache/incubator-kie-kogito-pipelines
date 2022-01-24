@@ -29,6 +29,7 @@ dependencies:
           - source: (\d*)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
       exclude:
+        - kiegroup/drools
         - kiegroup/optaweb-employee-rostering
         - kiegroup/optaweb-vehicle-routing
         - kiegroup/optaplanner-quickstarts
