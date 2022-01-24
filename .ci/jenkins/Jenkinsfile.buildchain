@@ -20,14 +20,6 @@ pipeline {
                 sh 'printenv'
             }
         }
-        // executes a script that compresses the consoleText and attaches it to the mail
-        stage('build sh script') {
-            steps {
-                script {
-                    mailer.buildLogScriptPR()
-                }
-            }
-        }
         stage('check space before build') {
             steps {
                 script {
@@ -49,8 +41,15 @@ pipeline {
 
                     configFileProvider([configFile(fileId: getSettingsXmlId(), variable: 'MAVEN_SETTINGS_FILE')]) {
                         withCredentials([string(credentialsId: 'kie-ci1-token', variable: 'GITHUB_TOKEN')]) {
-                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/\${GROUP}/kogito-pipelines/1.11.x/.ci/${buildChainActionInfo.file}' -folder='bc' build ${buildChainActionInfo.action} -url=${env.ghprbPullLink} ${buildChainActionInfo.arguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true'"
                         }
+            post {
+                always {
+                    junit '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml'
+                    archiveArtifacts artifacts: '**/*.log,**/cypress/screenshots/**,**/cypress/videos/**', allowEmptyArchive: true
+                }
+                unsuccessful {
+                    script {
+                        util.archiveConsoleLog('', 300)
                     }
                 }
             }
@@ -82,23 +81,11 @@ pipeline {
         }
     }
     post {
-        always {
-            sh '$WORKSPACE/trace.sh'
-            junit '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml'
-        }
-        failure {
+        unsuccessful {
             script {
-                mailer.sendEmail_failedPR()
-            }
-        }
-        unstable {
-            script {
-                mailer.sendEmail_unstablePR()
-            }
-        }
-        fixed {
-            script {
-                mailer.sendEmail_fixedPR()
+                if (isPR()) {
+                    pullrequest.postComment(util.getMarkdownTestSummary('PR', '', "${BUILD_URL}", 'GITHUB'))
+                }
             }
         }
         cleanup {
