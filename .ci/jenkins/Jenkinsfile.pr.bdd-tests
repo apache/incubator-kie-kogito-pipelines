@@ -50,23 +50,6 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Kogito Runtimes') {
-            steps {
-                script {
-                    echo "Call ${RUNTIMES_DEPLOY} job"
-                    def buildParams = getDefaultBuildParams()
-                    addAuthorBranchParamsIfExist(buildParams, 'kogito-runtimes')
-
-                    buildJob(RUNTIMES_DEPLOY, buildParams, false)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage()
-                }
-            }
-        }
-
         stage('Build & Deploy OptaPlanner') {
             steps {
                 script {
@@ -79,6 +62,23 @@ pipeline {
                     addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', targetBranch)
 
                     buildJob(OPTAPLANNER_DEPLOY, buildParams, false)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage()
+                }
+            }
+        }
+
+        stage('Build & Deploy Kogito Runtimes') {
+            steps {
+                script {
+                    echo "Call ${RUNTIMES_DEPLOY} job"
+                    def buildParams = getDefaultBuildParams()
+                    addAuthorBranchParamsIfExist(buildParams, 'kogito-runtimes')
+
+                    buildJob(RUNTIMES_DEPLOY, buildParams, false)
                 }
             }
             post {

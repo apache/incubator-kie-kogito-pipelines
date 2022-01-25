@@ -84,26 +84,6 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Kogito Runtimes') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
-
-                    // images and operator deploy testing will use older working artifacts if that one fails
-                    buildJob(RUNTIMES_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(RUNTIMES_DEPLOY)
-                }
-            }
-        }
-
         stage('Build & Deploy OptaPlanner') {
             when {
                 expression { return isArtifactsDeploy() }
@@ -133,6 +113,26 @@ pipeline {
             post {
                 failure {
                     addFailedStage(OPTAPLANNER_DEPLOY)
+                }
+            }
+        }
+
+        stage('Build & Deploy Kogito Runtimes') {
+            when {
+                expression { return isArtifactsDeploy() }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+
+                    // images and operator deploy testing will use older working artifacts if that one fails
+                    buildJob(RUNTIMES_DEPLOY, buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage(RUNTIMES_DEPLOY)
                 }
             }
         }

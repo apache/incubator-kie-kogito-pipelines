@@ -37,22 +37,22 @@ pipeline {
             steps {
                 script {
                     assert getDroolsVersion()
-                    assert getKogitoVersion()
                     assert getOptaPlannerVersion()
+                    assert getKogitoVersion()
 
                     // Set release branch
                     env.DROOLS_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getDroolsVersion())
                     echo "Drools Release Branch ${getDroolsReleaseBranch()}"
 
-                    env.KOGITO_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getKogitoVersion())
-                    echo "Kogito Release Branch ${getKogitoReleaseBranch()}"
-
                     env.OPTAPLANNER_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getOptaPlannerVersion())
                     echo "OptaPlanner Release Branch ${getOptaPlannerReleaseBranch()}"
 
-                    currentBuild.displayName = getDisplayName("Drools ${getDroolsReleaseBranch()} / Kogito ${getKogitoReleaseBranch()}/ OptaPlanner${getOptaPlannerReleaseBranch()}")
+                    env.KOGITO_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getKogitoVersion())
+                    echo "Kogito Release Branch ${getKogitoReleaseBranch()}"
 
-                    sendNotification("Cut-off for Drools ${getDroolsReleaseBranch()}, Kogito ${getKogitoReleaseBranch()} and Optaplanner ${getOptaPlannerReleaseBranch()} has started...\n=> ${env.BUILD_URL}")
+                    currentBuild.displayName = getDisplayName("Drools ${getDroolsReleaseBranch()} / OptaPlanner${getOptaPlannerReleaseBranch()} / Kogito ${getKogitoReleaseBranch()}")
+
+                    sendNotification("Cut-off for Drools ${getDroolsReleaseBranch()}, Optaplanner ${getOptaPlannerReleaseBranch()} and Kogito ${getKogitoReleaseBranch()} has started...\n=> ${env.BUILD_URL}")
                 }
             }
         }
@@ -71,6 +71,19 @@ pipeline {
             }
         }
 
+        stage('Create OptaPlanner release branches') {
+            steps {
+                script {
+                    def repositories = OPTAPLANNER_REPOS
+
+                    echo "Create ${getOptaPlannerReleaseBranch()} on repositories ${repositories}"
+                    createBranches(repositories, getOptaPlannerReleaseBranch())
+
+                    sendNotification("${getOptaPlannerReleaseBranch()} branches have been created for repositories: ${repositories}")
+                }
+            }
+        }
+
         stage('Create Kogito release branches') {
             steps {
                 script {
@@ -84,19 +97,6 @@ pipeline {
                     createBranches(repositories, getKogitoReleaseBranch())
 
                     sendNotification("${getKogitoReleaseBranch()} branches have been created for repositories: ${repositories}")
-                }
-            }
-        }
-
-        stage('Create OptaPlanner release branches') {
-            steps {
-                script {
-                    def repositories = OPTAPLANNER_REPOS
-
-                    echo "Create ${getOptaPlannerReleaseBranch()} on repositories ${repositories}"
-                    createBranches(repositories, getOptaPlannerReleaseBranch())
-
-                    sendNotification("${getOptaPlannerReleaseBranch()} branches have been created for repositories: ${repositories}")
                 }
             }
         }

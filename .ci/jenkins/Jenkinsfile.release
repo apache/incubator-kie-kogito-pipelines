@@ -109,6 +109,22 @@ pipeline {
             }
         }
 
+        stage('Build & Deploy OptaPlanner') {
+            when {
+                expression { return isArtifactsDeploy() }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams(getOptaPlannerVersion())
+                    addSkipTestsParam(buildParams)
+                    addSkipIntegrationTestsParam(buildParams)
+                    addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
+                    addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
+                    buildJob(OPTAPLANNER_DEPLOY, buildParams)
+                }
+            }
+        }
+
         stage('Build & Deploy Kogito Runtimes') {
             when {
                 expression { return isArtifactsDeploy() }
@@ -120,22 +136,6 @@ pipeline {
                     addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
 
                     buildJob(RUNTIMES_DEPLOY, buildParams)
-                }
-            }
-        }
-
-        stage('Build & Deploy OptaPlanner') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getOptaPlannerVersion())
-                    addSkipTestsParam(buildParams)
-                    addSkipIntegrationTestsParam(buildParams)
-                    addStringParam(buildParams, 'KOGITO_VERSION', getKogitoArtifactsVersion())
-                    addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
-                    buildJob(OPTAPLANNER_DEPLOY, buildParams)
                 }
             }
         }
@@ -302,6 +302,21 @@ pipeline {
             }
         }
 
+        stage('Promote OptaPlanner') {
+            when {
+                expression { return isArtifactsPromote() && isJobConsideredOk(OPTAPLANNER_DEPLOY) }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams(getOptaPlannerVersion())
+                    addDeployBuildUrlParam(buildParams, OPTAPLANNER_DEPLOY)
+                    addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
+
+                    buildJob(OPTAPLANNER_PROMOTE, buildParams)
+                }
+            }
+        }
+
         stage('Promote Kogito Runtimes') {
             when {
                 expression { return isArtifactsPromote() && isJobConsideredOk(RUNTIMES_DEPLOY) }
@@ -313,21 +328,6 @@ pipeline {
                     addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
 
                     buildJob(RUNTIMES_PROMOTE, buildParams)
-                }
-            }
-        }
-
-        stage('Promote OptaPlanner') {
-            when {
-                expression { return isArtifactsPromote() && isJobConsideredOk(OPTAPLANNER_DEPLOY) }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getOptaPlannerVersion())
-                    addDeployBuildUrlParam(buildParams, OPTAPLANNER_DEPLOY)
-                    addStringParam(buildParams, 'KOGITO_VERSION', getKogitoArtifactsVersion())
-
-                    buildJob(OPTAPLANNER_PROMOTE, buildParams)
                 }
             }
         }
