@@ -17,7 +17,10 @@ pipeline {
     stages {
         stage('Initialize') {
             steps {
-                sh 'printenv'
+                script {
+                    sh 'printenv > env_props'
+                    archiveArtifacts artifacts: 'env_props'
+                }
             }
         }
         stage('check space before build') {
