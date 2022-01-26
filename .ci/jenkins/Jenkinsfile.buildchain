@@ -105,7 +105,7 @@ pipeline {
         unsuccessful {
             script {
                 if (isPR()) {
-                    pullrequest.postComment(util.getMarkdownTestSummary('PR', '', "${BUILD_URL}", 'GITHUB'))
+                    pullrequest.postComment(util.getMarkdownTestSummary(getNotificationName(), '', "${BUILD_URL}", 'GITHUB'))
                 }
             }
         }
@@ -181,4 +181,8 @@ boolean isSonarCloudAnalysis() {
         return !env.DOWNSTREAM_BUILD?.toBoolean()
     }
     return false
+}
+
+String getNotificationName() {
+    return env.NOTIFICATION_JOB_NAME ?: 'PR'
 }
