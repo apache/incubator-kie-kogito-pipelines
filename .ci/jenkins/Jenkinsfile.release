@@ -72,7 +72,7 @@ pipeline {
 
                     currentBuild.displayName = getDisplayName()
 
-                    sendNotification("Release Pipeline has started...\nKogito artifacts version=${getKogitoArtifactsVersion()}\nOptaplanner version=${getOptaPlannerVersion()}\n=> ${env.BUILD_URL}")
+                    sendNotification("Release Pipeline has started...\nDrools version = ${getDroolsVersion()}\nKogito artifacts version = ${getKogitoArtifactsVersion()}\nOptaplanner version = ${getOptaPlannerVersion()}\n=> ${env.BUILD_URL}")
 
                     // Safety measure to not publish to main JBoss
                     if (getGitAuthor() != 'kiegroup' && !getArtifactsRepositoryParam()) {
