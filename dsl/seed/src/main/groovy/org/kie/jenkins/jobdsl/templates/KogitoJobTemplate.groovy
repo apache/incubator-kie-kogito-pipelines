@@ -373,7 +373,7 @@ class KogitoJobTemplate {
                 jobParams.pr.checkout_branch = VersionUtils.getProjectTargetBranch(KogitoConstants.BUILDCHAIN_REPOSITORY, jobParams.git.branch, jobParams.git.repository)
                 jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository ?: jobParams.git.repository}")
                 jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
-                jobParams.env.put('NOTIFICATION_JOB_NAME', "(${testTypeId}) - ${jobParams.git.repository}")
+                jobParams.env.put('NOTIFICATION_JOB_NAME', "(${testTypeId}) - ${jobCfg.repository}")
                 jobParams.git.repository = KogitoConstants.BUILDCHAIN_REPOSITORY
                 jobParams.jenkinsfile = KogitoConstants.BUILDCHAIN_JENKINSFILE_PATH
 
