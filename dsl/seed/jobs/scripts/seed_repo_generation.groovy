@@ -1,29 +1,17 @@
 SEED_FOLDER = 'dsl/seed'
 
 util = null
-paths = []
 
 def generate() {
-    // Preliminary check
-    shouldRun = false
-    node {
-        initNode()
-        stage('Preliminary check') {
-            def repoConfig = getRepoConfig()
-            paths.add(repoConfig.git.jenkins_config_path)
-            shouldRun = params.FORCE_REBUILD ?: util.arePathsModified(paths)
+    node('kie-rhel8-priority') {
+        checkout scm
+
+        dir("${SEED_REPO}") {
+            checkout(githubscm.resolveRepository("${SEED_REPO}", "${SEED_AUTHOR}", "${SEED_BRANCH}", false))
+            echo 'This is the generate repo seed jobs'
+
+            util = load "${SEED_FOLDER}/jobs/scripts/util.groovy"
         }
-    }
-
-    if (!shouldRun) {
-        echo "No force rebuild or modified paths ${paths}"
-        echo 'Nothing done'
-        currentBuild.displayName = 'No generation'
-        return
-    }
-
-    node('kie-rhel7 && kie-mem8g') {
-        initNode()
 
         stage('Prepare jobs') {
             def repoConfig = getRepoConfig()
@@ -54,7 +42,7 @@ def generate() {
             def envProps = getRepoEnvProperties()
             def repoConfig = getRepoConfig()
             envProps.put('GIT_MAIN_BRANCH', "${GIT_MAIN_BRANCH}")
-            
+
             // Add other repos `jenkins_config_path` var (useful if multijob PR checks for example)
             getAllBranchRepos().each { repoName ->
                 String key = generateEnvKey(repoName, 'jenkins_config_path')
@@ -82,17 +70,6 @@ def generate() {
                 additionalParameters : envProps
             }
         }
-    }
-}
-
-def initNode() {
-    checkout scm
-
-    dir("${SEED_REPO}") {
-        checkout(githubscm.resolveRepository("${SEED_REPO}", "${SEED_AUTHOR}", "${SEED_BRANCH}", false))
-        echo 'This is the generate repo seed jobs'
-
-        util = load "${SEED_FOLDER}/jobs/scripts/util.groovy"
     }
 }
 

@@ -1,10 +1,31 @@
 // +++++++++++++++++++++++++++++++++++++++++++ create a seed job ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 import org.kie.jenkins.jobdsl.FolderUtils
+import org.kie.jenkins.jobdsl.KogitoConstants
+import org.kie.jenkins.jobdsl.SeedJobUtils
 
 // Create all folders
 folder("${GENERATION_BRANCH}")
 FolderUtils.getAllNeededFolders().each { folder("${GENERATION_BRANCH}/${it}") }
+
+SeedJobUtils.createSeedJobTrigger(
+    this,
+    "${GENERATION_BRANCH}/${JOB_NAME}-trigger",
+    KogitoConstants.KOGITO_PIPELINES_REPOSITORY,
+    "${SEED_AUTHOR}",
+    "${SEED_BRANCH}",
+    [
+        'dsl/seed/config/branch.yaml',
+        'dsl/seed/gradle',
+        'dsl/seed/jobs/seed_job_branch.groovy',
+        'dsl/seed/jobs/Jenkinsfile.seed.branch',
+        'dsl/seed/jobs/seed_job_repo.groovy',
+        'dsl/seed/jobs/scripts',
+        'dsl/seed/src',
+        'dsl/seed/build.gradle',
+        'dsl/seed/gradle.properties',
+]   ,
+    "${JOB_NAME}")
 
 // Configuration of the seed and generated jobs is done via `dsl/seed/config.yaml`
 pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
@@ -28,8 +49,6 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
 
         stringParam('SEED_AUTHOR', "${SEED_AUTHOR}", 'If different from the default')
         stringParam('SEED_BRANCH', "${SEED_BRANCH}", 'If different from the default')
-
-        booleanParam('FORCE_REBUILD', false, 'Default, the job will scan for modified files and do the update in case some files are modified. In case you want to force the DSL generation')
     }
 
     environmentVariables {
@@ -57,11 +76,5 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
 
     properties {
         githubProjectUrl("https://github.com/${SEED_AUTHOR}/kogito-pipelines/")
-
-        pipelineTriggers {
-            triggers {
-                gitHubPushTrigger()
-            }
-        }
     }
 }
