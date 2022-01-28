@@ -24,8 +24,10 @@ build:
   
   - project: kiegroup/kogito-runtimes
     build-command:
+      # `-Dquarkus.bootstrap.effective-model-builder` is a temporary fix due to quarkus resolver on tests
+      # https://github.com/quarkusio/quarkus/issues/23205
       current: |
-        mvn -f kogito-runtimes/pom.xml clean install -Dvalidate-formatting ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS }}
+        mvn -f kogito-runtimes/pom.xml clean install -Dvalidate-formatting -Dquarkus.bootstrap.effective-model-builder ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS }}
       upstream: mvn clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS_UPSTREAM }}
     clone:
       - kogito-runtimes
