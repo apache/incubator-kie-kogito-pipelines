@@ -139,25 +139,28 @@ stage() {
     git checkout $BRANCH
     # create branch
     git checkout -b $PR_BRANCH
+    
+    # add custom repositories
+    echo "$DIFF_FILE" | patch .github/mvn-settings.xml
+    
     # process versions
     ./mvnw \
+    -s .github/mvn-settings.xml \
     versions:set-property \
     -Dproperty=kogito-quarkus.version \
     -DnewVersion=$KOGITO_VERSION \
     -DgenerateBackupPoms=false
     ./mvnw \
+    -s .github/mvn-settings.xml \
     versions:set-property \
     -Dproperty=optaplanner-quarkus.version \
     -DnewVersion=$OPTAPLANNER_VERSION \
     -DgenerateBackupPoms=false
     
     # update pom metadata
-    ./mvnw validate -Pregen-kogito -N
-    
-    # add custom repositories
-    echo "$DIFF_FILE" | patch .github/mvn-settings.xml
+    ./mvnw -s .github/mvn-settings.xml validate -Pregen-kogito -N
 
-    ./mvnw -Dsync
+    ./mvnw -s .github/mvn-settings.xml -Dsync
     
     # commit all
     git commit -am "Kogito $KOGITO_VERSION + OptaPlanner $OPTAPLANNER_VERSION"
@@ -181,8 +184,6 @@ finalize() {
     fi
 
     git checkout $PR_BRANCH
-
-
 
     # undo patch to add repos
     echo "$DIFF_FILE" | patch -R .github/mvn-settings.xml
