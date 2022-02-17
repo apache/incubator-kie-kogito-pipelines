@@ -340,19 +340,7 @@ class KogitoJobTemplate {
                 jobParams.jenkinsfile = jobCfg.jenkinsfile
             }
 
-            // TODO remove after testing
-            jobParams.pr.putAll([
-                run_only_for_labels: ['dsl-test'],
-                run_only_for_branches: [ 'main' ],
-                authorized_users: [ 'kiegroup' ],
-                authorized_groups: [ 'kiegroup' ],
-            ])
-            // TODO remove after testing
-
-            // TODO set back after testing
-            // jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
-            jobParams.git.project_url = "https://github.com/kiegroup/${jobParams.git.repository}/"
-            // TODO set back after testing
+            jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
 
             if (jobCfg.repository && jobCfg.repository != jobParams.git.repository ) { // Downstream job
                 jobParams.env.put('DOWNSTREAM_BUILD', true)
@@ -381,10 +369,9 @@ class KogitoJobTemplate {
             if (useBuildChain) {
                 // Buildchain uses centralized configuration for Jenkinsfile.buildchain to checkout
                 // Overrides configuration already done
-                String buildChainCheckoutBranch = 'radtriste-patch-2'
-                // TODO Test -> to change back
+                String buildChainCheckoutBranch = VersionUtils.getProjectTargetBranch(KogitoConstants.BUILDCHAIN_REPOSITORY, jobParams.git.branch, jobParams.git.repository)
                 jobParams.pr.checkout_branch = buildChainCheckoutBranch
-                jobParams.env.put('BUILDCHAIN_PROJECT', "kiegroup/${jobCfg.repository ?: jobParams.git.repository}")
+                jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository ?: jobParams.git.repository}")
                 jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
                 jobParams.env.put('BUILDCHAIN_CONFIG_BRANCH', buildChainCheckoutBranch)
                 jobParams.env.put('NOTIFICATION_JOB_NAME', "(${testTypeId}) - ${jobCfg.repository ?: jobParams.git.repository}")
@@ -510,15 +497,16 @@ class KogitoJobTemplate {
             ],
             env: [:],
             pr: [
-                // TODO set back after testing
                 excluded_regions: [
                     'LICENSE',
                     '\\.gitignore',
                     '.*\\.md',
                     '.*\\.adoc',
                     '.*\\.txt',
+                    '\\.github/.*',
+                    '\\.ci/jenkins/.*',
                 ],
-                ignore_for_labels: [ 'skip-ci' ], 
+                ignore_for_labels: [ 'skip-ci', 'dsl-test' ],
             ]
         ]
     }
