@@ -1,0 +1,34 @@
+name: 'Java + Maven configuration'
+description: 'Java and Maven version setup'
+inputs:
+  java-version:
+    description: "the java version"
+    default: 11
+    required: false
+  maven-version:
+    description: "the maven version"
+    default: "3.8.1"
+    required: false
+  cache-key-prefix:
+    description: "the cache key"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Jdk
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'temurin'
+        java-version: ${{ inputs.java-version }}
+        check-latest: true
+    - name: Set up Maven
+      uses: stCarolas/setup-maven@v4.2
+      with:
+        maven-version: ${{ inputs.maven-version }}
+    - name: Cache Maven packages
+      uses: actions/cache@v2
+      with:
+        path:  ~/.m2
+        key: ${{ inputs.cache-key-prefix }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys:  ${{ inputs.cache-key-prefix }}-m2

@@ -15,7 +15,7 @@ class KogitoJobUtils {
     static def createVersionUpdateToolsJob(def script, String repository, String dependencyName, String notificationProject, def mavenUpdate = [:], def gradleUpdate = [:]) {
         def jobParams = KogitoJobTemplate.getCompletedJobParams(script,
                                                 KogitoConstants.KOGITO_PIPELINES_REPOSITORY,
-                                                "${repository}-update-${dependencyName.toLowerCase()}",
+                                                "update-${dependencyName.toLowerCase()}-${repository}",
                                                 FolderUtils.getToolsFolder(script),
                                                 "${Utils.getJenkinsConfigPath(script, KogitoConstants.KOGITO_PIPELINES_REPOSITORY)}/Jenkinsfile.tools.update-dependency-version",
                                                 "Update KIE version for ${notificationProject}")
