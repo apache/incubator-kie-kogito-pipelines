@@ -34,7 +34,7 @@ class VersionUtils {
         return project.startsWith('kogito')
     }
 
-    static boolean isOptaplannerProject(String project) {
+    static boolean isOptaPlannerProject(String project) {
         return project.startsWith('opta')
     }
 
