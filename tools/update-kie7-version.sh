@@ -110,7 +110,7 @@ git checkout $BRANCH
 # create branch named like version
 git checkout -b $PR_BRANCH
 
-${script_dir_path}/update-maven-module-property.sh 'version.org.kie7' ${KIE_VERSION} 'kogito-kie7-bom'
+${script_dir_path}/update-maven-module-property.sh 'version.org.kie' ${KIE_VERSION} 'kogito-kie-bom'
  
 # commit all
 git commit -am "[$BRANCH] Bump KIE $KIE_VERSION"
