@@ -202,13 +202,17 @@ class KogitoJobTemplate {
                                 }
                                 ghprbBuildStatus {
                                     messages {
-                                        ghprbBuildResultMessage {
-                                            result('ERROR')
-                                            message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **an error**. Please check [the logs](\${BUILD_URL}display/redirect).")
+                                        if (!jobParams.pr.disable_status_message_error) {
+                                            ghprbBuildResultMessage {
+                                                result('ERROR')
+                                                message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **an error**. Please check [the logs](\${BUILD_URL}display/redirect).")
+                                            }
                                         }
-                                        ghprbBuildResultMessage {
-                                            result('FAILURE')
-                                            message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **failed**. Please check [the logs](\${BUILD_URL}display/redirect).")
+                                        if (!jobParams.pr.disable_status_message_failure) {
+                                            ghprbBuildResultMessage {
+                                                result('FAILURE')
+                                                message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **failed**. Please check [the logs](\${BUILD_URL}display/redirect).")
+                                            }
                                         }
                                     }
                                 }
@@ -314,7 +318,6 @@ class KogitoJobTemplate {
     *     dependsOn: (optional) which job should be executed before that one ? Ignored if `primary` is set (only considered for non-parallel jobs)
     *     jenkinsfile: (optional) where to lookup the jenkinsfile. else it will take the default one
     *   testType: (optional) Name of the tests. Used for the trigger phrase and commitContext. Default is `tests`.
-    *   extraEnv: (optional) Environment variables to set to all the jobs
     *   primaryTriggerPhrase: Redefined default primary trigger phrase
     */
     static def createMultijobPRJobs(def script, Map multijobConfig, Closure defaultParamsGetter) {
@@ -371,8 +374,15 @@ class KogitoJobTemplate {
                 jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository ?: jobParams.git.repository}")
                 jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
                 jobParams.env.put('BUILDCHAIN_CONFIG_BRANCH', buildChainCheckoutBranch)
+                jobParams.env.put('NOTIFICATION_JOB_NAME', "(${testTypeId}) - ${jobCfg.repository ?: jobParams.git.repository}")
                 jobParams.git.repository = KogitoConstants.BUILDCHAIN_REPOSITORY
                 jobParams.jenkinsfile = KogitoConstants.BUILDCHAIN_JENKINSFILE_PATH
+
+                // Status messages are sent directly by the pipeline as comments
+                jobParams.pr.putAll([
+                    disable_status_message_error: true,
+                    disable_status_message_failure: true,
+                ])
             }
             jobParams.job.name += ".${jobCfg.id.toLowerCase()}"
 
@@ -404,11 +414,9 @@ class KogitoJobTemplate {
             }
 
             // Update env
-            if (jobCfg.env) {
-                jobParams.env.putAll(jobCfg.env)
-            }
-            if (multijobConfig.extraEnv) {
-                jobParams.env.putAll(multijobConfig.extraEnv)
+            // Job env overrides always any value
+            jobCfg.env.each { key, value ->
+                jobParams.env.put(key, value)
             }
 
             createPRJob(script, jobParams)
@@ -422,17 +430,18 @@ class KogitoJobTemplate {
     *
     * Overriden config:
     *   testType => 'LTS'
-    *   extraEnv => added `QUARKUS_BRANCH`
+    *   jobs.env => added `QUARKUS_BRANCH`, `LTS` and `DISABLE_SONARCLOUD`
     *   optional => true
     *   primaryTriggerPhrase => '.*[j|J]enkins,? run LTS[ tests]?.*'
     */
     static def createMultijobLTSPRJobs(def script, Map multijobConfig, Closure defaultParamsGetter) {
         multijobConfig.testType = 'LTS'
-        multijobConfig.extraEnv = multijobConfig.extraEnv ?: [:]
-        multijobConfig.extraEnv.putAll([
-            QUARKUS_BRANCH: Utils.getQuarkusLTSVersion(script),
-            LTS: true
-        ])
+        multijobConfig.jobs.each { job ->
+            job.env = job.env ?: [:]
+            job.env.QUARKUS_BRANCH = Utils.getQuarkusLTSVersion(script)
+            job.env.LTS = true
+            job.env.DISABLE_SONARCLOUD = true
+        }
         multijobConfig.optional = true
         multijobConfig.primaryTriggerPhrase = KogitoConstants.KOGITO_LTS_PR_TRIGGER_PHRASE
         createMultijobPRJobs(script, multijobConfig, defaultParamsGetter)
@@ -445,14 +454,18 @@ class KogitoJobTemplate {
     *
     * Overriden config:
     *   testType => 'native'
-    *   extraEnv => added `NATIVE`
+    *   jobs.env => added `DISABLE_SONARCLOUD` and then `BUILD_MVN_OPTS_CURRENT` and `NATIVE_PROFILE` if not set already
     *   optional => true
     *   primaryTriggerPhrase => '.*[j|J]enkins,? run native[ tests]?.*'
     */
     static def createMultijobNativePRJobs(def script, Map multijobConfig, Closure defaultParamsGetter) {
         multijobConfig.testType = 'native'
-        multijobConfig.extraEnv = multijobConfig.extraEnv ?: [:]
-        multijobConfig.extraEnv.putAll([ NATIVE: true ])
+        multijobConfig.jobs.each { job ->
+            job.env = job.env ?: [:]
+            job.env.DISABLE_SONARCLOUD = true
+            job.env.BUILD_MVN_OPTS_CURRENT = job.env.BUILD_MVN_OPTS_CURRENT ?: "-Pnative ${KogitoConstants.DEFAULT_NATIVE_CONTAINER_PARAMS}"
+            job.env.ADDITIONAL_TIMEOUT = job.env.ADDITIONAL_TIMEOUT ?: '720'
+        }
         multijobConfig.optional = true
         multijobConfig.primaryTriggerPhrase = KogitoConstants.KOGITO_NATIVE_PR_TRIGGER_PHRASE
         createMultijobPRJobs(script, multijobConfig, defaultParamsGetter)
