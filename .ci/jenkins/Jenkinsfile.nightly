@@ -2,7 +2,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 @Library('jenkins-pipeline-shared-libraries')_
 
 // Deploy jobs
-DROOLS_DEPLOY = 'drools-deploy'
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
 OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
 APPS_DEPLOY = 'kogito-apps-deploy'
@@ -60,26 +59,6 @@ pipeline {
                     echo "nightly tag is ${env.NIGHTLY_TAG}"
 
                     currentBuild.displayName = env.NIGHTLY_TAG
-                }
-            }
-        }
-
-        stage('Build & Deploy Drools') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
-
-                    // images and operator deploy testing will use older working artifacts if that one fails
-                    buildJob(DROOLS_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(DROOLS_DEPLOY)
                 }
             }
         }

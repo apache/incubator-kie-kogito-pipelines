@@ -9,7 +9,6 @@ OPTAPLANNER_REPO = 'optaplanner'
 OPTAPLANNER_QUICKSTARTS_REPO = 'optaplanner-quickstarts'
 
 PIPELINE_REPOS = ["${PIPELINE_REPO}"]
-DROOLS_REPOS = ["drools"]
 RUNTIMES_REPOS = ['kogito-runtimes', 'kogito-apps', 'kogito-examples']
 OPTAPLANNER_REPOS = ["${OPTAPLANNER_REPO}", 'optaweb-vehicle-routing', 'optaweb-employee-rostering', "${OPTAPLANNER_QUICKSTARTS_REPO}:development"]
 IMAGES_REPOS = ['kogito-images']
@@ -36,13 +35,10 @@ pipeline {
         stage('Initialize') {
             steps {
                 script {
-                    assert getDroolsVersion()
                     assert getKogitoVersion()
                     assert getOptaPlannerVersion()
 
                     // Set release branch
-                    env.DROOLS_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getDroolsVersion())
-                    echo "Drools Release Branch ${getDroolsReleaseBranch()}"
 
                     env.KOGITO_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getKogitoVersion())
                     echo "Kogito Release Branch ${getKogitoReleaseBranch()}"
@@ -50,23 +46,9 @@ pipeline {
                     env.OPTAPLANNER_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getOptaPlannerVersion())
                     echo "OptaPlanner Release Branch ${getOptaPlannerReleaseBranch()}"
 
-                    currentBuild.displayName = getDisplayName("Drools ${getDroolsReleaseBranch()} / Kogito ${getKogitoReleaseBranch()}/ OptaPlanner${getOptaPlannerReleaseBranch()}")
+                    currentBuild.displayName = getDisplayName("Kogito ${getKogitoReleaseBranch()}/ OptaPlanner${getOptaPlannerReleaseBranch()}")
 
-                    sendNotification("Cut-off for Drools ${getDroolsReleaseBranch()}, Kogito ${getKogitoReleaseBranch()} and Optaplanner ${getOptaPlannerReleaseBranch()} has started...\n=> ${env.BUILD_URL}")
-                }
-            }
-        }
-
-        stage('Create Drools release branches') {
-            steps {
-                script {
-                    def repositories = []
-                    repositories += DROOLS_REPOS
-
-                    echo "Create ${getDroolsReleaseBranch()} on repositories ${repositories}"
-                    createBranches(repositories, getDroolsReleaseBranch())
-
-                    sendNotification("${getDroolsReleaseBranch()} branches have been created for repositories: ${repositories}")
+                    sendNotification("Cut-off for Kogito ${getKogitoReleaseBranch()} and Optaplanner ${getOptaPlannerReleaseBranch()} has started...\n=> ${env.BUILD_URL}")
                 }
             }
         }
@@ -113,7 +95,6 @@ pipeline {
 
                         repositories = []
                         repositories.addAll(collectRepos(PIPELINE_REPOS, getKogitoReleaseBranch()))
-                        repositories.addAll(collectRepos(DROOLS_REPOS, getDroolsReleaseBranch()))
                         repositories.addAll(collectRepos(RUNTIMES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(IMAGES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
@@ -220,10 +201,6 @@ String getDisplayName(branch = '') {
     return "Cut-off ${branch ?: getKogitoReleaseBranch()}"
 }
 
-String getDroolsVersion() {
-    return params.DROOLS_VERSION
-}
-
 String getKogitoVersion() {
     return params.KOGITO_VERSION
 }
@@ -250,10 +227,6 @@ String getBotAuthorCredsID() {
 
 String getOptaPlannerReleaseBranch() {
     return env.OPTAPLANNER_RELEASE_BRANCH
-}
-
-String getDroolsReleaseBranch() {
-    return env.DROOLS_RELEASE_BRANCH
 }
 
 String getRepoName(String repo) {
