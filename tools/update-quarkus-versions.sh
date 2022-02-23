@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-script_dir_path=`dirname "${BASH_SOURCE[0]}"`
+script_dir_path=$(cd `dirname "${BASH_SOURCE[0]}"`; pwd -P)
  
 GITHUB_URL="https://github.com/"
 GITHUB_URL_SSH="git@github.com:"
