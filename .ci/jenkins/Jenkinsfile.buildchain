@@ -1,7 +1,9 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
+definitionFile = 'pull-request-config.yaml'
+
 agentLabel = "${env.ADDITIONAL_LABEL?.trim() ? ADDITIONAL_LABEL : 'kie-rhel7 && kie-mem16g'} && !master"
-timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: "180"
+timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: '180'
 jdkTool = env.BUILD_JDK_TOOL?.trim() ?: 'kie-jdk11'
 mavenTool = env.BUILD_MAVEN_TOOL?.trim() ?: 'kie-maven-3.8.1'
 
@@ -12,10 +14,17 @@ disableSonarCloudAnalysis = env.DISABLE_SONARCLOUD ? env.DISABLE_SONARCLOUD.toBo
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
 lts = env.LTS ? env.LTS.toBoolean() : false
 
-buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
-buildChainAdditionalArguments = env.BUILDCHAIN_PROJECT ? "-sp=${env.BUILDCHAIN_PROJECT.trim()}" : ''
-
 notificationJobName = env.NOTIFICATION_JOB_NAME ?: 'PR'
+
+// Build chain vars
+buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
+buildChainActionInfo = [
+    action: isFDB() ? 'fd' : isSingle() ? 'single' : 'pr',
+    file: definitionFile,
+    arguments: []
+]
+env.BUILDCHAIN_PROJECT ? buildChainActionInfo.arguments.add("-sp=${env.BUILDCHAIN_PROJECT.trim()}") : null
+lts ? null : buildChainActionInfo.arguments.add('-spe quarkusio/quarkus')
 
 pipeline {
     agent {
@@ -71,8 +80,6 @@ pipeline {
                 script {
                     env.BUILD_MVN_OPTS_CURRENT = env.BUILD_MVN_OPTS_CURRENT ?: ''
                     env.BUILD_MVN_OPTS_CURRENT += isSonarCloudAnalysis() ? ' -Prun-code-coverage' : ''
-
-                    def buildChainActionInfo = getBuildChainActionInfo()
 
                     configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
                         withCredentials([string(credentialsId: 'kie-ci1-token', variable: 'GITHUB_TOKEN')]) {
@@ -148,13 +155,6 @@ boolean isFDB() {
 
 boolean isSingle() {
     return prType == 'single'
-}
-
-def getBuildChainActionInfo() {
-    def definitionFile = lts ? 'pull-request-lts-config.yaml' : 'pull-request-config.yaml'
-    return isFDB() ? [action: 'fd', file: definitionFile, arguments: buildChainAdditionalArguments] :
-                     isSingle() ? [action: 'single', file: definitionFile, arguments: buildChainAdditionalArguments] :
-                     [action: 'pr', file: definitionFile, arguments: buildChainAdditionalArguments]
 }
 
 boolean isSonarCloudAnalysis() {

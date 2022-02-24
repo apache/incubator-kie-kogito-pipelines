@@ -441,6 +441,11 @@ class KogitoJobTemplate {
             job.env.QUARKUS_BRANCH = Utils.getQuarkusLTSVersion(script)
             job.env.LTS = true
             job.env.DISABLE_SONARCLOUD = true
+            
+            job.env.BUILD_MVN_OPTS_CURRENT = job.env.BUILD_MVN_OPTS_CURRENT ?: ''
+            job.env.BUILD_MVN_OPTS_CURRENT += ' -Dversion.io.quarkus=999-SNAPSHOT'
+            job.env.BUILD_MVN_OPTS_CURRENT += ' -Dversion.io.quarkus.quarkus-test-maven=999-SNAPSHOT'
+            job.env.BUILD_MVN_OPTS_CURRENT += ' -Dquarkus.platform.version=999-SNAPSHOT'
         }
         multijobConfig.optional = true
         multijobConfig.primaryTriggerPhrase = KogitoConstants.KOGITO_LTS_PR_TRIGGER_PHRASE
