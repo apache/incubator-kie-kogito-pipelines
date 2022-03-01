@@ -88,22 +88,22 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Kogito Apps') {
-            steps {
-                script {
-                    echo "Call ${APPS_DEPLOY} job"
-                    def buildParams = getDefaultBuildParams()
-                    addAuthorBranchParamsIfExist(buildParams, 'kogito-apps')
+        // stage('Build & Deploy Kogito Apps') {
+        //     steps {
+        //         script {
+        //             echo "Call ${APPS_DEPLOY} job"
+        //             def buildParams = getDefaultBuildParams()
+        //             addAuthorBranchParamsIfExist(buildParams, 'kogito-apps')
 
-                    buildJob(APPS_DEPLOY, buildParams, false)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage()
-                }
-            }
-        }
+        //             buildJob(APPS_DEPLOY, buildParams, false)
+        //         }
+        //     }
+        //     post {
+        //         failure {
+        //             addFailedStage()
+        //         }
+        //     }
+        // }
 
         stage('Build & Deploy Kogito Examples') {
             steps {

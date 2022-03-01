@@ -116,25 +116,25 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Kogito Apps') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
+        // stage('Build & Deploy Kogito Apps') {
+        //     when {
+        //         expression { return isArtifactsDeploy() }
+        //     }
+        //     steps {
+        //         script {
+        //             def buildParams = getDefaultBuildParams()
+        //             addSkipTestsParam(buildParams)
 
-                    // images and operator deploy testing will use older working artifacts if that one fails
-                    buildJob(APPS_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(APPS_DEPLOY)
-                }
-            }
-        }
+        //             // images and operator deploy testing will use older working artifacts if that one fails
+        //             buildJob(APPS_DEPLOY, buildParams)
+        //         }
+        //     }
+        //     post {
+        //         failure {
+        //             addFailedStage(APPS_DEPLOY)
+        //         }
+        //     }
+        // }
 
         stage('Build & Deploy Kogito Examples') {
             when {

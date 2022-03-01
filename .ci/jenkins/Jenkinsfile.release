@@ -120,20 +120,20 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Kogito Apps') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
-                    addSkipTestsParam(buildParams)
-                    addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
+        // stage('Build & Deploy Kogito Apps') {
+        //     when {
+        //         expression { return isArtifactsDeploy() }
+        //     }
+        //     steps {
+        //         script {
+        //             def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
+        //             addSkipTestsParam(buildParams)
+        //             addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
 
-                    buildJob(APPS_DEPLOY, buildParams)
-                }
-            }
-        }
+        //             buildJob(APPS_DEPLOY, buildParams)
+        //         }
+        //     }
+        // }
 
         stage('Build & Deploy Kogito Examples') {
             when {
@@ -296,20 +296,20 @@ pipeline {
             }
         }
 
-        stage('Promote Kogito Apps') {
-            when {
-                expression { return isArtifactsPromote() && isJobConsideredOk(APPS_DEPLOY) }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
-                    addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
-                    addDeployBuildUrlParam(buildParams, APPS_DEPLOY)
+        // stage('Promote Kogito Apps') {
+        //     when {
+        //         expression { return isArtifactsPromote() && isJobConsideredOk(APPS_DEPLOY) }
+        //     }
+        //     steps {
+        //         script {
+        //             def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
+        //             addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
+        //             addDeployBuildUrlParam(buildParams, APPS_DEPLOY)
 
-                    buildJob(APPS_PROMOTE, buildParams)
-                }
-            }
-        }
+        //             buildJob(APPS_PROMOTE, buildParams)
+        //         }
+        //     }
+        // }
 
         stage('Promote Kogito Examples') {
             when {
