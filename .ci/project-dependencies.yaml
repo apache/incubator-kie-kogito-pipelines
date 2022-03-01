@@ -12,7 +12,7 @@ dependencies:
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
       exclude:
         - kiegroup/kogito-examples
-        - kiegroup/kogito-apps
+        # - kiegroup/kogito-apps
   
   - project: kiegroup/optaplanner
     dependencies:
@@ -31,22 +31,22 @@ dependencies:
         - kiegroup/optaweb-vehicle-routing
         - kiegroup/optaplanner-quickstarts
 
-  - project: kiegroup/kogito-apps
-    dependencies:
-      - project: kiegroup/kogito-runtimes
-      - project: kiegroup/optaplanner
-    mapping:
-      dependencies:
-        default:
-          - source: (\d*)\.(.*)\.(.*)
-            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
-      dependant:
-        default:
-          - source: (\d*)\.(.*)\.(.*)
-            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
-      exclude:
-        - kiegroup/kogito-examples
-        - kiegroup/kogito-runtimes
+  # - project: kiegroup/kogito-apps
+  #   dependencies:
+  #     - project: kiegroup/kogito-runtimes
+  #     - project: kiegroup/optaplanner
+  #   mapping:
+  #     dependencies:
+  #       default:
+  #         - source: (\d*)\.(.*)\.(.*)
+  #           targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
+  #     dependant:
+  #       default:
+  #         - source: (\d*)\.(.*)\.(.*)
+  #           targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
+  #     exclude:
+  #       - kiegroup/kogito-examples
+  #       - kiegroup/kogito-runtimes
 
   - project: kiegroup/kogito-examples
     dependencies:
@@ -62,7 +62,7 @@ dependencies:
           - source: (\d*)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
       exclude:
-        - kiegroup/kogito-apps
+        # - kiegroup/kogito-apps
         - kiegroup/kogito-runtimes
 
   - project: kiegroup/optaweb-employee-rostering
