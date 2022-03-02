@@ -15,8 +15,9 @@ pipeline {
         booleanParam(description: 'Skip Tests? True as default', name: 'SKIP_TESTS', defaultValue: true)
         string(description: 'The UMB message version', name: 'UMB_VERSION', defaultValue: 'main')
         string(description: 'The product version', name: 'PRODUCT_VERSION')
+        string(description: 'The drools product version', name: 'DROOLS_PRODUCT_VERSION')
         string(description: 'The optaplanner product version', name: 'OPTAPLANNER_PRODUCT_VERSION')
-        string(description: 'The config repository branch', name: 'DEFAULT_CONFIG_BRANCH', defaultValue: 'main')
+        string(description: 'The config repository branch', name: 'CONFIG_BRANCH', defaultValue: 'main')
         string(description: 'The RHBA release version. Something like 7.12 or main', name: 'RHBA_RELEASE_VERSION')
     }
     options {
@@ -34,22 +35,9 @@ pipeline {
         stage('Clone build configuration repo') {
             steps {
                 script {
-                    def currentBranch = env.DEFAULT_CONFIG_BRANCH ?: env.BRANCH_NAME ?: env.GIT_BRANCH
+                    def currentBranch = env.CONFIG_BRANCH ?: env.DEFAULT_CONFIG_BRANCH ?: env.BRANCH_NAME ?: env.GIT_BRANCH
                     println "Checking out ${env.BUILD_CONFIGURATION_REPO_URL}:${currentBranch} into build_config folder"
                     sh "git clone -b ${currentBranch} --single-branch ${env.BUILD_CONFIGURATION_REPO_URL} build_config"
-                }
-            }
-        }
-        stage('Get latest RHBA product version') {
-            steps {
-                script {
-                    env.RHBA_LASTEST_PRODUCT_VERSION = maven.getLatestArtifactVersionPrefixFromRepository(RHBA_MAVEN_REPO_URL, 'org.drools', 'drools', RHBA_VERSION_PREFIX)
-                    println "[INFO] RHBA latest product version ${env.RHBA_LASTEST_PRODUCT_VERSION} from ${RHBA_MAVEN_REPO_URL}. Filtered by ${RHBA_VERSION_PREFIX}"
-                    if([null, 'null'].contains(env.RHBA_LASTEST_PRODUCT_VERSION)) {
-                        def errorMessage = "[ERROR] There's no RHBA product for ${RHBA_VERSION_PREFIX} prefix"
-                        println errorMessage
-                        error(errorMessage)
-                    }
                 }
             }
         }
@@ -62,9 +50,17 @@ pipeline {
                         pipelineHelper.retry(
                         {
                             def SETTINGS_XML_ID = RHBA_RELEASE_VERSION ? 'kogito-nightly-version' : 'kogito-nightly-main'
-                            def projectCollection = ['kogito-runtimes', 'optaplanner', 'kogito-examples', 'optaplanner-quickstarts', 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'jboss-integration/kogito-rhba']
+                            def projectCollection = ['drools', 'optaplanner', 'optaplanner-quickstarts', 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'kogito-runtimes', 'kogito-apps', 'kogito-examples', 'jboss-integration/kogito-rhba']
                             def projectVariableMap = [:]
-                            def additionalVariables = ['optaplannerProductVersion': env.OPTAPLANNER_PRODUCT_VERSION, 'optaplanner-scmRevision': getOptaPlannerBranch(), 'optaplanner-quickstarts-scmRevision': getOptaPlannerBranch('stable'), 'rhbaProductVersion': env.RHBA_LASTEST_PRODUCT_VERSION]
+                            def additionalVariables = [
+                                'droolsProductVersion': env.DROOLS_PRODUCT_VERSION, 
+                                'drools-scmRevision': getDroolsBranch(), 
+                                'optaplannerProductVersion': env.OPTAPLANNER_PRODUCT_VERSION, 
+                                'optaplanner-scmRevision': getOptaPlannerBranch(), 
+                                'optaplanner-quickstarts-scmRevision': getOptaPlannerQuickstartsBranch(), 
+                                'optaweb-vehicle-routing-scmRevision': getOptaPlannerBranch(), 
+                                'optaweb-employee-rostering-scmRevision': getOptaPlannerBranch(),
+                            ]
                             configFileProvider([configFile(fileId: '49737697-ebd6-4396-9c22-11f7714808eb', variable: 'PRODUCTION_PROJECT_LIST')]) {
                                 pmebuild.buildProjects(projectCollection, "${SETTINGS_XML_ID}", "$WORKSPACE/build_config/kogito/nightly", "${env.PME_CLI_PATH}", projectVariableMap, additionalVariables, [:])
                             }
@@ -83,6 +79,7 @@ pipeline {
                             [$class: 'BooleanParameterValue', name: 'IS_RELEASE', value: false],
                             [$class: 'StringParameterValue', name: 'BRANCH_NAME', value: env.BRANCH_NAME],
                             [$class: 'StringParameterValue', name: 'KOGITO_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['productVersion']],
+                            [$class: 'StringParameterValue', name: 'DROOLS_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['droolsProductVersion']],
                             [$class: 'StringParameterValue', name: 'OPTAPLANNER_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['optaplannerProductVersion']],
                             [$class: 'StringParameterValue', name: 'TIME_STAMP', value: "${PME_BUILD_VARIABLES['datetimeSuffix']}"],
                             [$class: 'StringParameterValue', name: 'GIT_INFORMATION_HASHES', value: "${treatGitHashes(env.GIT_INFORMATION_HASHES)}"]
@@ -186,16 +183,30 @@ def treatGitHashes(String gitInformationHashes) {
     return gitInformationHashes.replace('-', '.').replaceAll(/([\w\d\-\_\.]*\/)([\w\d\-\_\.]*)/,'$2.scm.hash').replace(';', '\n')
 }
 
-String getOptaPlannerBranch(String defaultBranch = '') {
-    /* The OptaPlanner major version is shifted by 7 from the Kogito major version:
-       Kogito 1.x.y -> OptaPlanner 8.x.y. */
-    int majorVersionShift = 7
-    def branch = defaultBranch ?: env.CHANGE_BRANCH ?: BRANCH_NAME
+String getDroolsBranch() {
+    return calculateKieRepoBranch(env.CHANGE_BRANCH ?: BRANCH_NAME)
+}
 
+String getOptaPlannerBranch() {
+    return calculateKieRepoBranch(env.CHANGE_BRANCH ?: BRANCH_NAME)
+}
+
+String getOptaPlannerQuickstartsBranch() {
+    def branch = env.CHANGE_BRANCH ?: BRANCH_NAME
+    return branch == 'main' ? 'development' : calculateKieRepoBranch(branch)
+}
+
+String calculateKieRepoBranch(String branch) {
+    /* The Drools/OptaPlanner major version is shifted by 7 from the Kogito major version:
+    Kogito 1.x.y -> Drools 8.x.y. 
+    Kogito 1.x.y -> OptaPlanner 8.x.y. */
+    int majorVersionShift = 7
     String [] branchSplit = branch.split("\\.")
     if (branchSplit.length == 3) {
         Integer optaplannerMajorVersion = Integer.parseInt(branchSplit[0]) + majorVersionShift
         return "${optaplannerMajorVersion}.${branchSplit[1]}.${branchSplit[2]}"
+    } else {
+       return branch
     }
-    return branch
 }
+
