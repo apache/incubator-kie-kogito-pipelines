@@ -203,8 +203,7 @@ String getOptaPlannerQuickstartsBranch() {
 }
 
 String calculateKieRepoBranch(String branch) {
-    /* The Drools/OptaPlanner major version is shifted by 7 from the Kogito major version:
-    Kogito 1.x.y -> Drools 8.x.y. 
+    /* The OptaPlanner major version is shifted by 7 from the Kogito major version:
     Kogito 1.x.y -> OptaPlanner 8.x.y. */
     int majorVersionShift = 7
     String [] branchSplit = branch.split("\\.")
