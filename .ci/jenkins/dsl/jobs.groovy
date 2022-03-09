@@ -96,9 +96,9 @@ void setupNightlyJob() {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
             booleanParam('SKIP_ARTIFACTS', false, 'To skip Artifacts (runtimes, examples, optaplanner) Deployment')
-            booleanParam('SKIP_IMAGES', true, 'To skip Images Deployment')
-            booleanParam('SKIP_EXAMPLES_IMAGES', true, 'To skip Examples Images Deployment')
-            booleanParam('SKIP_OPERATOR', true, 'To skip Operator Deployment')
+            booleanParam('SKIP_IMAGES', false, 'To skip Images Deployment')
+            booleanParam('SKIP_EXAMPLES_IMAGES', false, 'To skip Examples Images Deployment')
+            booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
 
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
         }
