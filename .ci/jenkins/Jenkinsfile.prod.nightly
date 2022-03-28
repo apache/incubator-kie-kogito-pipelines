@@ -64,7 +64,7 @@ pipeline {
                             def SETTINGS_XML_ID = 'kogito-nightly-version'
                             def projectCollection = ['kogito-runtimes', 'optaplanner', 'kogito-examples', 'optaplanner-quickstarts', 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'jboss-integration/kogito-rhba']
                             def projectVariableMap = [:]
-			                def additionalVariables = [
+                            def additionalVariables = [
                                 'optaplannerProductVersion': env.OPTAPLANNER_PRODUCT_VERSION, 
                                 'optaplanner-scmRevision': getOptaPlannerBranch(), 
                                 'optaplanner-quickstarts-scmRevision': getOptaPlannerQuickstartsBranch(), 
