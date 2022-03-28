@@ -49,7 +49,7 @@ pipeline {
                         def pipelineHelper = new PipelineHelper(this)
                         pipelineHelper.retry(
                         {
-                            def SETTINGS_XML_ID = RHBA_RELEASE_VERSION ? 'kogito-nightly-version' : 'kogito-nightly-main'
+                            def SETTINGS_XML_ID = RHBA_RELEASE_VERSION && RHBA_RELEASE_VERSION != 'main' ? 'kogito-nightly-version' : 'kogito-nightly-main'
                             def projectCollection = ['drools', 'optaplanner', 'optaplanner-quickstarts', 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'kogito-runtimes', 'kogito-apps', 'kogito-examples', 'jboss-integration/kogito-rhba']
                             def projectVariableMap = [:]
                             def additionalVariables = [
