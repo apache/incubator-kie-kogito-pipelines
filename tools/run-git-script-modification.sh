@@ -69,6 +69,7 @@ echo "SCRIPT_FILE_OPTIONS.......${SCRIPT_FILE_OPTIONS}"
 echo
 
 source ${SCRIPT_FILE}
+parseArgsAsEnv ${SCRIPT_FILE_OPTIONS}
 args=$(parseArgsAsEnv ${SCRIPT_FILE_OPTIONS})
 status=$?
 if [ "$status" != "0" ]; then

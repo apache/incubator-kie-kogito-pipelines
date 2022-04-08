@@ -38,7 +38,7 @@ usage() {
     echo 'Usage: update-project-dependencies.sh -v $NEW_VALUE [-m MAVEN_MODULE]* [-p MAVEN_PROPERTY]* [-g GRADLE_REGEX]* [-c COMPARE_REMOTE_POMS]'
     echo
     echo 'Options:'
-    echo '  -q $NEW_VALUE             New value to set.'
+    echo '  -v $NEW_VALUE             New value to set.'
     echo '  -m $MAVEN_MODULE          Maven module to update.'
     echo '  -p $MAVEN_PROPERTY        Maven property to set to the given value.'
     echo '  -g $GRADLE_REGEX          Gradle line to update as a regex. Anything behing the given regex will be replaced by the given value.'
@@ -87,8 +87,8 @@ parseArgsAsEnv() {
     echo "export NEW_VALUE=${new_value};"
     if  [ ! -z ${maven_modules} ]; then echo "export MAVEN_MODULES='${maven_modules[*]}';"; fi
     if  [ ! -z ${maven_props} ]; then echo "export MAVEN_PROPERTIES='${maven_props[*]}';"; fi
-    if  [ ! -z ${gradle_regex} ]; then echo echo "export GRADLE_REGEX='${gradle_regex[*]}';"; fi
-    if  [ ! -z ${remote_poms} ]; then echo echo "export REMOTE_POMS='${remote_poms[*]}';"; fi
+    if  [ ! -z ${gradle_regex} ]; then echo "export GRADLE_REGEX='${gradle_regex[*]}';"; fi
+    if  [ ! -z ${remote_poms} ]; then echo "export REMOTE_POMS='${remote_poms[*]}';"; fi
 }
 
 retrieveGitDefaultValuesAsEnv() {
@@ -157,7 +157,7 @@ execute() {
 }
 
 if [ "$1" != "" ]; then
-    # parseArgsAsEnv $@
+    parseArgsAsEnv $@
     args=$(parseArgsAsEnv $@)
     status=$?
     if [ "$status" != "0" ]; then

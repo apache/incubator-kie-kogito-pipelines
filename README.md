@@ -15,11 +15,11 @@ This repository contains some of the pipelines of Kogito project.
       * [Jenkins artifacts PR checks](#jenkins-artifacts-pr-checks)
       * [GitHub Action checks](#github-action-checks)
     * [Sonar cloud](#sonar-cloud)
-* [Configuration of pipelines](#configuration-of-pipelines)
-  * [Jenkins](#jenkins)
+  * [Configuration of pipelines](#configuration-of-pipelines)
+      * [Jenkins](#jenkins)
     * [Jenkins jobs generation](#jenkins-jobs-generation)
-  * [Zulip notifications](#zulip-notifications)
-    * [Format](#format)
+    * [Zulip notifications](#zulip-notifications)
+      * [Format](#format)
 
 # Kogito Repositories
 
@@ -110,9 +110,9 @@ After the build, test results are parsed and logged using the [`action-surefire-
 
 NOTE: test coverage analysis is executed only by **Jenkins PR simple build&test** and not while using GitHub action.
 
-# Configuration of pipelines
+## Configuration of pipelines
 
-## Jenkins
+#### Jenkins
 
 All pipelines can be found in [kogito Jenkins folder](https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito).
 
@@ -120,10 +120,10 @@ All pipelines can be found in [kogito Jenkins folder](https://eng-jenkins-csb-bu
 
 More information can be found [here](./docs/jenkins.md).
 
-## Zulip notifications
+### Zulip notifications
 
 Any message / error is sent to [kogito-ci](https://kie.zulipchat.com/#narrow/stream/236603-kogito-ci) stream.
 
-### Format
+#### Format
 
-    [branch] Project
+    [branch] Project name - Job Suffix

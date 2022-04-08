@@ -11,12 +11,13 @@ Jobs should then be created for the branch and nightly are automatically activat
 ## Before Release day
 
 - Is Quarkus version up to date ?  
-  If not, update it on all the repositories with the [update Quarkus job](https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/tools/job/update-quarkus-all/)
+  If not, update it on projects via the `update-quarkus-all` job from the release branch `tools` folder. See also [tools documentation](./tools.md)
 
 ## Release day
 
 - Start release pipeline
-- Once all tests passed and artifacts are staged, create the [Quarkus Platform PR](../tools/update-quarkus-platform.sh)
+- Once all tests passed and artifacts are staged, create the [Quarkus Platform PR](../tools/update-quarkus-platform.sh)  
+  This script should be executed into an already existing repository. If it is not the case, you will need to call that with the [run-git-script-modification.sh](../tools/run-git-script-modification.sh). See also [tools documentation](./tools.md)
 - Once platform PR is green, artifacts can be released (release pipeline job can continue)
 
 ## Release pipeline is done

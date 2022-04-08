@@ -145,7 +145,7 @@ index d5e4664b..b03cc023 100644
 '
 
 if [ "$1" != "" ]; then
-    # parseArgsAsEnv $@
+    parseArgsAsEnv $@
     args=$(parseArgsAsEnv $@)
     status=$?
     if [ "$status" != "0" ]; then
