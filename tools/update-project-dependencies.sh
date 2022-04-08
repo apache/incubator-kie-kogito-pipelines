@@ -30,7 +30,7 @@ set -eo pipefail
 # REMOTE_POMS=('io.quarkus:quarkus-bom')
 # ###################################################
 
-script_dir_path=`dirname "${BASH_SOURCE[0]}"`
+script_dir_path=$(cd `dirname "${BASH_SOURCE[0]}"`; pwd -P)
 
 DEFAULT_PROJECT=kogito-runtimes
 
