@@ -263,65 +263,65 @@ pipeline {
                         }
                     }
                 }
-                stage('LTS Build examples images & BDD testing') {
+                stage('Mandrel Build examples images & BDD testing') {
                     when {
-                        expression { return getLTSNativeBuilderImage() }
+                        expression { return getNativeBuilderImage() }
                     }
                     stages {
-                        stage('Build & Deploy Examples Images LTS') {
+                        stage('Build & Deploy Examples Images with Mandrel') {
                             when {
                                 expression { return isExamplesImagesDeploy() }
                             }
                             steps {
                                 script {
-                                    def buildParams = getDefaultBuildParams(getBuildBranch(), 'LTS')
+                                    def buildParams = getDefaultBuildParams(getBuildBranch(), 'mandrel')
                                     addSkipTestsParam(buildParams)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, defaultImageParamsPrefix, 'lts')
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, defaultImageParamsPrefix, 'mandrel')
                                     addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
                                     addDeployImageWithLatestTagParam(buildParams)
 
                                     // For BDD tests
-                                    addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getLTSNativeBuilderImage())
+                                    addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getNativeBuilderImage())
                                     addStringParam(buildParams, 'BDD_TEST_TAGS', '~@ignorelts')
                                     addBooleanParam(buildParams, 'SKIP_NON_NATIVE_TESTS', true)
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
                                     addExamplesParam(buildParams)
 
-                                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams, getLTSJobKey(EXAMPLES_IMAGES_DEPLOY))
+                                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams, getMandrelJobKey(EXAMPLES_IMAGES_DEPLOY))
                                 }
                             }
                             post {
                                 failure {
-                                    addFailedStage(getLTSJobKey(EXAMPLES_IMAGES_DEPLOY))
+                                    addFailedStage(getMandrelJobKey(EXAMPLES_IMAGES_DEPLOY))
                                 }
                             }
                         }
-                        stage('Build & Deploy Operator LTS') {
+                        stage('Build & Deploy Operator with Mandrel') {
                             when {
-                                expression { return getLTSNativeBuilderImage() && isOperatorDeploy() }
+                                expression { return getNativeBuilderImage() && isOperatorDeploy() }
                             }
                             steps {
                                 script {
-                                    def buildParams = getDefaultBuildParams(getBuildBranch(), 'LTS')
+                                    def buildParams = getDefaultBuildParams(getBuildBranch(), 'mandrel')
                                     addSkipTestsParam(buildParams)
                                     addBooleanParam(buildParams, 'SKIP_DEPLOY', true)
 
                                     // For BDD tests
-                                    addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getLTSNativeBuilderImage())
+                                    addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getNativeBuilderImage())
                                     addStringParam(buildParams, 'BDD_TEST_TAGS', '~@ignorelts')
                                     addBooleanParam(buildParams, 'SKIP_NON_NATIVE_TESTS', true)
                                     addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix, 'lts')
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix, 'mandrel')
                                     addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
                                     addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
                                     addExamplesParam(buildParams)
 
-                                    buildJob(OPERATOR_DEPLOY, buildParams, getLTSJobKey(OPERATOR_DEPLOY))
+                                    buildJob(OPERATOR_DEPLOY, buildParams, getMandrelJobKey(OPERATOR_DEPLOY))
                                 }
                             }
                             post {
                                 failure {
-                                    addFailedStage(getLTSJobKey(OPERATOR_DEPLOY))
+                                    addFailedStage(getMandrelJobKey(OPERATOR_DEPLOY))
                                 }
                             }
                         }
@@ -364,8 +364,8 @@ boolean isJobSucceeded(String jobKey) {
     return getJob(jobKey)?.getResult() == 'SUCCESS'
 }
 
-String getLTSJobKey(String jobName) {
-    return "${jobName}-lts"
+String getMandrelJobKey(String jobName) {
+    return "${jobName}-mandrel"
 }
 
 void addFailedStage(String jobKey = '') {
@@ -482,8 +482,8 @@ boolean isOperatorDeploy() {
     return !params.SKIP_OPERATOR
 }
 
-String getLTSNativeBuilderImage() {
-    return env.LTS_NATIVE_BUILDER_IMAGE
+String getNativeBuilderImage() {
+    return env.NATIVE_BUILDER_IMAGE
 }
 
 String getArtifactsRepositoryParam() {

@@ -1,54 +1,31 @@
-import org.kie.jenkins.jobdsl.templates.KogitoJobTemplate
-import org.kie.jenkins.jobdsl.KogitoConstants
-import org.kie.jenkins.jobdsl.FolderUtils
+import org.kie.jenkins.jobdsl.KogitoJobTemplate
+import org.kie.jenkins.jobdsl.model.Folder
+import org.kie.jenkins.jobdsl.KogitoJobUtils
 import org.kie.jenkins.jobdsl.Utils
 
 JENKINSFILE_PATH = '.ci/jenkins'
 
-def getDefaultJobParams() {
-    return KogitoJobTemplate.getDefaultJobParams(this, KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
-}
+// PRs
+setupKogitoRuntimesBDDPrJob()
 
-def getJobParams(String jobName, String jobFolder, String jenkinsfileName, String jobDescription = '') {
-    def jobParams = getDefaultJobParams()
-    jobParams.job.name = jobName
-    jobParams.job.folder = jobFolder
-    jobParams.jenkinsfile = jenkinsfileName
-    if (jobDescription) {
-        jobParams.job.description = jobDescription
-    }
-    return jobParams
-}
-
-if (Utils.isMainBranch(this)) {
-    // PRs
-    setupKogitoRuntimesBDDPrJob()
-
-    // Tools
-    setupCreateIssueToolsJob()
-    setupCleanOldNamespacesToolsJob()
-    setupCleanOldNightlyImagesToolsJob()
-}
+// Tools
+setupCreateIssueToolsJob()
+setupCleanOldNamespacesToolsJob()
+setupCleanOldNightlyImagesToolsJob()
+setupUpdateQuarkusToolsJob()
 
 // Nightly
 setupNightlyJob()
 
-if (Utils.isMainBranch(this)) {
-    // Release prepare is not in a specific branch and should be generated only on main branch
-    setupPrepareReleaseJob()
-} else {
-    // No release job directly on main branch
-    setupReleaseJob()
-}
-
-setupUpdateQuarkusToolsJob()
+// Release
+setupReleaseJob()
 
 /////////////////////////////////////////////////////////////////
 // Methods
 /////////////////////////////////////////////////////////////////
 
 void setupKogitoRuntimesBDDPrJob() {
-    def jobParams = getJobParams('0-runtimes-bdd-testing', FolderUtils.getPullRequestRuntimesBDDFolder(this), "${JENKINSFILE_PATH}/Jenkinsfile.pr.bdd-tests", 'Run on demand BDD tests from runtimes repository')
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, '0-runtimes-bdd-testing', Folder.PULLREQUEST_RUNTIMES_BDD, "${JENKINSFILE_PATH}/Jenkinsfile.pr.bdd-tests", 'Run on demand BDD tests from runtimes repository')
     jobParams.git.project_url = "https://github.com/${GIT_AUTHOR_NAME}/kogito-runtimes/"
     jobParams.git.repo_url = "https://github.com/${GIT_AUTHOR_NAME}/${jobParams.git.repository}/"
     jobParams.pr = [
@@ -63,8 +40,8 @@ void setupKogitoRuntimesBDDPrJob() {
 }
 
 void setupUpdateQuarkusToolsJob() {
-    def jobParams = getJobParams('update-quarkus-all', FolderUtils.getToolsFolder(this), "${JENKINSFILE_PATH}/Jenkinsfile.tools.update-quarkus")
-    KogitoJobTemplate.createPipelineJob(this, jobParams).with {
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'update-quarkus-all', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.update-quarkus")
+    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         parameters {
             stringParam('NEW_VERSION', '', 'Which version to set ?')
         }
@@ -82,20 +59,20 @@ void setupUpdateQuarkusToolsJob() {
 }
 
 void setupCleanOldNamespacesToolsJob() {
-    def jobParams = getJobParams('kogito-clean-old-namespaces', FolderUtils.getToolsFolder(this), "${JENKINSFILE_PATH}/Jenkinsfile.tools.clean-old-namespaces")
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-clean-old-namespaces', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.clean-old-namespaces")
     jobParams.triggers = [ cron : '@midnight' ]
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
-void setupCleanOldNightlyImagesToolsJob(String jobFolder) {
-    jobParams = getJobParams('kogito-clean-old-nightly-images', FolderUtils.getToolsFolder(this), "${JENKINSFILE_PATH}/Jenkinsfile.tools.clean-nightly-images")
+void setupCleanOldNightlyImagesToolsJob() {
+    jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-clean-old-nightly-images', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.clean-nightly-images")
     jobParams.triggers = [ cron : 'H 8 * * *' ]
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
-void setupCreateIssueToolsJob(String jobFolder) {
-    jobParams = getJobParams('kogito-create-issue', FolderUtils.getToolsFolder(this), "${JENKINSFILE_PATH}/Jenkinsfile.tools.create-issue")
-    KogitoJobTemplate.createPipelineJob(this, jobParams).with {
+void setupCreateIssueToolsJob() {
+    jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-create-issue', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.create-issue")
+    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         parameters {
             stringParam('AUTHOR', '', 'Git author')
             stringParam('REPOSITORY', '', 'Git repository')
@@ -110,9 +87,9 @@ void setupCreateIssueToolsJob(String jobFolder) {
 }
 
 void setupNightlyJob() {
-    def jobParams = getJobParams('kogito-nightly', FolderUtils.getNightlyFolder(this), "${JENKINSFILE_PATH}/Jenkinsfile.nightly", 'Kogito Nightly')
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-nightly', Folder.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly", 'Kogito Nightly')
     jobParams.triggers = [cron : '@midnight']
-    KogitoJobTemplate.createPipelineJob(this, jobParams).with {
+    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         parameters {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
@@ -137,16 +114,12 @@ void setupNightlyJob() {
 
             env('MAVEN_SETTINGS_CONFIG_FILE_ID', "${MAVEN_SETTINGS_FILE_ID}")
             env('ARTIFACTS_REPOSITORY', "${MAVEN_ARTIFACTS_REPOSITORY}")
-
-            if (Utils.isLTSBranch(this)) {
-                env('LTS_NATIVE_BUILDER_IMAGE', Utils.getLTSNativeBuilderImage(this))
-            }
         }
     }
 }
 
 void setupReleaseJob() {
-    KogitoJobTemplate.createPipelineJob(this, getJobParams('kogito-release', FolderUtils.getReleaseFolder(this), "${JENKINSFILE_PATH}/Jenkinsfile.release", 'Kogito Release')).with {
+    KogitoJobTemplate.createPipelineJob(this, KogitoJobUtils.getBasicJobParams(this, 'kogito-release', Folder.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release", 'Kogito Release'))?.with {
         parameters {
             stringParam('RESTORE_FROM_PREVIOUS_JOB', '', 'URL to a previous stopped release job which needs to be continued')
 
@@ -189,27 +162,6 @@ void setupReleaseJob() {
 
             env('DEFAULT_STAGING_REPOSITORY', "${MAVEN_NEXUS_STAGING_PROFILE_URL}")
             env('ARTIFACTS_REPOSITORY', "${MAVEN_ARTIFACTS_REPOSITORY}")
-        }
-    }
-}
-
-void setupPrepareReleaseJob() {
-    KogitoJobTemplate.createPipelineJob(this, getJobParams('prepare-release-branch', FolderUtils.getReleaseFolder(this), "${JENKINSFILE_PATH}/Jenkinsfile.release.prepare", 'Prepare env for a release')).with {
-        parameters {
-            stringParam('DROOLS_VERSION', '', 'Drools version to release as Major.minor.micro')
-            stringParam('OPTAPLANNER_VERSION', '', 'OptaPlanner version of OptaPlanner and its examples to release as Major.minor.micro')
-            stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
-        }
-
-        environmentVariables {
-            env('JENKINS_EMAIL_CREDS_ID', "${JENKINS_EMAIL_CREDS_ID}")
-
-            env('PIPELINE_MAIN_BRANCH', "${GIT_MAIN_BRANCH}")
-            env('DEFAULT_BASE_BRANCH', "${GIT_MAIN_BRANCH}")
-
-            env('GIT_AUTHOR', "${GIT_AUTHOR_NAME}")
-            env('GIT_AUTHOR_CREDS_ID', "${GIT_AUTHOR_CREDENTIALS_ID}")
-            env('GIT_BOT_AUTHOR_CREDS_ID', "${GIT_BOT_AUTHOR_CREDENTIALS_ID}")
         }
     }
 }

@@ -1,12 +1,19 @@
 // +++++++++++++++++++++++++++++++++++++++++++ create a seed job ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+import org.kie.jenkins.jobdsl.model.Folder
 import org.kie.jenkins.jobdsl.FolderUtils
 import org.kie.jenkins.jobdsl.KogitoConstants
 import org.kie.jenkins.jobdsl.SeedJobUtils
+import org.kie.jenkins.jobdsl.Utils
 
 // Create all folders
 folder("${GENERATION_BRANCH}")
-FolderUtils.getAllNeededFolders().each { folder("${GENERATION_BRANCH}/${it}") }
+if (Utils.isNewFolderStructure(this)) {
+    Folder.getAllFolders(this).each { folder("${GENERATION_BRANCH}/${it.getFolderName()}") }
+} else {
+    // For old branches
+    FolderUtils.getAllNeededFolders().each { folder("${GENERATION_BRANCH}/${it}") }
+}
 
 SeedJobUtils.createSeedJobTrigger(
     this,

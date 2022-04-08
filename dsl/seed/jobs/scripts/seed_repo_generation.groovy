@@ -71,13 +71,14 @@ def generateJobs() {
         }
 
         stage('Generate jobs') {
-            def envProps = getRepoEnvProperties()
+            def envProps = getRepoConfigAsEnvProperties()
             def repoConfig = getRepoConfig()
             envProps.put('GIT_MAIN_BRANCH', "${GIT_MAIN_BRANCH}")
+            envProps.put('REPO_NAME', "${REPO_NAME}")
 
             // Add other repos `jenkins_config_path` var (useful if multijob PR checks for example)
             getAllBranchRepos().each { repoName ->
-                String key = generateEnvKey(repoName, 'jenkins_config_path')
+                String key = util.generateEnvKey(repoName, 'jenkins_config_path')
                 envProps.put(key, getRepoConfig(repoName).git.jenkins_config_path)
             }
 
@@ -90,16 +91,17 @@ def generateJobs() {
 
             dir("${SEED_REPO}/${SEED_FOLDER}") {
                 println "[INFO] Generate jobs for branch ${GENERATION_BRANCH} and repo ${REPO_NAME}."
+                println "[INFO] Additional parameters: ${envProps}."
                 jobDsl targets: 'jobs/jobs.groovy',
-                sandbox: false,
-                ignoreExisting: false,
-                ignoreMissingFiles: false,
-                removedJobAction: repoConfig.disable.branch || repoConfig.disabled ? 'DISABLE' : 'DELETE',
-                removedViewAction: 'DELETE',
-                //removedConfigFilesAction: 'IGNORE',
-                lookupStrategy: 'SEED_JOB',
-                additionalClasspath: 'src/main/groovy',
-                additionalParameters : envProps
+                    sandbox: false,
+                    ignoreExisting: false,
+                    ignoreMissingFiles: false,
+                    removedJobAction: repoConfig.disable.branch || repoConfig.disabled ? 'DISABLE' : 'DELETE',
+                    removedViewAction: 'DELETE',
+                    //removedConfigFilesAction: 'IGNORE',
+                    lookupStrategy: 'SEED_JOB',
+                    additionalClasspath: 'src/main/groovy',
+                    additionalParameters : envProps
             }
         }
     }
@@ -123,37 +125,8 @@ def getRepoConfig(String repoName = "${REPO_NAME}") {
     return cfg
 }
 
-def getRepoEnvProperties() {
-    Map envProperties = [:]
-    fillEnvProperties(envProperties, '', getRepoConfig())
-    if (util.isDebug()) {
-        println '[DEBUG] Environment properties:'
-        envProperties.each {
-            println "[DEBUG] ${it.key} = ${it.value}"
-        }
-    }
-    return envProperties
-}
-
-void fillEnvProperties(Map envProperties, String envKeyPrefix, Map propsMap) {
-    propsMap.each { it ->
-        String newKey = generateEnvKey(envKeyPrefix, it.key)
-        def value = it.value
-        if (util.isDebug()) {
-            println "[DEBUG] Setting key ${newKey} and value ${value}"
-        }
-        if (value instanceof Map) {
-            fillEnvProperties(envProperties, newKey, value as Map)
-        } else if (value instanceof List) {
-            envProperties.put(newKey, (value as List).join(','))
-        } else {
-            envProperties.put(newKey, value)
-        }
-    }
-}
-
-String generateEnvKey(String envKeyPrefix, String key) {
-    return (envKeyPrefix ? "${envKeyPrefix}_${key}" : key).toUpperCase()
+def getRepoConfigAsEnvProperties(String repoName = "${REPO_NAME}") {
+    return util.convertConfigToEnvProperties(getRepoConfig(repoName))
 }
 
 List getAllBranchRepos() {
