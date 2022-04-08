@@ -3,7 +3,7 @@ SEED_FOLDER = 'dsl/seed'
 util = null
 
 def generate() {
-    node('kie-rhel8-priority') {
+    node('kie-rhel8 && !master') {
         checkout scm
 
         dir("${SEED_REPO}") {
