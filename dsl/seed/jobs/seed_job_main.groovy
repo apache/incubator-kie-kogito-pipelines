@@ -1,5 +1,8 @@
 // +++++++++++++++++++++++++++++++++++++++++++ create a seed job ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+import org.kie.jenkins.jobdsl.KogitoConstants
+import org.kie.jenkins.jobdsl.SeedJobUtils
+
 String getSeedAuthor() {
     return SEED_AUTHOR ?: 'kiegroup'
 }
@@ -7,6 +10,19 @@ String getSeedAuthor() {
 String getSeedBranch() {
     return SEED_BRANCH ?: 'main'
 }
+
+SeedJobUtils.createSeedJobTrigger(
+    this,
+    '0-seed-job-trigger',
+    KogitoConstants.KOGITO_PIPELINES_REPOSITORY,
+    getSeedAuthor(),
+    getSeedBranch(),
+    [
+        'dsl/seed/config/main.yaml',
+        'dsl/seed/jobs/seed_job_main.groovy',
+        'dsl/seed/jobs/Jenkinsfile.seed.main',
+    ],
+    './0-seed-job')
 
 // Configuration of the seed and generated jobs is done via `dsl/seed/config.yaml`
 pipelineJob('0-seed-job') {
@@ -20,16 +36,6 @@ pipelineJob('0-seed-job') {
         maxTotal(1)
     }
 
-    // triggers {
-    //     scm('H/15 * * * *')
-    // }
-
-    // wrappers {
-    //     timestamps()
-    //     colorizeOutput()
-    //     preBuildCleanup()
-    // }
-
     parameters {
         booleanParam('DEBUG', false, 'Enable Debug capability')
 
@@ -42,8 +48,6 @@ pipelineJob('0-seed-job') {
 
         stringParam('SEED_AUTHOR', getSeedAuthor(), 'If different from the default')
         stringParam('SEED_BRANCH', getSeedBranch(), 'If different from the default')
-
-        booleanParam('FORCE_REBUILD', false, 'Default, the job will scan for modified files and do the update in case some files are modified. In case you want to force the DSL generation')
     }
 
     definition {
@@ -66,11 +70,5 @@ pipelineJob('0-seed-job') {
 
     properties {
         githubProjectUrl("https://github.com/${getSeedAuthor()}/kogito-pipelines/")
-
-        pipelineTriggers {
-            triggers {
-                gitHubPushTrigger()
-            }
-        }
     }
 }

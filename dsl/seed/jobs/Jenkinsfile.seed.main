@@ -8,19 +8,19 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 util = null
 
-shouldRun = false
-LISTEN_TO_MODIFIED_PATHS = [
-    'dsl/seed/config/main.yaml',
-    'dsl/seed/jobs/seed_job_main.groovy',
-    'dsl/seed/jobs/Jenkinsfile.seed.main',
-]
 
 // Configuration of the pipeline is done via the `config/main.yaml` file
 pipeline {
-    agent none
+    agent {
+        label 'kie-rhel8 && !master'
+    }
 
     options {
         timestamps()
+    }
+
+    tools {
+        jdk 'kie-jdk1.8'
     }
 
     // parameters {
@@ -28,129 +28,92 @@ pipeline {
     // }
 
     stages {
-        stage('Preliminary check') {
-            agent any
+        stage('Initialize') {
             steps {
                 script {
                     checkout scm
                     util = load 'dsl/seed/jobs/scripts/util.groovy'
 
-                    shouldRun = params.FORCE_REBUILD ?: util.arePathsModified(LISTEN_TO_MODIFIED_PATHS)
-                    if (!shouldRun) {
-                        echo "No force rebuild or modified paths ${LISTEN_TO_MODIFIED_PATHS}"
-                        echo 'Nothing done'
-                        currentBuild.displayName = 'No generation'
-                    }
-                }
-            }
-            post {
-                always {
-                    cleanWs()
+                    def seedConfig = readSeedConfig()
+
+                    currentBuild.displayName = getCustomBranchKey() ?: 'Global build'
+                    currentBuild.description = seedConfig.git.branches.join(',')
                 }
             }
         }
-        stage('Launch generation') {
-            when {
-                expression { return shouldRun }
-            }
-            stages {
-                stage('Generate jobs') {
-                    agent {
-                        label 'kie-rhel7 && kie-mem8g'
-                    }
-                    tools {
-                        jdk 'kie-jdk1.8'
-                    }
-                    stages {
-                        stage('Initialize') {
-                            steps {
-                                script {
-                                    checkout scm
-                                    util = load 'dsl/seed/jobs/scripts/util.groovy'
 
-                                    def seedConfig = readSeedConfig()
-
-                                    currentBuild.displayName = getCustomBranchKey() ?: 'Global build'
-                                    currentBuild.description = seedConfig.git.branches.join(',')
-                                }
-                            }
-                        }
-
-                        stage('Generate branch seed jobs') {
-                            steps {
-                                script {
-                                    def seedConfig = readSeedConfig()
-                                    seedConfig.git.branches.each { branch ->
-                                        dir(util.getDslSeedFolderAbsolutePath()) {
-                                            println "[INFO] Generate branch seed job for branch ${branch}"
-                                            jobDsl(targets: 'jobs/seed_job_branch.groovy',
-                                                    sandbox: false,
-                                                    ignoreExisting: false,
-                                                    ignoreMissingFiles: false,
-                                                    removedJobAction: 'IGNORE',
-                                                    removedViewAction: 'IGNORE',
-                                                    //removedConfigFilesAction: 'IGNORE',
-                                                    lookupStrategy: 'SEED_JOB',
-                                                    additionalClasspath: 'src/main/groovy',
-                                                    additionalParameters : [
-                                                        JOB_NAME: getBranchSeedJobName(branch),
-                                                        GENERATION_BRANCH: branch,
-                                                        MAIN_BRANCHES: writeJSON(json: seedConfig.git.main_branch, returnText: true),
-                                                        CUSTOM_REPOSITORIES: "${CUSTOM_REPOSITORIES}",
-                                                        CUSTOM_AUTHOR: "${CUSTOM_AUTHOR}",
-                                                        SEED_AUTHOR: "${SEED_AUTHOR}",
-                                                        SEED_BRANCH: getEffectiveSeedBranch(branch),
-                                                    ],
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        stage('Generate main seed job') {
-                            steps {
-                                script {
-                                    dir(util.getDslSeedFolderAbsolutePath()) {
-                                        println '[INFO] Generate main seed job'
-                                        jobDsl(targets: 'jobs/seed_job_main.groovy',
-                                                sandbox: false,
-                                                ignoreExisting: false,
-                                                ignoreMissingFiles: false,
-                                                removedJobAction: 'DELETE',
-                                                removedViewAction: 'DELETE',
-                                                //removedConfigFilesAction: 'IGNORE',
-                                                lookupStrategy: 'SEED_JOB',
-                                                additionalParameters : [
-                                                    SEED_AUTHOR: "${SEED_AUTHOR}",
-                                                    SEED_BRANCH: "${SEED_BRANCH}",
-                                                ],
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        stage('Launch branch seed jobs') {
-                            steps {
-                                script {
-                                    Map parallelJobs = [:]
-                                    readSeedConfig().git.branches.each { branch ->
-                                        parallelJobs.put(branch, { launchBranchSeedJob(branch) })
-                                    }
-
-                                    parallel parallelJobs
-                                }
-                            }
-                        }
-                    }
-                    post {
-                        always {
-                            cleanWs()
+        stage('Generate branch seed jobs') {
+            steps {
+                script {
+                    def seedConfig = readSeedConfig()
+                    seedConfig.git.branches.each { branch ->
+                        dir(util.getDslSeedFolderAbsolutePath()) {
+                            println "[INFO] Generate branch seed job for branch ${branch}"
+                            jobDsl(targets: 'jobs/seed_job_branch.groovy',
+                                    sandbox: false,
+                                    ignoreExisting: false,
+                                    ignoreMissingFiles: false,
+                                    removedJobAction: 'IGNORE',
+                                    removedViewAction: 'IGNORE',
+                                    //removedConfigFilesAction: 'IGNORE',
+                                    lookupStrategy: 'SEED_JOB',
+                                    additionalClasspath: 'src/main/groovy',
+                                    additionalParameters : [
+                                        JOB_NAME: getBranchSeedJobName(branch),
+                                        GENERATION_BRANCH: branch,
+                                        MAIN_BRANCHES: writeJSON(json: seedConfig.git.main_branch, returnText: true),
+                                        CUSTOM_REPOSITORIES: "${CUSTOM_REPOSITORIES}",
+                                        CUSTOM_AUTHOR: "${CUSTOM_AUTHOR}",
+                                        SEED_AUTHOR: "${SEED_AUTHOR}",
+                                        SEED_BRANCH: getEffectiveSeedBranch(branch),
+                                    ],
+                            )
                         }
                     }
                 }
             }
+        }
+
+        stage('Generate main seed job') {
+            steps {
+                script {
+                    dir(util.getDslSeedFolderAbsolutePath()) {
+                        println '[INFO] Generate main seed job'
+                        jobDsl(targets: 'jobs/seed_job_main.groovy',
+                                sandbox: false,
+                                ignoreExisting: false,
+                                ignoreMissingFiles: false,
+                                removedJobAction: 'DELETE',
+                                removedViewAction: 'DELETE',
+                                //removedConfigFilesAction: 'IGNORE',
+                                lookupStrategy: 'SEED_JOB',
+                                additionalClasspath: 'src/main/groovy',
+                                additionalParameters : [
+                                    SEED_AUTHOR: "${SEED_AUTHOR}",
+                                    SEED_BRANCH: "${SEED_BRANCH}",
+                                ],
+                        )
+                    }
+                }
+            }
+        }
+
+        stage('Launch branch seed jobs') {
+            steps {
+                script {
+                    Map parallelJobs = [:]
+                    readSeedConfig().git.branches.each { branch ->
+                        parallelJobs.put(branch, { launchBranchSeedJob(branch) })
+                    }
+
+                    parallel parallelJobs
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
         }
     }
 }
@@ -169,7 +132,6 @@ void launchBranchSeedJob(String branch) {
     jobParams.add(stringParam(name: 'CUSTOM_AUTHOR', value: params.CUSTOM_AUTHOR))
     jobParams.add(stringParam(name: 'SEED_AUTHOR', value: params.SEED_AUTHOR))
     jobParams.add(stringParam(name: 'SEED_BRANCH', value: getEffectiveSeedBranch(branch)))
-    jobParams.add(booleanParam(name: 'FORCE_REBUILD', value: true))
 
     echo "Build ./${branch}/${getBranchSeedJobName(branch)} with parameters ${jobParams}"
     build(job: "./${branch}/${getBranchSeedJobName(branch)}", parameters: jobParams, wait: false)
