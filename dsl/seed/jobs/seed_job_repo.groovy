@@ -1,6 +1,15 @@
-import org.kie.jenkins.jobdsl.Utils
+import org.kie.jenkins.jobdsl.SeedJobUtils
 
 // +++++++++++++++++++++++++++++++++++++++++++ create a seed job ++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+SeedJobUtils.createSeedJobTrigger(
+    this,
+    "${JOB_NAME}-trigger",
+    "${REPO_NAME}",
+    "${GIT_AUTHOR}",
+    "${GIT_BRANCH}",
+    [ "${GIT_JENKINS_CONFIG_PATH}" ],
+    "${JOB_NAME}")
 
 // Configuration of the seed and generated jobs is done via `dsl/seed/config.yaml`
 pipelineJob("${JOB_NAME}") {
@@ -19,8 +28,6 @@ pipelineJob("${JOB_NAME}") {
 
         stringParam('SEED_AUTHOR', "${SEED_AUTHOR}", 'If different from the default')
         stringParam('SEED_BRANCH', "${SEED_BRANCH}", 'If different from the default')
-
-        booleanParam('FORCE_REBUILD', false, 'Default, the job will scan for modified files and do the update in case some files are modified. In case you want to force the DSL generation')
     }
 
     environmentVariables {
@@ -56,11 +63,5 @@ pipelineJob("${JOB_NAME}") {
 
     properties {
         githubProjectUrl("https://github.com/${GIT_AUTHOR}/${REPO_NAME}/")
-        
-        pipelineTriggers {
-            triggers {
-                gitHubPushTrigger()
-            }
-        }
     }
 }
