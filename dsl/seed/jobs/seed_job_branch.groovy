@@ -24,7 +24,7 @@ SeedJobUtils.createSeedJobTrigger(
         'dsl/seed/src',
         'dsl/seed/build.gradle',
         'dsl/seed/gradle.properties',
-]   ,
+    ],
     "${JOB_NAME}")
 
 // Configuration of the seed and generated jobs is done via `dsl/seed/config.yaml`
