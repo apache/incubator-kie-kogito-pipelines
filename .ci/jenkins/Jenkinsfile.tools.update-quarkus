@@ -29,7 +29,7 @@ pipeline {
         stage('Call update quarkus jobs') {
             steps {
                 script {
-                    [ 'optaplanner', 'optaplanner-quickstarts', 'kogito-runtimes', 'kogito-examples' ].each { repo ->
+                    [ 'drools', 'optaplanner', 'optaplanner-quickstarts', 'kogito-runtimes', 'kogito-examples' ].each { repo ->
                         launchUpdateQuarkusJob(repo)
                     }
                 }
