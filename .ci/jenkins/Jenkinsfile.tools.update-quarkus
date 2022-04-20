@@ -11,9 +11,11 @@ pipeline {
     // For parameters, check into ./dsl/jobs.groovy file
     // }
 
-    // environment {
-    // Some generated env is also defined into ./dsl/jobs.groovy file
-    // }
+    environment {
+        // Static env is defined into .jenkins/dsl/jobs.groovy file
+
+        KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+    }
 
     stages {
         stage('Initialize') {
@@ -22,6 +24,39 @@ pipeline {
                     assert getNewVersion()
 
                     currentBuild.displayName = getNewVersion()
+                }
+            }
+        }
+
+        stage('Update quarkus version on main kogito-pipelines') {
+            steps {
+                script {
+                    dir('kogito-pipelines') {
+                        deleteDir()
+                        checkout(githubscm.resolveRepository('kogito-pipelines', getGitAuthor(), getBuildBranch(), false))
+
+                        githubscm.createBranch(getPRBranch())
+
+                        // Perform updates
+                        // Not using `readYaml` here to avoid a full reformat of 
+                        sh """
+                            sed -i -E "s|(.*quarkus_version:).*|\\1 '${getNewVersionBranch()}'|g" 'dsl/seed/config/branch.yaml'
+                            sed -i -E "s|(.*target:).*(# <quarkus-branch>.*)|\\1 ${getNewVersionBranch()} \\2|g" '.ci/project-dependencies-quarkus.yaml'
+                        """
+
+                        if (githubscm.isThereAnyChanges()) {
+                            String commitMsg = "[${getBuildBranch()}] Bump quarkus version to ${getNewVersion()}"
+                            githubscm.commitChanges(commitMsg)
+                            githubscm.pushObject('origin', getPRBranch(), getAuthorCredsId())
+
+                            String prLink = githubscm.createPR(commitMsg, 'Please review and merge', getBuildBranch(), getAuthorCredsId())
+                            echo "Created PR ${prLink}"
+
+                            sendNotification("PR was created to update quarkus version to ${getNewVersion()}.\nPlease review and merge ${prLink}")
+                        } else {
+                            echo "No changes to commit. No PR is created !"
+                        }
+                    }
                 }
             }
         }
@@ -36,6 +71,26 @@ pipeline {
             }
         }
     }
+    post {
+        unsuccessful {
+            script {
+                sendErrorNotification()
+            }
+        }
+        cleanup {
+            cleanWs()
+        }
+    }
+}
+
+void sendNotification(String body) {
+    emailext body: "**Quarkus version update job**\n${body}",
+             subject: "[${getBuildBranch()}] ${getNotificationJobName()}",
+             to: env.KOGITO_CI_EMAIL_TO
+}
+
+void sendErrorNotification() {
+    sendNotification("Job #${BUILD_NUMBER} was: **${currentBuild.currentResult}**\nPlease look here: ${BUILD_URL}")
 }
 
 void launchUpdateQuarkusJob(String repo) {
@@ -51,4 +106,39 @@ void launchUpdateQuarkusJob(String repo) {
 
 String getNewVersion() {
     return params.NEW_VERSION
+}
+
+String getNewVersionBranch() {
+    Integer[] versionSplit = util.parseVersion(getNewVersion())
+    return "${versionSplit[0]}.${versionSplit[1]}"
+}
+
+String getBuildBranch() {
+    return "${BUILD_BRANCH_NAME}"
+}
+
+String getGitAuthor() {
+    return "${GIT_AUTHOR}"
+}
+
+String getPRBranch() {
+    return "bump-${getPRPrefixBranch() ?: getBuildBranch()}-quarkus-${getNewVersion()}"
+}
+
+String getPRPrefixBranch() {
+    return env.PR_PREFIX_BRANCH
+}
+
+String getAuthorCredsId() {
+    return "${GIT_AUTHOR_CREDS_ID}"
+}
+
+String getNotificationJobName() {
+    return "${NOTIFICATION_JOB_NAME}"
+}
+
+void updateYaml(String filePath, Closure updateClosure) {
+    def yamlData = readYaml(file: filePath)
+    updateClosure(yamlData)
+    writeYaml(file: filePath, data: yamlData, overwrite: true)
 }

@@ -18,7 +18,7 @@ class KogitoJobUtils {
                                                 "update-${dependencyName.toLowerCase()}-${repository}",
                                                 FolderUtils.getToolsFolder(script),
                                                 "${Utils.getJenkinsConfigPath(script, KogitoConstants.KOGITO_PIPELINES_REPOSITORY)}/Jenkinsfile.tools.update-dependency-version",
-                                                "Update KIE version for ${notificationProject}")
+                                                "Update ${dependencyName} version for ${notificationProject}")
         // Setup correct checkout branch for pipelines
         jobParams.git.branch = VersionUtils.getProjectTargetBranch(KogitoConstants.KOGITO_PIPELINES_REPOSITORY, jobParams.git.branch, repository)
 
@@ -39,7 +39,6 @@ class KogitoJobUtils {
                 env('BUILD_BRANCH_NAME', Utils.getGitBranch(script))
                 env('GIT_AUTHOR',  Utils.getGitAuthor(script))
                 env('AUTHOR_CREDS_ID', Utils.getGitAuthorCredsId(script))
-                env('GITHUB_TOKEN_CREDS_ID', Utils.getGitAuthorTokenCredsId(script))
 
                 if (mavenUpdate) {
                     mavenUpdate.modules ? env('MAVEN_MODULES', JsonOutput.toJson(mavenUpdate.modules)) : null
