@@ -68,6 +68,16 @@ void setupUpdateQuarkusToolsJob() {
         parameters {
             stringParam('NEW_VERSION', '', 'Which version to set ?')
         }
+        environmentVariables {
+            env('JENKINS_EMAIL_CREDS_ID', "${JENKINS_EMAIL_CREDS_ID}")
+
+            env('NOTIFICATION_JOB_NAME', "Kogito Pipelines")
+            env('PR_PREFIX_BRANCH', "${GENERATION_BRANCH}")
+
+            env('BUILD_BRANCH_NAME', "${GIT_BRANCH}")
+            env('GIT_AUTHOR', "${GIT_AUTHOR_NAME}")
+            env('GIT_AUTHOR_CREDS_ID', "${GIT_AUTHOR_CREDENTIALS_ID}")
+        }
     }
 }
 
