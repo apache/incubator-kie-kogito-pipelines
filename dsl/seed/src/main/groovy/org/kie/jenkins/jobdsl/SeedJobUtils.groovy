@@ -60,3 +60,5 @@ class SeedJobUtils {
         }
     }
 }
+
+println 'test'
