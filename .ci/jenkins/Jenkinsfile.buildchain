@@ -30,6 +30,7 @@ pipeline {
     }
     environment {
         FIREFOX_FOLDER = '/opt/tools/firefox-60esr'
+        MAVEN_OPTS = '-Xms1024m -Xmx6g -XX:PermSize=128m -XX:MaxPermSize=512m'
     }
     stages {
         stage('Initialize') {
