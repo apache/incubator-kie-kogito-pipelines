@@ -60,5 +60,3 @@ class SeedJobUtils {
         }
     }
 }
-
-println 'test'
