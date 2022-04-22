@@ -52,7 +52,7 @@ void setupKogitoRuntimesBDDPrJob() {
     jobParams.git.project_url = "https://github.com/${GIT_AUTHOR_NAME}/kogito-runtimes/"
     jobParams.git.repo_url = "https://github.com/${GIT_AUTHOR_NAME}/${jobParams.git.repository}/"
     jobParams.pr = [
-        run_only_for_branches: jobParams.git.branch,
+        run_only_for_branches: [ jobParams.git.branch ],
         checkout_branch : '${ghprbTargetBranch}',
         trigger_phrase : '.*[j|J]enkins,? run BDD[ tests]?.*',
         trigger_phrase_only: true,
