@@ -15,7 +15,10 @@ import org.kie.jenkins.jobdsl.VersionUtils
 class SeedJobUtils {
 
     static def createSeedJobTrigger(def script, String jobName, String repository, String gitAuthor, String gitBranch, List pathsToListen, String jobRelativePathToTrigger) {
-        return script.pipelineJob(jobName) {
+        if (pathsToListen.isEmpty()) {
+            throw new RuntimeException('pathsToListen cannot be empty, else it would end up in an infinite loop ...');
+        }
+        def job = script.pipelineJob(jobName) {
             description('This job listens to pipelines repo and launch the seed job if needed. DO NOT USE FOR TESTING !!!! See https://github.com/kiegroup/kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs')
 
             logRotator {
@@ -63,5 +66,9 @@ class SeedJobUtils {
                 }
             }
         }
+        // Trigger jobs need to be executed once for the hook to work ...
+        // There will 
+        script.queue(jobName)
+        return job
     }
 }
