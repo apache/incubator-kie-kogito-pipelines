@@ -1,3 +1,4 @@
+import org.kie.jenkins.jobdsl.KogitoConstants
 import org.kie.jenkins.jobdsl.SeedJobUtils
 
 // +++++++++++++++++++++++++++++++++++++++++++ create a seed job ++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -31,7 +32,8 @@ pipelineJob("${JOB_NAME}") {
     }
 
     environmentVariables {
-        env('SEED_REPO', 'kogito-pipelines')
+        env('SEED_REPO', KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
+        env('JOB_TYPE', 'GENERATE')
 
         env('REPO_NAME', "${REPO_NAME}")
         env('GIT_BRANCH', "${GIT_BRANCH}")

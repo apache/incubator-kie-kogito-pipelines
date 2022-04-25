@@ -72,4 +72,15 @@ class Utils {
         return getBindingValue(script, "${repoName.toUpperCase()}_JENKINS_CONFIG_PATH")
     }
 
+    static String getJenkinsEmailCredsId(def script) {
+        return getBindingValue(script, 'JENKINS_EMAIL_CREDS_ID')
+    }
+
+    static String getSeedAuthor(def script) {
+        return getBindingValue(script, 'SEED_AUTHOR')
+    }
+
+    static String getSeedBranch(def script) {
+        return getBindingValue(script, 'SEED_BRANCH')
+    }
 }
