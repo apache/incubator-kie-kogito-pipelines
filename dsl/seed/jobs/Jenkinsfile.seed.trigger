@@ -1,7 +1,3 @@
-/////////////////////////////////////////////////////////////////////////////////
-// This Jenkinsfile generate the respective Branch seed jobs
-/////////////////////////////////////////////////////////////////////////////////
-
 import org.jenkinsci.plugins.workflow.libs.Library
 
 @Library('jenkins-pipeline-shared-libraries')_
@@ -24,7 +20,8 @@ pipeline {
         stage('Trigger seed job if needed') {
             steps {
                 script {
-                    checkout scm
+                    checkout(githubscm.resolveRepository("${SEED_REPO}", "${SEED_AUTHOR}", "${SEED_BRANCH}", false))
+
                     util = load 'dsl/seed/jobs/scripts/util.groovy'
 
                     List listenToModifiedPaths = readJSON(text: env.LISTEN_TO_MODIFIED_PATHS)
