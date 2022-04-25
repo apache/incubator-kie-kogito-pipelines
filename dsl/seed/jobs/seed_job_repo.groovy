@@ -35,6 +35,7 @@ pipelineJob("${JOB_NAME}") {
 
     environmentVariables {
         env('SEED_REPO', KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
+        env('JOB_TYPE', 'GENERATE')
 
         env('REPO_NAME', "${REPO_NAME}")
         env('GIT_BRANCH', "${GIT_BRANCH}")
