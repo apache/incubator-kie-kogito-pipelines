@@ -5,8 +5,14 @@ set -eo pipefail
 # # If you need to run locally this script, please uncomment the needed lines
 # # and run the script of only the value option (-v)
 
+# Drools
+# MAVEN_MODULES=('drools-build-parent')
+# MAVEN_PROPERTIES=('version.io.quarkus')
+# GRADLE_REGEX=
+# REMOTE_POMS=('io.quarkus:quarkus-bom')
+
 # # Kogito Runtimes
-# MAVEN_MODULES=('kogito-dependencies-bom' 'kogito-build-parent' 'kogito-quarkus-bom')
+# MAVEN_MODULES=('kogito-dependencies-bom' 'kogito-build-parent' 'kogito-quarkus-bom' 'kogito-build-no-bom-parent')
 # MAVEN_PROPERTIES=('version.io.quarkus' 'version.io.quarkus.quarkus-test-maven')
 # GRADLE_REGEX=
 # REMOTE_POMS=('io.quarkus:quarkus-bom')
@@ -21,13 +27,13 @@ set -eo pipefail
 # MAVEN_MODULES=
 # MAVEN_PROPERTIES=('quarkus-plugin.version' 'quarkus.platform.version')
 # GRADLE_REGEX=
-# REMOTE_POMS=('io.quarkus:quarkus-bom')
+# REMOTE_POMS=
 
 # # OptaPlanner Quickstarts
 # MAVEN_MODULES=
 # MAVEN_PROPERTIES=('version.io.quarkus')
 # GRADLE_REGEX=('id "io.quarkus" version' 'def quarkusVersion =')
-# REMOTE_POMS=('io.quarkus:quarkus-bom')
+# REMOTE_POMS=
 # ###################################################
 
 script_dir_path=$(cd `dirname "${BASH_SOURCE[0]}"`; pwd -P)
