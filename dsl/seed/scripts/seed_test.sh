@@ -41,7 +41,7 @@ checkout_repository() {
   local repository=$1
   local output_dir=$2
 
-  echo "----- Cloning ${repository} repo from ${owner} on branch ${branch}"
+  echo "----- Cloning ${git_server}${owner}/${repository}.git repo on branch ${branch}"
   git clone --single-branch --depth 1 --branch ${branch} ${git_server}${owner}/${repository}.git ${output_dir}
   clone_status=$?
 
@@ -107,6 +107,7 @@ if [ -z "${owner}" ]; then
   echo "Got current owner = ${owner}"
 fi
 
+echo "git_server...............${git_server}"
 echo "branch...................${branch}"
 echo "owner....................${owner}"
 echo "target_branch............${target_branch}"
