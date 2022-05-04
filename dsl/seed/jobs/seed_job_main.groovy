@@ -1,6 +1,8 @@
 // +++++++++++++++++++++++++++++++++++++++++++ create a seed job ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 import org.kie.jenkins.jobdsl.KogitoConstants
+import org.kie.jenkins.jobdsl.KogitoJobTemplate
+import org.kie.jenkins.jobdsl.KogitoJobUtils
 import org.kie.jenkins.jobdsl.SeedJobUtils
 
 String getSeedAuthor() {
@@ -70,5 +72,29 @@ pipelineJob('0-seed-job') {
 
     properties {
         githubProjectUrl("https://github.com/${getSeedAuthor()}/kogito-pipelines/")
+    }
+}
+
+def jobParams = KogitoJobUtils.getDefaultJobParams(this, KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
+jobParams.job.name = '0-prepare-release-branch'
+jobParams.job.folder = ''
+jobParams.jenkinsfile = '.ci/jenkins//Jenkinsfile.release.prepare'
+jobParams.job.description = 'Prepare env for a release'
+KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
+    parameters {
+        stringParam('DROOLS_VERSION', '', 'Drools version to release as Major.minor.micro')
+        stringParam('OPTAPLANNER_VERSION', '', 'OptaPlanner version of OptaPlanner and its examples to release as Major.minor.micro')
+        stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
+    }
+
+    environmentVariables {
+        env('JENKINS_EMAIL_CREDS_ID', "${JENKINS_EMAIL_CREDS_ID}")
+
+        env('PIPELINE_MAIN_BRANCH', "${GIT_MAIN_BRANCH}")
+        env('DEFAULT_BASE_BRANCH', "${GIT_MAIN_BRANCH}")
+
+        env('GIT_AUTHOR', "${GIT_AUTHOR_NAME}")
+        env('GIT_AUTHOR_CREDS_ID', "${GIT_AUTHOR_CREDENTIALS_ID}")
+        env('GIT_BOT_AUTHOR_CREDS_ID', "${GIT_BOT_AUTHOR_CREDENTIALS_ID}")
     }
 }

@@ -41,6 +41,10 @@ def deepCopyObject(def originalMap) {
     return readJSON(text: JsonOutput.toJson(originalMap))
 }
 
+boolean getMainBranch(Map mainBranches, String repository) {
+    return mainBranches.get(mainBranches.containsKey(repository) ? repository : 'default')
+}
+
 def getRepoConfig(String repository, String generationBranch, String seedRepoPath = '') {
     def branchConfig = readBranchConfig(seedRepoPath)
     def repoConfig = branchConfig.repositories.find { it.name == repository }
@@ -64,7 +68,7 @@ def getRepoConfig(String repository, String generationBranch, String seedRepoPat
         cfg.git.bot_author.credentials_id = repoConfig.bot_author.credentials_id ?: cfg.git.bot_author.credentials_id
     }
     if (isDebug()) {
-        println "[DEBUG] Repo config:"
+        println '[DEBUG] Repo config:'
         println "[DEBUG] ${cfg}"
     }
     return cfg
@@ -122,11 +126,44 @@ boolean arePathsModified(List<String> paths) {
                         println "[DEBUG] Modified path ${file.path} is taken into account"
                     }
                     modified = true
-                }
             }
         }
     }
+}
     return modified
+}
+
+Map convertConfigToEnvProperties(Map propsMap, String envKeyPrefix = '') {
+    Map envProperties = [:]
+    fillEnvProperties(envProperties, envKeyPrefix, propsMap)
+    if (util.isDebug()) {
+        println '[DEBUG] Environment properties:'
+        envProperties.each {
+            println "[DEBUG] ${it.key} = ${it.value}"
+        }
+    }
+    return envProperties
+}
+
+void fillEnvProperties(Map envProperties, String envKeyPrefix, Map propsMap) {
+    propsMap.each { it ->
+        String newKey = generateEnvKey(envKeyPrefix, it.key)
+        def value = it.value
+        if (util.isDebug()) {
+            println "[DEBUG] Setting key ${newKey} and value ${value}"
+        }
+        if (value instanceof Map) {
+            fillEnvProperties(envProperties, newKey, value as Map)
+        } else if (value instanceof List) {
+            envProperties.put(newKey, (value as List).join(','))
+        } else {
+            envProperties.put(newKey, value)
+        }
+    }
+}
+
+String generateEnvKey(String envKeyPrefix, String key) {
+    return (envKeyPrefix ? "${envKeyPrefix}_${key}" : key).toUpperCase()
 }
 
 return this

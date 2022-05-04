@@ -8,7 +8,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 util = null
 
-
 // Configuration of the pipeline is done via the `config/main.yaml` file
 pipeline {
     agent {
@@ -45,8 +44,8 @@ pipeline {
         stage('Generate branch seed jobs') {
             steps {
                 script {
-                    def seedConfig = readSeedConfig()
-                    seedConfig.git.branches.each { branch ->
+                    readSeedConfig().git.branches.each { branch ->
+                        def envProperties = getGenerationEnvProperties(branch)
                         dir(util.getDslSeedFolderAbsolutePath()) {
                             println "[INFO] Generate branch seed job for branch ${branch}"
                             jobDsl(targets: 'jobs/seed_job_branch.groovy',
@@ -58,15 +57,7 @@ pipeline {
                                     //removedConfigFilesAction: 'IGNORE',
                                     lookupStrategy: 'SEED_JOB',
                                     additionalClasspath: 'src/main/groovy',
-                                    additionalParameters : [
-                                        JOB_NAME: getBranchSeedJobName(branch),
-                                        GENERATION_BRANCH: branch,
-                                        MAIN_BRANCHES: writeJSON(json: seedConfig.git.main_branch, returnText: true),
-                                        CUSTOM_REPOSITORIES: "${CUSTOM_REPOSITORIES}",
-                                        CUSTOM_AUTHOR: "${CUSTOM_AUTHOR}",
-                                        SEED_AUTHOR: "${SEED_AUTHOR}",
-                                        SEED_BRANCH: getEffectiveSeedBranch(branch),
-                                    ],
+                                    additionalParameters : envProperties
                             )
                         }
                     }
@@ -74,9 +65,15 @@ pipeline {
             }
         }
 
-        stage('Generate main seed job') {
+        stage('Generate main jobs') {
             steps {
                 script {
+                    String mainBranch = getPipelinesMainBranch()
+                    def envProperties = getGenerationEnvProperties(mainBranch)
+                    envProperties.putAll([
+                        SEED_AUTHOR: "${SEED_AUTHOR}",
+                        SEED_BRANCH: "${SEED_BRANCH}",
+                    ])
                     dir(util.getDslSeedFolderAbsolutePath()) {
                         println '[INFO] Generate main seed job'
                         jobDsl(targets: 'jobs/seed_job_main.groovy',
@@ -88,10 +85,7 @@ pipeline {
                                 //removedConfigFilesAction: 'IGNORE',
                                 lookupStrategy: 'SEED_JOB',
                                 additionalClasspath: 'src/main/groovy',
-                                additionalParameters : [
-                                    SEED_AUTHOR: "${SEED_AUTHOR}",
-                                    SEED_BRANCH: "${SEED_BRANCH}",
-                                ],
+                                additionalParameters : envProperties
                         )
                     }
                 }
@@ -118,8 +112,8 @@ pipeline {
     }
 }
 
-String getBranchSeedJobName(String branch) {
-    return "z-seed-job"
+String getBranchSeedJobName() {
+    return 'z-seed-job'
 }
 
 void launchBranchSeedJob(String branch) {
@@ -133,13 +127,45 @@ void launchBranchSeedJob(String branch) {
     jobParams.add(stringParam(name: 'SEED_AUTHOR', value: params.SEED_AUTHOR))
     jobParams.add(stringParam(name: 'SEED_BRANCH', value: getEffectiveSeedBranch(branch)))
 
-    echo "Build ./${branch}/${getBranchSeedJobName(branch)} with parameters ${jobParams}"
-    build(job: "./${branch}/${getBranchSeedJobName(branch)}", parameters: jobParams, wait: false)
+    echo "Build ./${branch}/${getBranchSeedJobName()} with parameters ${jobParams}"
+    build(job: "./${branch}/${getBranchSeedJobName()}", parameters: jobParams, wait: false)
 }
 
 String getEffectiveSeedBranch(String branch) {
     def repo = githubscm.getRepositoryScm('kogito-pipelines', "${SEED_AUTHOR}", branch)
     return repo ? branch : "${SEED_BRANCH}"
+}
+
+def getGenerationEnvProperties(String envBranch) {
+    def seedConfig = readSeedConfig()
+    String mainBranch = getPipelinesMainBranch()
+    def envProperties = util.convertConfigToEnvProperties(getPipelinesRepoConfig(envBranch))
+    envProperties.putAll([
+        JOB_NAME: getBranchSeedJobName(),
+        GENERATION_BRANCH: envBranch,
+        GIT_MAIN_BRANCH: mainBranch,
+        MAIN_BRANCHES: writeJSON(json: seedConfig.git.main_branch, returnText: true),
+        CUSTOM_REPOSITORIES: "${CUSTOM_REPOSITORIES}",
+        CUSTOM_AUTHOR: "${CUSTOM_AUTHOR}",
+        SEED_AUTHOR: "${SEED_AUTHOR}",
+        SEED_BRANCH: getEffectiveSeedBranch(envBranch),
+    ])
+    return envProperties
+}
+
+def getPipelinesMainBranch() {
+    def seedConfig = readSeedConfig()
+    return util.getMainBranch(seedConfig.git.main_branch, 'kogito-pipelines')
+}
+
+def getPipelinesRepoConfig(String generationBranch) {
+    echo "getPipelinesRepoConfig on ${generationBranch}"
+    String checkoutBranch = getEffectiveSeedBranch(generationBranch)
+    echo "checkoutBranch is ${checkoutBranch}"
+    dir("${WORKSPACE}/kogito-pipelines-${generationBranch}") {
+        checkout(githubscm.resolveRepository('kogito-pipelines', "${SEED_AUTHOR}", checkoutBranch, false))
+        return util.getRepoConfig('kogito-pipelines', generationBranch, "kogito-pipelines-${generationBranch}")
+    }
 }
 
 def readSeedConfig(String seedRepoPath = '') {

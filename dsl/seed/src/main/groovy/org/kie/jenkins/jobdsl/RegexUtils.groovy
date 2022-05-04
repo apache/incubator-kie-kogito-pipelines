@@ -12,11 +12,6 @@ class RegexUtils {
     }
 
     static String getRegexMultipleCase(String str) {
-        return "(${str.toUpperCase()}|${str.toLowerCase()}|${firstLetterUpperCase(str.toLowerCase())})"
+        return "(${str.toUpperCase()}|${str.toLowerCase()}|${Utils.firstLetterUpperCase(str.toLowerCase())})"
     }
-
-    static String firstLetterUpperCase(String str) {
-        return str.length() > 1 ? "${str.substring(0, 1).toUpperCase()}${str.substring(1)}" : str.toUpperCase()
-    }
-
 }

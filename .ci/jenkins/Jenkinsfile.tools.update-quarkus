@@ -41,7 +41,7 @@ pipeline {
                         // Not using `readYaml` here to avoid a full reformat of 
                         sh """
                             sed -i -E "s|(.*quarkus_version:).*|\\1 '${getNewVersionBranch()}'|g" 'dsl/seed/config/branch.yaml'
-                            sed -i -E "s|(.*target:).*(# <quarkus-branch>.*)|\\1 ${getNewVersionBranch()} \\2|g" '.ci/project-dependencies-quarkus.yaml'
+                            sed -i -E "s|(.*targetExpression:).*(# <quarkus-branch>.*)|\\1 \\"process.env.QUARKUS_BRANCH ? process.env.QUARKUS_BRANCH : '${getNewVersionBranch()}'\\" \\2|g" '.ci/project-dependencies-quarkus.yaml'
                         """
 
                         if (githubscm.isThereAnyChanges()) {
