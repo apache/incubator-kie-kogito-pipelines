@@ -10,7 +10,7 @@ This repository contains some of the pipelines of Kogito project.
   * [Repositories' specific pipelines](#repositories-specific-pipelines)
     * [Native checks](#native-checks)
     * [Quarkus check](#quarkus-check)
-    * [LTS check](#lts-check)
+    * [Mandrel check](#mandrel-check)
     * [PR checks](#pr-checks)
       * [Jenkins artifacts PR checks](#jenkins-artifacts-pr-checks)
       * [GitHub Action checks](#github-action-checks)
@@ -63,9 +63,9 @@ In some of the Kogito repositories, you can find native checks. If that is the c
 
 A nightly check against Quarkus is done every night. Pipeline can be found in https://github.com/kiegroup/kogito-runtimes/blob/main/.ci/jenkins/Jenkinsfile.quarkus.
 
-### LTS check
+### Mandrel check
 
-If the [LTS check](./dsl/seed/config/branch.yaml) is enabled, then Quarkus and Native checks are also performed against LTS version of Quarkus (see config `lts.quarkus_version`) and Quarkus native LTS builder image (see config `lts.native_builder_image`).
+Quarkus and Native checks are also performed against Mandrel builder image (see config `mandrel.builder_image`).
 
 ### PR checks
 
@@ -91,8 +91,12 @@ Jenkins PR checks are of 3 different types:
   Regular testing
 * Native build&test (optional, can be launched with comment `jenkins run native`)  
   Test all native parts of the repository
-* LTS build&test (optional, can be launched with comment `jenkins run LTS`)  
-  Test against quarkus LTS version (see above)
+* Mandrel build&test (optional, can be launched with comment `jenkins run mandrel`)  
+  Test against Mandrel builder image
+* Quarkus main build&test (optional, can be launched with comment `jenkins run quarkus main`)  
+  Test against quarkus main version
+* Quarkus branch build&test (optional, can be launched with comment `jenkins run quarkus branch`)  
+  Test against quarkus branch, corresponding to current used Quarkus released version
 
 #### GitHub Action checks
 

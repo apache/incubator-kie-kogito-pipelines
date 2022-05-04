@@ -42,7 +42,7 @@ class JobScriptsSpec extends Specification {
         envVars.put('DEBUG', false)
         envVars.put('JOB_NAME', 'JOB_NAME')
         envVars.put('GENERATION_BRANCH', 'GENERATION_BRANCH')
-        
+
         envVars.put('REPO_NAME', 'REPO_NAME')
         envVars.put('GIT_MAIN_BRANCH', 'GIT_MAIN_BRANCH')
         envVars.put('GIT_BRANCH', 'GIT_BRANCH')
@@ -60,10 +60,21 @@ class JobScriptsSpec extends Specification {
         envVars.put('GIT_JENKINS_CONFIG_PATH', 'GIT_JENKINS_CONFIG_PATH')
         JobManagement jm = new JenkinsJobManagement(System.out, envVars, new File('.'))
         jm.createOrUpdateConfig(new Folder(jm, 'nightly'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'nightly.native'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'nightly.mandrel'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'nightly.quarkus-main'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'nightly.quarkus-branch'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'nightly.sonarcloud'), true)
         jm.createOrUpdateConfig(new Folder(jm, 'release'), true)
         jm.createOrUpdateConfig(new Folder(jm, 'tools'), true)
         jm.createOrUpdateConfig(new Folder(jm, 'pullrequest'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'pullrequest.kogito-bdd'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'pullrequest.native'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'pullrequest.mandrel'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'pullrequest.quarkus-main'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'pullrequest.quarkus-branch'), true)
         jm.createOrUpdateConfig(new Folder(jm, 'other'), true)
+        jm.createOrUpdateConfig(new Folder(jm, 'update-version'), true)
         jm.createOrUpdateConfig(new Folder(jm, 'kogito-runtimes.bdd'), true)
 
         when:

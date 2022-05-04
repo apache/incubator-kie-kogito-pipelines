@@ -42,31 +42,31 @@ pipeline {
                         println "[INFO] Generate repo seed job for repository ${repository}"
                         def repoCfg = util.getRepoConfig(repository, "${GENERATION_BRANCH}")
                         dir("${util.getDslSeedFolderAbsolutePath()}") {
-                                jobDsl(targets: 'jobs/seed_job_repo.groovy',
-                                        sandbox: false,
-                                        ignoreExisting: false,
-                                        ignoreMissingFiles: false,
-                                        removedJobAction: 'DISABLE',
-                                        removedViewAction: 'DELETE',
-                                        //removedConfigFilesAction: 'IGNORE',
-                                        lookupStrategy: 'SEED_JOB',
-                                        additionalClasspath: 'src/main/groovy',
-                                        additionalParameters : [
-                                            JOB_NAME: getRepoBranchSeedJobName(repository),
+                            jobDsl(targets: 'jobs/seed_job_repo.groovy',
+                                    sandbox: false,
+                                    ignoreExisting: false,
+                                    ignoreMissingFiles: false,
+                                    removedJobAction: 'DELETE',
+                                    removedViewAction: 'DELETE',
+                                    //removedConfigFilesAction: 'IGNORE',
+                                    lookupStrategy: 'SEED_JOB',
+                                    additionalClasspath: 'src/main/groovy',
+                                    additionalParameters : [
+                                        JOB_NAME: getRepoBranchSeedJobName(repository),
 
-                                            // Params propagation
-                                            SEED_AUTHOR: "${SEED_AUTHOR}",
-                                            SEED_BRANCH: "${SEED_BRANCH}",
+                                        // Params propagation
+                                        SEED_AUTHOR: "${SEED_AUTHOR}",
+                                        SEED_BRANCH: "${SEED_BRANCH}",
 
-                                            // Env
-                                            REPO_NAME: repository,
-                                            GIT_BRANCH: repoCfg.git.branch,
-                                            GIT_AUTHOR: repoCfg.git.author.name,
-                                            GENERATION_BRANCH: "${GENERATION_BRANCH}",
-                                            GIT_MAIN_BRANCH: getMainBranch(repository),
-                                            GIT_JENKINS_CONFIG_PATH: repoCfg.git.jenkins_config_path
-                                        ],
-                                )
+                                        // Env
+                                        REPO_NAME: repository,
+                                        GIT_BRANCH: repoCfg.git.branch,
+                                        GIT_AUTHOR: repoCfg.git.author.name,
+                                        GENERATION_BRANCH: "${GENERATION_BRANCH}",
+                                        GIT_MAIN_BRANCH: getMainBranch(repository),
+                                        GIT_JENKINS_CONFIG_PATH: repoCfg.git.jenkins_config_path
+                                    ],
+                            )
                         }
                     }
                 }
@@ -98,8 +98,7 @@ String getRepoBranchSeedJobName(String repository) {
 }
 
 boolean getMainBranch(String repository) {
-    Map mainBranches = readJSON(text: "${MAIN_BRANCHES}")
-    return mainBranches.get(mainBranches.containsKey(repository) ? repository : 'default')
+    return util.getMainBranch(readJSON(text: "${MAIN_BRANCHES}"), repository)
 }
 
 void launchRepositorySeedJob(String repository) {

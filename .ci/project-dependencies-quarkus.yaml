@@ -6,9 +6,11 @@ dependencies:
       dependant:
         default:
           - source: .*
-            target: 2.9 # <quarkus-branch> quarkus placeholder for updating version - do not remove
+            targetExpression: "process.env.QUARKUS_BRANCH ? process.env.QUARKUS_BRANCH : '2.9'" # <quarkus-branch> quarkus placeholder for updating version - do not remove
 
   - project: kiegroup/drools
+    dependencies:
+      - project: quarkusio/quarkus
     mapping:
       dependencies:
         default:
@@ -19,6 +21,7 @@ dependencies:
           - source: (\d*)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
       exclude:
+        - quarkusio/quarkus
         - kiegroup/optaplanner
         - kiegroup/optaweb-employee-rostering
         - kiegroup/optaweb-vehicle-routing

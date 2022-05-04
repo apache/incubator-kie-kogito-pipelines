@@ -1,13 +1,33 @@
 # Disabled until Quarkus 2.2 is out
 # Follow-up issue: https://issues.redhat.com/browse/KOGITO-5487
-lts:
-  enabled: true
-  quarkus_version: '2.9'
-  native_builder_image: quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11
+
+environment:
+  quarkus:
+    main:
+      enabled: true
+    branch:
+      enabled: true
+      name: '2.9'
+
+  native:
+    enabled: true
+
+  mandrel:
+    enabled: true
+    builder_image: quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11
+
+  runtimes_bdd:
+    enabled: true
+
+productized_branch: true
 
 disable:
   triggers: false
   branch: false
+
+# Used by the main seed job to know which folders are to be created
+# Some old maintained branch will keep the "old" folder structure
+new_folder_structure: true
 
 repositories:
   - name: kogito-pipelines

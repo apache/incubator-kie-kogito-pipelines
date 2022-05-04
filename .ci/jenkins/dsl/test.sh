@@ -1,9 +1,5 @@
-#!/bin/bash -e
+#!/bin/bash
 
-TEMP_DIR=`mktemp -d`
+SCRIPT_DIR_PATH=`dirname "${BASH_SOURCE[0]}"`
 
-echo '----- Copying seed repo'
-cp -r ../../../dsl/seed $TEMP_DIR
-
-echo '----- Launching seed tests'
-${TEMP_DIR}/seed/scripts/seed_test.sh
+${SCRIPT_DIR_PATH}/../../../dsl/seed/scripts/seed_test.sh $@ 
