@@ -26,31 +26,39 @@ class Utils {
         return script.getBinding().hasVariable(key) ? script.getBinding().getVariable(key) : ''
     }
 
-    static boolean isQuarkusMainEnvironmentEnabled(def script) {
+    static boolean isEnvironmentQuarkusMainEnabled(def script) {
         return getBindingValue(script, 'ENVIRONMENT_QUARKUS_MAIN_ENABLED').toBoolean()
     }
 
-    static boolean isQuarkusBranchEnvironmentEnabled(def script) {
+    static boolean isEnvironmentQuarkusBranchEnabled(def script) {
         return getBindingValue(script, 'ENVIRONMENT_QUARKUS_BRANCH_ENABLED').toBoolean()
     }
 
-    static String getQuarkusEnvironmentBranchName(def script) {
+    static String getEnvironmentQuarkusBranchName(def script) {
         return getBindingValue(script, 'ENVIRONMENT_QUARKUS_BRANCH_NAME')
     }
 
-    static boolean isNativeEnvironmentEnabled(def script) {
+    static boolean isEnvironmentQuarkusLTSEnabled(def script) {
+        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_LTS_ENABLED').toBoolean()
+    }
+
+    static String getEnvironmentQuarkusLTSName(def script) {
+        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_LTS_NAME')
+    }
+
+    static boolean isEnvironmentNativeEnabled(def script) {
         return getBindingValue(script, 'ENVIRONMENT_NATIVE_ENABLED').toBoolean()
     }
 
-    static boolean isMandrelEnvironmentEnabled(def script) {
+    static boolean isEnvironmentMandrelEnabled(def script) {
         return getBindingValue(script, 'ENVIRONMENT_MANDREL_ENABLED').toBoolean()
     }
 
-    static String getMandrelEnvironmentBuilderImage(def script) {
+    static String getEnvironmentMandrelBuilderImage(def script) {
         return getBindingValue(script, 'ENVIRONMENT_MANDREL_BUILDER_IMAGE')
     }
 
-    static boolean isRuntimesBDDEnvironmentEnabled(def script) {
+    static boolean isEnvironmentRuntimesBDDEnabled(def script) {
         return getBindingValue(script, 'ENVIRONMENT_RUNTIMES_BDD_ENABLED').toBoolean()
     }
 

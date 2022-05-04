@@ -23,7 +23,7 @@ enum Environment {
     ),
     NATIVE(
         optional: true,
-        isActiveClosure: { script -> Utils.isNativeEnvironmentEnabled(script) },
+        isActiveClosure: { script -> Utils.isEnvironmentNativeEnabled(script) },
         getDefaultEnvVarsClosure: { script ->
             [
                 NATIVE: 'true',
@@ -33,28 +33,33 @@ enum Environment {
     ),
     MANDREL(
         optional: true,
-        isActiveClosure: { script -> Utils.isMandrelEnvironmentEnabled(script) },
+        isActiveClosure: { script -> Utils.isEnvironmentMandrelEnabled(script) },
         getDefaultEnvVarsClosure: { script ->
             [
                 NATIVE: 'true',
-                NATIVE_BUILDER_IMAGE: Utils.getMandrelEnvironmentBuilderImage(script),
+                NATIVE_BUILDER_IMAGE: Utils.getEnvironmentMandrelBuilderImage(script),
                 ADDITIONAL_TIMEOUT: 720
             ]
         }
     ),
     QUARKUS_MAIN(
         optional: true,
-        isActiveClosure: { script -> Utils.isQuarkusMainEnvironmentEnabled(script) },
+        isActiveClosure: { script -> Utils.isEnvironmentQuarkusMainEnabled(script) },
         getDefaultEnvVarsClosure: { script -> [ QUARKUS_BRANCH: 'main' ] }
     ),
     QUARKUS_BRANCH(
         optional: true,
-        isActiveClosure: { script -> Utils.isQuarkusBranchEnvironmentEnabled(script) },
-        getDefaultEnvVarsClosure: { script -> [ QUARKUS_BRANCH: Utils.getQuarkusEnvironmentBranchName(script) ] }
+        isActiveClosure: { script -> Utils.isEnvironmentQuarkusBranchEnabled(script) },
+        getDefaultEnvVarsClosure: { script -> [ QUARKUS_BRANCH: Utils.getEnvironmentQuarkusBranchName(script) ] }
+    ),
+    QUARKUS_LTS(
+        optional: true,
+        isActiveClosure: { script -> Utils.isEnvironmentQuarkusLTSEnabled(script) },
+        getDefaultEnvVarsClosure: { script -> [ QUARKUS_BRANCH: Utils.getEnvironmentQuarkusLTSName(script) ] }
     ),
     KOGITO_BDD(
         optional: true,
-        isActiveClosure: { script -> Utils.isRuntimesBDDEnvironmentEnabled(script) },
+        isActiveClosure: { script -> Utils.isEnvironmentRuntimesBDDEnabled(script) },
     )
 
     boolean optional
