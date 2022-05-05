@@ -63,7 +63,7 @@ do
     case "$i"
     in
         r) full_repository=${OPTARG} ;;
-        o) repository=${OPTARG} ;;
+        o) repository=${OPTARG}; target_repository=${repository} ;;
         h) branch=${OPTARG} ;;
         t) target_full_repository=${OPTARG} ;;
         b) target_branch=${OPTARG} ;;
@@ -105,7 +105,6 @@ fi
 owner=$(echo ${full_repository} | awk -F/ '{print $1}')
 if [ -z "${repository}" ]; then
   repository=$(echo ${full_repository} | awk -F/ '{print $2}' | awk -F'.' '{print $1}')
-  target_repository=${repository}
 fi
 
 if [ -z "${target_full_repository}" ]; then
