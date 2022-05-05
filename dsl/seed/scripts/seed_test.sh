@@ -100,7 +100,7 @@ fi
 if [ -z "${full_repository}" ]; then
   full_repository=$(echo ${git_url} | awk -F"${git_server}" '{print $2}')
 fi
-owner=$(echo ${full_repository} | awk -F/ '{print $1}' | awk -F'.' '{print $1}')
+owner=$(echo ${full_repository} | awk -F/ '{print $1}')
 if [ -z "${repository}" ]; then
   repository=$(echo ${full_repository} | awk -F/ '{print $2}' | awk -F'.' '{print $1}')
   target_repository=${repository}
@@ -110,9 +110,9 @@ if [ -z "${target_full_repository}" ]; then
   target_owner="kiegroup"
   target_repository=${repository}
 else
-  target_owner=$(echo ${owner} | awk -F/ '{print $1}')
+  target_owner=$(echo ${target_full_repository} | awk -F/ '{print $1}')
   if [ -z "${target_repository}" ]; then
-    target_repository=$(echo ${owner} | awk -F/ '{print $1}' | awk -F'.' '{print $2}')
+    target_repository=$(echo ${target_full_repository} | awk -F/ '{print $2}' | awk -F'.' '{print $1}')
   fi
 fi
 
