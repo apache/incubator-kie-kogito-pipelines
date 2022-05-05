@@ -31,8 +31,7 @@ usage() {
 }
 
 checkout_repository() {
-  local repository=$1
-  local output_dir=$2
+  local output_dir=$1
 
   echo "----- Cloning ${git_server}${owner}/${repository} repo on branch ${branch}"
   git clone --single-branch --depth 1 --branch ${branch} ${git_server}${owner}/${repository} ${output_dir}
@@ -133,7 +132,7 @@ echo "Got current repository = ${current_repository}"
 if [ "${repository}" != "${current_repository}" ]; then
   echo "Current repository is not the right one, checking out ${repository}"
   repo_tmp_dir=`mktemp -d`
-  checkout_repository "${repository}" "${repo_tmp_dir}"
+  checkout_repository "${repo_tmp_dir}"
   echo "Going into ${repository} directory"
   cd ${repo_tmp_dir}
 fi
@@ -149,7 +148,9 @@ if [ "${repository}" = 'kogito-pipelines' ]; then
   cp -r ${script_dir_path}/../../../dsl/seed ${TEMP_DIR}/dsl
 else
   if [ -z ${pipelines_repo} ]; then
-    checkout_repository 'kogito-pipelines' "${TEMP_DIR}"
+    repository='kogito-pipelines'
+    target_repository='kogito-pipelines'
+    checkout_repository "${TEMP_DIR}"
   else
     echo '----- Copying given pipelines seed repo'
     mkdir -p ${TEMP_DIR}/dsl
