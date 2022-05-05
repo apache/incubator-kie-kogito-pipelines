@@ -158,8 +158,6 @@ else
   fi
 fi
 
-pwd
-
 ${TEMP_DIR}/dsl/seed/scripts/copy_jobs.sh
 
 ${TEMP_DIR}/dsl/seed/scripts/test_jobs.sh
