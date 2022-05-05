@@ -44,6 +44,8 @@ checkout_repository() {
     echo "[WARN] Error cloning ${git_server}${owner}/${repository} on branch ${target_branch}"
     echo "----- Cloning ${git_server}${target_owner}/${target_repository} on branch ${target_branch}"
     git clone --single-branch --depth 1 --branch ${target_branch} ${git_server}${target_owner}/${target_repository} ${output_dir}
+  else
+    echo "Clone succeeded"
   fi
 
   set +e
@@ -155,6 +157,8 @@ else
     cp -r ${pipelines_repo}/dsl/seed ${TEMP_DIR}/dsl
   fi
 fi
+
+pwd
 
 ${TEMP_DIR}/dsl/seed/scripts/copy_jobs.sh
 
