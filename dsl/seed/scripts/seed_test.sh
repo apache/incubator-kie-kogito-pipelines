@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 ### This script should be launch by any dependent DSL scripts generation repo for local testing of changes
 ### Ideal dependent repo should have a `local_test.sh` script located in `.ci/jenkins/dsl` folder
@@ -10,7 +10,7 @@
 # chmod u+x ${file}
 # ${file} $1
 
-script_dir_path=$(cd `dirname "${BASH_SOURCE[0]}"`; pwd -P)
+SCRIPT_DIR_PATH=`dirname "${BASH_SOURCE[0]}"`
 
 TEMP_DIR=`mktemp -d`
 GIT_SERVER='github.com'
@@ -19,54 +19,57 @@ usage() {
     echo "Usage: $(basename $0) [-b BRANCH] [-o GIT_OWNER] [PATH]"
     echo
     echo 'Options: (only used for any repository different from current pipelines)'
-    echo '  -r FULL_REPOSITORY          Full name of the repository, aka `owner/repo`'
-    echo '  -o OVERRIDE_REPOSITORY      Override the repository to check'
-    echo '  -h BRANCH                   Git Branch to checkout'
-    echo '  -t TARGET FULL_REPOSITORY   Full name of the PR target repository, aka `owner/repo`'
-    echo '  -b TARGET_BRANCH            PR target branch'
+    echo '  -b BRANCH            Git Branch to checkout'
+    echo '  -o OWNER             Git Owner to checkout'
+    echo '  -t TARGET BRANCH     PR target branch'
+    echo '  -a TARGET_AUTHOR     PR target author'
     echo '  -r REPOSITORY        Repository to test jobs from. Please reference the PATH if the jobs.groovy file is not present at the root of the project'
     echo '  -p PATH_TO_PIPELINES Absolute path to local pipelines repository. Else the pipelines repository will be checked out'
     echo '  PATH                 Path to test'
     echo
 }
 
+retrieve_current_repository() {
+  sub_git_url=$(echo ${git_url} | awk -F"${GIT_SERVER}" '{print $2}')
+  [[ ${sub_git_url} = :* ]] && sub_git_url="${sub_git_url:1}"
+  [[ ${sub_git_url} = /* ]] && sub_git_url="${sub_git_url:1}"
+  local current_repository=$(echo ${sub_git_url} | awk -F'/' '{print $2}' | awk -F'.' '{print $1}')
+  echo "${current_repository}"
+}
+
 checkout_repository() {
   local repository=$1
   local output_dir=$2
 
-  echo "----- Cloning ${git_server}${owner}/${repository} repo on branch ${branch}"
-  git clone --single-branch --depth 1 --branch ${branch} ${git_server}${owner}/${repository} ${output_dir}
+  echo "----- Cloning ${repository} repo from ${owner} on branch ${branch}"
+  git clone --single-branch --depth 1 --branch ${branch} ${git_server}${owner}/${repository}.git ${output_dir}
   clone_status=$?
 
   set -e
 
   if [ "${clone_status}" != '0' ]; then
-    echo "[WARN] Error cloning ${git_server}${owner}/${repository} on branch ${target_branch}"
-    echo "----- Cloning ${git_server}${target_owner}/${target_repository} on branch ${target_branch}"
-    git clone --single-branch --depth 1 --branch ${target_branch} ${git_server}${target_owner}/${target_repository} ${output_dir}
-  else
-    echo "Clone succeeded"
+    echo "[WARN] Error cloning ${repository} repo from ${target_author} on branch ${target_branch}"
+    echo "----- Cloning ${repository} repo from ${target_author} on branch ${target_branch}"
+    git clone --single-branch --depth 1 --branch ${target_branch} ${git_server}${target_author}/${repository}.git ${output_dir}
   fi
-
-  set +e
 }
 
-full_repository=
-repository=
 branch=
-target_full_repository=
+owner=
 target_branch='main'
+target_author='kiegroup'
+repository=
 pipelines_repo=
 
-while getopts "r:o:h:t:b:p:h" i
+while getopts "b:o:t:a:r:p:h" i
 do
     case "$i"
     in
-        r) full_repository=${OPTARG} ;;
-        o) repository=${OPTARG} ;;
-        h) branch=${OPTARG} ;;
-        t) target_full_repository=${OPTARG} ;;
-        b) target_branch=${OPTARG} ;;
+        b) branch=${OPTARG} ;;
+        o) owner=${OPTARG} ;;
+        t) target_branch=${OPTARG} ;;
+        o) target_author=${OPTARG} ;;
+        r) repository=${OPTARG} ;;
         p) pipelines_repo=${OPTARG} ;;
         h) usage; exit 0 ;;
         \?) usage; exit 1 ;;
@@ -98,41 +101,24 @@ if [ -z "${branch}" ]; then
   echo "Got current branch = ${branch}"
 fi
 
-# parse full repository
-if [ -z "${full_repository}" ]; then
-  full_repository=$(echo ${git_url} | awk -F"${git_server}" '{print $2}')
-fi
-owner=$(echo ${full_repository} | awk -F/ '{print $1}')
-if [ -z "${repository}" ]; then
-  repository=$(echo ${full_repository} | awk -F/ '{print $2}' | awk -F'.' '{print $1}')
-  target_repository=${repository}
+# retrieve owner
+if [ -z "${owner}" ]; then
+  owner=$(echo ${git_url} | awk -F"${git_server}" '{print $2}' | awk -F'/' '{print $1}')
+  echo "Got current owner = ${owner}"
 fi
 
-if [ -z "${target_full_repository}" ]; then
-  target_owner="kiegroup"
-  target_repository=${repository}
-else
-  target_owner=$(echo ${target_full_repository} | awk -F/ '{print $1}')
-  if [ -z "${target_repository}" ]; then
-    target_repository=$(echo ${target_full_repository} | awk -F/ '{print $2}' | awk -F'.' '{print $1}')
-  fi
-fi
-
-echo "git_server...............${git_server}"
-echo "owner....................${owner}"
-echo "repository...............${repository}"
 echo "branch...................${branch}"
-echo "target_owner.............${target_owner}"
-echo "target_repository........${target_repository}"
+echo "owner....................${owner}"
 echo "target_branch............${target_branch}"
+echo "target_author............${target_author}"
+echo "repository...............${repository}"
 echo "pipelines_repo...........${pipelines_repo}"
 
-current_repository="$(echo ${git_url}  | awk -F"${git_server}" '{print $2}' | awk -F'/' '{print $2}' | awk -F'.' '{print $1}')"
-echo "Got current repository = ${current_repository}"
-
 # retrieve repository
-if [ "${repository}" != "${current_repository}" ]; then
-  echo "Current repository is not the right one, checking out ${repository}"
+if [ -z ${repository} ]; then
+  repository="$(retrieve_current_repository)"
+  echo "Got current repository = ${repository}"
+else
   repo_tmp_dir=`mktemp -d`
   checkout_repository "${repository}" "${repo_tmp_dir}"
   echo "Going into ${repository} directory"
@@ -140,14 +126,13 @@ if [ "${repository}" != "${current_repository}" ]; then
 fi
 
 if [ ! -z "${dsl_path}" ]; then
-  echo "Moving to ${dsl_path}"
   cd ${dsl_path}
 fi
 
 if [ "${repository}" = 'kogito-pipelines' ]; then
   echo '----- Copying seed repo'
   mkdir -p ${TEMP_DIR}/dsl
-  cp -r ${script_dir_path}/../../../dsl/seed ${TEMP_DIR}/dsl
+  cp -r ${SCRIPT_DIR_PATH}/../../../dsl/seed ${TEMP_DIR}/dsl
 else
   if [ -z ${pipelines_repo} ]; then
     checkout_repository 'kogito-pipelines' "${TEMP_DIR}"
