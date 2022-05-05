@@ -103,6 +103,7 @@ fi
 owner=$(echo ${full_repository} | awk -F/ '{print $1}' | awk -F'.' '{print $1}')
 if [ -z "${repository}" ]; then
   repository=$(echo ${full_repository} | awk -F/ '{print $2}' | awk -F'.' '{print $1}')
+  target_repository=${repository}
 fi
 
 if [ -z "${target_full_repository}" ]; then
@@ -110,7 +111,9 @@ if [ -z "${target_full_repository}" ]; then
   target_repository=${repository}
 else
   target_owner=$(echo ${owner} | awk -F/ '{print $1}')
-  target_repository=$(echo ${owner} | awk -F/ '{print $1}' | awk -F'.' '{print $1}')
+  if [ -z "${target_repository}" ]; then
+    target_repository=$(echo ${owner} | awk -F/ '{print $1}' | awk -F'.' '{print $2}')
+  fi
 fi
 
 echo "git_server...............${git_server}"
