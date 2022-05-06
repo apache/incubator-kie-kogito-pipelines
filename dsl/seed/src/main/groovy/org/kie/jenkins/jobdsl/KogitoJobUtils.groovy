@@ -61,34 +61,31 @@ class KogitoJobUtils {
                                                 }
         // Setup correct checkout branch for pipelines
         jobParams.git.branch = VersionUtils.getProjectTargetBranch(KogitoConstants.KOGITO_PIPELINES_REPOSITORY, jobParams.git.branch, repository)
+        jobParams.env.putAll([
+            REPO_NAME: "${repository}",
+            JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
 
+            DEPENDENCY_NAME: "${dependencyName}",
+            NOTIFICATION_JOB_NAME: Utils.getRepoNameCamelCase(repository),
+
+            PR_PREFIX_BRANCH: Utils.getGenerationBranch(script),
+
+            BUILD_BRANCH_NAME: Utils.getGitBranch(script),
+            GIT_AUTHOR:  Utils.getGitAuthor(script),
+            AUTHOR_CREDS_ID: Utils.getGitAuthorCredsId(script),
+        ])
+        if (mavenUpdate) {
+            mavenUpdate.modules ? jobParams.env.put('MAVEN_MODULES',  JsonOutput.toJson(mavenUpdate.modules)) : null
+            mavenUpdate.compare_deps_remote_poms ? jobParams.env.put('MAVEN_COMPARE_DEPS_REMOTE_POMS', JsonOutput.toJson(mavenUpdate.compare_deps_remote_poms)) : null
+            mavenUpdate.properties ? jobParams.env.put('MAVEN_PROPERTIES', JsonOutput.toJson(mavenUpdate.properties)) : null
+        }
+        if (gradleUpdate) {
+            gradleUpdate.regex ? jobParams.env.put('GRADLE_REGEX', JsonOutput.toJson(gradleUpdate.regex)) : null
+        }
         def job = KogitoJobTemplate.createPipelineJob(script, jobParams)
-        job.with {
+        return job.with {
             parameters {
                 stringParam('NEW_VERSION', '', 'Which version to set ?')
-            }
-
-            environmentVariables {
-                env('REPO_NAME', "${repository}")
-                env('JENKINS_EMAIL_CREDS_ID', Utils.getJenkinsEmailCredsId(script))
-
-                env('DEPENDENCY_NAME', "${dependencyName}")
-                env('NOTIFICATION_JOB_NAME', Utils.getRepoNameCamelCase(repository))
-
-                env('PR_PREFIX_BRANCH', Utils.getGenerationBranch(script))
-
-                env('BUILD_BRANCH_NAME', Utils.getGitBranch(script))
-                env('GIT_AUTHOR',  Utils.getGitAuthor(script))
-                env('AUTHOR_CREDS_ID', Utils.getGitAuthorCredsId(script))
-
-                if (mavenUpdate) {
-                    mavenUpdate.modules ? env('MAVEN_MODULES', JsonOutput.toJson(mavenUpdate.modules)) : null
-                    mavenUpdate.compare_deps_remote_poms ? env('MAVEN_COMPARE_DEPS_REMOTE_POMS', JsonOutput.toJson(mavenUpdate.compare_deps_remote_poms)) : null
-                    mavenUpdate.properties ? env('MAVEN_PROPERTIES', JsonOutput.toJson(mavenUpdate.properties)) : null
-                }
-                if (gradleUpdate) {
-                    gradleUpdate.regex ? env('GRADLE_REGEX', JsonOutput.toJson(gradleUpdate.regex)) : null
-                }
             }
         }
     }
@@ -98,7 +95,7 @@ class KogitoJobUtils {
     }
 
     static List createAllEnvsPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
-        createPerEnvPerRepoPRJobs(script, Environment.getActiveEnvironments(script), jobsRepoConfigGetter, defaultParamsGetter)
+        return createPerEnvPerRepoPRJobs(script, Environment.getActiveEnvironments(script), jobsRepoConfigGetter, defaultParamsGetter)
     }
 
     static List createPerEnvPerRepoPRJobs(def script, List<Environment> environments, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
