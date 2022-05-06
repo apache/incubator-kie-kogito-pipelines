@@ -11,7 +11,7 @@ util = null
 // Configuration of the pipeline is done via the `config/main.yaml` file
 pipeline {
     agent {
-        label 'kie-rhel8 && !master'
+        label 'kie-rhel8-priority'
     }
 
     options {
@@ -46,6 +46,8 @@ pipeline {
                 script {
                     readSeedConfig().git.branches.each { branch ->
                         def envProperties = getGenerationEnvProperties(branch)
+                        echo "Got envProperties for generation"
+                        echo "${envProperties}"
                         dir(util.getDslSeedFolderAbsolutePath()) {
                             println "[INFO] Generate branch seed job for branch ${branch}"
                             jobDsl(targets: 'jobs/seed_job_branch.groovy',
