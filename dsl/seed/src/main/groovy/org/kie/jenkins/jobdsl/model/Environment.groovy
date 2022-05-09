@@ -78,7 +78,7 @@ class Environment {
         getDefaultEnvVarsClosure: { script ->
             [
                 NATIVE: 'true',
-                NATIVE_BUILDER_IMAGE: Utils.getEnvironmentMandrelBuilderImage(script),
+                QUARKUS_NATIVE_BUILDER_IMAGE: 'mandrel',
                 ADDITIONAL_TIMEOUT: 720,
             ]
         }
@@ -91,7 +91,7 @@ class Environment {
         getDefaultEnvVarsClosure: { script ->
             [
                 NATIVE: 'true',
-                NATIVE_BUILDER_IMAGE: Utils.getEnvironmentMandrelLTSBuilderImage(script),
+                QUARKUS_NATIVE_BUILDER_IMAGE: 'mandrel',
                 ADDITIONAL_TIMEOUT: 720,
                 QUARKUS_BRANCH: Utils.getEnvironmentMandrelLTSQuarkusVersion(script),
                 BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
