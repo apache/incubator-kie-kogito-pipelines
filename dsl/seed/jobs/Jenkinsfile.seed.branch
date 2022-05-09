@@ -10,7 +10,7 @@ util = null
 
 pipeline {
     agent {
-        label 'kie-rhel8-priority'
+        label 'kie-rhel8 && !master'
     }
 
     tools {

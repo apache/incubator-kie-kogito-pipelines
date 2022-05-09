@@ -11,7 +11,7 @@ def generate() {
 }
 
 def triggerSeedJob() {
-    node('kie-rhel8-priority') {
+    node('kie-rhel8 && !master') {
         checkout scm
 
         dir("${SEED_REPO}") {
@@ -35,7 +35,7 @@ def triggerSeedJob() {
 }
 
 def generateJobs() {
-    node('kie-rhel8-priority') {
+    node('kie-rhel8 && !master') {
         checkout scm
 
         dir("${SEED_REPO}") {
