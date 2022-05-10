@@ -164,7 +164,6 @@ pipeline {
                     def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
                     addSkipTestsParam(buildParams)
                     addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
-                    addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
 
                     buildJob(EXAMPLES_DEPLOY, buildParams)
                 }
@@ -355,7 +354,6 @@ pipeline {
                 script {
                     def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
                     addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
-                    addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
                     addDeployBuildUrlParam(buildParams, EXAMPLES_DEPLOY)
                     addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', isDeployAsLatest())
 
