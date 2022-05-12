@@ -1,0 +1,247 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+defaultImageParamsPrefix = 'IMAGE'
+kogitoImagesParamsPrefix = 'KOGITO_IMAGES'
+examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
+baseImageParamsPrefix = 'BASE_IMAGE'
+promoteImageParamsPrefix = 'PROMOTE_IMAGE'
+
+REPOSITORIES = [
+    'kogito-images' : [:],
+    'kogito-examples-images' : [ // Not an effective repository but necessary for the launch of the job
+        build : [
+            extraParams: getImageBuildParams(env.NIGHTLY_TAG, kogitoImagesParamsPrefix) +
+                            getKeyConstructStringParam(defaultImageParamsPrefix, 'NAME_PREFIX', 'examples')
+        ]
+    ],
+    'kogito-operator' : [
+        build : [
+            extraParams: getImageBuildParams(env.NIGHTLY_TAG, kogitoImagesParamsPrefix) +
+                            getImageBuildParams(env.NIGHTLY_TAG, examplesImagesParamsPrefix) +
+                            getKeyConstructStringParam(defaultImageParamsPrefix, 'NAME_PREFIX', 'examples') +
+                            getKeyConstructStringParam(defaultImageParamsPrefix, 'CACHE_MODE', isExamplesImagesDeploy() ? 'always' : 'never')
+        ]
+    ],
+]
+
+// Map of executed jobs
+// See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
+// for more options on built job entity
+JOBS = [:]
+
+// Should be multibranch pipeline
+pipeline {
+    agent {
+        label 'kie-rhel7 && !master'
+    }
+
+    options {
+        timeout(time: 1380, unit: 'MINUTES')
+    }
+
+    // parameters {
+    // For parameters, check into ./dsl/jobs.groovy file
+    // }
+
+    environment {
+        // Some generated env is also defined into ./dsl/jobs.groovy file
+        KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+
+        IMAGE_NAME_NIGHTLY_SUFFIX = 'nightly'
+
+        // Use branch name in nightly tag as we may have parallel main and release branch builds
+        NIGHTLY_TAG = """${getGitBranch()}${getJobEnvironment() != 'default' ? "-${getJobEnvironment()}" : ''}-${sh(
+                returnStdout: true,
+                script: 'date -u "+%Y-%m-%d"'
+            ).trim()}"""
+}
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    echo "nightly tag is ${env.NIGHTLY_TAG}"
+
+                    currentBuild.displayName = env.NIGHTLY_TAG
+                }
+            }
+        }
+
+        // Sequential on all cloud jobs
+        // Build and test and if ok, deploy
+        stage('Build & Deploy images') {
+            steps {
+                script {
+                    REPOSITORIES.each { repo, repoConfig ->
+                        // No parallel here as each steps depends on the previous one
+                        stage("Build & Deploy ${repo}") {
+                            boolean buildOk = false
+
+                            if (!repoConfig.build?.disabled) {
+                                // Call build & test job
+                                def buildParams = getDefaultBuildParams()
+                                buildParams.putAll(getImageBuildParams(env.NIGHTLY_TAG))
+                                buildParams.putAll(getSkipTestsParams())
+                                buildParams.putAll(getAppsParams())
+                                buildParams.putAll(getExamplesParams())
+                                if (repoConfig.build?.extraParams) {
+                                    buildParams.putAll(repoConfig.build.extraParams)
+                                }
+
+                                String jobName = buildJob(repo, 'build-and-test', buildParams)
+                                buildOk = isJobSucceeded(jobName) || isJobUnstable(jobName)
+                            }
+
+                            if (buildOk && !repoConfig.deploy?.disabled) {
+                                // Call deploy artifacts job
+                                def buildParams = getDefaultBuildParams()
+                                buildParams.putAll(getImageBuildParams(env.NIGHTLY_TAG, baseImageParamsPrefix))
+                                buildParams.putAll(getImageBuildParams(env.NIGHTLY_TAG, promoteImageParamsPrefix))
+                                buildParams.putAll(getDeployImageWithLatestTagParams())
+                                if (repoConfig.deploy?.extraParams) {
+                                    buildParams.putAll(repoConfig.deploy.extraParams)
+                                }
+
+                                buildJob(repo, 'promote-images', buildParams)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        failure {
+            sendNotification('Nightly Cloud')
+        }
+        aborted {
+            sendNotification('Nightly Cloud')
+        }
+    }
+}
+
+void sendNotification(String subject, String buildUrl = "${BUILD_URL}") {
+    mailer.sendMarkdownTestSummaryNotification(getJobEnvironment() != 'default' ? getJobEnvironment(): '', "[${getGitBranch()}] ${subject}", [env.KOGITO_CI_EMAIL_TO], '', buildUrl)
+}
+
+String buildJob(String repo, String jobNameSuffix, Map buildParams) {
+    String jobName = constructJobName(repo, jobNameSuffix)
+    echo "Build ${jobName} with params ${buildParams.values()}"
+
+    def job = build(job: "./${jobName}", parameters: buildParams.values(), wait: true, propagate: false)
+    registerJob(jobName, job)
+    echo "Job ${jobName} finished with result ${getJobResult(jobName)}"
+
+    // Set Unstable if job did not succeed
+    if (!isJobSucceeded(jobName)) {
+        unstable("Job ${jobName} finished with result ${getJobResult(jobName)}")
+        sendNotification(getRepoNameCamelCase(repo), getJobUrl(jobName))
+    }
+
+    return jobName
+}
+
+String constructJobName(repo, jobNameSuffix) {
+    return "${repo}.${jobNameSuffix}"
+}
+
+def registerJob(String jobName, def job) {
+    JOBS[jobName] = job
+}
+
+def getJob(String jobName) {
+    return JOBS[jobName]
+}
+
+String getJobUrl(String jobName) {
+    echo "getJobUrl for ${jobName}"
+    return getJob(jobName)?.absoluteUrl ?: ''
+}
+
+String getJobResult(String jobName) {
+    echo "getJobResult for ${jobName}"
+    return getJob(jobName)?.result ?: ''
+}
+
+boolean isJobSucceeded(String jobName) {
+    return getJobResult(jobName) == 'SUCCESS'
+}
+
+Map getDefaultBuildParams() {
+    return [
+        DISPLAY_NAME: string(name: 'DISPLAY_NAME', value: "${env.NIGHTLY_TAG}")
+    ]
+}
+
+Map getSkipTestsParams() {
+    return [
+        SKIP_TESTS: booleanParam(name: 'SKIP_TESTS', value: params.SKIP_TESTS)
+    ]
+}
+
+Map getExamplesParams() {
+    return [
+        EXAMPLES_URI: string(name: 'EXAMPLES_URI', value: "https://github.com/${getGitAuthor()}/kogito-examples"),
+        EXAMPLES_REF: string(name: 'EXAMPLES_REF', value: "nightly-${getGitBranch()}"),
+    ]
+}
+
+Map getAppsParams() {
+    return [
+        EXAMPLES_URI: string(name: 'APPS_URI', value: "https://github.com/${getGitAuthor()}/kogito-apps"),
+        EXAMPLES_REF: string(name: 'APPS_REF', value: "${getGitBranch()}"),
+    ]
+}
+
+Map getImageBuildParams(String tag, String paramsPrefix = defaultImageParamsPrefix) {
+    return getKeyConstructStringParam(paramsPrefix, 'REGISTRY_CREDENTIALS', env.IMAGE_REGISTRY_CREDENTIALS) +
+                getKeyConstructStringParam(paramsPrefix, 'REGISTRY', env.IMAGE_REGISTRY) +
+                getKeyConstructStringParam(paramsPrefix, 'NAMESPACE', env.IMAGE_NAMESPACE) +
+                getKeyConstructStringParam(paramsPrefix, 'NAME_SUFFIX', env.IMAGE_NAME_NIGHTLY_SUFFIX) +
+                getKeyConstructStringParam(paramsPrefix, 'TAG', tag)
+}
+
+Map getKeyConstructStringParam(String paramsPrefix, String key, String value) {
+    String constructedKey = constructKey(paramsPrefix, key)
+    return [ (constructedKey): string(name: constructedKey, value: value) ]
+}
+
+Map getDeployImageWithLatestTagParams() {
+    return [
+        DEPLOY_WITH_LATEST_TAG: booleanParam(name: 'DEPLOY_WITH_LATEST_TAG', value: isDeployImagesLatestTag())
+    ]
+}
+
+String constructKey(String prefix, String paramId) {
+    return prefix ? "${prefix}_${paramId}" : paramId
+}
+
+String getGitBranch() {
+    return env.GIT_BRANCH_NAME
+}
+
+String getGitAuthor() {
+    return env.GIT_AUTHOR
+}
+
+boolean isDeployImagesLatestTag() {
+    return getGitBranch() == env.BRANCH_FOR_LATEST
+}
+
+boolean isImagesDeploy() {
+    return !params.SKIP_IMAGES
+}
+
+boolean isExamplesImagesDeploy() {
+    return !params.SKIP_EXAMPLES_IMAGES
+}
+
+boolean isOperatorDeploy() {
+    return !params.SKIP_OPERATOR
+}
+
+String getJobEnvironment() {
+    return (env.JOB_ENVIRONMENT ?: 'Default').toLowerCase()
+}

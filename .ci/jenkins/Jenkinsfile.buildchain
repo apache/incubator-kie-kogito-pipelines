@@ -1,15 +1,18 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
+import org.kie.jenkins.MavenSettingsUtils
+
 agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'kie-rhel7 && kie-mem16g'} && !master"
 timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: '180'
 jdkTool = env.BUILD_JDK_TOOL
 mavenTool = env.BUILD_MAVEN_TOOL
 
-prType = env.BUILDCHAIN_PR_TYPE?.trim() ?: 'pr'
+buildChainType = env.BUILDCHAIN_TYPE?.trim() ?: 'pr'
 buildChainProject = env.BUILDCHAIN_PROJECT?.trim()
-settingsXmlId = isPR() || isFDB() ? 'kogito_pr_settings' : 'kogito_release_settings'
+defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kogito_pr_settings' : 'kogito_release_settings'
+settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
 
-disableSonarCloudAnalysis = env.DISABLE_SONARCLOUD ? env.DISABLE_SONARCLOUD.toBoolean() : false
+enableSonarCloudAnalysis = env.ENABLE_SONARCLOUD ? env.ENABLE_SONARCLOUD.toBoolean() : false
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
 native_build = env.NATIVE ? env.NATIVE.toBoolean() : false
 native_builder_image = env.NATIVE_BUILDER_IMAGE ?: ''
@@ -18,10 +21,19 @@ buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
 buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:kiegroup}'
 buildChainDefinitionFile = env.QUARKUS_BRANCH ? 'pull-request-config-quarkus.yaml' : 'pull-request-config.yaml'
-buildChainAction = isFDB() ? 'fd' : prType
-buildChainAdditionalArguments = buildChainProject ? "-sp=${buildChainProject}" : ''
+buildChainAction = isFDBBuildChainType() ? 'fd' : buildChainType
+buildChainAdditionalArguments = buildChainProject ? [ "-sp=${buildChainProject}" ] : []
+if (isBranchBuildChainType()) {
+    buildChainAdditionalArguments.add("-b=${env.GIT_BRANCH_NAME.trim()}")
+    buildChainAdditionalArguments.add("-g=${env.GIT_AUTHOR.trim()}")
+} else {
+    buildChainAdditionalArguments.add("-url=${env.ghprbPullLink}")
+}
 
-notificationJobName = env.NOTIFICATION_JOB_NAME ?: 'PR'
+skipTests = params.SKIP_TESTS ?: false
+skipIntegrationTests = params.SKIP_INTEGRATION_TESTS ?: false
+
+notificationJobName = "${env.REPO_NAME} - ${env.JOB_ENVIRONMENT}"
 
 pipeline {
     agent {
@@ -78,17 +90,21 @@ pipeline {
                 script {
                     env.BUILD_MVN_OPTS_CURRENT = getBuildMavenOptsCurrent()
                     echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
-
                     configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
+                        if(env.MAVEN_DEPENDENCIES_REPOSITORY) {
+                            MavenSettingsUtils.setRepositoryInSettings(this, "${MAVEN_SETTINGS_FILE}", 'deps-repo', env.MAVEN_DEPENDENCIES_REPOSITORY)
+                            env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -Denforcer.skip=true"
+                        }
+
                         withCredentials([string(credentialsId: 'kie-ci3-token', variable: 'GITHUB_TOKEN')]) {
-                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/.ci/${buildChainDefinitionFile}' -folder='bc' build ${buildChainAction} -url=${env.ghprbPullLink} ${buildChainAdditionalArguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'"
+                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/.ci/${buildChainDefinitionFile}' -folder='bc' build ${buildChainAction} ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'"
                         }
                     }
                 }
             }
             post {
                 always {
-                    junit '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml, **/target/invoker-reports/**/*.xml'
+                    junit(testResults: '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml, **/target/invoker-reports/**/*.xml', allowEmptyResults: skipTests || skipIntegrationTests)
                     archiveArtifacts(artifacts: '**/cypress/screenshots/**,**/cypress/videos/**', fingerprint: false, allowEmptyArchive: true)
                 }
                 unsuccessful {
@@ -100,7 +116,7 @@ pipeline {
         }
         stage('Sonar analysis') {
             when {
-                expression { return isSonarCloudAnalysis() }
+                expression { return enableSonarCloudAnalysis }
             }
             tools {
                 jdk jdkTool
@@ -108,7 +124,7 @@ pipeline {
             }
             steps {
                 script {
-                    def project = (env.BUILDCHAIN_PROJECT ? util.getProjectGroupName(env.BUILDCHAIN_PROJECT) : util.getProjectTriggeringJob())[1]
+                    def project = (buildChainProject ? util.getProjectGroupName(buildChainProject) : util.getProjectTriggeringJob())[1]
                     // Project should define a `clone` for the current command so that the pom can be found for sonarcloud analysis
                     // Else this next step will fail
                     dir("bc/kiegroup_${project.replaceAll('-', '_')}/${project}") {
@@ -128,7 +144,7 @@ pipeline {
     post {
         unsuccessful {
             script {
-                if (isPR()) {
+                if (shouldNotify()) {
                     pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, '', "${BUILD_URL}", 'GITHUB'), 'kie-ci3-token')
                 }
             }
@@ -142,32 +158,32 @@ pipeline {
     }
 }
 
-boolean isPR() {
-    return prType == 'pr'
+boolean isPRBuildChainType() {
+    return buildChainType == 'pr'
 }
 
-boolean isFDB() {
-    return prType == 'fdb'
+boolean isFDBBuildChainType() {
+    return buildChainType == 'fdb'
 }
 
-boolean isSingle() {
-    return prType == 'single'
+boolean isSingleBuildChainType() {
+    return buildChainType == 'single'
 }
 
-boolean isSonarCloudAnalysis() {
-    if (disableSonarCloudAnalysis) {
-        return false
-    }
-    if (isPR()) {
-        return !downstreamBuild
-    }
-    return false
+boolean isBranchBuildChainType() {
+    return buildChainType == 'branch'
 }
 
 String getBuildMavenOptsCurrent() {
     List opts_current = env.BUILD_MVN_OPTS_CURRENT ? [ env.BUILD_MVN_OPTS_CURRENT ] : []
-    isSonarCloudAnalysis() ? opts_current.add('-Prun-code-coverage') : null
+    enableSonarCloudAnalysis ? opts_current.add('-Prun-code-coverage') : null
     native_build ? opts_current.add('-Dquarkus.native.container-build=true -Dnative -Pnative') : null
     native_builder_image ? opts_current.add("-Dquarkus.native.builder-image=${native_builder_image}") : null
+    skipTests ? opts_current.add('-DskipTests') : null
+    skipIntegrationTests ? opts_current.add('-DskipITs') : null
     return opts_current.join(' ')
+}
+
+boolean shouldNotify() {
+    return !isBranchBuildChainType()
 }

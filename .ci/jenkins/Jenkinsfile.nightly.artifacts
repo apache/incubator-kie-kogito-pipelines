@@ -1,0 +1,227 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+REPOSITORIES = [
+    'drools' : [:],
+    'kogito-runtimes' : [:],
+    'kogito-apps' : [:],
+    'kogito-examples' : [
+        build : [
+            extraParams : [
+                UPDATE_NIGHTLY_BRANCH: booleanParam(name: 'UPDATE_NIGHTLY_BRANCH', value: true)
+            ]
+        ]
+    ],
+    // 'optaplanner' : [:],
+    // 'optaweb-vehicle-routing' : [:],
+    // 'optaweb-employee-rostering' : [:],
+    // 'optaplanner-quickstarts' : [
+    //     deploy : [
+    //         disabled : true
+    //     ]
+    // ]
+]
+
+// Map of executed jobs
+// See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
+// for more options on built job entity
+JOBS = [:]
+
+// Should be multibranch pipeline
+pipeline {
+    // agent {
+    //     label 'kie-rhel7 && !master'
+    // }
+    agent any
+
+    options {
+        timeout(time: 720, unit: 'MINUTES')
+    }
+
+    // parameters {
+    // For parameters, check into ./dsl/jobs.groovy file
+    // }
+
+    environment {
+        // Some generated env is also defined into ./dsl/jobs.groovy file
+
+        KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+
+        // Use branch name in nightly tag as we may have parallel main and release branch builds
+        BUILD_NAME = """${getGitBranch()}-${sh(
+                returnStdout: true,
+                script: 'date -u "+%Y-%m-%d"'
+            ).trim()}"""
+}
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    currentBuild.displayName = env.BUILD_NAME
+                }
+            }
+        }
+
+        // Parallel on all artifacts jobs (they should be using the build-chain)
+        // Build and test and if ok, deploy
+        stage('Build & Deploy artifacts') {
+            steps {
+                script {
+                    Map parallelJobs = [:]
+
+                    REPOSITORIES.each { repo, repoConfig ->
+                        parallelJobs.put("Build & Deploy ${repo}", {
+                            boolean buildOk = false
+
+                            if (!repoConfig.build?.disabled) {
+                                // Call build & test job
+                                Map buildParams = getDefaultBuildParams()
+                                buildParams.putAll(getSkipTestsParams())
+                                buildParams.putAll(getSkipIntegrationTestsParams())
+                                if (repoConfig.build?.extraParams) {
+                                    buildParams.putAll(repoConfig.build.extraParams)
+                                }
+
+                                String jobName = buildJob(repo, 'build-and-test', buildParams)
+                                buildOk = isJobSucceeded(jobName) || isJobUnstable(jobName)
+                            }
+
+                            if (buildOk && !repoConfig.deploy?.disabled && shouldDeploy()) {
+                                // Call deploy artifacts job
+                                Map buildParams = getDefaultBuildParams()
+                                if (repoConfig.deploy?.extraParams) {
+                                    buildParams.putAll(repoConfig.deploy.extraParams)
+                                }
+
+                                buildJob(repo, 'deploy-artifacts', buildParams)
+                            }
+                        })
+                    }
+
+                    // Launch in parallel
+                    parallel parallelJobs
+                }
+            }
+        }
+    }
+    post {
+        success {
+            script {
+                callCloudNightlyJob()
+            }
+        }
+        unstable {
+            script {
+                callCloudNightlyJob()
+            }
+        }
+        failure {
+            script {
+                sendNotification('Nightly Artifacts')
+            }
+        }
+        aborted {
+            script {
+                sendNotification('Nightly Artifacts')
+            }
+        }
+    }
+}
+
+void sendNotification(String subject, String buildUrl = "${BUILD_URL}") {
+    mailer.sendMarkdownTestSummaryNotification(getJobEnvironment() != 'default' ? getJobEnvironment(): '', "[${getGitBranch()}] ${subject}", [env.KOGITO_CI_EMAIL_TO], '', buildUrl)
+}
+
+void callCloudNightlyJob() {
+    if (isCloudEnabledJobEnvironment()) {
+        Map buildParams = getSkipTestsParams()
+        build(job: './kogito-nightly.cloud', parameters: buildParams.values(), wait: false, propagate: false)
+    }
+}
+
+String buildJob(String repo, String jobNameSuffix, Map buildParams) {
+    String jobName = constructJobName(repo, jobNameSuffix)
+    echo "Build ${jobName} with params ${buildParams.values()}"
+
+    def job = build(job: "./${jobName}", parameters: buildParams.values(), wait: true, propagate: false)
+    registerJob(jobName, job)
+    echo "Job ${jobName} finished with result ${getJobResult(jobName)}"
+
+    // Set Unstable if job did not succeed
+    if (!isJobSucceeded(jobName)) {
+        unstable("Job ${jobName} finished with result ${getJobResult(jobName)}")
+        sendNotification(getRepoNameCamelCase(repo), getJobUrl(jobName))
+    }
+
+    return jobName
+}
+
+String constructJobName(repo, jobNameSuffix) {
+    return "${repo}.${jobNameSuffix}"
+}
+
+def registerJob(String jobName, def job) {
+    JOBS[jobName] = job
+}
+
+def getJob(String jobName) {
+    return JOBS[jobName]
+}
+
+String getJobUrl(String jobName) {
+    echo "getJobUrl for ${jobName}"
+    return getJob(jobName)?.absoluteUrl ?: ''
+}
+
+String getJobResult(String jobName) {
+    return getJob(jobName)?.result ?: ''
+}
+
+boolean isJobSucceeded(String jobName) {
+    return getJobResult(jobName) == 'SUCCESS'
+}
+
+boolean isJobUnstable(String jobName) {
+    return getJobResult(jobName) == 'UNSTABLE'
+}
+
+Map getDefaultBuildParams() {
+    return [
+        DISPLAY_NAME: string(name: 'DISPLAY_NAME', value: "${env.BUILD_NAME}")
+    ]
+}
+
+Map getSkipTestsParams() {
+    return [
+        SKIP_TESTS: booleanParam(name: 'SKIP_TESTS', value: params.SKIP_TESTS)
+    ]
+}
+
+Map getSkipIntegrationTestsParams() {
+    return [
+        SKIP_INTEGRATION_TESTS: booleanParam(name: 'SKIP_INTEGRATION_TESTS', value: params.SKIP_TESTS)
+    ]
+}
+
+String getGitBranch() {
+    return env.GIT_BRANCH_NAME
+}
+
+String getJobEnvironment() {
+    return (env.JOB_ENVIRONMENT ?: 'Default').toLowerCase()
+}
+
+String isCloudEnabledJobEnvironment() {
+    return env.JOB_ENVIRONMENT_CLOUD_ENABLED ? env.JOB_ENVIRONMENT_CLOUD_ENABLED.toBoolean() : false
+}
+
+boolean shouldDeploy() {
+    return getJobEnvironment() == 'default'
+}
+
+String getRepoNameCamelCase(String repoName) {
+    List words = repoName.split('-') as List
+    return words.collect { it.isEmpty() ? it : it.substring(0, 1).toUpperCase() + it.substring(1).toLowerCase() }.join(' ')
+}

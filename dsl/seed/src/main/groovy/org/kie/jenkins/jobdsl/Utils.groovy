@@ -144,6 +144,23 @@ class Utils {
         return getBindingValue(script, 'OLD_FOLDER_STRUCTURE')?.toBoolean()
     }
 
+    static String getCloudImageRegistry(def script) {
+        return getBindingValue(script, 'CLOUD_IMAGE_REGISTRY')
+    }
+
+    static String getCloudImageNamespace(def script) {
+        return getBindingValue(script, 'CLOUD_IMAGE_NAMESPACE')
+    }
+
+    static String getCloudImageRegistryCredentialsNightly(def script) {
+        return getBindingValue(script, 'CLOUD_IMAGE_REGISTRY_CREDENTIALS_NIGHTLY')
+    }
+
+    static String getCloudImageRegistryCredentialsRelease(def script) {
+        return getBindingValue(script, 'CLOUD_IMAGE_REGISTRY_CREDENTIALS_RELEASE')
+    }
+    
+
     /**
     *   Return the given string with all words beginning with first letter as upper case
     */

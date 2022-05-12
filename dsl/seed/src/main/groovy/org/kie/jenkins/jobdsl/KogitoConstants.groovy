@@ -5,4 +5,6 @@ class KogitoConstants {
     static String KOGITO_DEFAULT_PR_TRIGGER_PHRASE = '.*[j|J]enkins,?.*(retest|test) this.*'
     
     static String SEED_JENKINSFILES_PATH = '.ci/jenkins'
+
+    static String BUILD_CHAIN_JENKINSFILE = 'Jenkinsfile.buildchain'
 }

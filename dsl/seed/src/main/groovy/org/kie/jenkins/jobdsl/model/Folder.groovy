@@ -24,6 +24,9 @@ class Folder {
     Map getDefaultEnvVars(def script) {
         Map defaultEnv = this.environment?.getDefaultEnvVars(script)
         defaultEnv.putAll(this.defaultEnv ?: [:])
+        defaultEnv.putAll([
+            JOB_TYPE: this.jobType?.toName(),
+        ])
         return defaultEnv
     }
 

@@ -1,0 +1,186 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+@Library('jenkins-pipeline-shared-libraries')_
+
+import org.kie.jenkins.MavenCommand
+import org.kie.jenkins.MavenStagingHelper
+
+deployProperties = [:]
+
+pipeline {
+    agent {
+        label 'kie-rhel7 && kie-mem8g'
+    }
+
+    tools {
+        maven 'kie-maven-3.8.1'
+        jdk 'kie-jdk11'
+    }
+
+    options {
+        timestamps()
+        timeout(time: 60, unit: 'MINUTES')
+    }
+
+    // parameters {
+    // For parameters, check into ./dsl/jobs.groovy file
+    // }
+
+    environment {
+        // Static env is defined into ./dsl/jobs.groovy file
+
+        // Keep here for visitibility
+        MAVEN_OPTS = '-Xms1024m -Xmx4g'
+
+        MAVEN_DEPLOY_LOCAL_DIR = "${WORKSPACE}/maven_deploy_dir"
+    }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    cleanWs()
+
+                    if (params.DISPLAY_NAME) {
+                        currentBuild.displayName = params.DISPLAY_NAME
+                    }
+
+                    dir(getRepoName()) {
+                        checkoutRepo()
+                    }
+                }
+            }
+        }
+        stage('Deploy to repository') {
+            when {
+                expression { return !shouldStageArtifacts() && !isSpecificArtifactsUpload() && shouldDeployToRepository() }
+            }
+            steps {
+                script {
+                    runMavenDeploy()
+                }
+            }
+        }
+        stage('Deploy locally') {
+            when {
+                expression { return shouldStageArtifacts() || isSpecificArtifactsUpload() }
+            }
+            steps {
+                script {
+                    runMavenDeploy(true)
+                }
+            }
+        }
+        stage('Upload artifacts to given repository') {
+            when {
+                expression { return isSpecificArtifactsUpload() }
+            }
+            steps {
+                script {
+                    // Deploy to specific repository with credentials
+                    maven.uploadLocalArtifacts(env.MAVEN_REPO_CREDS_ID, getLocalDeploymentFolder(), getMavenRepoZipUrl())
+                }
+            }
+        }
+        stage('Stage artifacts') {
+            when {
+                expression { return shouldStageArtifacts() }
+            }
+            steps {
+                script {
+                    // Stage release artifacts
+                    runMavenStage()
+                }
+            }
+        }
+    }
+    post {
+        cleanup {
+            script {
+                util.cleanNode('docker')
+            }
+        }
+    }
+}
+
+void checkoutRepo() {
+    deleteDir()
+    checkout(githubscm.resolveRepository(getRepoName(), getGitAuthor(), getGitBranch(), false))
+}
+
+boolean isSpecificArtifactsUpload() {
+    return env.MAVEN_DEPLOY_REPOSITORY && env.MAVEN_REPO_CREDS_ID
+}
+
+boolean shouldStageArtifacts() {
+    return !isSpecificArtifactsUpload() && isRelease() && !env.MAVEN_DEPLOY_REPOSITORY
+}
+
+boolean shouldDeployToRepository() {
+    return env.MAVEN_DEPLOY_REPOSITORY || getGitAuthor() == 'kiegroup'
+}
+
+boolean isRelease() {
+    return env.RELEASE ? env.RELEASE.toBoolean() : false
+}
+
+String getRepoName() {
+    return env.REPO_NAME
+}
+
+String getGitAuthor() {
+    return env.GIT_AUTHOR
+}
+
+String getGitBranch() {
+    return params.GIT_BRANCH_NAME
+}
+
+boolean skipTests() {
+    return params.SKIP_TESTS
+}
+
+MavenCommand getMavenCommand(String directory = '') {
+    directory = directory ?: getRepoName()
+    MavenCommand mvnCmd = new MavenCommand(this, ['-fae', '-ntp'])
+                .withSettingsXmlId(env.MAVEN_SETTINGS_CONFIG_FILE_ID)
+                .inDirectory(directory)
+    if (env.MAVEN_DEPENDENCIES_REPOSITORY) {
+        mvnCmd.withDependencyRepositoryInSettings('deps-repo', env.MAVEN_DEPENDENCIES_REPOSITORY)
+    }
+    if(env.DEPLOY_MVN_OPTS) {
+        mvnCmd.withOptions([env.DEPLOY_MVN_OPTS])
+    }
+    return mvnCmd
+}
+
+void runMavenDeploy(boolean localDeployment = false) {
+    mvnCmd = getMavenCommand()
+
+    if(localDeployment) {
+        mvnCmd.withLocalDeployFolder(getLocalDeploymentFolder())
+    } else if (env.MAVEN_DEPLOY_REPOSITORY) {
+        mvnCmd.withDeployRepository(env.MAVEN_DEPLOY_REPOSITORY)
+    }
+
+    mvnCmd.skipTests(skipTests()).run('clean deploy')
+}
+
+String getMavenRepoZipUrl() {
+    return "${env.MAVEN_DEPLOY_REPOSITORY.replaceAll('/content/', '/service/local/').replaceFirst('/*$', '')}/content-compressed"
+}
+
+void runMavenStage() {
+    MavenStagingHelper stagingHelper = getStagingHelper()
+    deployProperties.putAll(stagingHelper.stageLocalArtifacts(env.NEXUS_STAGING_PROFILE_ID, getLocalDeploymentFolder()))
+    stagingHelper.promoteStagingRepository(env.NEXUS_BUILD_PROMOTION_PROFILE_ID)
+}
+
+MavenStagingHelper getStagingHelper() {
+    return new MavenStagingHelper(this, getMavenCommand())
+        .withNexusReleaseUrl(env.NEXUS_RELEASE_URL)
+        .withNexusReleaseRepositoryId(env.NEXUS_RELEASE_REPOSITORY_ID)
+}
+
+String getLocalDeploymentFolder() {
+    return "${env.MAVEN_DEPLOY_LOCAL_DIR}/${getRepoName()}"
+}

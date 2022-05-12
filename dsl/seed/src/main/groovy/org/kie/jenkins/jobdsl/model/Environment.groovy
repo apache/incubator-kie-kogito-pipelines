@@ -17,6 +17,7 @@ class Environment {
 
     String name
     boolean optional
+    boolean cloudEnabled
     Closure isActiveClosure
     Closure getDefaultEnvVarsClosure
 
@@ -32,12 +33,21 @@ class Environment {
         return this.optional
     }
 
+    boolean isCloudEnabled() {
+        return this.cloudEnabled
+    }
+
     boolean isActive(def script) {
         return !this.isOptional() || (this.isActiveClosure ? this.isActiveClosure(script) : true)
     }
 
     Map getDefaultEnvVars(def script) {
-        return this.getDefaultEnvVarsClosure ? this.getDefaultEnvVarsClosure(script) : [:]
+        Map envVars = this.getDefaultEnvVarsClosure ? this.getDefaultEnvVarsClosure(script) : [:]
+        envVars.putAll([
+            JOB_ENVIRONMENT: this.toName(),
+            JOB_ENVIRONMENT_CLOUD_ENABLED: "${this.isCloudEnabled()}",
+        ])
+        return envVars
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
@@ -46,17 +56,24 @@ class Environment {
     public static final Environment DEFAULT = new Environment(
         name: 'DEFAULT',
         optional: false,
+        cloudEnabled: true,
     )
 
     public static final Environment SONARCLOUD = new Environment(
         name: 'SONARCLOUD',
         optional: true,
         isActiveClosure: { script -> Utils.isMainBranch(script) },
+        getDefaultEnvVarsClosure: { script ->
+            [
+                ENABLE_SONARCLOUD: 'true'
+            ]
+        },
     )
 
     public static final Environment NATIVE = new Environment(
         name: 'NATIVE',
         optional: true,
+        cloudEnabled: true,
         isActiveClosure: { script -> Utils.isEnvironmentNativeEnabled(script) },
         getDefaultEnvVarsClosure: { script ->
             [
@@ -69,6 +86,7 @@ class Environment {
     public static final Environment MANDREL = new Environment(
         name: 'MANDREL',
         optional: true,
+        cloudEnabled: true,
         isActiveClosure: { script -> Utils.isEnvironmentMandrelEnabled(script) },
         getDefaultEnvVarsClosure: { script ->
             [
@@ -82,20 +100,31 @@ class Environment {
     public static final Environment QUARKUS_MAIN = new Environment(
         name: 'QUARKUS_MAIN',
         optional: true,
+        // cloudEnabled: true, // Can be activated once we are able to deploy artifacts to specific repository
         isActiveClosure: { script -> Utils.isEnvironmentQuarkusMainEnabled(script) },
-        getDefaultEnvVarsClosure: { script -> [ QUARKUS_BRANCH: 'main' ] }
+        getDefaultEnvVarsClosure: { script -> 
+            [ 
+                QUARKUS_BRANCH: 'main' 
+            ] 
+        }
     )
 
     public static final Environment QUARKUS_BRANCH = new Environment(
         name: 'QUARKUS_BRANCH',
         optional: true,
+        // cloudEnabled: true, // Can be activated once we are able to deploy artifacts to specific repository
         isActiveClosure: { script -> Utils.isEnvironmentQuarkusBranchEnabled(script) },
-        getDefaultEnvVarsClosure: { script -> [ QUARKUS_BRANCH: Utils.getEnvironmentQuarkusBranchVersion(script) ] }
+        getDefaultEnvVarsClosure: { script -> 
+            [ 
+                QUARKUS_BRANCH: Utils.getEnvironmentQuarkusBranchVersion(script) 
+            ] 
+        }
     )
 
     public static final Environment QUARKUS_LTS = new Environment(
         name: 'QUARKUS_LTS',
         optional: true,
+        // cloudEnabled: true, // Can be activated once we are able to deploy artifacts to specific repository
         isActiveClosure: { script -> Utils.isEnvironmentQuarkusLTSEnabled(script) },
         getDefaultEnvVarsClosure: { script -> [ 
             QUARKUS_BRANCH: Utils.getEnvironmentQuarkusLTSVersion(script),
@@ -107,6 +136,7 @@ class Environment {
     public static final Environment KOGITO_BDD = new Environment(
         name: 'KOGITO_BDD',
         optional: true,
+        cloudEnabled: true,
         isActiveClosure: { script -> Utils.isEnvironmentRuntimesBDDEnabled(script) },
     )
 
@@ -143,6 +173,14 @@ class Environment {
 
     static List<Environment> getActiveEnvironments(def script) {
         return getAllRegistered().findAll { environment -> environment.isActive(script) }
+    }
+
+    static List<Environment> getMandatoryActiveEnvironments(def script) {
+        return getActiveEnvironments(script).findAll { !it.isOptional() }
+    }
+
+    static List<Environment> getOptionalActiveEnvironments(def script) {
+        return getActiveEnvironments(script).findAll { it.isOptional() }
     }
 
 }

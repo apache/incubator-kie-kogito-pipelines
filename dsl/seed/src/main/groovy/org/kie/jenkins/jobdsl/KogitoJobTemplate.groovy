@@ -32,12 +32,13 @@ class KogitoJobTemplate {
     *     cron: (optional) For recurring jobs
     *   jenkinsfile: (optional) Which Jenkinsfile to get ? Default is `Jenkinsfile`
     *   env: key/value pairs to set as environement variables
+    *   parametersClosures: Array of closure to add some parameters to the job. In the closure, you can use the different `*Param` methods, like `booleanParam`, `stringParam`, ...
     *
     */
     static def createPipelineJob(def script, Map jobParams = [:]) {
         String jobFolderName = ''
         Map jobFolderEnv = [:]
-        if(jobParams.job.folder) {
+        if (jobParams.job.folder) {
             if (!jobParams.job.folder instanceof Folder) {
                 throw new RuntimeException('Folder is not of type org.kie.jenkins.jobdsl.model.Folder')
             }
@@ -107,6 +108,10 @@ class KogitoJobTemplate {
                 }
             }
 
+            jobParams.parametersClosures.each { paramsClosure ->
+                parameters(paramsClosure)
+            }
+
             if (jobParams.env || jobFolderEnv) {
                 environmentVariables {
                     jobFolderEnv.each {
@@ -117,8 +122,8 @@ class KogitoJobTemplate {
                     }
                 }
             }
-        }
     }
+}
 
     /**
     * Create a PR job
@@ -260,8 +265,8 @@ class KogitoJobTemplate {
     /**
     * Set per repo PR jobs for a repository.
     *
-    * Jobs are defined into the `jobsRepoConfig`. Default job params are retrieved from `defaultParamsGetter`.
-    * If no `defaultParamsGetter` is given (aka null), then the method will call the `KogitoJobUtils.getDefaultJobParams` method to retrieve those.
+    * Jobs are defined into the `jobsRepoConfig`. Default job params are retrieved from `defaultJobParamsGetter`.
+    * If no `defaultJobParamsGetter` is given, then the default one is used, aka KogitoJobUtils.getDefaultJobParams(...).
     * The method will configure the different PR jobs with the given `jobsRepoConfig` and the default params retrieved.
     *
     * See createPRJob(script, jobParams) for the default job params structure
@@ -277,7 +282,7 @@ class KogitoJobTemplate {
     *     jenkinsfile: (optional) where to lookup the jenkinsfile. else it will take the default one
     *   testType: (optional) Name of the tests. Used for the trigger phrase and commitContext. Default is `tests`.
     */
-    static def createPerRepoPRJobs(def script, Folder prFolder, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
+    static def createPerRepoPRJobs(def script, Folder prFolder, Closure jobsRepoConfigGetter, Closure defaultJobParamsGetter = KogitoJobUtils.DEFAULT_PARAMS_GETTER) {
         String testTypeId = prFolder.getConfigValues()?.typeId ?: prFolder.environment.toId()
         String testTypeName = prFolder.getConfigValues()?.typeName ?: prFolder.environment.toId()
         String triggerPhraseTestType = RegexUtils.getRegexMultipleCase(testTypeId)
@@ -287,7 +292,7 @@ class KogitoJobTemplate {
         boolean useBuildChain = jobsRepoConfig.buildchain
 
         return jobsRepoConfig.jobs.collect { jobCfg ->
-            def jobParams = defaultParamsGetter ? defaultParamsGetter() : KogitoJobUtils.getDefaultJobParams(script)
+            def jobParams = defaultJobParamsGetter(script)
             jobParams.job.folder = prFolder
             jobParams.env = jobParams.env ?: [:]
             jobParams.pr = jobParams.pr ?: [:]
@@ -336,13 +341,12 @@ class KogitoJobTemplate {
                 jobParams.pr.checkout_branch = buildChainCheckoutBranch
                 jobParams.git.author = Utils.getSeedAuthor(script)
                 jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository ?: jobParams.git.repository}")
-                jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
+                jobParams.env.put('BUILDCHAIN_TYPE', 'pr')
                 jobParams.env.put('BUILDCHAIN_CONFIG_REPO', Utils.getSeedRepo(script))
                 jobParams.env.put('BUILDCHAIN_CONFIG_AUTHOR', Utils.getSeedAuthor(script))
                 jobParams.env.put('BUILDCHAIN_CONFIG_BRANCH', buildChainCheckoutBranch)
-                jobParams.env.put('NOTIFICATION_JOB_NAME', "(${testTypeId}) - ${jobCfg.repository ?: jobParams.git.repository}")
                 jobParams.git.repository = Utils.getSeedRepo(script)
-                jobParams.jenkinsfile = Utils.getSeedJenkinsfilePath(script, 'Jenkinsfile.buildchain')
+                jobParams.jenkinsfile = Utils.getSeedJenkinsfilePath(script, KogitoConstants.BUILD_CHAIN_JENKINSFILE)
 
                 // Status messages are sent directly by the pipeline as comments
                 jobParams.pr.putAll([
@@ -401,4 +405,5 @@ class KogitoJobTemplate {
         String idStr = id ? id + ' ' : ''
         return "(.*${RegexUtils.getRegexFirstLetterCase('jenkins')},?.*(rerun|run) ${idStr}${testType}.*)"
     }
+
 }

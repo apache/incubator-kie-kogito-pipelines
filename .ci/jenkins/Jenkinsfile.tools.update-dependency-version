@@ -196,7 +196,7 @@ String getRepoName() {
 }
 
 String getNotificationJobName() {
-    return "${NOTIFICATION_JOB_NAME}"
+    return "${env.REPO_NAME}"
 }
 
 List getMavenModules() {

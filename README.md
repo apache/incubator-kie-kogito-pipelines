@@ -58,7 +58,7 @@ In some of the Kogito repositories, you can find native checks. If that is the c
 
 ### Mandrel check
 
-Quarkus and Native checks are also performed against Mandrel builder image (see config `mandrel.builder_image`).
+If the [Mandrel environment](./dsl/seed/config/branch.yaml) is enabled, then Native checks are also performed with given Mandrel builder image.
 
 ### Quarkus check
 

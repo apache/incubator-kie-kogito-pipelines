@@ -1,0 +1,155 @@
+// Promote images
+@Library('jenkins-pipeline-shared-libraries')_
+
+cloudHelper = null
+jobPropsHelper = null
+
+oldImageNameBuilder = { imageName -> 
+    return helper.buildImageName(CLOUD_OLD_PARAM_PREFIX, imageName, '')
+}
+
+newImageNameBuilder = { imageName ->
+    return helper.buildImageName(CLOUD_NEW_PARAM_PREFIX, imageName, '')
+}
+
+IMAGES = []
+
+pipeline {
+    agent {
+        label 'kogito-image-slave && !master'
+    }
+
+    options {
+        timeout(time: 120, unit: 'MINUTES')
+    }
+
+    stages {
+        stage('Initialization') {
+            steps {
+                script {
+                    cloudHelper = load '.ci/jenkins/helper_scripts/cloud.groovy'
+                    jobPropsHelper = load '.ci/jenkins/helper_scripts/job_properties.groovy'
+
+                    clean()
+
+                    if (params.DISPLAY_NAME) {
+                        currentBuild.displayName = params.DISPLAY_NAME
+                    }
+
+                    dir(getRepoName()) {
+                        checkoutRepo()
+                    }
+
+                    // Read image names
+                    if (params.BUILD_IMAGES_JOB_URL) {
+                        jobPropsHelper.readFromJobUrl(params.BUILD_IMAGES_JOB_URL)
+
+                        assert jobPropsHelper.contains('image_names') : 'No `image_names` can be retrieved from properties of the given BUILD_IMAGES_JOB_URL'
+                        IMAGES = jobPropsHelper.retrieve('image_names')
+                    } else if (params.IMAGE_NAMES) {
+                        IMAGES = params.IMAGE_NAMES.trim().split(',').collect { it.trim() }
+                    } else if (env.DEFAULT_IMAGE_NAMES) {
+                        echo 'IMAGES: Use default image names from environment'
+                        IMAGES = env.DEFAULT_IMAGE_NAMES.trim().split(',').collect { it.trim() }
+                    } else if (env.DEFAULT_IMAGE_NAMES_SHELL_SCRIPT) {
+                        echo 'IMAGES: Use default image names shell script from environment'
+                        dir(getRepoName()) {
+                            IMAGES = sh(script: env.DEFAULT_IMAGE_SHELL_SCRIPT, returnStdout: true).trim().split(',').collect { it.trim() }
+                        }
+                    }
+
+                    assert IMAGES : 'No image given to be promoted ! Please verify you gave `BUILD_IMAGES_JOB_URL` or `IMAGE_NAMES` parameter'
+                }
+            }
+        }
+        stage('Pull "old" images') {
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        cloudHelper.pullImages(IMAGES, oldImageNameBuilder)
+                    }
+                }
+            }
+        }
+        stage('Tag images') {
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        cloudHelper.tagImages(IMAGES, oldImageNameBuilder, newImageNameBuilder)
+                        if (isDeployLatestTag()) {
+                            cloudHelper.tagImages(IMAGES, oldImageNameBuilder) { imageName ->
+                                return helper.buildImageName(CLOUD_NEW_PARAM_PREFIX, imageName, 'latest')
+                            }
+                        }
+                        String reducedTag = getReducedTag()
+                        if (reducedTag) {
+                            cloudHelper.tagImages(IMAGES, oldImageNameBuilder) { imageName ->
+                                return helper.buildImageName(CLOUD_NEW_PARAM_PREFIX, imageName, reducedTag)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        stage('Pushing "new" images') {
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        cloudHelper.pushImages(IMAGES, newImageNameBuilder)
+                        
+                        String reducedTag = getReducedTag()
+                        if (reducedTag) {
+                            cloudHelper.pushImages(IMAGES) { imageName ->
+                                return helper.buildImageName(CLOUD_NEW_PARAM_PREFIX, imageName, reducedTag)
+                            }
+                        }
+                        
+                        if (isDeployLatestTag()) {
+                            cloudHelper.pushImages(IMAGES) { imageName ->
+                                return helper.buildImageName(CLOUD_NEW_PARAM_PREFIX, imageName, 'latest')
+                            }
+                        }
+
+                        if (cloudHelper.isQuayRegistry(cloudHelper.getImageRegistry(CLOUD_NEW_PARAM_PREFIX))) {
+                            cloudHelper.makeQuayNewImagesPublic(IMAGES, CLOUD_NEW_PARAM_PREFIX)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        cleanup {
+            clean()
+        }
+    }
+}
+
+void clean() {
+    cleanWs()
+    cloudHelper?.cleanImages()
+}
+
+String getReducedTag() {
+    return cloudHelper.getReducedTag(cloudHelper.getImageTag(CLOUD_NEW_PARAM_PREFIX))
+}
+
+////////////////////////////////////////////////////////////////////////
+// Utils
+////////////////////////////////////////////////////////////////////////
+
+String getRepoName() {
+    return env.REPO_NAME
+}
+
+String getGitBranch() {
+    return params.GIT_BRANCH_NAME
+}
+
+String getGitAuthor() {
+    return env.GIT_AUTHOR
+}
+
+boolean isDeployLatestTag() {
+    return params.DEPLOY_WITH_LATEST_TAG
+}
