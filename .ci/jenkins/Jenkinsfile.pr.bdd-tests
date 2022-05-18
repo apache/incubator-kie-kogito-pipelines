@@ -131,6 +131,7 @@ pipeline {
                     addAuthorBranchParamsIfExist(buildParams, 'kogito-images')
                     addImageBuildParams(buildParams)
                     addExamplesParams(buildParams)
+                    addAppsParams(buildParams)
 
                     buildJob(IMAGES_DEPLOY, buildParams, false)
                 }
@@ -234,6 +235,22 @@ String getOptaPlannerBranch() {
         return "${optaplannerMajorVersion}.${changeTargetSplit[1]}.${changeTargetSplit[2]}"
     }
     return changeTarget
+}
+
+void addAppsParams(List buildParams) {
+    def author = ''
+    def branch = ''
+    if (doesBranchExist('kogito-apps', changeAuthor, changeBranch)) {
+        author = changeAuthor
+        branch = changeBranch
+    } else if (doesBranchExist('kogito-apps', 'kiegroup', changeTarget)) {
+        author = 'kiegroup'
+        branch = changeTarget
+    } else {
+        author = 'kiegroup'
+        branch = 'main'
+    }
+    addStringParam(buildParams, 'APPS_REF', branch)
 }
 
 void addExamplesParams(List buildParams) {
