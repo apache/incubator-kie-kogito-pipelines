@@ -2,7 +2,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 @Library('jenkins-pipeline-shared-libraries')_
 
-// Configuration of the pipeline is done via the `config/main.yaml` file
 pipeline {
     agent {
         label 'kie-rhel8 && !master'

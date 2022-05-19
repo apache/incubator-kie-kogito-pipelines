@@ -40,7 +40,7 @@ class SeedJobUtils {
 
             definition {
                 cps {
-                    script(jenkinsScript.readFileFromWorkspace('jobs/Jenkinsfile.seed.trigger'))
+                    script(jenkinsScript.readFileFromWorkspace('jenkinsfiles/Jenkinsfile.seed.trigger'))
                 }
             }
 

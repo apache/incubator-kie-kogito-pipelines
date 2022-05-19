@@ -32,7 +32,7 @@ class TestUtil {
     }
 
     static Map readBranchConfig() {
-        Map config = new Yaml().load(('config/branch.yaml' as File).text)
+        Map config = new Yaml().load(('./branch_config.yaml' as File).text)
 
         Map props = [:]
         fillEnvProperties(props, '', config)

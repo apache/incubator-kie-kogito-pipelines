@@ -45,22 +45,30 @@ class KogitoJobUtils {
         ]
     }
 
-    static def getBasicJobParams(def script, String jobName, Folder jobFolder, String jenkinsfileName, String jobDescription = '', Closure defaultJobParamsGetter = null) {
+    static def getBasicJobParams(def script, String jobName, Folder jobFolder, String jenkinsfilePath, String jobDescription = '', Closure defaultJobParamsGetter = null) {
         def jobParams = defaultJobParamsGetter ? defaultJobParamsGetter() : getDefaultJobParams(script)
         jobParams.job.name = jobName
         jobParams.job.folder = jobFolder
-        jobParams.jenkinsfile = jenkinsfileName
+        jobParams.jenkinsfile = jenkinsfilePath
         jobParams.job.description = jobDescription ?: jobParams.job.description
         return jobParams
     }
 
+    /**
+    * Seed job params are used for `common` jenkinsfiles which are taken from the seed
+    **/
+    static def getSeedJobParams(def script, String jobName, Folder jobFolder, String jenkinsfileName, String jobDescription = '') {
+        def jobParams = getBasicJobParams(script, jobName, jobFolder, Utils.getSeedJenkinsfilePath(script, jenkinsfileName), jobDescription) {
+            return getDefaultJobParams(script, Utils.getSeedRepo(script))
+        }
+        jobParams.git.author = Utils.getSeedAuthor(script)
+        jobParams.git.branch = Utils.getSeedBranch(script)
+        return jobParams
+    }
+
     static def createVersionUpdateToolsJob(def script, String repository, String dependencyName, def mavenUpdate = [:], def gradleUpdate = [:]) {
-        def jobParams = getBasicJobParams(script, "update-${dependencyName.toLowerCase()}-${repository}", Folder.TOOLS,
-                                                Utils.getPipelinesJenkinsfilePath(script, 'Jenkinsfile.tools.update-dependency-version'), "Update ${dependencyName} version for ${repository}") {
-                                                    return getDefaultJobParams(script, KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
-                                                }
+        def jobParams = getSeedJobParams(script, "update-${dependencyName.toLowerCase()}-${repository}", Folder.TOOLS, 'Jenkinsfile.tools.update-dependency-version', "Update ${dependencyName} version for ${repository}")
         // Setup correct checkout branch for pipelines
-        jobParams.git.branch = VersionUtils.getProjectTargetBranch(KogitoConstants.KOGITO_PIPELINES_REPOSITORY, jobParams.git.branch, repository)
         jobParams.env.putAll([
             REPO_NAME: "${repository}",
             JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),

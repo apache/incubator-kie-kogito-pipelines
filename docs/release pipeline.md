@@ -64,14 +64,14 @@ The release of Kogito artifacts/images is done in 2 steps:
 
 ### Create a release branch
 
-The creation of a release branch should be done via the **[Prepare Release](../Jenkinsfile.release.prepare)** job.  
+The creation of a release branch should be done via the **[Prepare Release](../dsl/seed/jenkinsfiles/Jenkinsfile.release.prepare)** job.  
 
 This job prepares the GH/Jenkins environment for a release.  
 It will create the different release branches for the whole projects as well as updating the seed configuration to be able generate the new Jenkins job.
 
 #### How to create a new release branch ?
 
-You just need to call the **[Prepare Release](../Jenkinsfile.release.prepare)** job with the correct Kogito and Optaplanner versions.
+You just need to call the **[Prepare Release](../dsl/seed/jenkinsfiles/Jenkinsfile.release.prepare)** job with the correct Kogito and Optaplanner versions.
 
 After that, if the seed job (`0-seed-job`, at the root of the Jenkins folder) has not been launched automatically, you should start it.
 
@@ -81,7 +81,7 @@ Once the seed job has run, you should be able to see the new release branch in t
 
 In case a release branch is no more maintained, you may want to delete the corresponding jobs.
 
-In that case, you just need to go to the [main branch configuration](../dsl/seed/config/main.yaml) and remove the corresponding branch.  
+In that case, you just need to go to the [main branch configuration](../dsl/config/main.yaml) and remove the corresponding branch.  
 Jobs should be automatically deleted on push of the change.
 
 ### Performing a release

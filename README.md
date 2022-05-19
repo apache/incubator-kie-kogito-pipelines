@@ -27,14 +27,15 @@ Apart from this repository, pipelines are also concerning those repositories:
 
 * [drools](https://github.com/kiegroup/drools)
 * [kogito-runtimes](https://github.com/kiegroup/kogito-runtimes)
-* [optaplanner](https://github.com/kiegroup/optaplanner)
 * [kogito-apps](https://github.com/kiegroup/kogito-apps)
 * [kogito-examples](https://github.com/kiegroup/kogito-examples)
 * [kogito-images](https://github.com/kiegroup/kogito-images)
 * [kogito-operator](https://github.com/kiegroup/kogito-operator)
+* [optaplanner](https://github.com/kiegroup/optaplanner)
 * [optaweb-employee-rostering](https://github.com/kiegroup/optaweb-employee-rostering)
 * [optaweb-vehicle-routing](https://github.com/kiegroup/optaweb-vehicle-routing)
 * [optaplanner-quickstarts](https://github.com/kiegroup/optaplanner-quickstarts)
+* [kie-tools](https://github.com/kiegroup/kie-tools)
 
 # The different Kogito pipelines
 
@@ -59,13 +60,13 @@ This is a set of cleanup utils jobs.
 
 In some of the Kogito repositories, you can find native checks. If that is the case, the pipeline can be found in `.ci/jenkins/Jenkinsfile.native`.
 
-### Quarkus check
-
-A nightly check against Quarkus is done every night. Pipeline can be found in https://github.com/kiegroup/kogito-runtimes/blob/main/.ci/jenkins/Jenkinsfile.quarkus.
-
 ### Mandrel check
 
 Quarkus and Native checks are also performed against Mandrel builder image (see config `mandrel.builder_image`).
+
+### Quarkus check
+
+A nightly check against Quarkus is done every night. Pipeline can be found in https://github.com/kiegroup/kogito-runtimes/blob/main/.ci/jenkins/Jenkinsfile.quarkus.
 
 ### PR checks
 
@@ -93,10 +94,12 @@ Jenkins PR checks are of 3 different types:
   Test all native parts of the repository
 * Mandrel build&test (optional, can be launched with comment `jenkins run mandrel`)  
   Test against Mandrel builder image
-* Quarkus main build&test (optional, can be launched with comment `jenkins run quarkus main`)  
+* Quarkus main build&test (optional, can be launched with comment `jenkins run quarkus-main`)  
   Test against quarkus main version
-* Quarkus branch build&test (optional, can be launched with comment `jenkins run quarkus branch`)  
+* Quarkus branch build&test (optional, can be launched with comment `jenkins run quarkus-branch`)  
   Test against quarkus branch, corresponding to current used Quarkus released version
+* Quarkus lts build&test (optional, can be launched with comment `jenkins run quarkus-lts`)  
+  Test against quarkus branch, corresponding to current used Quarkus LTS version
 
 #### GitHub Action checks
 

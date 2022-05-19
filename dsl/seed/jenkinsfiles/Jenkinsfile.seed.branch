@@ -6,8 +6,9 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 @Library('jenkins-pipeline-shared-libraries')_
 
-util = null
+scriptUtils = null
 all_repos = []
+branchConfig = [:]
 
 TRIGGER_REPOSITORY_JOB_DSL_SCRIPT = '''
 import org.kie.jenkins.jobdsl.SeedJobUtils
@@ -52,9 +53,9 @@ pipeline {
                 script {
                     checkout scm
 
-                    util = load 'dsl/seed/jobs/scripts/util.groovy'
+                    scriptUtils = load 'dsl/seed/jenkinsfiles/scripts/utils.groovy'
 
-                    all_repos = util.readBranchConfig().repositories.collect { it.name }
+                    all_repos = readBranchConfig().repositories.collect { it.name }
                 }
             }
         }
@@ -80,9 +81,13 @@ pipeline {
             steps {
                 script {
                     if (!params.SKIP_TESTS) {
+                        String branchConfigPath = "${WORKSPACE}/${checkoutBranchConfig()}/${env.SEED_CONFIG_FILE_PATH}"
                         dir("${SEED_FOLDER}") {
                             try {
-                                sh './gradlew clean test'
+                                sh """
+                                    cp ${branchConfigPath} ./branch_config.yaml
+                                    ./gradlew clean test
+                                """
                             } finally {
                                 junit 'build/test-results/**/*.xml'
                                 archiveArtifacts 'build/reports/**'
@@ -102,11 +107,14 @@ pipeline {
                         def envProps = getRepoConfigAsEnvProperties(repository)
                         envProps += [
                             GIT_MAIN_BRANCH: getMainBranch(repository),
-                            REPO_NAME: "${repository}"
+                            REPO_NAME: "${repository}",
+                            SEED_REPO: "${SEED_REPO}",
+                            SEED_AUTHOR: "${SEED_AUTHOR}",
+                            SEED_BRANCH: "${SEED_BRANCH}",
                         ]
                         // Add other repos `jenkins_config_path` var (useful if multijob PR checks for example)
                         envProps += all_repos.collectEntries {
-                            [ (util.generateEnvKey(it, 'jenkins_config_path')): getRepoConfig(it).git.jenkins_config_path]
+                            [ (generateEnvKey(it, 'jenkins_config_path')): getRepoConfig(it).git.jenkins_config_path]
                         }
 
                         println "[INFO] Generate jobs for branch ${GENERATION_BRANCH} and repo ${repository}"
@@ -172,20 +180,99 @@ String normalizeRepositoryJobsFile(String repository) {
 }
 
 boolean getMainBranch(String repository) {
-    return util.getMainBranch(readJSON(text: "${MAIN_BRANCHES}"), repository)
+    return scriptUtils.getMainBranch(readJSON(text: "${MAIN_BRANCHES}"), repository)
 }
 
-def getRepoConfig(String repoName) {
-    def cfg = util.getRepoConfig(repoName, "${GENERATION_BRANCH}")
+def readBranchConfig() {
+    assert env.SEED_CONFIG_FILE_PATH : 'Missing main seed config file Path into the environment. Please check the job configuration.'
+    if(!branchConfig) {
+        dir(checkoutBranchConfig()) {
+            branchConfig = readYaml(file: "${env.SEED_CONFIG_FILE_PATH}")
+            if (scriptUtils.isDebug()) {
+                println '[DEBUG] Branch config:'
+                println "[DEBUG] ${branchConfig}"
+            }
+        } 
+    }
+    return branchConfig
+}
 
-    if (util.isDebug()) {
-        println '[DEBUG] Modified repo config:'
+String checkoutBranchConfig() {
+    assert env.SEED_CONFIG_FILE_GIT_REPOSITORY : 'Missing main seed config file Git Repository into the environment. Please check the job configuration.'
+    assert env.SEED_CONFIG_FILE_GIT_AUTHOR_NAME : 'Missing main seed config file Git Author Name into the environment. Please check the job configuration.'
+    assert env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID : 'Missing main seed config file Git Author Credentials ID into the environment. Please check the job configuration.'
+    assert env.SEED_CONFIG_FILE_GIT_BRANCH : 'Missing main seed config file Git Branch into the environment. Please check the job configuration.'
+    
+    String dirName = "seed-${env.SEED_CONFIG_FILE_GIT_REPOSITORY}"
+    dir(dirName) {
+        deleteDir()
+        checkout(githubscm.resolveRepository(env.SEED_CONFIG_FILE_GIT_REPOSITORY, env.SEED_CONFIG_FILE_GIT_AUTHOR_NAME, env.SEED_CONFIG_FILE_GIT_BRANCH, false, env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID))
+    }
+    return dirName
+}
+
+def getRepoConfig(String repository, String generationBranch = "${GENERATION_BRANCH}") {
+    def branchConfig = readBranchConfig()
+    def repoConfig = branchConfig.repositories.find { it.name == repository }
+
+    def cfg = scriptUtils.deepCopyObject(branchConfig)
+    cfg.remove('repositories')
+
+    // In case repository is disabled
+    cfg.disabled = repoConfig.disabled ?: false
+
+    cfg.git.branch = repoConfig.branch ?: generationBranch
+    cfg.git.jenkins_config_path = repoConfig.jenkins_config_path ?: cfg.git.jenkins_config_path
+
+    if (repoConfig.author) {
+        cfg.git.author.name = repoConfig.author.name ?: cfg.git.author.name
+        cfg.git.author.credentials_id = repoConfig.author.credentials_id ?: cfg.git.author.credentials_id
+        cfg.git.author.token_credentials_id = repoConfig.author.credentials_id ?: cfg.git.author.token_credentials_id
+    }
+    if (repoConfig.bot_author) {
+        cfg.git.bot_author.name = repoConfig.bot_author.name ?: cfg.git.bot_author.name
+        cfg.git.bot_author.credentials_id = repoConfig.bot_author.credentials_id ?: cfg.git.bot_author.credentials_id
+    }
+    if (scriptUtils.isDebug()) {
+        println '[DEBUG] Repo config:'
         println "[DEBUG] ${cfg}"
     }
-
     return cfg
 }
 
 def getRepoConfigAsEnvProperties(String repoName) {
-    return util.convertConfigToEnvProperties(getRepoConfig(repoName))
+    return convertConfigToEnvProperties(getRepoConfig(repoName))
+}
+
+Map convertConfigToEnvProperties(Map propsMap, String envKeyPrefix = '') {
+    Map envProperties = [:]
+    fillEnvProperties(envProperties, envKeyPrefix, propsMap)
+    if (scriptUtils.isDebug()) {
+        println '[DEBUG] Environment properties:'
+        envProperties.each {
+            println "[DEBUG] ${it.key} = ${it.value}"
+        }
+    }
+    return envProperties
+}
+
+void fillEnvProperties(Map envProperties, String envKeyPrefix, Map propsMap) {
+    propsMap.each { it ->
+        String newKey = generateEnvKey(envKeyPrefix, it.key)
+        def value = it.value
+        if (scriptUtils.isDebug()) {
+            println "[DEBUG] Setting key ${newKey} and value ${value}"
+        }
+        if (value instanceof Map) {
+            fillEnvProperties(envProperties, newKey, value as Map)
+        } else if (value instanceof List) {
+            envProperties.put(newKey, (value as List).join(','))
+        } else {
+            envProperties.put(newKey, value)
+        }
+    }
+}
+
+String generateEnvKey(String envKeyPrefix, String key) {
+    return (envKeyPrefix ? "${envKeyPrefix}_${key}" : key).toUpperCase()
 }
