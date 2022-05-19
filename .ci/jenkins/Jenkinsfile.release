@@ -178,8 +178,13 @@ pipeline {
                     }
                     setArtifactsStaged()
 
-                    String jobUrl = getJobUrl(EXAMPLES_DEPLOY)
-                    def deployProps = jobUrl ? readPropertiesFromUrl(jobUrl, 'deployment.properties') : [:]
+                    def deployProps = [:]
+                    if(getJobUrl(EXAMPLES_DEPLOY)) {
+                        deployProps.putAll(readPropertiesFromUrl(getJobUrl(EXAMPLES_DEPLOY), 'deployment.properties'))
+                    }
+                    if(getJobUrl(APPS_DEPLOY)) {
+                        deployProps.putAll(readPropertiesFromUrl(getJobUrl(APPS_DEPLOY), 'deployment.properties'))
+                    }
 
                     env.EXAMPLES_URI = params.EXAMPLES_URI ?: (getReleaseProperty('examples.uri') ?: (deployProps['kogito-examples.pr.source.uri'] ?: "https://github.com/${getGitAuthor()}/kogito-examples"))
                     env.EXAMPLES_REF = params.EXAMPLES_REF ?: (getReleaseProperty('examples.ref') ?: (deployProps['kogito-examples.pr.source.ref'] ?: util.getReleaseBranchFromVersion(getKogitoArtifactsVersion())))
