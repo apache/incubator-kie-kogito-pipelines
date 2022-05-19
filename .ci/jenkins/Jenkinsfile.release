@@ -171,14 +171,12 @@ pipeline {
         }
 
         stage('Artifacts\' staging finalization') {
-            when {
-                expression { !areArtifactsStaged() }
-            }
             steps {
                 script {
-                    if (isArtifactsDeploy()) {
+                    if (isArtifactsDeploy() && !areArtifactsStaged()) {
                         sendNotification("All artifacts have been staged. You can find them here: ${getStagingRepository()}")
                     }
+                    setArtifactsStaged()
 
                     String jobUrl = getJobUrl(EXAMPLES_DEPLOY)
                     def deployProps = jobUrl ? readPropertiesFromUrl(jobUrl, 'deployment.properties') : [:]
@@ -194,8 +192,6 @@ pipeline {
                     setReleasePropertyIfneeded('examples.uri', env.EXAMPLES_URI)
                     setReleasePropertyIfneeded('examples.ref', env.EXAMPLES_REF)
                     setReleasePropertyIfneeded('apps.ref', env.APPS_REF)
-
-                    setArtifactsStaged()
                 }
             }
         }
