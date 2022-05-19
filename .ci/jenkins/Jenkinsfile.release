@@ -185,12 +185,15 @@ pipeline {
 
                     env.EXAMPLES_URI = params.EXAMPLES_URI ?: (getReleaseProperty('examples.uri') ?: (deployProps['kogito-examples.pr.source.uri'] ?: "https://github.com/${getGitAuthor()}/kogito-examples"))
                     env.EXAMPLES_REF = params.EXAMPLES_REF ?: (getReleaseProperty('examples.ref') ?: (deployProps['kogito-examples.pr.source.ref'] ?: util.getReleaseBranchFromVersion(getKogitoArtifactsVersion())))
+                    env.APPS_REF = params.APPS_REF ?: (getReleaseProperty('apps.ref') ?: (deployProps['kogito-apps.pr.source.ref'] ?: util.getReleaseBranchFromVersion(getKogitoArtifactsVersion())))
 
                     echo "Got examples uri ${env.EXAMPLES_URI}"
                     echo "Got examples ref ${env.EXAMPLES_REF}"
+                    echo "Got apps ref ${env.APPS_REF}"
 
                     setReleasePropertyIfneeded('examples.uri', env.EXAMPLES_URI)
                     setReleasePropertyIfneeded('examples.ref', env.EXAMPLES_REF)
+                    setReleasePropertyIfneeded('apps.ref', env.APPS_REF)
 
                     setArtifactsStaged()
                 }
@@ -206,6 +209,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
                     addStringParam(buildParams, 'KOGITO_ARTIFACTS_VERSION', getKogitoArtifactsVersion())
                     addImageBuildParams(buildParams, getKogitoImagesTempTag())
+                    addAppsParam(buildParams)
                     addSkipTestsParam(buildParams)
                     addExamplesParam(buildParams)
 
@@ -630,6 +634,10 @@ void addSkipTestsParam(buildParams) {
 
 void addSkipIntegrationTestsParam(buildParams) {
     addBooleanParam(buildParams, 'SKIP_INTEGRATION_TESTS', true)
+}
+
+void addAppsParam(buildParams) {
+    addStringParam(buildParams, 'APPS_REF', env.APPS_REF)
 }
 
 void addExamplesParam(buildParams) {
