@@ -15,7 +15,7 @@ native_build = env.NATIVE ? env.NATIVE.toBoolean() : false
 native_builder_image = env.NATIVE_BUILDER_IMAGE ?: ''
 
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
-buildChainDefinitionFile = env.QUARKUS_BRANCH ? 'pull-request-quarkus-config.yaml' : 'pull-request-config.yaml'
+buildChainDefinitionFile = env.QUARKUS_BRANCH ? 'pull-request-config-quarkus.yaml' : 'pull-request-config.yaml'
 buildChainAction = isFDB() ? 'fd' : prType
 buildChainAdditionalArguments = buildChainProject ? "-sp=${buildChainProject}" : ''
 

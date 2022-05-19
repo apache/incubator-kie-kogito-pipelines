@@ -15,7 +15,8 @@ setupCleanOldNightlyImagesToolsJob()
 setupUpdateQuarkusToolsJob()
 
 // Nightly
-setupNightlyJob()
+setupKogitoNightlyJob()
+setupOptaPlannerNightlyJob()
 
 // Release
 setupReleaseJob()
@@ -86,8 +87,8 @@ void setupCreateIssueToolsJob() {
     }
 }
 
-void setupNightlyJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-nightly', Folder.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly", 'Kogito Nightly')
+void setupKogitoNightlyJob() {
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-nightly', Folder.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly.kogito", 'Kogito Nightly')
     jobParams.triggers = [cron : '@midnight']
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
@@ -113,6 +114,25 @@ void setupNightlyJob() {
             booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
 
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
+        }
+    }
+}
+
+void setupOptaPlannerNightlyJob() {
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'optaplanner-nightly', Folder.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly.optaplanner", 'Optaplanner Nightly')
+    jobParams.triggers = [cron : '@midnight']
+    jobParams.env.putAll([
+        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+
+        GIT_BRANCH_NAME: "${GIT_BRANCH}",
+        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
+
+        MAVEN_SETTINGS_CONFIG_FILE_ID: "${MAVEN_SETTINGS_FILE_ID}",
+        ARTIFACTS_REPOSITORY: "${MAVEN_ARTIFACTS_REPOSITORY}",
+    ])
+    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
+        parameters {
+            booleanParam('SKIP_TESTS', false, 'Skip all tests')
         }
     }
 }

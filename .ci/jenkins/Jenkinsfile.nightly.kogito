@@ -4,7 +4,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 // Deploy jobs
 DROOLS_DEPLOY = 'drools-deploy'
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
-OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
 APPS_DEPLOY = 'kogito-apps-deploy'
 EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
@@ -80,39 +79,6 @@ pipeline {
             post {
                 failure {
                     addFailedStage(DROOLS_DEPLOY)
-                }
-            }
-        }
-
-        stage('Build & Deploy OptaPlanner') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    String optaplannerBranch = getBuildBranch()
-                    String [] buildBranchSplit = optaplannerBranch.split("\\.")
-                    if (buildBranchSplit.length == 3) {
-                        /* The OptaPlanner major version is shifted by 7 from the Kogito major version:
-                           Kogito 1.x.y -> OptaPlanner 8.x.y. */
-
-                        int majorVersionShift = 7
-                        Integer optaplannerMajorVersion = Integer.parseInt(buildBranchSplit[0]) + majorVersionShift
-                        optaplannerBranch = "${optaplannerMajorVersion}.${buildBranchSplit[1]}.${buildBranchSplit[2]}"
-                    }
-
-                    def buildParams = getDefaultBuildParams(optaplannerBranch)
-                    addSkipTestsParam(buildParams)
-                    addSkipIntegrationTestsParam(buildParams)
-                    def quickstartsBranch = optaplannerBranch == 'main' ? 'development' : optaplannerBranch
-                    addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', quickstartsBranch)
-
-                    buildJob(OPTAPLANNER_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(OPTAPLANNER_DEPLOY)
                 }
             }
         }

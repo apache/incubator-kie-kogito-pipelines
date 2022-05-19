@@ -110,6 +110,14 @@ class Environment {
         isActiveClosure: { script -> Utils.isEnvironmentRuntimesBDDEnabled(script) },
     )
 
+    // Ecosystem env should only be executed in main branch
+    // This makes sure all projects of Kogito ecosystem (aka Drools, Kogito, Optaplanner) are in sync
+    public static final Environment ECOSYSTEM = new Environment(
+        name: 'ECOSYSTEM',
+        optional: true,
+        isActiveClosure: { script -> Utils.isMainBranch(script) },
+    )
+
     private static final Set<Environment> ENVIRONMENTS = [
         DEFAULT,
         SONARCLOUD,

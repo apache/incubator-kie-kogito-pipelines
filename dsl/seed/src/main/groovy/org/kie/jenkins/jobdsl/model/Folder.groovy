@@ -128,6 +128,13 @@ class Folder {
         environment: Environment.QUARKUS_LTS,
     )
 
+    // TEMPORARY FIX for Optaplanner getting out of Kogito train
+    public static final Folder NIGHTLY_ECOSYSTEM = new Folder(
+        jobType: JobType.NIGHTLY,
+        environment: Environment.ECOSYSTEM,
+        disableAutoGeneration: true
+    )
+
     public static final Folder PULLREQUEST = new Folder(
         name: 'PULLREQUEST',
         jobType: JobType.PULLREQUEST,

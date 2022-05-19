@@ -42,7 +42,7 @@ Apart from this repository, pipelines are also concerning those repositories:
 
 Kogito has 2 main pipelines:
 
-* [Nightly pipeline](./.ci/jenkins/Jenkinsfile.nightly)  
+* [Nightly pipeline](./.ci/jenkins/Jenkinsfile.nightly.kogito)  
   is a multibranch pipeline which is run daily on each active branch
 * [Release pipeline](./.ci/jenkins/Jenkinsfile.release)  
   is a on-demand single pipeline job
