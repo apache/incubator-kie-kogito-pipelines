@@ -250,6 +250,7 @@ void addAppsParams(List buildParams) {
         author = 'kiegroup'
         branch = 'main'
     }
+    addStringParam(buildParams, 'APPS_URI', "https://github.com/${author}/kogito-apps")
     addStringParam(buildParams, 'APPS_REF', branch)
 }
 

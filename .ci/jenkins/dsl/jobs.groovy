@@ -146,6 +146,7 @@ void setupReleaseJob() {
             stringParam('KOGITO_OPERATOR_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
             booleanParam('DEPLOY_AS_LATEST', false, 'Given project version is considered the latest version')
 
+            stringParam('APPS_URI', '', 'Override default. Git uri to the kogito-apps repository to use for building images.')
             stringParam('APPS_REF', '', 'Override default. Git reference (branch/tag) to the kogito-apps repository to use for building images.')
 
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
