@@ -15,7 +15,7 @@ String getSeedBranch() {
 
 SeedJobUtils.createSeedJobTrigger(
     this,
-    '0-seed-job-trigger',
+    'z-seed-trigger-job',
     KogitoConstants.KOGITO_PIPELINES_REPOSITORY,
     getSeedAuthor(),
     getSeedBranch(),

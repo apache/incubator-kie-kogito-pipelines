@@ -10,11 +10,8 @@ pipeline {
 
     options {
         timestamps()
+        timeout(time: 20, unit: 'MINUTES')
     }
-
-    // parameters {
-    // See ./jobs/seed_job.groovy
-    // }
 
     stages {
         stage('Trigger seed job if needed') {
@@ -28,6 +25,7 @@ pipeline {
 
                     if (params.FORCE_REBUILD ?: util.arePathsModified(listenToModifiedPaths)) {
                         echo "Build ${JOB_RELATIVE_PATH_TO_TRIGGER}"
+                        currentBuild.displayName = '(Re)Build jobs'
                         build(job: "${JOB_RELATIVE_PATH_TO_TRIGGER}", parameters: [], wait: false)
                     } else {
                         echo "No force rebuild or modified paths ${listenToModifiedPaths}"

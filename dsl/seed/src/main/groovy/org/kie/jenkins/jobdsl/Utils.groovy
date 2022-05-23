@@ -34,16 +34,16 @@ class Utils {
         return getBindingValue(script, 'ENVIRONMENT_QUARKUS_BRANCH_ENABLED').toBoolean()
     }
 
-    static String getEnvironmentQuarkusBranchName(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_BRANCH_NAME')
+    static String getEnvironmentQuarkusBranchVersion(def script) {
+        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_BRANCH_VERSION')
     }
 
     static boolean isEnvironmentQuarkusLTSEnabled(def script) {
         return getBindingValue(script, 'ENVIRONMENT_QUARKUS_LTS_ENABLED').toBoolean()
     }
 
-    static String getEnvironmentQuarkusLTSName(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_LTS_NAME')
+    static String getEnvironmentQuarkusLTSVersion(def script) {
+        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_LTS_VERSION')
     }
 
     static boolean isEnvironmentNativeEnabled(def script) {
@@ -71,8 +71,8 @@ class Utils {
     }
 
     static boolean isMainBranch(def script) {
-        boolean result = getGitBranch(script) == getGitMainBranch(script)
-        // script.println("Branch=${getGitBranch(script)}. Main Branch=${getGitMainBranch(script)}. Is main branch ? => ${result}")
+        boolean result = getGenerationBranch(script) == getGitMainBranch(script)
+        // script.println("Branch=${getGenerationBranch(script)}. Main Branch=${getGitMainBranch(script)}. Is main branch ? => ${result}")
         return result
     }
 

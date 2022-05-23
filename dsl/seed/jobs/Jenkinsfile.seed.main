@@ -16,6 +16,7 @@ pipeline {
 
     options {
         timestamps()
+        timeout(time: 20, unit: 'MINUTES')
     }
 
     tools {
@@ -23,7 +24,7 @@ pipeline {
     }
 
     // parameters {
-    // See ./jobs/seed_job.groovy
+    // See ./seed_job_main.groovy
     // }
 
     stages {
@@ -46,8 +47,11 @@ pipeline {
                 script {
                     readSeedConfig().git.branches.each { branch ->
                         def envProperties = getGenerationEnvProperties(branch)
+                        envProperties.putAll([
+                            JOB_NAME: getBranchSeedJobName(),
+                        ])
                         dir(util.getDslSeedFolderAbsolutePath()) {
-                            println "[INFO] Generate branch seed job for branch ${branch}"
+                            println "[INFO] Generate branch seed job for branch ${branch} with properties ${envProperties}"
                             jobDsl(targets: 'jobs/seed_job_branch.groovy',
                                     sandbox: false,
                                     ignoreExisting: false,
@@ -75,7 +79,7 @@ pipeline {
                         SEED_BRANCH: "${SEED_BRANCH}",
                     ])
                     dir(util.getDslSeedFolderAbsolutePath()) {
-                        println '[INFO] Generate main seed job'
+                        println "[INFO] Generate main seed job with properties ${envProperties}"
                         jobDsl(targets: 'jobs/seed_job_main.groovy',
                                 sandbox: false,
                                 ignoreExisting: false,
@@ -113,7 +117,7 @@ pipeline {
 }
 
 String getBranchSeedJobName() {
-    return 'z-seed-job'
+    return '0-seed-job'
 }
 
 void launchBranchSeedJob(String branch) {
@@ -141,7 +145,6 @@ def getGenerationEnvProperties(String envBranch) {
     String mainBranch = getPipelinesMainBranch()
     def envProperties = util.convertConfigToEnvProperties(getPipelinesRepoConfig(envBranch))
     envProperties.putAll([
-        JOB_NAME: getBranchSeedJobName(),
         GENERATION_BRANCH: envBranch,
         GIT_MAIN_BRANCH: mainBranch,
         MAIN_BRANCHES: writeJSON(json: seedConfig.git.main_branch, returnText: true),
