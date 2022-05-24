@@ -105,7 +105,7 @@ pipeline {
             steps {
                 script {
                     String branchConfigFile = 'dsl/seed/config/branch.yaml'
-                    
+
                     dir('pipelines-branch') {
                         deleteDir()
                         checkout(githubscm.resolveRepository(PIPELINE_REPO, getGitAuthor(), getKogitoReleaseBranch(), false))
@@ -121,6 +121,11 @@ pipeline {
 
                         def branchConfig = readYaml file: "${branchConfigFile}"
                         branchConfig.repositories = repositories
+                        branchConfig.productized_branch = params.PRODUCTIZED_BRANCH
+
+                        // Disable some environments when branching as they make no sense by default
+                        branchConfig.environment.quarkus.main.enabled = false
+                        branchConfig.environment.quarkus.lts.enabled = false
 
                         echo "Write dsl branch_config => ${branchConfig}"
                         sh "rm -f ${branchConfigFile}"
