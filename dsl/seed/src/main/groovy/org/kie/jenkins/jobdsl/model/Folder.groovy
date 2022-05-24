@@ -28,6 +28,10 @@ enum Folder {
         jobType: JobType.NIGHTLY,
         environment: Environment.QUARKUS_BRANCH,
     ),
+    NIGHTLY_QUARKUS_LTS(
+        jobType: JobType.NIGHTLY,
+        environment: Environment.QUARKUS_LTS,
+    ),
 
     PULLREQUEST(
         jobType: JobType.PULLREQUEST,
@@ -52,6 +56,10 @@ enum Folder {
     PULLREQUEST_QUARKUS_BRANCH(
         jobType: JobType.PULLREQUEST,
         environment: Environment.QUARKUS_BRANCH,
+    ),
+    PULLREQUEST_QUARKUS_LTS(
+        jobType: JobType.PULLREQUEST,
+        environment: Environment.QUARKUS_LTS,
     ),
     PULLREQUEST_RUNTIMES_BDD(
         jobType: JobType.PULLREQUEST,
