@@ -171,28 +171,35 @@ pipeline {
         }
 
         stage('Artifacts\' staging finalization') {
-            when {
-                expression { !areArtifactsStaged() }
-            }
             steps {
                 script {
-                    if (isArtifactsDeploy()) {
+                    if (isArtifactsDeploy() && !areArtifactsStaged()) {
                         sendNotification("All artifacts have been staged. You can find them here: ${getStagingRepository()}")
                     }
+                    setArtifactsStaged()
 
-                    String jobUrl = getJobUrl(EXAMPLES_DEPLOY)
-                    def deployProps = jobUrl ? readPropertiesFromUrl(jobUrl, 'deployment.properties') : [:]
+                    def deployProps = [:]
+                    if(getJobUrl(EXAMPLES_DEPLOY)) {
+                        deployProps.putAll(readPropertiesFromUrl(getJobUrl(EXAMPLES_DEPLOY), 'deployment.properties'))
+                    }
+                    if(getJobUrl(APPS_DEPLOY)) {
+                        deployProps.putAll(readPropertiesFromUrl(getJobUrl(APPS_DEPLOY), 'deployment.properties'))
+                    }
 
                     env.EXAMPLES_URI = params.EXAMPLES_URI ?: (getReleaseProperty('examples.uri') ?: (deployProps['kogito-examples.pr.source.uri'] ?: "https://github.com/${getGitAuthor()}/kogito-examples"))
                     env.EXAMPLES_REF = params.EXAMPLES_REF ?: (getReleaseProperty('examples.ref') ?: (deployProps['kogito-examples.pr.source.ref'] ?: util.getReleaseBranchFromVersion(getKogitoArtifactsVersion())))
+                    env.APPS_URI = params.APPS_URI ?: (getReleaseProperty('apps.uri') ?: (deployProps['kogito-apps.pr.source.uri'] ?: "https://github.com/${getGitAuthor()}/kogito-apps"))
+                    env.APPS_REF = params.APPS_REF ?: (getReleaseProperty('apps.ref') ?: (deployProps['kogito-apps.pr.source.ref'] ?: util.getReleaseBranchFromVersion(getKogitoArtifactsVersion())))
 
                     echo "Got examples uri ${env.EXAMPLES_URI}"
                     echo "Got examples ref ${env.EXAMPLES_REF}"
+                    echo "Got apps uri ${env.APPS_URI}"
+                    echo "Got apps ref ${env.APPS_REF}"
 
                     setReleasePropertyIfneeded('examples.uri', env.EXAMPLES_URI)
                     setReleasePropertyIfneeded('examples.ref', env.EXAMPLES_REF)
-
-                    setArtifactsStaged()
+                    setReleasePropertyIfneeded('apps.uri', env.APPS_URI)
+                    setReleasePropertyIfneeded('apps.ref', env.APPS_REF)
                 }
             }
         }
@@ -206,6 +213,7 @@ pipeline {
                     def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
                     addStringParam(buildParams, 'KOGITO_ARTIFACTS_VERSION', getKogitoArtifactsVersion())
                     addImageBuildParams(buildParams, getKogitoImagesTempTag())
+                    addAppsParam(buildParams)
                     addSkipTestsParam(buildParams)
                     addExamplesParam(buildParams)
 
@@ -630,6 +638,11 @@ void addSkipTestsParam(buildParams) {
 
 void addSkipIntegrationTestsParam(buildParams) {
     addBooleanParam(buildParams, 'SKIP_INTEGRATION_TESTS', true)
+}
+
+void addAppsParam(buildParams) {
+    addStringParam(buildParams, 'APPS_URI', env.APPS_URI)
+    addStringParam(buildParams, 'APPS_REF', env.APPS_REF)
 }
 
 void addExamplesParam(buildParams) {

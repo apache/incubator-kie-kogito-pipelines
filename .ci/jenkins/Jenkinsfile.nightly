@@ -188,6 +188,9 @@ pipeline {
                     addImageBuildParams(buildParams, env.NIGHTLY_TAG)
                     addDeployImageWithLatestTagParam(buildParams)
 
+                    // For building
+                    addAppsParam(buildParams)
+
                     // For testing
                     addSkipTestsParam(buildParams)
                     addExamplesParam(buildParams)
@@ -423,6 +426,11 @@ void addSkipTestsParam(buildParams) {
 
 void addSkipIntegrationTestsParam(buildParams) {
     addBooleanParam(buildParams, 'SKIP_INTEGRATION_TESTS', params.SKIP_TESTS)
+}
+
+void addAppsParam(buildParams) {
+    addStringParam(buildParams, 'APPS_REF', "${getBuildBranch()}")
+    addStringParam(buildParams, 'APPS_URI', "https://github.com/${getGitAuthor()}/kogito-apps")
 }
 
 void addExamplesParam(buildParams) {
