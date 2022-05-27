@@ -16,6 +16,10 @@ pipeline {
 
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
     }
+    options {
+        timestamps ()
+        disableConcurrentBuilds(abortPrevious: true)
+    }
 
     stages {
         stage('Initialize') {
