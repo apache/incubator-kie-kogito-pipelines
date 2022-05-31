@@ -33,10 +33,8 @@ if (Utils.isMainBranch(this)) {
 // Nightly
 setupNightlyJob()
 
-if (Utils.isMainBranch(this)) {
-    // Release prepare is not in a specific branch and should be generated only on main branch
-    setupPrepareReleaseJob()
-} else {
+setupPrepareReleaseJob()
+if (!Utils.isMainBranch(this)) {
     // No release job directly on main branch
     setupReleaseJob()
 }
@@ -173,6 +171,7 @@ void setupReleaseJob() {
 void setupPrepareReleaseJob() {
     KogitoJobTemplate.createPipelineJob(this, getJobParams('prepare-release-branch', FolderUtils.getReleaseFolder(this), "${JENKINSFILE_PATH}/Jenkinsfile.release.prepare", 'Prepare env for a release')).with {
         parameters {
+            stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
             stringParam('OPTAPLANNER_VERSION', '', 'OptaPlanner version of OptaPlanner and its examples to release as Major.minor.micro')
         }
 
