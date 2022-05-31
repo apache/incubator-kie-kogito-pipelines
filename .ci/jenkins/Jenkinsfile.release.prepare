@@ -43,7 +43,7 @@ pipeline {
                     env.KOGITO_RELEASE_BRANCH = "${util.getReleaseBranchFromVersion(getKogitoVersion())}${params.BRANCH_SUFFIX ? "-${params.BRANCH_SUFFIX}" : ''}"
                     echo "Kogito Release Branch ${getKogitoReleaseBranch()}"
 
-                    env.OPTAPLANNER_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getOptaPlannerVersion())
+                    env.OPTAPLANNER_RELEASE_BRANCH = "${util.getReleaseBranchFromVersion(getOptaPlannerVersion())}${params.BRANCH_SUFFIX ? "-${params.BRANCH_SUFFIX}" : ''}"
                     echo "OptaPlanner Release Branch ${getOptaPlannerReleaseBranch()}"
 
                     currentBuild.displayName = getDisplayName("Kogito ${getKogitoReleaseBranch()}/ OptaPlanner${getOptaPlannerReleaseBranch()}")
@@ -252,5 +252,31 @@ String getUrl(String repo) {
 }
 
 String getBase(String repo) {
-    return (repo.find(':')) ? repo.split(':')[1] : env.DEFAULT_BASE_BRANCH
+    return (repo.find(':')) ? repo.split(':')[1] : getDefaultBaseBranch(repo)
+}
+
+void getDefaultBaseBranch(String repo) {
+    if (repo.startsWith('opta')) {
+        return getDefaultOptaplannerBaseBranch()
+    } else {
+        return getDefaultKogitoBaseBranch()
+    }
+}
+
+void getDefaultKogitoBaseBranch() {
+    return env.DEFAULT_BASE_BRANCH
+}
+
+void getDefaultOptaplannerBaseBranch() {
+    String targetBranch = getDefaultKogitoBaseBranch()
+    String [] versionSplit = targetBranch.split("\\.")
+    if (versionSplit.length == 3
+        && versionSplit[0].isNumber()
+        && versionSplit[1].isNumber()
+       && versionSplit[2] == 'x') {
+        targetBranch = "${Integer.parseInt(versionSplit[0]) + 7}.${versionSplit[1]}.x"
+    } else {
+        echo "Cannot parse branch as release branch so going further with current value: ${targetBranch}"
+    }
+    return targetBranch
 }
