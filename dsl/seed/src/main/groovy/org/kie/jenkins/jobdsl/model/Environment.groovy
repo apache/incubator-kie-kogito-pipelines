@@ -55,7 +55,10 @@ enum Environment {
     QUARKUS_LTS(
         optional: true,
         isActiveClosure: { script -> Utils.isEnvironmentQuarkusLTSEnabled(script) },
-        getDefaultEnvVarsClosure: { script -> [ QUARKUS_BRANCH: Utils.getEnvironmentQuarkusLTSName(script) ] }
+        getDefaultEnvVarsClosure: { script -> [ 
+            QUARKUS_BRANCH: Utils.getEnvironmentQuarkusLTSName(script),
+            BUILD_MVN_OPTS: '-Dproductized',
+        ] }
     ),
     KOGITO_BDD(
         optional: true,
