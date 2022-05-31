@@ -41,13 +41,13 @@ pipeline {
                     assert getKogitoVersion()
 
                     // Set release branch
-                    env.DROOLS_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getDroolsVersion())
+                    env.DROOLS_RELEASE_BRANCH = "${util.getReleaseBranchFromVersion(getDroolsVersion())}${params.BRANCH_SUFFIX ? "-${params.BRANCH_SUFFIX}" : ''}"
                     echo "Drools Release Branch ${getDroolsReleaseBranch()}"
 
-                    env.OPTAPLANNER_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getOptaPlannerVersion())
+                    env.OPTAPLANNER_RELEASE_BRANCH = "${util.getReleaseBranchFromVersion(getKogitoVersion())}${params.BRANCH_SUFFIX ? "-${params.BRANCH_SUFFIX}" : ''}"
                     echo "OptaPlanner Release Branch ${getOptaPlannerReleaseBranch()}"
 
-                    env.KOGITO_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getKogitoVersion())
+                    env.KOGITO_RELEASE_BRANCH = "${util.getReleaseBranchFromVersion(getOptaPlannerVersion())}${params.BRANCH_SUFFIX ? "-${params.BRANCH_SUFFIX}" : ''}"
                     echo "Kogito Release Branch ${getKogitoReleaseBranch()}"
 
                     currentBuild.displayName = getDisplayName("Drools ${getDroolsReleaseBranch()} / OptaPlanner${getOptaPlannerReleaseBranch()} / Kogito ${getKogitoReleaseBranch()}")
@@ -121,7 +121,7 @@ pipeline {
 
                         def branchConfig = readYaml file: "${branchConfigFile}"
                         branchConfig.repositories = repositories
-                        branchConfig.productized_branch = params.PRODUCTIZED_BRANCH
+                        branchConfig.productized_branch = params.IS_PRODUCTIZED_BRANCH
 
                         // Disable some environments when branching as they make no sense by default
                         branchConfig.environment.quarkus.main.enabled = false
@@ -284,5 +284,32 @@ String getUrl(String repo) {
 }
 
 String getBase(String repo) {
-    return (repo.find(':')) ? repo.split(':')[1] : env.DEFAULT_BASE_BRANCH
+    return getDefaultBaseBranch(repo) 
+}
+
+void getDefaultBaseBranch(String repo) {
+    if (OPTAPLANNER_REPOS.contains(repo) || DROOLS_REPOS.contains(repo)) {
+        return getDefaultKIEBaseBranch(repo)
+    } else {
+        return getDefaultKogitoBaseBranch(repo)
+    }
+}
+
+void getDefaultKogitoBaseBranch(String repo) {
+    return env.DEFAULT_BASE_BRANCH
+}
+
+void getDefaultKIEBaseBranch(String repo) {
+    String targetBranch = getDefaultKogitoBaseBranch()
+    String [] versionSplit = targetBranch.split("\\.")
+    if (versionSplit.length == 3
+        && versionSplit[0].isNumber()
+        && versionSplit[1].isNumber()
+       && versionSplit[2] == 'x') {
+        targetBranch = "${Integer.parseInt(versionSplit[0]) + 7}.${versionSplit[1]}.x"
+    } else {
+        targetBranch = repo.find(':') ? repo.split(':')[1] : targetBranch
+        echo "Cannot parse branch as release branch so going further with current value: ${targetBranch}"
+    }
+    return targetBranch
 }

@@ -78,7 +78,7 @@ pipelineJob('0-seed-job') {
 def jobParams = KogitoJobUtils.getDefaultJobParams(this, KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
 jobParams.job.name = '0-prepare-release-branch'
 jobParams.job.folder = ''
-jobParams.jenkinsfile = '.ci/jenkins//Jenkinsfile.release.prepare'
+jobParams.jenkinsfile = '.ci/jenkins/Jenkinsfile.release.prepare'
 jobParams.job.description = 'Prepare env for a release'
 KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
     parameters {
@@ -86,7 +86,9 @@ KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         stringParam('OPTAPLANNER_VERSION', '', 'OptaPlanner version of OptaPlanner and its examples to release as Major.minor.micro')
         stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
 
-        booleanParam('PRODUCTIZED_BRANCH', false, 'Is the created branch a productized one ?')
+        booleanParam('IS_PRODUCTIZED_BRANCH', false, 'Is the created branch a productized one ?')
+
+        stringParam('BRANCH_SUFFIX', '', 'Suffix to append to the created release branch. This will create a `{RELEASE_BRANCH}-{BRANCH_SUFFIX}`')
     }
 
     environmentVariables {
