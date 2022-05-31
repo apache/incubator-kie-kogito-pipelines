@@ -40,7 +40,7 @@ pipeline {
 
                     // Set release branch
 
-                    env.KOGITO_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getKogitoVersion())
+                    env.KOGITO_RELEASE_BRANCH = "${util.getReleaseBranchFromVersion(getKogitoVersion())}${params.BRANCH_SUFFIX ? "-${params.BRANCH_SUFFIX}" : ''}"
                     echo "Kogito Release Branch ${getKogitoReleaseBranch()}"
 
                     env.OPTAPLANNER_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getOptaPlannerVersion())

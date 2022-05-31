@@ -173,6 +173,8 @@ void setupPrepareReleaseJob() {
         parameters {
             stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
             stringParam('OPTAPLANNER_VERSION', '', 'OptaPlanner version of OptaPlanner and its examples to release as Major.minor.micro')
+
+            stringParam('BRANCH_SUFFIX', '', 'Suffix to append to the created release branch. This will create a `{RELEASE_BRANCH}-{BRANCH_SUFFIX}`')
         }
 
         environmentVariables {
