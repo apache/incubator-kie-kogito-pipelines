@@ -10,7 +10,7 @@ OPTAPLANNER_QUICKSTARTS_REPO = 'optaplanner-quickstarts'
 
 PIPELINE_REPOS = ["${PIPELINE_REPO}"]
 RUNTIMES_REPOS = ['kogito-runtimes', 'kogito-examples']
-OPTAPLANNER_REPOS = ["${OPTAPLANNER_REPO}", 'optaweb-vehicle-routing', 'optaweb-employee-rostering', "${OPTAPLANNER_QUICKSTARTS_REPO}:development"]
+OPTAPLANNER_REPOS = ["${OPTAPLANNER_REPO}", 'optaweb-vehicle-routing', 'optaweb-employee-rostering', "${OPTAPLANNER_QUICKSTARTS_REPO}"]
 IMAGES_REPOS = ['kogito-images']
 OPERATOR_REPOS = ['kogito-operator']
 
@@ -40,7 +40,7 @@ pipeline {
 
                     // Set release branch
 
-                    env.KOGITO_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getKogitoVersion())
+                    env.KOGITO_RELEASE_BRANCH = "${util.getReleaseBranchFromVersion(getKogitoVersion())}${params.BRANCH_SUFFIX ? "-${params.BRANCH_SUFFIX}" : ''}"
                     echo "Kogito Release Branch ${getKogitoReleaseBranch()}"
 
                     env.OPTAPLANNER_RELEASE_BRANCH = util.getReleaseBranchFromVersion(getOptaPlannerVersion())
