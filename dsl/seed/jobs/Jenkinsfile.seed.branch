@@ -100,13 +100,13 @@ pipeline {
                 script {
                     all_repos.each { repository ->
                         def envProps = getRepoConfigAsEnvProperties(repository)
-                        envProps.put('GIT_MAIN_BRANCH', getMainBranch(repository))
-                        envProps.put('REPO_NAME', "${repository}")
-
+                        envProps += [
+                            GIT_MAIN_BRANCH: getMainBranch(repository),
+                            REPO_NAME: "${repository}"
+                        ]
                         // Add other repos `jenkins_config_path` var (useful if multijob PR checks for example)
-                        all_repos.each { repoName ->
-                            String key = util.generateEnvKey(repoName, 'jenkins_config_path')
-                            envProps.put(key, getRepoConfig(repoName).git.jenkins_config_path)
+                        envProps += all_repos.collectEntries {
+                            [ (util.generateEnvKey(it, 'jenkins_config_path')): getRepoConfig(it).git.jenkins_config_path]
                         }
 
                         println "[INFO] Generate jobs for branch ${GENERATION_BRANCH} and repo ${repository}"

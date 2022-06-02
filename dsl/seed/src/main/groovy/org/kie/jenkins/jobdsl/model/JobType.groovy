@@ -17,9 +17,6 @@ class JobType {
         name: 'NIGHTLY',
         optional: true,
     )
-    // public static final JobType UPDATE_VERSION  = new JobType (
-    //     name: UPDATE_VERSION,
-    // )
     public static final JobType RELEASE = new JobType(
         name: 'RELEASE',
         optional: true,
@@ -51,7 +48,6 @@ class JobType {
     private static Set<JobType> JOB_TYPES = [
         PULLREQUEST,
         NIGHTLY,
-        // UPDATE_VERSION,
         RELEASE,
         TOOLS,
         OTHER

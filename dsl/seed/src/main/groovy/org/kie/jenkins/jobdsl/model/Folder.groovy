@@ -47,10 +47,6 @@ class Folder {
         return this.jobType == JobType.PULLREQUEST
     }
 
-    // boolean isUpdateVersion() {
-    //     return this.jobType == JobType.UPDATE_VERSION
-    // }
-
     boolean isTools() {
         return this.jobType == JobType.TOOLS
     }
@@ -187,12 +183,6 @@ class Folder {
         ],
     )
 
-    // public static final Folder UPDATE_VERSION = new Folder(
-    //     name: 'UPDATE_VERSION',
-    //     jobType: JobType.UPDATE_VERSION,
-    //     environment: Environment.DEFAULT,
-    // )
-
     public static final Folder TOOLS = new Folder(
         name: 'TOOLS',
         jobType: JobType.TOOLS,
@@ -221,7 +211,6 @@ class Folder {
         PULLREQUEST_QUARKUS_LTS, 
         PULLREQUEST_RUNTIMES_BDD,
         RELEASE, TOOLS, OTHER
-        // UPDATE_VERSION,
     ]
 
     static void register(Folder folder) {
@@ -242,7 +231,6 @@ class Folder {
             getAllReleaseFolders(script) +
             getAllToolsFolders(script) +
             getAllOtherFolders(script)
-            // Folder.UPDATE_VERSION,
     }
 
     static List<Folder> getAllActiveFolders(def script) {
