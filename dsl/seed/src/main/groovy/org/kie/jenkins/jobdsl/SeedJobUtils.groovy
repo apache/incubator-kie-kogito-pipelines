@@ -42,33 +42,17 @@ class SeedJobUtils {
             }
 
             definition {
-                cpsScm {
-                    scm {
-                        git {
-                            remote {
-                                url("https://github.com/${gitAuthor}/${repository}.git")
-                                credentials('kie-ci')
-                            }
-                            branch(gitBranch)
-                            extensions {
-                                cleanBeforeCheckout()
-                            }
-                        }
-                    }
-                    if (repository == KogitoConstants.KOGITO_PIPELINES_REPOSITORY) {
-                        scriptPath('dsl/seed/jobs/Jenkinsfile.seed.trigger')
-                    } else {
-                        scriptPath('.ci/jenkins/dsl/Jenkinsfile.seed')
-                    }
+                cps {
+                    script(jenkinsScript.readFileFromWorkspace('jobs/Jenkinsfile.seed.trigger'))
                 }
             }
 
             properties {
-                githubProjectUrl("https://github.com/${gitAuthor}/${repository}/")
+                githubProjectUrl("https://github.com/${gitAuthor}/${repository}")
 
                 pipelineTriggers {
                     triggers {
-                        gitHubPushTrigger()
+                        githubPush()
                     }
                 }
             }

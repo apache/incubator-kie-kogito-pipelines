@@ -16,7 +16,7 @@ class KogitoJobTemplate {
     *
     * jobParams structure:
     *   job:
-    *     folder: In which folder should the job be created ? Can be a String or a org.kie.jenkins.jobdsl.model.Folder struct
+    *     folder: In which folder should the job be created ? it has to be a org.kie.jenkins.jobdsl.model.Folder struct
     *     name: Name of the job
     *     description: (optional) Description of the job
     *   git:
@@ -37,18 +37,20 @@ class KogitoJobTemplate {
     static def createPipelineJob(def script, Map jobParams = [:]) {
         String jobFolderName = ''
         Map jobFolderEnv = [:]
-        if (jobParams.job.folder instanceof String) {
-            jobFolderName = jobParams.job.folder
-        } else {
+        if(jobParams.job.folder) {
+            if (!jobParams.job.folder instanceof Folder) {
+                throw new RuntimeException('Folder is not of type org.kie.jenkins.jobdsl.model.Folder')
+            }
             // Expect org.kie.jenkins.jobdsl.model.Folder structure
             jobFolderName = jobParams.job.folder.getFolderName()
             jobFolderEnv = jobParams.job.folder.getDefaultEnvVars(script)
-
             if (!jobParams.job.folder.isActive(script)) {
                 // Do no create the job if the folder is not active
                 println "Cannot create job name ${jobParams.job.name} in jobFolder ${jobFolderName} as folder is NOT active"
                 return
             }
+
+            script.folder(jobFolderName)
         }
 
         println "Create job name ${jobParams.job.name} in jobFolder ${jobFolderName} with folder env${jobFolderEnv}"
