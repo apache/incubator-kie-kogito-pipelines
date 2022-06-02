@@ -60,15 +60,6 @@ class JenkinsfilePrBddTests extends JenkinsPipelineSpecification {
             0 * getPipelineMock('string.call').call(['name' : 'BUILD_BRANCH_NAME', 'value' : changeTarget])
 	}
 
-	def '[JenkinsfilePrBddTests.groovy] getOptaPlannerBranch' () {
-        setup:
-            Jenkinsfile.getBinding().setVariable('changeTarget', '1.0.x')
-		when:
-			def optaPlannerBranch = Jenkinsfile.getOptaPlannerBranch()
-		then:
-            optaPlannerBranch == '8.0.x'
-	}
-
 	def '[JenkinsfilePrBddTests.groovy] doesBranchExist: doesn\'t exist' () {
 		setup:
             getPipelineMock('githubscm.getRepositoryScm')('repo', changeAuthor, changeBranch) >> null

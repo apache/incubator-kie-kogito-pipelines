@@ -3,16 +3,12 @@ import org.jenkinsci.plugins.workflow.libs.Library
 @Library('jenkins-pipeline-shared-libraries')_
 
 RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
-OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
-APPS_DEPLOY = 'kogito-apps-deploy'
 EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 EXAMPLES_IMAGES_DEPLOY = 'kogito-examples-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
 
 RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
-OPTAPLANNER_PROMOTE = 'optaplanner-promote'
-APPS_PROMOTE = 'kogito-apps-promote'
 EXAMPLES_PROMOTE = 'kogito-examples-promote'
 IMAGES_PROMOTE = 'kogito-images-promote'
 EXAMPLES_IMAGES_PROMOTE = 'kogito-examples-images-promote'
@@ -63,13 +59,10 @@ pipeline {
                     }
 
                     assert getKogitoArtifactsVersion()
-                    if (isArtifactsDeploy() || isArtifactsPromote()) {
-                        assert getOptaPlannerVersion()
-                    }
 
                     currentBuild.displayName = getDisplayName()
 
-                    sendNotification("Release Pipeline has started...\nKogito artifacts version=${getKogitoArtifactsVersion()}\nOptaplanner version=${getOptaPlannerVersion()}\n=> ${env.BUILD_URL}")
+                    sendNotification("Release Pipeline has started...\nKogito artifacts version=${getKogitoArtifactsVersion()}\n=> ${env.BUILD_URL}")
 
                     // Safety measure to not publish to main JBoss
                     if (getGitAuthor() != 'kiegroup' && !getArtifactsRepositoryParam()) {
@@ -83,8 +76,6 @@ pipeline {
                     setReleasePropertyIfneeded('kogito.version', getKogitoArtifactsVersion())
                     setReleasePropertyIfneeded('kogito.images.version', getKogitoImagesVersion())
                     setReleasePropertyIfneeded('kogito.operator.version', getKogitoOperatorVersion())
-                    setReleasePropertyIfneeded('optaplanner.version', getOptaPlannerVersion())
-                    setReleasePropertyIfneeded('optaplanner.branch', getOptaPlannerReleaseBranch())
                     setReleasePropertyIfneeded('deploy.latest', isDeployAsLatest())
                 }
             }
@@ -104,37 +95,6 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy OptaPlanner') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getOptaPlannerVersion())
-                    addSkipTestsParam(buildParams)
-                    addSkipIntegrationTestsParam(buildParams)
-                    addStringParam(buildParams, 'KOGITO_VERSION', getKogitoArtifactsVersion())
-                    addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', getOptaPlannerReleaseBranch())
-                    buildJob(OPTAPLANNER_DEPLOY, buildParams)
-                }
-            }
-        }
-
-        // stage('Build & Deploy Kogito Apps') {
-        //     when {
-        //         expression { return isArtifactsDeploy() }
-        //     }
-        //     steps {
-        //         script {
-        //             def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
-        //             addSkipTestsParam(buildParams)
-        //             addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
-
-        //             buildJob(APPS_DEPLOY, buildParams)
-        //         }
-        //     }
-        // }
-
         stage('Build & Deploy Kogito Examples') {
             when {
                 expression { return isArtifactsDeploy() }
@@ -143,7 +103,6 @@ pipeline {
                 script {
                     def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
                     addSkipTestsParam(buildParams)
-                    addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
 
                     buildJob(EXAMPLES_DEPLOY, buildParams)
                 }
@@ -281,36 +240,6 @@ pipeline {
             }
         }
 
-        stage('Promote OptaPlanner') {
-            when {
-                expression { return isArtifactsPromote() && isJobConsideredOk(OPTAPLANNER_DEPLOY) }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getOptaPlannerVersion())
-                    addDeployBuildUrlParam(buildParams, OPTAPLANNER_DEPLOY)
-                    addStringParam(buildParams, 'KOGITO_VERSION', getKogitoArtifactsVersion())
-
-                    buildJob(OPTAPLANNER_PROMOTE, buildParams)
-                }
-            }
-        }
-
-        // stage('Promote Kogito Apps') {
-        //     when {
-        //         expression { return isArtifactsPromote() && isJobConsideredOk(APPS_DEPLOY) }
-        //     }
-        //     steps {
-        //         script {
-        //             def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
-        //             addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
-        //             addDeployBuildUrlParam(buildParams, APPS_DEPLOY)
-
-        //             buildJob(APPS_PROMOTE, buildParams)
-        //         }
-        //     }
-        // }
-
         stage('Promote Kogito Examples') {
             when {
                 expression { return isArtifactsPromote() && isJobConsideredOk(EXAMPLES_DEPLOY) }
@@ -318,7 +247,6 @@ pipeline {
             steps {
                 script {
                     def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
-                    addStringParam(buildParams, 'OPTAPLANNER_VERSION', getOptaPlannerVersion())
                     addDeployBuildUrlParam(buildParams, EXAMPLES_DEPLOY)
                     addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', isDeployAsLatest())
 
@@ -636,20 +564,12 @@ String getKogitoOperatorVersion() {
     return params.KOGITO_OPERATOR_VERSION ?: (getReleaseProperty('kogito.operator.version') ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion()))
 }
 
-String getOptaPlannerVersion() {
-    return params.OPTAPLANNER_VERSION ?: getReleaseProperty('optaplanner.version')
-}
-
 String getGitAuthor() {
     return env.GIT_AUTHOR
 }
 
 String getArtifactsRepositoryParam() {
     return env['ARTIFACTS_REPOSITORY'] ?: ''
-}
-
-String getOptaPlannerReleaseBranch() {
-    return params.OPTAPLANNER_RELEASE_BRANCH ?: (getReleaseProperty('optaplanner.branch') ?: util.getReleaseBranchFromVersion(getOptaPlannerVersion()))
 }
 
 String getStagingRepository() {

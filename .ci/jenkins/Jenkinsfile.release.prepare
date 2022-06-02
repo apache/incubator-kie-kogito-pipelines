@@ -5,12 +5,9 @@ import org.jenkinsci.plugins.workflow.libs.Library
 CREATE_RELEASE_BRANCHES = 'create-release-branches'
 
 PIPELINE_REPO = 'kogito-pipelines'
-OPTAPLANNER_REPO = 'optaplanner'
-OPTAPLANNER_QUICKSTARTS_REPO = 'optaplanner-quickstarts'
 
 PIPELINE_REPOS = ["${PIPELINE_REPO}"]
 RUNTIMES_REPOS = ['kogito-runtimes', 'kogito-examples']
-OPTAPLANNER_REPOS = ["${OPTAPLANNER_REPO}", 'optaweb-vehicle-routing', 'optaweb-employee-rostering', "${OPTAPLANNER_QUICKSTARTS_REPO}"]
 IMAGES_REPOS = ['kogito-images']
 OPERATOR_REPOS = ['kogito-operator']
 
@@ -36,19 +33,15 @@ pipeline {
             steps {
                 script {
                     assert getKogitoVersion()
-                    assert getOptaPlannerVersion()
 
                     // Set release branch
 
                     env.KOGITO_RELEASE_BRANCH = "${util.getReleaseBranchFromVersion(getKogitoVersion())}${params.BRANCH_SUFFIX ? "-${params.BRANCH_SUFFIX}" : ''}"
                     echo "Kogito Release Branch ${getKogitoReleaseBranch()}"
 
-                    env.OPTAPLANNER_RELEASE_BRANCH = "${util.getReleaseBranchFromVersion(getOptaPlannerVersion())}${params.BRANCH_SUFFIX ? "-${params.BRANCH_SUFFIX}" : ''}"
-                    echo "OptaPlanner Release Branch ${getOptaPlannerReleaseBranch()}"
+                    currentBuild.displayName = getDisplayName("Kogito ${getKogitoReleaseBranch()}")
 
-                    currentBuild.displayName = getDisplayName("Kogito ${getKogitoReleaseBranch()}/ OptaPlanner${getOptaPlannerReleaseBranch()}")
-
-                    sendNotification("Cut-off for Kogito ${getKogitoReleaseBranch()} and Optaplanner ${getOptaPlannerReleaseBranch()} has started...\n=> ${env.BUILD_URL}")
+                    sendNotification("Cut-off for Kogito ${getKogitoReleaseBranch()} has started...\n=> ${env.BUILD_URL}")
                 }
             }
         }
@@ -70,19 +63,6 @@ pipeline {
             }
         }
 
-        stage('Create OptaPlanner release branches') {
-            steps {
-                script {
-                    def repositories = OPTAPLANNER_REPOS
-
-                    echo "Create ${getOptaPlannerReleaseBranch()} on repositories ${repositories}"
-                    createBranches(repositories, getOptaPlannerReleaseBranch())
-
-                    sendNotification("${getOptaPlannerReleaseBranch()} branches have been created for repositories: ${repositories}")
-                }
-            }
-        }
-
         stage('Update kogito-pipelines branch config') {
             steps {
                 script {
@@ -98,7 +78,6 @@ pipeline {
                         repositories.addAll(collectRepos(RUNTIMES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(IMAGES_REPOS, getKogitoReleaseBranch()))
                         repositories.addAll(collectRepos(OPERATOR_REPOS, getKogitoReleaseBranch()))
-                        repositories.addAll(collectRepos(OPTAPLANNER_REPOS, getOptaPlannerReleaseBranch()))
 
                         def branchConfig = readYaml file: "${branchConfigFile}"
                         branchConfig.repositories = repositories
@@ -205,10 +184,6 @@ String getKogitoVersion() {
     return params.KOGITO_VERSION
 }
 
-String getOptaPlannerVersion() {
-    return params.OPTAPLANNER_VERSION
-}
-
 String getKogitoReleaseBranch() {
     return env.KOGITO_RELEASE_BRANCH
 }
@@ -223,10 +198,6 @@ String getGitAuthorCredsId() {
 
 String getBotAuthorCredsID() {
     return env.GIT_BOT_AUTHOR_CREDS_ID
-}
-
-String getOptaPlannerReleaseBranch() {
-    return env.OPTAPLANNER_RELEASE_BRANCH
 }
 
 String getRepoName(String repo) {
@@ -256,27 +227,5 @@ String getBase(String repo) {
 }
 
 void getDefaultBaseBranch(String repo) {
-    if (repo.startsWith('opta')) {
-        return getDefaultOptaplannerBaseBranch()
-    } else {
-        return getDefaultKogitoBaseBranch()
-    }
-}
-
-void getDefaultKogitoBaseBranch() {
     return env.DEFAULT_BASE_BRANCH
-}
-
-void getDefaultOptaplannerBaseBranch() {
-    String targetBranch = getDefaultKogitoBaseBranch()
-    String [] versionSplit = targetBranch.split("\\.")
-    if (versionSplit.length == 3
-        && versionSplit[0].isNumber()
-        && versionSplit[1].isNumber()
-       && versionSplit[2] == 'x') {
-        targetBranch = "${Integer.parseInt(versionSplit[0]) + 7}.${versionSplit[1]}.x"
-    } else {
-        echo "Cannot parse branch as release branch so going further with current value: ${targetBranch}"
-    }
-    return targetBranch
 }

@@ -19,8 +19,6 @@ Here is the list of jobs and link to Jenkinsfiles:
 
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.promote)
-* [optaplanner-deploy](https://github.com/kiegroup/optaplanner/blob/main/Jenkinsfile.deploy)
-* [optaplanner-promote](https://github.com/kiegroup/optaplanner/blob/main/Jenkinsfile.promote)
 * [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.deploy)
 * [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/main/Jenkinsfile.deploy)

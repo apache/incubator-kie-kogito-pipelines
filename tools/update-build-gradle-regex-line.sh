@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
  
-# kogito-runtimes, optaplanner. kogito-examples or optaplanner-quickstarts
+# kogito-runtimes, kogito-examples
 REGEX=$1
 VALUE=$2
 

@@ -93,7 +93,7 @@ void setupNightlyJob() {
         parameters {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
-            booleanParam('SKIP_ARTIFACTS', false, 'To skip Artifacts (runtimes, examples, optaplanner) Deployment')
+            booleanParam('SKIP_ARTIFACTS', false, 'To skip Artifacts (runtimes, examples) Deployment')
             booleanParam('SKIP_IMAGES', false, 'To skip Images Deployment')
             booleanParam('SKIP_EXAMPLES_IMAGES', false, 'To skip Examples Images Deployment')
             booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
@@ -130,8 +130,6 @@ void setupReleaseJob() {
             stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
             stringParam('KOGITO_IMAGES_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
             stringParam('KOGITO_OPERATOR_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
-            stringParam('OPTAPLANNER_VERSION', '', 'Project version of OptaPlanner and its examples to release as Major.minor.micro')
-            stringParam('OPTAPLANNER_RELEASE_BRANCH', '', '(optional) Use to override the release branch name deduced from the OPTAPLANNER_VERSION')
             booleanParam('DEPLOY_AS_LATEST', false, 'Given project version is considered the latest version')
 
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
@@ -172,7 +170,6 @@ void setupPrepareReleaseJob() {
     KogitoJobTemplate.createPipelineJob(this, getJobParams('prepare-release-branch', FolderUtils.getReleaseFolder(this), "${JENKINSFILE_PATH}/Jenkinsfile.release.prepare", 'Prepare env for a release')).with {
         parameters {
             stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
-            stringParam('OPTAPLANNER_VERSION', '', 'OptaPlanner version of OptaPlanner and its examples to release as Major.minor.micro')
 
             stringParam('BRANCH_SUFFIX', '', 'Suffix to append to the created release branch. This will create a `{RELEASE_BRANCH}-{BRANCH_SUFFIX}`')
         }
