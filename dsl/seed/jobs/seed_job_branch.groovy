@@ -8,16 +8,14 @@ import org.kie.jenkins.jobdsl.Utils
 
 // Create all folders
 folder("${GENERATION_BRANCH}")
-if (Utils.isNewFolderStructure(this)) {
-    Folder.getAllFolders(this).each { folder("${GENERATION_BRANCH}/${it.getFolderName()}") }
-} else {
+if (!Utils.isNewFolderStructure(this)) {
     // For old branches
     FolderUtils.getAllNeededFolders().each { folder("${GENERATION_BRANCH}/${it}") }
 }
 
 SeedJobUtils.createSeedJobTrigger(
     this,
-    "${GENERATION_BRANCH}/${JOB_NAME}-trigger",
+    "${GENERATION_BRANCH}/z-seed-trigger-job",
     KogitoConstants.KOGITO_PIPELINES_REPOSITORY,
     "${SEED_AUTHOR}",
     "${SEED_BRANCH}",

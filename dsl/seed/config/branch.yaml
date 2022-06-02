@@ -1,10 +1,14 @@
 environment:
   quarkus:
     main:
-      enabled: true
+      enabled: false
     branch:
       enabled: true
-      name: '2.9'
+      version: '2.9'
+    lts:
+      enabled: false
+      version: '2.7'
+
   native:
     enabled: true
   mandrel:
@@ -15,7 +19,9 @@ environment:
 productized_branch: true
 disable:
   triggers: false
-  branch: false
+
+# Used by the main seed job to know which folders are to be created
+# Some old maintained branch will keep the "old" folder structure
 new_folder_structure: true
 repositories:
 - name: kogito-pipelines

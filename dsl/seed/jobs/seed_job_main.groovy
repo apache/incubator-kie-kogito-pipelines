@@ -15,7 +15,7 @@ String getSeedBranch() {
 
 SeedJobUtils.createSeedJobTrigger(
     this,
-    '0-seed-job-trigger',
+    'z-seed-trigger-job',
     KogitoConstants.KOGITO_PIPELINES_REPOSITORY,
     getSeedAuthor(),
     getSeedBranch(),
@@ -85,6 +85,8 @@ KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         stringParam('DROOLS_VERSION', '', 'Drools version to release as Major.minor.micro')
         stringParam('OPTAPLANNER_VERSION', '', 'OptaPlanner version of OptaPlanner and its examples to release as Major.minor.micro')
         stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
+
+        booleanParam('PRODUCTIZED_BRANCH', false, 'Is the created branch a productized one ?')
     }
 
     environmentVariables {

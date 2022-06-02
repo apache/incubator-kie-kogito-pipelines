@@ -2,84 +2,9 @@ package org.kie.jenkins.jobdsl.model
 
 import org.kie.jenkins.jobdsl.Utils
 
-enum Folder {
+class Folder {
 
-    NIGHTLY(
-        jobType: JobType.NIGHTLY,
-        environment: Environment.DEFAULT,
-    ),
-    NIGHTLY_SONARCLOUD(
-        jobType: JobType.NIGHTLY,
-        environment: Environment.SONARCLOUD,
-    ),
-    NIGHTLY_NATIVE(
-        jobType: JobType.NIGHTLY,
-        environment: Environment.NATIVE,
-    ),
-    NIGHTLY_MANDREL(
-        jobType: JobType.NIGHTLY,
-        environment: Environment.MANDREL,
-    ),
-    NIGHTLY_QUARKUS_MAIN(
-        jobType: JobType.NIGHTLY,
-        environment: Environment.QUARKUS_MAIN,
-    ),
-    NIGHTLY_QUARKUS_BRANCH(
-        jobType: JobType.NIGHTLY,
-        environment: Environment.QUARKUS_BRANCH,
-    ),
-
-    PULLREQUEST(
-        jobType: JobType.PULLREQUEST,
-        environment: Environment.DEFAULT,
-        configValues: [ // Setup config values for backward compatibility in job naming
-            typeId: 'tests',
-            typeName: 'build'
-        ],
-    ),
-    PULLREQUEST_NATIVE(
-        jobType: JobType.PULLREQUEST,
-        environment: Environment.NATIVE,
-    ),
-    PULLREQUEST_MANDREL(
-        jobType: JobType.PULLREQUEST,
-        environment: Environment.MANDREL,
-    ),
-    PULLREQUEST_QUARKUS_MAIN(
-        jobType: JobType.PULLREQUEST,
-        environment: Environment.QUARKUS_MAIN,
-    ),
-    PULLREQUEST_QUARKUS_BRANCH(
-        jobType: JobType.PULLREQUEST,
-        environment: Environment.QUARKUS_BRANCH,
-    ),
-    PULLREQUEST_RUNTIMES_BDD(
-        jobType: JobType.PULLREQUEST,
-        environment: Environment.KOGITO_BDD,
-        disableAutoGeneration: true
-    ),
-
-    RELEASE(
-        jobType: JobType.RELEASE,
-        environment: Environment.DEFAULT,
-        defaultEnv: [
-            RELEASE: 'true'
-        ],
-    ),
-
-    // UPDATE_VERSION(
-    //     jobType: JobType.UPDATE_VERSION,
-    //     environment: Environment.DEFAULT,
-    // ),
-
-    TOOLS(
-        jobType: JobType.TOOLS,
-        environment: Environment.DEFAULT,
-    ),
-    OTHER(
-        jobType: JobType.OTHER,
-        environment: Environment.DEFAULT,
-    )
+    String name
 
     JobType jobType
     Environment environment
@@ -89,7 +14,7 @@ enum Folder {
     Map defaultEnv
 
     String getFolderName(String separator = '.') {
-        String folderName = this.jobType.toFolderName()
+        String folderName = this.jobType.toName()
         if (this.environment != Environment.DEFAULT) {
             folderName += "${separator}${environment.toId()}"
         }
@@ -121,10 +46,6 @@ enum Folder {
     boolean isPullRequest() {
         return this.jobType == JobType.PULLREQUEST
     }
-
-    // boolean isUpdateVersion() {
-    //     return this.jobType == JobType.UPDATE_VERSION
-    // }
 
     boolean isTools() {
         return this.jobType == JobType.TOOLS
@@ -159,13 +80,149 @@ enum Folder {
     // OR
     // - it is active and the environment is also active
     boolean isActive(def script) {
-        // script.println("isActive call for folder ${this.name()}")
-        // script.println("isActive call for folder ${this.name()}: jobtype name ? ${this.jobType.name()}")
-        // script.println("isActive call for folder ${this.name()}: jobtype optional ? ${this.jobType.isOptional()}")
-        // script.println("isActive call for folder ${this.name()}: jobtype active ? ${this.jobType.isActive(script)}")
-        // script.println("isActive call for folder ${this.name()}: environment name ? ${this.environment.name()}")
-        // script.println("isActive call for folder ${this.name()}: environment active ? ${this.environment.isActive(script)}")
         return !this.jobType.isOptional() || (this.jobType.isActive(script) && this.environment.isActive(script))
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    // Folder Management
+
+    public static final Folder NIGHTLY = new Folder(
+        name: 'NIGHTLY',
+        jobType: JobType.NIGHTLY,
+        environment: Environment.DEFAULT,
+    )
+
+    public static final Folder NIGHTLY_SONARCLOUD = new Folder(
+        name: 'NIGHTLY_SONARCLOUD',
+        jobType: JobType.NIGHTLY,
+        environment: Environment.SONARCLOUD,
+    )
+
+    public static final Folder NIGHTLY_NATIVE = new Folder(
+        name: 'NIGHTLY_NATIVE',
+        jobType: JobType.NIGHTLY,
+        environment: Environment.NATIVE,
+    )
+
+    public static final Folder NIGHTLY_MANDREL = new Folder(
+        name: 'NIGHTLY_MANDREL',
+        jobType: JobType.NIGHTLY,
+        environment: Environment.MANDREL,
+    )
+
+    public static final Folder NIGHTLY_QUARKUS_MAIN = new Folder(
+        name: 'NIGHTLY_QUARKUS_MAIN',
+        jobType: JobType.NIGHTLY,
+        environment: Environment.QUARKUS_MAIN,
+    )
+
+    public static final Folder NIGHTLY_QUARKUS_BRANCH = new Folder(
+        name: 'NIGHTLY_QUARKUS_BRANCH',
+        jobType: JobType.NIGHTLY,
+        environment: Environment.QUARKUS_BRANCH,
+    )
+
+    public static final Folder NIGHTLY_QUARKUS_LTS = new Folder(
+        name: 'NIGHTLY_QUARKUS_LTS',
+        jobType: JobType.NIGHTLY,
+        environment: Environment.QUARKUS_LTS,
+    )
+
+    public static final Folder PULLREQUEST = new Folder(
+        name: 'PULLREQUEST',
+        jobType: JobType.PULLREQUEST,
+        environment: Environment.DEFAULT,
+        configValues: [ // Setup config values for backward compatibility in job naming
+            typeId: 'tests',
+            typeName: 'build'
+        ],
+    )
+    public static final Folder PULLREQUEST_NATIVE = new Folder(
+        name: 'PULLREQUEST_NATIVE',
+        jobType: JobType.PULLREQUEST,
+        environment: Environment.NATIVE,
+    )
+
+    public static final Folder PULLREQUEST_MANDREL = new Folder(
+        name: 'PULLREQUEST_MANDREL',
+        jobType: JobType.PULLREQUEST,
+        environment: Environment.MANDREL,
+    )
+
+    public static final Folder PULLREQUEST_QUARKUS_MAIN = new Folder(
+        name: 'PULLREQUEST_QUARKUS_MAIN',
+        jobType: JobType.PULLREQUEST,
+        environment: Environment.QUARKUS_MAIN,
+    )
+
+    public static final Folder PULLREQUEST_QUARKUS_BRANCH = new Folder(
+        name: 'PULLREQUEST_QUARKUS_BRANCH',
+        jobType: JobType.PULLREQUEST,
+        environment: Environment.QUARKUS_BRANCH,
+    )
+
+    public static final Folder PULLREQUEST_QUARKUS_LTS = new Folder(
+        name: 'PULLREQUEST_QUARKUS_LTS',
+        jobType: JobType.PULLREQUEST,
+        environment: Environment.QUARKUS_LTS,
+    )
+
+    public static final Folder PULLREQUEST_RUNTIMES_BDD = new Folder(
+        name: 'PULLREQUEST_RUNTIMES_BDD',
+        jobType: JobType.PULLREQUEST,
+        environment: Environment.KOGITO_BDD,
+        disableAutoGeneration: true
+    )
+
+    public static final Folder RELEASE = new Folder(
+        name: 'RELEASE',
+        jobType: JobType.RELEASE,
+        environment: Environment.DEFAULT,
+        defaultEnv: [
+            RELEASE: 'true'
+        ],
+    )
+
+    public static final Folder TOOLS = new Folder(
+        name: 'TOOLS',
+        jobType: JobType.TOOLS,
+        environment: Environment.DEFAULT,
+    )
+
+    public static final Folder OTHER = new Folder(
+        name: 'OTHER',
+        jobType: JobType.OTHER,
+        environment: Environment.DEFAULT,
+    )
+
+    private static Set<Folder> FOLDERS = [
+        NIGHTLY, 
+        NIGHTLY_SONARCLOUD, 
+        NIGHTLY_NATIVE, 
+        NIGHTLY_MANDREL, 
+        NIGHTLY_QUARKUS_MAIN, 
+        NIGHTLY_QUARKUS_BRANCH,
+        NIGHTLY_QUARKUS_LTS,
+        PULLREQUEST, 
+        PULLREQUEST_NATIVE, 
+        PULLREQUEST_MANDREL, 
+        PULLREQUEST_QUARKUS_MAIN, 
+        PULLREQUEST_QUARKUS_BRANCH, 
+        PULLREQUEST_QUARKUS_LTS, 
+        PULLREQUEST_RUNTIMES_BDD,
+        RELEASE, TOOLS, OTHER
+    ]
+
+    static void register(Folder folder) {
+        FOLDERS.add(folder)
+    }
+
+    static List getAllRegistered() {
+        return new ArrayList(FOLDERS)
+    }
+
+    static Folder getByName(String name) {
+        return FOLDERS.find { it.name == name }
     }
 
     static List<Folder> getAllFolders(def script) {
@@ -174,11 +231,10 @@ enum Folder {
             getAllReleaseFolders(script) +
             getAllToolsFolders(script) +
             getAllOtherFolders(script)
-    // Folder.UPDATE_VERSION,
     }
 
     static List<Folder> getAllActiveFolders(def script) {
-        return Folder.values().findAll { folder -> folder.isActive(script) }
+        return getAllRegistered().findAll { folder -> folder.isActive(script) }
     }
 
     static List<Folder> getAllNightlyFolders(def script) {

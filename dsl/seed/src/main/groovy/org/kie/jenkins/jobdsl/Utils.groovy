@@ -26,31 +26,39 @@ class Utils {
         return script.getBinding().hasVariable(key) ? script.getBinding().getVariable(key) : ''
     }
 
-    static boolean isQuarkusMainEnvironmentEnabled(def script) {
+    static boolean isEnvironmentQuarkusMainEnabled(def script) {
         return getBindingValue(script, 'ENVIRONMENT_QUARKUS_MAIN_ENABLED').toBoolean()
     }
 
-    static boolean isQuarkusBranchEnvironmentEnabled(def script) {
+    static boolean isEnvironmentQuarkusBranchEnabled(def script) {
         return getBindingValue(script, 'ENVIRONMENT_QUARKUS_BRANCH_ENABLED').toBoolean()
     }
 
-    static String getQuarkusEnvironmentBranchName(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_BRANCH_NAME')
+    static String getEnvironmentQuarkusBranchVersion(def script) {
+        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_BRANCH_VERSION')
     }
 
-    static boolean isNativeEnvironmentEnabled(def script) {
+    static boolean isEnvironmentQuarkusLTSEnabled(def script) {
+        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_LTS_ENABLED').toBoolean()
+    }
+
+    static String getEnvironmentQuarkusLTSVersion(def script) {
+        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_LTS_VERSION')
+    }
+
+    static boolean isEnvironmentNativeEnabled(def script) {
         return getBindingValue(script, 'ENVIRONMENT_NATIVE_ENABLED').toBoolean()
     }
 
-    static boolean isMandrelEnvironmentEnabled(def script) {
+    static boolean isEnvironmentMandrelEnabled(def script) {
         return getBindingValue(script, 'ENVIRONMENT_MANDREL_ENABLED').toBoolean()
     }
 
-    static String getMandrelEnvironmentBuilderImage(def script) {
+    static String getEnvironmentMandrelBuilderImage(def script) {
         return getBindingValue(script, 'ENVIRONMENT_MANDREL_BUILDER_IMAGE')
     }
 
-    static boolean isRuntimesBDDEnvironmentEnabled(def script) {
+    static boolean isEnvironmentRuntimesBDDEnabled(def script) {
         return getBindingValue(script, 'ENVIRONMENT_RUNTIMES_BDD_ENABLED').toBoolean()
     }
 
@@ -63,8 +71,8 @@ class Utils {
     }
 
     static boolean isMainBranch(def script) {
-        boolean result = getGitBranch(script) == getGitMainBranch(script)
-        // script.println("Branch=${getGitBranch(script)}. Main Branch=${getGitMainBranch(script)}. Is main branch ? => ${result}")
+        boolean result = getGenerationBranch(script) == getGitMainBranch(script)
+        // script.println("Branch=${getGenerationBranch(script)}. Main Branch=${getGitMainBranch(script)}. Is main branch ? => ${result}")
         return result
     }
 

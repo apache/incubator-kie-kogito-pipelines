@@ -8,23 +8,38 @@ on:
     paths:
     - 'dsl/**'
 
-jobs: 
+jobs:
+  getDslDownstreamMatrix:
+    runs-on: ubuntu-latest
+    name: Get DSL downstream projects Matrix
+    outputs:
+        matrix: ${{ steps.setmatrix.outputs.repositories }}
+    steps:
+      - name: Checkout 
+        uses: actions/checkout@v2
+
+      - name: Install yq
+        run: |
+          echo $PATH
+          wget https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_amd64.tar.gz -O - |  tar xz && ls -al && mv yq_linux_amd64 yq
+
+      - id: setmatrix
+        run: |
+         matrixArray=$(./yq eval '.repositories[].name' dsl/seed/config/branch.yaml) # Creates array of all repositories
+         # Start Generate Json String
+         echo "$matrixArray" | \
+         jq --slurp --raw-input 'split("\n")[:-1]' | \
+         jq  "{\"repository\": .[] }" | \
+         jq -sc "{ \"include\": . }" > tmp
+         cat ./tmp
+         # End Generate Json String
+         matrixStringifiedObject=$(cat ./tmp) # Use this as jq @sh wasn't cooperating
+         echo "::set-output name=repositories::$matrixStringifiedObject"
   downstream-dsl-tests:
     runs-on: ubuntu-latest
+    needs: getDslDownstreamMatrix
     strategy:
-      matrix:
-        repository:
-        - drools
-        - kogito-runtimes
-        - optaplanner
-        - optaweb-employee-rostering
-        - optaweb-vehicle-routing
-        - optaplanner-quickstarts
-        - kogito-apps
-        - kogito-examples
-        - kogito-images
-        - kogito-operator
-        - kie-tools
+      matrix: ${{fromJson(needs.getDslDownstreamMatrix.outputs.matrix)}}
       fail-fast: false
     name: Downstream - ${{ matrix.repository }}
     steps:
@@ -36,10 +51,27 @@ jobs:
       with:
         java-version: 11
 
-    - name: Setup base branch
-      if: matrix.repository != 'optaplanner-quickstarts' || github.base_ref != 'main'
+    - name: Setup default base branch
       run: |
         echo 'BASE_BRANCH=${{ github.base_ref }}' >> $GITHUB_ENV
+    
+    - name: Setup correct base branch for opta repositories
+      if: ${{ startsWith(matrix.repository, 'opta') && github.base_ref != 'main' }}
+      run: |
+        IFS='.' read -ra ver <<< "${{ github.base_ref }}"
+        release=${ver[2]}
+        minor=${ver[1]}
+        major=${ver[0]}
+        echo "BASE_BRANCH=$((major+7)).$minor.$release" >> $GITHUB_ENV
+
+    - name: Setup correct base branch for drools repositories
+      if: ${{ startsWith(matrix.repository, 'drools') && github.base_ref != 'main' }}
+      run: |
+        IFS='.' read -ra ver <<< "${{ github.base_ref }}"
+        release=${ver[2]}
+        minor=${ver[1]}
+        major=${ver[0]}
+        echo "BASE_BRANCH=$((major+7)).$minor.$release" >> $GITHUB_ENV
 
     - name: Setup correct base branch for optaplanner-quickstarts
       if: github.base_ref == 'main' && matrix.repository == 'optaplanner-quickstarts'
