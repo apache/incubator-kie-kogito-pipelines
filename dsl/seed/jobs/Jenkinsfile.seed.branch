@@ -149,8 +149,8 @@ pipeline {
                                 sandbox: false,
                                 ignoreExisting: false,
                                 ignoreMissingFiles: false,
-                                removedJobAction: index >= size - 1 ? 'DELETE' : 'IGNORE',
-                                removedViewAction: index >= size - 1 ? 'DELETE' : 'IGNORE',
+                                removedJobAction: index >= size - 1 ? 'IGNORE' : 'IGNORE',
+                                removedViewAction: index >= size - 1 ? 'IGNORE' : 'IGNORE',
                                 lookupStrategy: 'SEED_JOB',
                                 additionalClasspath: 'src/main/groovy',
                                 additionalParameters : envProps
