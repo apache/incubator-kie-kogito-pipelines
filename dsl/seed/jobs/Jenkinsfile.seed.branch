@@ -63,7 +63,7 @@ pipeline {
             steps {
                 script {
                     all_repos.each { repository ->
-                        println "[INFO] Generate repo seed job for repository ${repository}"
+                        println "[INFO] Prepare jobs for repository ${repository}"
                         def repoConfig = getRepoConfig(repository)
                         dir("repos/${repository}") {
                             checkout(githubscm.resolveRepository(repository, repoConfig.git.author.name, repoConfig.git.branch, false))
