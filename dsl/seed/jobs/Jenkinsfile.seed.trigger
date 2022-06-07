@@ -6,7 +6,7 @@ util = null
 
 // Configuration of the pipeline is done via the `config/main.yaml` file
 pipeline {
-    agent any
+    agent 'kie-rhel8 && !master'
 
     options {
         timestamps()

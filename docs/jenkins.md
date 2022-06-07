@@ -59,34 +59,8 @@ Each repository which want its job to be generated should be registered into the
     .
     ├── .ci/jenkins                
     │   ├── dsl
-    │   │   ├── Jenkinsfile.seed # Main entry point for generation of the jobs
     │   │   ├── jobs.groovy      # contains the jobs for the current branch to be generated
     │   └── tests                # (optional) tests for Jenkinsfiles
-
-#### Seed file entry point
-
-`Jenkinsfile.seed` should be defined as follow:
-
-```groovy
-@Library('jenkins-pipeline-shared-libraries')_
-
-seed_generation = null
-node('master') {
-    dir("${SEED_REPO}") {
-        checkout(githubscm.resolveRepository("${SEED_REPO}", "${SEED_AUTHOR}", "${SEED_BRANCH}", false))
-        seed_generation = load "${SEED_SCRIPTS_FILEPATH}"
-    }
-}
-seed_generation.generate()
-```
-
-It is just an entry point for the job generation. The setup for job generation is then done in the `seed_generation.generate()` method.  
-The user does just need to create then the `.ci/jenkins/dsl/jobs.groovy` file to generate the needed jobs for the repository.  
-See an example [here](../.ci/jenkins/dsl/jobs.groovy)
-
-Using a proper `Jenkinsfile.seed` stored directly into the repository folders will allow to set a hook on that repository to be able to refresh the jobs easily when an update is done.
-
-*NOTE: Your pipelines' Jenkinsfiles can be stored anywhere in the repository. The reference is anyway done in the job script, so you can put whatever you want if needed. One good practise would be to store it in the `.ci/jenkins` folder.*
 
 ### Generated jobs structure
 
