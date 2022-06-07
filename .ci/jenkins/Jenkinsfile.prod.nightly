@@ -174,8 +174,8 @@ def getMessageBody(String propertiesFileUrl, String alreadyBuiltProjects) {
     def alreadyBuiltProjectsArray = (alreadyBuiltProjects ?: '').split(";")
     return """
 {
-	"propertiesFileUrl": "${propertiesFileUrl}",
-	"builtProjects": ${new groovy.json.JsonBuilder(alreadyBuiltProjectsArray).toString()}
+    "propertiesFileUrl": "${propertiesFileUrl}",
+    "builtProjects": ${new groovy.json.JsonBuilder(alreadyBuiltProjectsArray).toString()}
 }"""    
 }
 
