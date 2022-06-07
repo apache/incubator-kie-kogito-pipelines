@@ -100,7 +100,21 @@ pipeline {
                 script {
                     dir(getRepoName()) {
                         getGradleRegex().each { regex ->
-                            sh "${WORKSPACE}/tools/update-build-gradle-regex-line.sh '${regex}' ${getNewVersion()}"
+                            sh "${WORKSPACE}/tools/update-file-property-lines.sh 'build.gradle' '${regex}' ${getNewVersion()}"
+                        }
+                    }
+                }
+            }
+        }
+        stage('Update Gradle properties') {
+            when {
+                expression { return getGradleRegex() }
+            }
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        getGradleRegex().each { regex ->
+                            sh "${WORKSPACE}/tools/update-file-property-lines.sh '${regex}' ${getNewVersion()}"
                         }
                     }
                 }

@@ -156,7 +156,7 @@ function update_quarkus_properties() {
 function update_gradle_regexps() {
   for re in "${GRADLE_REGEX[@]}"
   do
-    ${script_dir_path}/update-build-gradle-regex-line.sh "${re}" ${QUARKUS_VERSION}
+    ${script_dir_path}/update-file-property-lines.sh 'build.gradle' "${re}" ${QUARKUS_VERSION}
   done
 }
 
