@@ -78,7 +78,7 @@ pipeline {
                     echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
 
                     configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
-                        withCredentials([string(credentialsId: 'kie-ci1-token', variable: 'GITHUB_TOKEN')]) {
+                        withCredentials([string(credentialsId: 'kie-ci3-token', variable: 'GITHUB_TOKEN')]) {
                             sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/${buildChainConfigBranch}/.ci/${buildChainDefinitionFile}' -folder='bc' build ${buildChainAction} -url=${env.ghprbPullLink} ${buildChainAdditionalArguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'"
                         }
                     }
@@ -127,7 +127,7 @@ pipeline {
         unsuccessful {
             script {
                 if (isPR()) {
-                    pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, '', "${BUILD_URL}", 'GITHUB'))
+                    pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, '', "${BUILD_URL}", 'GITHUB'), 'kie-ci3-token')
                 }
             }
         }
