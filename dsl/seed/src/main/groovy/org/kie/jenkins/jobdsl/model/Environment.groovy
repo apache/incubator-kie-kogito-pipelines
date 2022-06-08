@@ -100,7 +100,6 @@ class Environment {
         getDefaultEnvVarsClosure: { script -> [ 
             QUARKUS_BRANCH: Utils.getEnvironmentQuarkusLTSVersion(script),
             BUILD_MVN_OPTS: '-Dproductized',
-            DISABLE_PERSISTENCE: 'true',
         ] }
     )
 
