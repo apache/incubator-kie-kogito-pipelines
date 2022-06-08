@@ -56,8 +56,8 @@ build:
     build-command: 
       current: |
         mvn -f kogito-examples/pom.xml clean install -Dquarkus.platform.version=999-SNAPSHOT ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
-        if [ "${{ env.DISABLE_PERSISTENCE_CHECK }}" != 'true' ]; then mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence -Dquarkus.platform.version=999-SNAPSHOT ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}; fi
-        if [ "${{ env.DISABLE_EVENTS_CHECK }}" != 'true' ]; then mvn -f kogito-examples-events/pom.xml clean install -Pevents -Dquarkus.platform.version=999-SNAPSHOT ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}; fi
+        mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence -Dquarkus.platform.version=999-SNAPSHOT ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
+        mvn -f kogito-examples-events/pom.xml clean install -Pevents -Dquarkus.platform.version=999-SNAPSHOT ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
       upstream: mvn clean install -Dquickly -Dquarkus.platform.version=999-SNAPSHOT ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_UPSTREAM }}
     clone:
       - kogito-examples
