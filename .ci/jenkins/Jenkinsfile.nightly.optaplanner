@@ -50,9 +50,6 @@ pipeline {
         }
 
         stage('Build & Deploy OptaPlanner') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
             steps {
                 script {
                     String optaplannerBranch = getBuildBranch()
