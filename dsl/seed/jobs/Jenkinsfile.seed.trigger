@@ -52,14 +52,7 @@ boolean arePathsModified(List<String> paths) {
             for (int k = 0; k < files.size(); k++) {
                 def file = files[k]
 
-                if (isDebug()) {
-                    println "[DEBUG] ${file.path}"
-                }
-
                 if (paths.any { file.path.startsWith(it) }) {
-                    if (isDebug()) {
-                        println "[DEBUG] Modified path ${file.path} is taken into account"
-                    }
                     modified = true
                 }
             }
