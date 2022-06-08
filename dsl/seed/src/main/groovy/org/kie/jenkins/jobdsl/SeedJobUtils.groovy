@@ -26,16 +26,13 @@ class SeedJobUtils {
             }
 
             parameters {
-                stringParam('SEED_AUTHOR', Utils.getSeedAuthor(jenkinsScript), 'If different from the default')
-                stringParam('SEED_BRANCH', Utils.getSeedBranch(jenkinsScript), 'If different from the default')
-
                 booleanParam('FORCE_REBUILD', false, 'Default, the job will scan for modified files and do the update in case some files are modified. In case you want to force the DSL generation')
             }
 
             environmentVariables {
-                env('SEED_REPO', KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
-                env('SEED_SCRIPTS_FILEPATH', 'dsl/seed/jobs/scripts/seed_repo_generation.groovy')
-                env('JOB_TYPE', 'TRIGGER')
+                env('REPO_NAME', repository)
+                env('GIT_AUTHOR', gitAuthor)
+                env('GIT_BRANCH_NAME', gitBranch)
 
                 env('JOB_RELATIVE_PATH_TO_TRIGGER', jobRelativePathToTrigger)
                 env('LISTEN_TO_MODIFIED_PATHS', new groovy.json.JsonBuilder(pathsToListen).toString())
