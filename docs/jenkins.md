@@ -34,7 +34,7 @@ The seed structure is as follow:
     |   │   │   └── branch.yaml     # jobs configuration for the current branch
     |   │   └── jobs
     |   │   │   ├── scripts                         # common script for seed generation
-    |   |   │   │   ├── seed_repo_generation.groovy # common script used by the repo seed job
+    |   |   │   │   ├── util.groovy                 # common script used by seed pipelines
     |   |   │   │   └── ...
     |   │   │   ├── Jenkinsfile.seed.branch         # pipeline for the branch seed job
     |   │   │   ├── Jenkinsfile.seed.main           # pipeline for the main seed job
