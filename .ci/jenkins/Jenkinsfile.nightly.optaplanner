@@ -52,21 +52,10 @@ pipeline {
         stage('Build & Deploy OptaPlanner') {
             steps {
                 script {
-                    String optaplannerBranch = getBuildBranch()
-                    String [] buildBranchSplit = optaplannerBranch.split("\\.")
-                    if (buildBranchSplit.length == 3) {
-                        /* The OptaPlanner major version is shifted by 7 from the Kogito major version:
-                           Kogito 1.x.y -> OptaPlanner 8.x.y. */
-
-                        int majorVersionShift = 7
-                        Integer optaplannerMajorVersion = Integer.parseInt(buildBranchSplit[0]) + majorVersionShift
-                        optaplannerBranch = "${optaplannerMajorVersion}.${buildBranchSplit[1]}.${buildBranchSplit[2]}"
-                    }
-
-                    def buildParams = getDefaultBuildParams(optaplannerBranch)
+                    def buildParams = getDefaultBuildParams(getBuildBranch())
                     addSkipTestsParam(buildParams)
                     addSkipIntegrationTestsParam(buildParams)
-                    def quickstartsBranch = optaplannerBranch == 'main' ? 'development' : optaplannerBranch
+                    def quickstartsBranch = getBuildBranch() == 'main' ? 'development' : getBuildBranch()
                     addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', quickstartsBranch)
 
                     buildJob(OPTAPLANNER_DEPLOY, buildParams)
@@ -127,15 +116,6 @@ void sendPipelineErrorNotification() {
     if (params.SKIP_TESTS) {
         paramsStr += '\n- Tests skipped'
     }
-    if (params.SKIP_ARTIFACTS) {
-        paramsStr += '\n- Artifacts skipped'
-    }
-    if (params.SKIP_IMAGES) {
-        paramsStr += '\n- Images skipped'
-    }
-    if (params.SKIP_OPERATOR) {
-        paramsStr += '\n- Operator skipped'
-    }
     bodyMsg += paramsStr ? "\n\nConfiguration:${paramsStr}" : '\n'
 
     if (FAILED_STAGES.size() > 0) {
@@ -170,12 +150,12 @@ void addSkipIntegrationTestsParam(buildParams) {
     addBooleanParam(buildParams, 'SKIP_INTEGRATION_TESTS', params.SKIP_TESTS)
 }
 
-void addStringParam(List params, String key, String value) {
-    params.add(string(name: key, value: value))
+void addStringParam(List buildParams, String key, String value) {
+    pabuildParamsrams.add(string(name: key, value: value))
 }
 
-void addBooleanParam(List params, String key, boolean value) {
-    params.add(booleanParam(name: key, value: value))
+void addBooleanParam(List buildParams, String key, boolean value) {
+    buildParams.add(booleanParam(name: key, value: value))
 }
 
 String getBuildBranch() {
