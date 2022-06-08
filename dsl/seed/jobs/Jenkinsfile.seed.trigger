@@ -2,8 +2,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 @Library('jenkins-pipeline-shared-libraries')_
 
-util = null
-
 // Configuration of the pipeline is done via the `config/main.yaml` file
 pipeline {
     agent {
@@ -19,13 +17,11 @@ pipeline {
         stage('Trigger seed job if needed') {
             steps {
                 script {
-                    checkout(githubscm.resolveRepository("${SEED_REPO}", "${SEED_AUTHOR}", "${SEED_BRANCH}", false))
-
-                    util = load 'dsl/seed/jobs/scripts/util.groovy'
+                    checkout(githubscm.resolveRepository("${REPO_NAME}", "${GIT_AUTHOR}", "${GIT_BRANCH_NAME}", false))
 
                     List listenToModifiedPaths = readJSON(text: env.LISTEN_TO_MODIFIED_PATHS)
 
-                    if (params.FORCE_REBUILD ?: util.arePathsModified(listenToModifiedPaths)) {
+                    if (params.FORCE_REBUILD ?: arePathsModified(listenToModifiedPaths)) {
                         echo "Build ${JOB_RELATIVE_PATH_TO_TRIGGER}"
                         currentBuild.displayName = '(Re)Build jobs'
                         build(job: "${JOB_RELATIVE_PATH_TO_TRIGGER}", parameters: [], wait: false)
@@ -43,4 +39,24 @@ pipeline {
             }
         }
     }
+}
+
+boolean arePathsModified(List<String> paths) {
+    def modified = false
+    def changeLogSets = currentBuild.changeSets
+    for (int i = 0; i < changeLogSets.size(); i++) {
+        def entries = changeLogSets[i].items
+        for (int j = 0; j < entries.length; j++) {
+            def entry = entries[j]
+            def files = new ArrayList(entry.affectedFiles)
+            for (int k = 0; k < files.size(); k++) {
+                def file = files[k]
+
+                if (paths.any { file.path.startsWith(it) }) {
+                    modified = true
+                }
+            }
+        }
+    }
+    return modified
 }
