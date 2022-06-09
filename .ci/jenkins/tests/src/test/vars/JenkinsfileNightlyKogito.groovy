@@ -1,14 +1,14 @@
 import com.homeaway.devtools.jenkins.testing.JenkinsPipelineSpecification
 
-class JenkinsfileNightly extends JenkinsPipelineSpecification {
+class JenkinsfileNightlyKogito extends JenkinsPipelineSpecification {
 	def Jenkinsfile = null
 
     def setup() {
-        Jenkinsfile = loadPipelineScriptForTest('Jenkinsfile.nightly')
+        Jenkinsfile = loadPipelineScriptForTest('Jenkinsfile.nightly.kogito')
         assert Jenkinsfile != null
     }
 
-	def '[Jenkinsfile.nightly] constructKey: no prefix' () {
+	def '[Jenkinsfile.nightly.kogito] constructKey: no prefix' () {
 		when:
 			String paramId = 'paramId'
 			String key = Jenkinsfile.constructKey('', paramId)
@@ -16,7 +16,7 @@ class JenkinsfileNightly extends JenkinsPipelineSpecification {
 			key == paramId
 	}
 
-	def '[Jenkinsfile.nightly] constructKey: prefix' () {
+	def '[Jenkinsfile.nightly.kogito] constructKey: prefix' () {
 		when:
 			String prefix = 'prefix'
 			String paramId = 'paramId'
