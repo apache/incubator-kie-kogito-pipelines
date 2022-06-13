@@ -75,6 +75,10 @@ class Folder {
         return this.environment == Environment.QUARKUS_BRANCH
     }
 
+    boolean isQuarkusLTS() {
+        return this.environment == Environment.QUARKUS_LTS
+    }
+
     // A folder is active if
     // - its job type is NOT optional (not matter the environment)
     // OR
