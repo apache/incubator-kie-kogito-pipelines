@@ -9,16 +9,11 @@ pipeline {
         jdk 'kie-jdk11'
     }
     parameters {
-        string(description: 'The RHBA Maven Repo URL', name: 'RHBA_MAVEN_REPO_URL')
-        string(description: 'The RHBA version prefix, something like 7.52.0.Final-redhat', name: 'RHBA_VERSION_PREFIX')
         string(description: 'The deployment URL', name: 'KOGITO_DEPLOYMENT_REPO_URL')
         booleanParam(description: 'Skip Tests? True as default', name: 'SKIP_TESTS', defaultValue: true)
         string(description: 'The UMB message version', name: 'UMB_VERSION', defaultValue: 'main')
         string(description: 'The product version', name: 'PRODUCT_VERSION')
-        string(description: 'The drools product version', name: 'DROOLS_PRODUCT_VERSION')
-        string(description: 'The optaplanner product version', name: 'OPTAPLANNER_PRODUCT_VERSION')
         string(description: 'The config repository branch', name: 'CONFIG_BRANCH', defaultValue: 'main')
-        string(description: 'The RHBA release version. Something like 7.12 or main', name: 'RHBA_RELEASE_VERSION')
     }
     options {
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')
@@ -50,19 +45,11 @@ pipeline {
                         pipelineHelper.retry(
                         {
                             def SETTINGS_XML_ID = 'kogito-nightly-version'
-                            def projectCollection = ['drools', 'optaplanner', 'optaplanner-quickstarts', 'optaweb-vehicle-routing', 'optaweb-employee-rostering', 'kogito-runtimes', 'kogito-apps', 'kogito-examples', 'jboss-integration/kogito-rhba']
+                            def projectCollection = ['kogito-runtimes', 'kogito-apps', 'kogito-examples', 'jboss-integration/kogito-rhba']
                             def projectVariableMap = [:]
-                            def additionalVariables = [
-                                'droolsProductVersion': env.DROOLS_PRODUCT_VERSION, 
-                                'drools-scmRevision': getDroolsBranch(), 
-                                'optaplannerProductVersion': env.OPTAPLANNER_PRODUCT_VERSION, 
-                                'optaplanner-scmRevision': getOptaPlannerBranch(), 
-                                'optaplanner-quickstarts-scmRevision': getOptaPlannerQuickstartsBranch(), 
-                                'optaweb-vehicle-routing-scmRevision': getOptaPlannerBranch(), 
-                                'optaweb-employee-rostering-scmRevision': getOptaPlannerBranch(),
-                            ]
+                            def additionalVariables = [:]
                             configFileProvider([configFile(fileId: '49737697-ebd6-4396-9c22-11f7714808eb', variable: 'PRODUCTION_PROJECT_LIST')]) {
-                                pmebuild.buildProjects(projectCollection, "${SETTINGS_XML_ID}", "$WORKSPACE/build_config/kogito/nightly", "${env.PME_CLI_PATH}", projectVariableMap, additionalVariables, [:])
+                                pmebuild.buildProjects(projectCollection, "${SETTINGS_XML_ID}", "$WORKSPACE/build_config/openshift-serverless-logic/nightly", "${env.PME_CLI_PATH}", projectVariableMap, additionalVariables, [:])
                             }
                         }, 2, 480*60)
                     }
@@ -75,12 +62,10 @@ pipeline {
                     if(env.ALREADY_BUILT_PROJECTS?.trim()) {
                         def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
 
-                        build job: env.KOGITO_PROPERTIES_GENERATOR_PATH, parameters: [
+                        build job: env.OPENSHIFT_SERVERLESS_LOGIC_PROPERTIES_GENERATOR_PATH, parameters: [
                             [$class: 'BooleanParameterValue', name: 'IS_RELEASE', value: false],
                             [$class: 'StringParameterValue', name: 'BRANCH_NAME', value: env.BRANCH_NAME],
-                            [$class: 'StringParameterValue', name: 'KOGITO_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['productVersion']],
-                            [$class: 'StringParameterValue', name: 'DROOLS_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['droolsProductVersion']],
-                            [$class: 'StringParameterValue', name: 'OPTAPLANNER_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['optaplannerProductVersion']],
+                            [$class: 'StringParameterValue', name: 'PRODUCT_VERSION', value: PME_BUILD_VARIABLES['productVersion']],
                             [$class: 'StringParameterValue', name: 'TIME_STAMP', value: "${PME_BUILD_VARIABLES['datetimeSuffix']}"],
                             [$class: 'StringParameterValue', name: 'GIT_INFORMATION_HASHES', value: "${treatGitHashes(env.GIT_INFORMATION_HASHES)}"]
                         ]
@@ -181,19 +166,6 @@ def getMessageBody(String propertiesFileUrl, String alreadyBuiltProjects) {
 
 def treatGitHashes(String gitInformationHashes) {
     return gitInformationHashes.replace('-', '.').replaceAll(/([\w\d\-\_\.]*\/)([\w\d\-\_\.]*)/,'$2.scm.hash').replace(';', '\n')
-}
-
-String getDroolsBranch() {
-    return calculateKieRepoBranch(env.CHANGE_BRANCH ?: BRANCH_NAME)
-}
-
-String getOptaPlannerBranch() {
-    return calculateKieRepoBranch(env.CHANGE_BRANCH ?: BRANCH_NAME)
-}
-
-String getOptaPlannerQuickstartsBranch() {
-    def branch = env.CHANGE_BRANCH ?: BRANCH_NAME
-    return branch == 'main' ? 'development' : calculateKieRepoBranch(branch)
 }
 
 String calculateKieRepoBranch(String branch) {
