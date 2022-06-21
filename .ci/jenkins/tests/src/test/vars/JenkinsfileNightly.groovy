@@ -4,11 +4,11 @@ class JenkinsfileNightlyKogito extends JenkinsPipelineSpecification {
 	def Jenkinsfile = null
 
     def setup() {
-        Jenkinsfile = loadPipelineScriptForTest('Jenkinsfile.nightly.kogito')
+        Jenkinsfile = loadPipelineScriptForTest('Jenkinsfile.nightly')
         assert Jenkinsfile != null
     }
 
-	def '[Jenkinsfile.nightly.kogito] constructKey: no prefix' () {
+	def '[Jenkinsfile.nightly] constructKey: no prefix' () {
 		when:
 			String paramId = 'paramId'
 			String key = Jenkinsfile.constructKey('', paramId)
@@ -16,7 +16,7 @@ class JenkinsfileNightlyKogito extends JenkinsPipelineSpecification {
 			key == paramId
 	}
 
-	def '[Jenkinsfile.nightly.kogito] constructKey: prefix' () {
+	def '[Jenkinsfile.nightly] constructKey: prefix' () {
 		when:
 			String prefix = 'prefix'
 			String paramId = 'paramId'

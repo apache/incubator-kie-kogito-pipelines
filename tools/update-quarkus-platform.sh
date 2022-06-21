@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
 
 GITHUB_URL="https://github.com/"
 GITHUB_URL_SSH="git@github.com:"
 
-MINOR_VERSION=
+VERSION=
+PROJECT=kogito
 DRY_RUN=false
 BRANCH=main
 
 usage() {
-    echo 'Usage: update-quarkus-platform.sh -v $MINOR_VERSION -f $FORK [-s] [-b] [-n] COMMAND'
+    echo 'Usage: update-quarkus-platform.sh -v $VERSION -f $FORK [-s] [-b] [-n] COMMAND'
     echo
     echo 'Options:'
-    echo '  -v $MINOR_VERSION    set MINOR version'
-    echo '                       e.g. 6.0.Final for Kogito 1.6.0.Final and OptaPlanner 8.6.0.Final'
+    echo '  -v $VERSION          set version'
+    echo '  -p project           `kogito` or `optaplanner`. Default is kogito.'
     echo '  -f $FORK             GH account where the branch should be pushed'
     echo '  -s                   Use SSH to connect to GitHub'
     echo '  -b $BRANCH           Quarkus Platform branch (optional. Default is `main`)'
@@ -22,11 +24,11 @@ usage() {
     echo
     echo 'Examples:'#!/bin/sh
     echo '  # Stage the PR'
-    echo '  #  - Bump Kogito 1.7.0.Final + OptaPlanner 8.7.0.Final'
+    echo '  #  - Bump Kogito 1.7.0.Final
     echo '  #  - Add staging repositories'
     echo '  #  - Push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run'
-    echo '  sh update-quarkus-platform.sh -v 7.0.Final -f evacchi -n stage'
+    echo '  sh update-quarkus-platform.sh -v 1.7.0.Final -p kogito -f evacchi -n stage'
     echo
     echo '  # Finalize the PR:'
     echo '  #  - Remove staging repositories'
@@ -35,7 +37,7 @@ usage() {
     echo '  sh update-quarkus-platform.sh -v 7.0.Final -f evacchi -n finalize'
 }
 
-args=`getopt v:f:b:snh $*`
+args=`getopt v:p:f:b:snh $*`
 if [ "$#" -eq 0 -o $? != 0 ]; then
     >&2 echo ERROR: no args given.
 
@@ -48,7 +50,10 @@ do
         case "$i"
         in
                 -v)
-                        MINOR_VERSION=$2;
+                        VERSION=$2;
+                        shift;shift ;;
+                -p)
+                        PROJECT=$2
                         shift;shift ;;
                 -f)
                         FORK=$2
@@ -75,18 +80,18 @@ do
 done
 
 
-if [ "$MINOR_VERSION" = "" ]; then 
-        >&2 echo ERROR: no version specified.
-        usage
+if [ "$VERSION" = "" ]; then 
+    >&2 echo ERROR: no version specified.
+    usage
 
-        exit 2
+    exit 2
 fi
 
 if [ "$FORK" = "" ]; then 
-        >&2 echo ERROR: no fork specified.
-        usage
+    >&2 echo ERROR: no fork specified.
+    usage
 
-        exit 2
+    exit 2
 fi
 
 case "$COMMAND"
@@ -108,10 +113,7 @@ REPO=quarkus-platform
 PR_FORK=$FORK/$REPO
 ORIGIN=quarkusio/$REPO
 
-KOGITO_VERSION=1.$MINOR_VERSION
-OPTAPLANNER_VERSION=8.$MINOR_VERSION
-
-PR_BRANCH=bump-kogito-$KOGITO_VERSION+optaplanner-$OPTAPLANNER_VERSION
+PR_BRANCH=bump-${PROJECT}-${VERSION}
 
 
 echo GITHUB_URL...............$GITHUB_URL
@@ -119,8 +121,7 @@ echo ORIGIN...................$ORIGIN
 echo PR_FORK..................$PR_FORK
 echo BRANCH...................$BRANCH
 echo PR_BRANCH................$PR_BRANCH
-echo KOGITO_VERSION...........$KOGITO_VERSION
-echo OPTAPLANNER_VERSION......$OPTAPLANNER_VERSION
+echo VERSION..................$VERSION
 echo COMMAND..................$COMMAND
 echo
 if [ "$DRY_RUN" = "true" ]; then
@@ -147,28 +148,18 @@ stage() {
     ./mvnw \
     -s .github/mvn-settings.xml \
     versions:set-property \
-    -Dproperty=kogito-quarkus.version \
-    -DnewVersion=$KOGITO_VERSION \
-    -DgenerateBackupPoms=false
-    ./mvnw \
-    -s .github/mvn-settings.xml \
-    versions:set-property \
-    -Dproperty=optaplanner-quarkus.version \
-    -DnewVersion=$OPTAPLANNER_VERSION \
+    -Dproperty=${PROJECT}-quarkus.version \
+    -DnewVersion=${VERSION} \
     -DgenerateBackupPoms=false
     
     # update pom metadata
-    ./mvnw -s .github/mvn-settings.xml validate -Pregen-kogito -N
-
     ./mvnw -s .github/mvn-settings.xml -Dsync
     
     # commit all
-    git commit -am "Kogito $KOGITO_VERSION + OptaPlanner $OPTAPLANNER_VERSION"
+    git commit -am "${PROJECT} ${VERSION}"
 
     if [ "$DRY_RUN" = "false" ]; then
-        # push the branch to a remote
         git push -u ${GITHUB_URL}$PR_FORK $PR_BRANCH
-        # Open a PR to kogito-runtimes using the commit as a title
         gh pr create --fill --base $BRANCH -R $ORIGIN
     fi
 }

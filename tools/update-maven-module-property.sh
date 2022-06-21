@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail
  
-# kogito-runtimes, optaplanner. kogito-examples or optaplanner-quickstarts
 PROPERTY=$1
 VALUE=$2
 MODULE=$3

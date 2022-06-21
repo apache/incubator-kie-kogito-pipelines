@@ -7,9 +7,6 @@ ecosystem:
   - name: kogito
     regexs:
     - kogito.*
-  - name: optaplanner
-    regexs:
-    - opta.*
   - name: kie-tools
     ignore_release: true
     regexs:
@@ -17,8 +14,6 @@ ecosystem:
 
 git:
   branches:
-  # For each branch, you can also define specific `seed_config_file` information
-  # which will override the default defined below
   - name: main
   - name: 1.11.x
     old_folder_structure: true
@@ -50,7 +45,6 @@ git:
       jenkinsfile: dsl/seed/jobs/Jenkinsfile.seed.branch
   main_branch:
     default: main
-    optaplanner-quickstarts: development
 
 seed:
   config_file:
@@ -59,7 +53,7 @@ seed:
       author:
         name: kiegroup
         credentials_id: kie-ci
-      branch: main # Used only for main branch checkout. Else it should be defined for each branch at git.branches level. By default, this value will be overriden by the branch name.
+      branch: main
     path: dsl/config/branch.yaml
   jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
 

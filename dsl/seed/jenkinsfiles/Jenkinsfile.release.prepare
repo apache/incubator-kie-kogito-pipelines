@@ -187,7 +187,7 @@ void createBranches(List repositories) {
         echo "Checkout repo ${gitAuthor}/${repoName} on branch ${baseBranch}"
         dir(repoName) {
             deleteDir()
-            checkout(githubscm.resolveRepository(repoName, gitAuthor, baseBranch, false))
+            checkout(githubscm.resolveRepository(repoName, gitAuthor, baseBranch, false, gitAuthorCredsId))
             getOrCreateGitBranch(releaseBranch, gitAuthorCredsId)
         }
         // Update the branch with the new release branch

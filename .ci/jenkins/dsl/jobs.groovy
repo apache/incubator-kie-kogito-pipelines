@@ -12,11 +12,10 @@ setupKogitoRuntimesBDDPrJob()
 setupCreateIssueToolsJob()
 setupCleanOldNamespacesToolsJob()
 setupCleanOldNightlyImagesToolsJob()
-setupUpdateQuarkusToolsJob()
+KogitoJobUtils.createMainQuarkusUpdateToolsJob(this, 'Kogito Pipelines', [ 'drools', 'kogito-runtimes', 'kogito-examples' ])
 
 // Nightly
-setupKogitoNightlyJob()
-setupOptaPlannerNightlyJob()
+setupNightlyJob()
 
 // Release
 setupReleaseJob()
@@ -38,25 +37,6 @@ void setupKogitoRuntimesBDDPrJob() {
     ]
     jobParams.disable_concurrent = true
     KogitoJobTemplate.createPRJob(this, jobParams)
-}
-
-void setupUpdateQuarkusToolsJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'update-quarkus-all', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.update-quarkus")
-    jobParams.env.putAll([
-        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
-
-        NOTIFICATION_JOB_NAME: 'Kogito Pipelines',
-        PR_PREFIX_BRANCH: "${GENERATION_BRANCH}",
-
-        BUILD_BRANCH_NAME: "${GIT_BRANCH}",
-        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
-        GIT_AUTHOR_CREDS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
-    ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
-        parameters {
-            stringParam('NEW_VERSION', '', 'Which version to set ?')
-        }
-    }
 }
 
 void setupCleanOldNamespacesToolsJob() {
@@ -87,8 +67,8 @@ void setupCreateIssueToolsJob() {
     }
 }
 
-void setupKogitoNightlyJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-nightly', Folder.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly.kogito", 'Kogito Nightly')
+void setupNightlyJob() {
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-nightly', Folder.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly", 'Kogito Nightly')
     jobParams.triggers = [cron : '@midnight']
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
@@ -108,31 +88,12 @@ void setupKogitoNightlyJob() {
         parameters {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
-            booleanParam('SKIP_ARTIFACTS', false, 'To skip Artifacts (runtimes, examples, optaplanner) Deployment')
+            booleanParam('SKIP_ARTIFACTS', false, 'To skip Artifacts (drools, runtimes, apps, examples) Deployment')
             booleanParam('SKIP_IMAGES', false, 'To skip Images Deployment')
             booleanParam('SKIP_EXAMPLES_IMAGES', false, 'To skip Examples Images Deployment')
             booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
 
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
-        }
-    }
-}
-
-void setupOptaPlannerNightlyJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'optaplanner-nightly', Folder.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly.optaplanner", 'Optaplanner Nightly')
-    jobParams.triggers = [cron : '@midnight']
-    jobParams.env.putAll([
-        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
-
-        GIT_BRANCH_NAME: "${GIT_BRANCH}",
-        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
-
-        MAVEN_SETTINGS_CONFIG_FILE_ID: "${MAVEN_SETTINGS_FILE_ID}",
-        ARTIFACTS_REPOSITORY: "${MAVEN_ARTIFACTS_REPOSITORY}",
-    ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
-        parameters {
-            booleanParam('SKIP_TESTS', false, 'Skip all tests')
         }
     }
 }
@@ -159,8 +120,6 @@ void setupReleaseJob() {
 
             stringParam('DROOLS_VERSION', '', 'Drools version to release as Major.minor.micro')
             stringParam('DROOLS_RELEASE_BRANCH', '', '(optional) Use to override the release branch name deduced from the DROOLS_VERSION')
-            stringParam('OPTAPLANNER_VERSION', '', 'Project version of OptaPlanner and its examples to release as Major.minor.micro')
-            stringParam('OPTAPLANNER_RELEASE_BRANCH', '', '(optional) Use to override the release branch name deduced from the OPTAPLANNER_VERSION')
             stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
             stringParam('KOGITO_IMAGES_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
             stringParam('KOGITO_OPERATOR_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
@@ -174,7 +133,7 @@ void setupReleaseJob() {
             stringParam('EXAMPLES_URI', '', 'Override default. Git uri to the kogito-examples repository to use for tests.')
             stringParam('EXAMPLES_REF', '', 'Override default. Git reference (branch/tag) to the kogito-examples repository to use for tests.')
 
-            booleanParam('SKIP_ARTIFACTS_DEPLOY', false, 'To skip all artifacts (runtimes, examples) Test & Deployment. If skipped, please provide `ARTIFACTS_REPOSITORY`')
+            booleanParam('SKIP_ARTIFACTS_DEPLOY', false, 'To skip all artifacts (drools, runtimes, apps, examples) Test & Deployment. If skipped, please provide `ARTIFACTS_REPOSITORY`')
             booleanParam('SKIP_ARTIFACTS_PROMOTE', false, 'To skip Runtimes Promote only. Automatically skipped if SKIP_ARTIFACTS_DEPLOY is true.')
             booleanParam('SKIP_IMAGES_DEPLOY', false, 'To skip Images Test & Deployment.')
             booleanParam('SKIP_IMAGES_PROMOTE', false, 'To skip Images Promote only. Automatically skipped if SKIP_IMAGES_DEPLOY is true')

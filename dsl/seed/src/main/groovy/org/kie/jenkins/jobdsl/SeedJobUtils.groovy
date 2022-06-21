@@ -10,7 +10,7 @@ import org.kie.jenkins.jobdsl.Utils
 **/
 class SeedJobUtils {
 
-    static def createSeedJobTrigger(def jenkinsScript, String jobName, String repository, String gitAuthor, String gitBranch, List pathsToListen, String jobRelativePathToTrigger) {
+    static def createSeedJobTrigger(def jenkinsScript, String jobName, String repository, String gitAuthor, String gitAuthorCredsId, String gitBranch, List pathsToListen, String jobRelativePathToTrigger) {
         if (pathsToListen.isEmpty()) {
             throw new RuntimeException('pathsToListen cannot be empty, else it would end up in an infinite loop ...');
         }
@@ -31,7 +31,8 @@ class SeedJobUtils {
 
             environmentVariables {
                 env('REPO_NAME', repository)
-                env('GIT_AUTHOR', gitAuthor)
+                env('GIT_AUTHOR_NAME', gitAuthor)
+                env('GIT_AUTHOR_CREDS_ID', gitAuthorCredsId)
                 env('GIT_BRANCH_NAME', gitBranch)
 
                 env('JOB_RELATIVE_PATH_TO_TRIGGER', jobRelativePathToTrigger)

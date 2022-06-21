@@ -16,7 +16,7 @@ pipeline {
         stage('Trigger seed job if needed') {
             steps {
                 script {
-                    checkout(githubscm.resolveRepository("${REPO_NAME}", "${GIT_AUTHOR}", "${GIT_BRANCH_NAME}", false))
+                    checkout(githubscm.resolveRepository("${REPO_NAME}", "${GIT_AUTHOR_NAME}", "${GIT_BRANCH_NAME}", false, "${GIT_AUTHOR_CREDS_ID}"))
 
                     List listenToModifiedPaths = readJSON(text: env.LISTEN_TO_MODIFIED_PATHS)
 

@@ -8,7 +8,6 @@ GITHUB_URL_SSH="git@github.com:"
 
 MAVEN_VERSION=3.6.3
 
-# kogito-runtimes, optaplanner. kogito-examples or optaplanner-quickstarts
 REPO=kogito-runtimes
 DRY_RUN=false
 BRANCH=main
@@ -118,7 +117,6 @@ fi
 ORIGIN=kiegroup/$REPO
 PR_FORK=$FORK/$REPO
 
-# kogito-runtimes or optaplanner
 PR_BRANCH=${BRANCH}-bump-quarkus-$QUARKUS_VERSION
 
 echo PROJECT................$REPO 
