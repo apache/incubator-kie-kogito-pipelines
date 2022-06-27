@@ -43,19 +43,23 @@ class JobScriptsSpec extends Specification {
         envVars.put('JOB_NAME', 'JOB_NAME')
         envVars.put('GENERATION_BRANCH', 'GENERATION_BRANCH')
 
+        envVars.put('RELEASE_PROJECTS', 'RELEASE_PROJECTS')
         envVars.put('REPO_NAME', 'REPO_NAME')
         envVars.put('GIT_MAIN_BRANCH', 'GIT_MAIN_BRANCH')
         envVars.put('GIT_BRANCH', 'GIT_BRANCH')
+        envVars.put('GIT_AUTHOR_NAME', 'GIT_AUTHOR')
         envVars.put('GIT_AUTHOR', 'GIT_AUTHOR')
         envVars.put('MAIN_BRANCHES', '{"default":"main"}')
 
-        envVars.put('CUSTOM_BRANCH_KEY', 'CUSTOM_BRANCH_KEY')
-        envVars.put('CUSTOM_REPOSITORIES', 'CUSTOM_REPOSITORIES')
-        envVars.put('CUSTOM_AUTHOR', 'CUSTOM_AUTHOR')
-        envVars.put('CUSTOM_MAIN_BRANCH', 'CUSTOM_MAIN_BRANCH')
-
         envVars.put('SEED_AUTHOR', 'SEED_AUTHOR')
         envVars.put('SEED_BRANCH', 'SEED_BRANCH')
+        envVars.put('SEED_REPO', 'SEED_REPO')
+        envVars.put('SEED_JENKINSFILE', 'SEED_JENKINSFILE')
+        envVars.put('SEED_CONFIG_FILE_GIT_REPOSITORY', 'SEED_CONFIG_FILE_GIT_REPOSITORY')
+        envVars.put('SEED_CONFIG_FILE_GIT_AUTHOR_NAME', 'SEED_CONFIG_FILE_GIT_AUTHOR_NAME')
+        envVars.put('SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID', 'SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID')
+        envVars.put('SEED_CONFIG_FILE_GIT_BRANCH', 'SEED_CONFIG_FILE_GIT_BRANCH')
+        envVars.put('SEED_CONFIG_FILE_PATH', 'SEED_CONFIG_FILE_PATH')
 
         envVars.put('GIT_JENKINS_CONFIG_PATH', 'GIT_JENKINS_CONFIG_PATH')
         JobManagement jm = new JenkinsJobManagement(System.out, envVars, new File('.'))

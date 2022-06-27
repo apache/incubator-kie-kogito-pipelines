@@ -1,8 +1,6 @@
 // +++++++++++++++++++++++++++++++++++++++++++ create a seed job ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 import org.kie.jenkins.jobdsl.KogitoConstants
-import org.kie.jenkins.jobdsl.KogitoJobTemplate
-import org.kie.jenkins.jobdsl.KogitoJobUtils
 import org.kie.jenkins.jobdsl.SeedJobUtils
 
 String getSeedAuthor() {
@@ -13,6 +11,26 @@ String getSeedBranch() {
     return SEED_BRANCH ?: 'main'
 }
 
+String getSeedConfigFileGitRepository() {
+    return SEED_CONFIG_FILE_GIT_REPOSITORY ?: 'kogito-pipelines'
+}
+
+String getSeedConfigFileGitAuthorName() {
+    return SEED_CONFIG_FILE_GIT_AUTHOR_NAME ?: 'kiegroup'
+}
+
+String getSeedConfigFileGitAuthorCredsId() {
+    return SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID ?: KogitoConstants.DEFAULT_CREDENTIALS_ID
+}
+
+String getSeedConfigFileGitBranch() {
+    return SEED_CONFIG_FILE_GIT_BRANCH ?: 'main'
+}
+
+String getSeedConfigFilePath() {
+    return SEED_CONFIG_FILE_PATH ?: 'dsl/config/main.yaml'
+}
+
 SeedJobUtils.createSeedJobTrigger(
     this,
     'z-seed-trigger-job',
@@ -20,9 +38,11 @@ SeedJobUtils.createSeedJobTrigger(
     getSeedAuthor(),
     getSeedBranch(),
     [
-        'dsl/seed/config/main.yaml',
+        'dsl/config/main.yaml',
+        'dsl/seed/jenkinsfiles/scripts',
+        'dsl/seed/jenkinsfiles/Jenkinsfile.seed.main',
         'dsl/seed/jobs/seed_job_main.groovy',
-        'dsl/seed/jobs/Jenkinsfile.seed.main',
+        'dsl/seed/jobs/root_jobs.groovy',
     ],
     './0-seed-job')
 
@@ -39,17 +59,18 @@ pipelineJob('0-seed-job') {
     }
 
     parameters {
+        stringParam('SEED_CONFIG_FILE_GIT_REPOSITORY', getSeedConfigFileGitRepository(), 'Repository containing the seed main config file')
+        stringParam('SEED_CONFIG_FILE_GIT_AUTHOR_NAME', getSeedConfigFileGitAuthorName(), 'Author name of repository containing the seed main config file')
+        stringParam('SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID', getSeedConfigFileGitAuthorCredsId(), 'Credentials Id for the author of repository containing the seed main config file')
+        stringParam('SEED_CONFIG_FILE_GIT_BRANCH', getSeedConfigFileGitBranch(), 'Branch of repository containing the seed main config file')
+        stringParam('SEED_CONFIG_FILE_PATH', getSeedConfigFilePath(), 'Path on repository containing the seed main config file')
+
         booleanParam('DEBUG', false, 'Enable Debug capability')
 
         booleanParam('SKIP_TESTS', false, 'Skip testing')
 
-        stringParam('CUSTOM_BRANCH_KEY', '', 'To generate only some custom repos... Branch key to use for job generation. This is useful if you use')
-        stringParam('CUSTOM_REPOSITORIES', '', 'To generate only some custom repos... Comma list of `repo[:branch]`. Example: `kogito-pipelines:any_change`. If no branch is given, then `main` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
-        stringParam('CUSTOM_AUTHOR', '', 'To generate only some custom repos... Define from from which author the custom repositories are checked out. If none given, then `SEED_AUTHOR` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
-        stringParam('CUSTOM_MAIN_BRANCH', '', 'To generate only some custom repos... If no main_branch is given, then DSL config `git.main_branch` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
-
-        stringParam('SEED_AUTHOR', getSeedAuthor(), 'If different from the default')
-        stringParam('SEED_BRANCH', getSeedBranch(), 'If different from the default')
+        stringParam('SEED_AUTHOR', getSeedAuthor(), 'Author to the kogito-pipelines seed repo')
+        stringParam('SEED_BRANCH', getSeedBranch(), 'Branch to the kogito-pipelines seed repo')
     }
 
     definition {
@@ -58,7 +79,7 @@ pipelineJob('0-seed-job') {
                 git {
                     remote {
                         url("https://github.com/${getSeedAuthor()}/kogito-pipelines.git")
-                        credentials('kie-ci')
+                        credentials(KogitoConstants.DEFAULT_CREDENTIALS_ID)
                     }
                     branch(getSeedBranch())
                     extensions {
@@ -66,37 +87,11 @@ pipelineJob('0-seed-job') {
                     }
                 }
             }
-            scriptPath('dsl/seed/jobs/Jenkinsfile.seed.main')
+            scriptPath('dsl/seed/jenkinsfiles/Jenkinsfile.seed.main')
         }
     }
 
     properties {
         githubProjectUrl("https://github.com/${getSeedAuthor()}/kogito-pipelines/")
-    }
-}
-
-def jobParams = KogitoJobUtils.getDefaultJobParams(this, KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
-jobParams.job.name = '0-prepare-release-branch'
-jobParams.job.folder = ''
-jobParams.jenkinsfile = '.ci/jenkins//Jenkinsfile.release.prepare'
-jobParams.job.description = 'Prepare env for a release'
-KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
-    parameters {
-        stringParam('DROOLS_VERSION', '', 'Drools version to release as Major.minor.micro')
-        stringParam('OPTAPLANNER_VERSION', '', 'OptaPlanner version of OptaPlanner and its examples to release as Major.minor.micro')
-        stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
-
-        booleanParam('PRODUCTIZED_BRANCH', false, 'Is the created branch a productized one ?')
-    }
-
-    environmentVariables {
-        env('JENKINS_EMAIL_CREDS_ID', "${JENKINS_EMAIL_CREDS_ID}")
-
-        env('PIPELINE_MAIN_BRANCH', "${GIT_MAIN_BRANCH}")
-        env('DEFAULT_BASE_BRANCH', "${GIT_MAIN_BRANCH}")
-
-        env('GIT_AUTHOR', "${GIT_AUTHOR_NAME}")
-        env('GIT_AUTHOR_CREDS_ID', "${GIT_AUTHOR_CREDENTIALS_ID}")
-        env('GIT_BOT_AUTHOR_CREDS_ID', "${GIT_BOT_AUTHOR_CREDENTIALS_ID}")
     }
 }

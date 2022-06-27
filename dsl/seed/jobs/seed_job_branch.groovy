@@ -1,6 +1,5 @@
 // +++++++++++++++++++++++++++++++++++++++++++ create a seed job ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-import org.kie.jenkins.jobdsl.model.Folder
 import org.kie.jenkins.jobdsl.FolderUtils
 import org.kie.jenkins.jobdsl.KogitoConstants
 import org.kie.jenkins.jobdsl.SeedJobUtils
@@ -8,7 +7,7 @@ import org.kie.jenkins.jobdsl.Utils
 
 // Create all folders
 folder("${GENERATION_BRANCH}")
-if (!Utils.isNewFolderStructure(this)) {
+if (Utils.isOldFolderStructure(this)) {
     // For old branches
     FolderUtils.getAllNeededFolders().each { folder("${GENERATION_BRANCH}/${it}") }
 }
@@ -20,12 +19,11 @@ SeedJobUtils.createSeedJobTrigger(
     "${SEED_AUTHOR}",
     "${SEED_BRANCH}",
     [
-        'dsl/seed/config/branch.yaml',
+        'dsl/config/branch.yaml',
         'dsl/seed/gradle',
+        'dsl/seed/jenkinsfiles/scripts',
+        'dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch',
         'dsl/seed/jobs/seed_job_branch.groovy',
-        'dsl/seed/jobs/Jenkinsfile.seed.branch',
-        'dsl/seed/jobs/seed_job_repo.groovy',
-        'dsl/seed/jobs/scripts',
         'dsl/seed/src',
         'dsl/seed/build.gradle',
         'dsl/seed/gradle.properties',
@@ -48,17 +46,21 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
         booleanParam('DEBUG', false, 'Enable Debug capability')
 
         booleanParam('SKIP_TESTS', false, 'Skip testing')
-
-        stringParam('CUSTOM_REPOSITORIES', "${CUSTOM_REPOSITORIES}", 'To generate only some custom repos... Comma list of `repo[:branch]`. Example: `kogito-pipelines:any_change`. If no branch is given, then `main` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
-        stringParam('CUSTOM_AUTHOR', "${CUSTOM_AUTHOR}", 'To generate only some custom repos... Define from from which author the custom repositories are checked out. If none given, then `SEED_AUTHOR` is taken. Ignored if `CUSTOM_BRANCH_KEY` is not set.')
-
-        stringParam('SEED_AUTHOR', "${SEED_AUTHOR}", 'If different from the default')
-        stringParam('SEED_BRANCH', "${SEED_BRANCH}", 'If different from the default')
     }
 
     environmentVariables {
         env('GENERATION_BRANCH', "${GENERATION_BRANCH}")
         env('MAIN_BRANCHES', "${MAIN_BRANCHES}")
+
+        env('SEED_CONFIG_FILE_GIT_REPOSITORY', "${SEED_CONFIG_FILE_GIT_REPOSITORY}")
+        env('SEED_CONFIG_FILE_GIT_AUTHOR_NAME', "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}")
+        env('SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
+        env('SEED_CONFIG_FILE_GIT_BRANCH', "${SEED_CONFIG_FILE_GIT_BRANCH}")
+        env('SEED_CONFIG_FILE_PATH', "${SEED_CONFIG_FILE_PATH}")
+
+        env('SEED_AUTHOR', "${SEED_AUTHOR}")
+        env('SEED_BRANCH', "${SEED_BRANCH}")
+        env('SEED_REPO', 'kogito-pipelines')
     }
 
     definition {
@@ -67,7 +69,7 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
                 git {
                     remote {
                         url("https://github.com/${SEED_AUTHOR}/kogito-pipelines.git")
-                        credentials('kie-ci')
+                        credentials(KogitoConstants.DEFAULT_CREDENTIALS_ID)
                     }
                     branch("${SEED_BRANCH}")
                     extensions {
@@ -75,7 +77,7 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
                     }
                 }
             }
-            scriptPath('dsl/seed/jobs/Jenkinsfile.seed.branch')
+            scriptPath("${SEED_JENKINSFILE}")
         }
     }
 

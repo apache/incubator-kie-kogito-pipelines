@@ -104,20 +104,12 @@ class Utils {
         return getBindingValue(script, "${repoName.toUpperCase()}_JENKINS_CONFIG_PATH")
     }
 
-    static String getPipelinesJenkinsfilePath(def script, String jenkinsfileName) {
-        return "${getPipelinesJenkinsConfigPath(script)}/${jenkinsfileName}"
-    }
-
-    static String getPipelinesJenkinsConfigPath(def script) {
-        return getJenkinsConfigPath(script, KogitoConstants.KOGITO_PIPELINES_REPOSITORY)
-    }
-
-    static String getPipelinesJenkinsHelperScript(def script) {
-        return "${getPipelinesJenkinsConfigPath(script)}/scripts/helper.groovy"
-    }
-
     static String getJenkinsEmailCredsId(def script) {
         return getBindingValue(script, 'JENKINS_EMAIL_CREDS_ID')
+    }
+
+    static String getSeedRepo(def script) {
+        return getBindingValue(script, 'SEED_REPO')
     }
 
     static String getSeedAuthor(def script) {
@@ -127,9 +119,13 @@ class Utils {
     static String getSeedBranch(def script) {
         return getBindingValue(script, 'SEED_BRANCH')
     }
-    
-    static boolean isNewFolderStructure(def script) {
-        return getBindingValue(script, 'NEW_FOLDER_STRUCTURE').toBoolean()
+
+    static String getSeedJenkinsfilePath(def script, String jenkinsfileName) {
+        return "${KogitoConstants.SEED_JENKINSFILES_PATH}/${jenkinsfileName}"
+    }
+
+    static boolean isOldFolderStructure(def script) {
+        return getBindingValue(script, 'OLD_FOLDER_STRUCTURE')?.toBoolean()
     }
 
     /**

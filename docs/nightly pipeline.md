@@ -52,7 +52,7 @@ Steps could be separated into 2 parts:
 
 ## Activate/Deactivate globally release branch jobs
 
-Once a branch is created or another one should be deactivated, you just need to go to the [seed branch configuration](../dsl/seed/config/branch.yaml) and disable the triggers. Jobs should be automatically disabled on push.
+Once a branch is created or another one should be deactivated, you just need to go to the [seed branch configuration](../dsl/config/branch.yaml) and disable the triggers. Jobs should be automatically disabled on push.
 
 ## Nightly pipeline Parameters
 

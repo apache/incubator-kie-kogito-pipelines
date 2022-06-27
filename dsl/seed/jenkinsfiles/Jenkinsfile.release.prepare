@@ -1,0 +1,340 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+import java.util.regex.Pattern
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+seedConfig = [:]
+mainBranchConfig = [:]
+repositoriesToBranch = []
+
+pipeline {
+    agent {
+        label 'kie-rhel7 && !master'
+    }
+
+    // parameters {
+    // For parameters, check into /dsl/seed/jobs/root_jobs.groovy file
+    // }
+
+    environment {
+        // Some generated env is also defined into /dsl/seed/jobs/root_jobs.groovy file
+        CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+    }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    checkout scm
+
+                    List projects = getEcosystemProjects().collect { it.name }
+                    String projectListStr = projects.collect { "${getRepoNameCamelCase(it)} ${getVersionFromRepository(it)}" }.join(' / ')
+                    currentBuild.displayName = "Cut-Off ${projectListStr}"
+
+                    sendNotification("Cut-off for ${projectListStr} has started...\n=> ${env.BUILD_URL}")
+                }
+            }
+        }
+
+        stage('Create release branches') {
+            steps {
+                script {
+                    List repositories = getRepositoriesToBranch()
+                    createBranches(repositories)
+
+                    sendNotification("Branches have been created for repositories: ${repositories.collect { "${it.name}:${it.branch}" }.join(', ')}")
+                }
+            }
+        }
+
+        stage('Setup branch seed config') {
+            steps {
+                script {
+                    String branchConfigFile = getMainBranchConfigFilePath()
+                    String newBranch = getBranchSeedReleaseBranch()
+                    def repositories = getRepositoriesToBranch()
+
+                    dir(checkoutMainBranchSeedConfigFileRepo()) {
+                        getOrCreateGitBranch(newBranch, getMainBranchConfigFileGitAuthorCredentialsId())
+
+                        // Update branch config
+                        def branchConfig = readYaml file: branchConfigFile
+                        branchConfig.repositories = repositories
+                        branchConfig.productized_branch = params.PRODUCTIZED_BRANCH
+
+                        // Disable some environments when branching as they make no sense by default
+                        branchConfig.environment.quarkus.main.enabled = false
+                        branchConfig.environment.quarkus.lts.enabled = false
+
+                        echo "Write dsl branch_config => ${branchConfig}"
+                        sh "rm -f ${branchConfigFile}"
+                        writeYaml file: "${branchConfigFile}", data: branchConfig, overwrite: true
+
+                        if (githubscm.isThereAnyChanges()) {
+                            sh 'git diff'
+                            githubscm.commitChanges('Setup DSL branch config after cut-off')
+                            githubscm.pushObject('origin', newBranch, getMainBranchConfigFileGitAuthorCredentialsId())
+
+                            sendNotification("Branch config on ${newBranch} has been updated with correct configuration")
+                        } else {
+                            println '[WARN] No changes to commit'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Branch seed repository') {
+            steps {
+                script {
+                    // Create seed branch if not already exist
+                    dir(checkoutSeedRepo()) {
+                        getOrCreateGitBranch(getBranchSeedReleaseBranch(), "${SEED_CREDENTIALS_ID}")
+                    }
+                }
+            }
+        }
+
+        stage('Update main seed config') {
+            steps {
+                script {
+                    String newBranch = getBranchSeedReleaseBranch()
+                    String prBranch = "${newBranch}-${util.generateHash(10)}"
+                    String seedConfigFile = env.SEED_CONFIG_FILE_PATH
+
+                    dir(checkoutMainSeedConfigFileRepo()) {
+                        githubscm.createBranch(prBranch)
+
+                        def seedConfig = readYaml file: seedConfigFile
+
+                        if (!seedConfig.git.branches.find { it.name == newBranch }) {
+                            seedConfig.git.branches.add([ name: newBranch ])
+                        }
+
+                        echo "Write seed config => ${seedConfig}"
+                        sh "rm ${seedConfigFile}"
+                        writeYaml file: seedConfigFile, data: seedConfig, overwrite: true
+
+                        if (githubscm.isThereAnyChanges()) {
+                            // Never push directly to main, always create a PR
+                            commitMsg = "Add release branch ${newBranch} after cut-off"
+                            prBody = "Generated by build ${BUILD_TAG}: ${BUILD_URL}.\nPlease review and merge."
+                            githubscm.commitChanges(commitMsg)
+                            githubscm.pushObject('origin', prBranch, env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID)
+                            prLink = githubscm.createPR(commitMsg, prBody, env.SEED_CONFIG_FILE_GIT_BRANCH, env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID)
+
+                            echo "PR ${prLink} has been created to update seed job"
+
+                            sendNotification("PR ${prLink} has been created to update the seed job config on `${env.SEED_CONFIG_FILE_GIT_BRANCH}` branch.\nPlease review and merge.")
+                        } else {
+                            println '[WARN] No changes to PR'
+                        }
+
+                // ideally there is a push action to seed job on main so that the seed jobs is started automatically to rebuild the DSL jobs when PR is merged
+                    }
+                }
+            }
+        }
+    }
+    post {
+        unsuccessful {
+            script {
+                sendNotification("${getEcosystemMainProject()}: Cut-off Pipeline job #${BUILD_NUMBER} was: ${currentBuild.currentResult}\nPlease look here: ${BUILD_URL}")
+            }
+        }
+    }
+}
+
+List getRepositoriesToBranch() {
+    if (!repositoriesToBranch) {
+        String newBranch = getBranchSeedReleaseBranch()
+        repositoriesToBranch = readMainBranchConfig().repositories.findAll { getProjectFromRepository(it.name) }
+        repositoriesToBranch.each { repoConfig ->
+            repoConfig.branch = repoConfig.branch ?: mainBranches.get(mainBranches.containsKey(repoConfig.name) ? repository : 'default')
+
+            if (repoConfig.name == getMainBranchConfigFileGitRepository()) {
+                String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
+                if (gitAuthor == getMainBranchConfigFileGitAuthorName() &&
+                    repoConfig.branch == getMainBranchConfigFileGitBranch()) {
+                    // we are already going to branch it with the setup of the branch config
+                    echo "Repository ${repoConfig.name} is branch config repository"
+                    repoConfig.new_branch = newBranch
+                }
+            }
+            if (repoConfig.name == "${SEED_REPO}") {
+                String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
+                if (gitAuthor == "${SEED_AUTHOR}" &&
+                    repoConfig.branch == "${SEED_BRANCH}") {
+                    // we are already going to branch it with the setup of the branch config
+                    echo "Repository ${repoConfig.name} is seed config repository"
+                    repoConfig.new_branch = newBranch
+                }
+            }
+        }
+    }
+    return repositoriesToBranch
+}
+
+void createBranches(List repositories) {
+    repositories.each { repoConfig ->
+        String repoName = repoConfig.name
+        String baseBranch = repoConfig.branch
+        String releaseBranch = repoConfig.new_branch ?: getReleaseBranchFromRepository(repoConfig.name)
+        String gitAuthorCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
+        assert gitAuthorCredsId : "Cannot find any credentials Id for git author ${repoConfig.author.name}. Please check your branch seed config file."
+        String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
+
+        echo "Checkout repo ${gitAuthor}/${repoName} on branch ${baseBranch}"
+        dir(repoName) {
+            deleteDir()
+            checkout(githubscm.resolveRepository(repoName, gitAuthor, baseBranch, false))
+            getOrCreateGitBranch(releaseBranch, gitAuthorCredsId)
+        }
+        // Update the branch with the new release branch
+        repoConfig.branch = releaseBranch
+        repoConfig.remove('new_branch')
+    }
+}
+
+void getOrCreateGitBranch(String branch, String credentialsId) {
+    sh 'git fetch origin'
+    String branchRemoteResult = sh(script: "git ls-remote origin ${branch} | wc -l", returnStdout: true).trim()
+    if (Integer.parseInt(branchRemoteResult) > 0) {
+        echo "Branch ${branch} already exist ... will not create it. Checking out !"
+        sh "git checkout ${branch}"
+    } else {
+        echo "Branch ${branch} does not exist ... gonna create it"
+        githubscm.createBranch(branch)
+        githubscm.pushObject('origin', branch,  credentialsId)
+    }
+}
+
+void sendNotification(String body) {
+    echo 'Send Notification'
+    echo body
+    emailext body: body, subject: "[${getBranchSeedReleaseBranch()}] ${getEcosystemMainProject()}",
+                to: env.CI_EMAIL_TO
+}
+
+String getProjectFromRepository(String repository) {
+    return getEcosystemProjects().find { project -> project.regexs?.any { Pattern.compile(it).matcher(repository).matches() } }?.name
+}
+
+String getVersionFromRepository(String repository) {
+    def projectName = getProjectFromRepository(repository)
+    if (projectName) {
+        return getVersionFromProject(projectName)
+    } else {
+        error "Cannot retrieve repository from repository name: ${repository}. Make sure it matches pattern from ecosystem projects in the main config"
+    }
+}
+
+String getVersionFromProject(String projectName) {
+    String key = "${projectName}_VERSION".toUpperCase()
+    assert params."${key}" : "No parameter ${key} available for project ${projectName}. Please check job configuration."
+    return params."${key}"
+}
+
+String getReleaseBranchFromRepository(String repository) {
+    return util.getReleaseBranchFromVersion(getVersionFromRepository(repository))
+}
+
+String getReleaseBranchFromProject(String projectName) {
+    return util.getReleaseBranchFromVersion(getVersionFromProject(projectName))
+}
+
+String getBranchSeedReleaseBranch() {
+    return "${getEcosystemMainProject()}-${getReleaseBranchFromProject(getEcosystemMainProject())}"
+}
+
+def readSeedConfig() {
+    assert env.SEED_CONFIG_FILE_PATH : 'Missing main seed config file Path into the environment. Please check the job configuration.'
+    if (!seedConfig) {
+        dir(checkoutMainSeedConfigFileRepo()) {
+            seedConfig = readYaml(file: "${env.SEED_CONFIG_FILE_PATH}")
+        }
+    }
+    return seedConfig
+}
+
+String checkoutMainSeedConfigFileRepo() {
+    assert env.SEED_CONFIG_FILE_GIT_REPOSITORY : 'Missing main seed config file Git Repository into the environment. Please check the job configuration.'
+    assert env.SEED_CONFIG_FILE_GIT_AUTHOR_NAME : 'Missing main seed config file Git Author Name into the environment. Please check the job configuration.'
+    assert env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID : 'Missing main seed config file Git Author Credentials ID into the environment. Please check the job configuration.'
+    assert env.SEED_CONFIG_FILE_GIT_BRANCH : 'Missing main seed config file Git Branch into the environment. Please check the job configuration.'
+
+    String dirName = "seed-main-${env.SEED_CONFIG_FILE_GIT_REPOSITORY}"
+    dir(dirName) {
+        deleteDir()
+        checkout(githubscm.resolveRepository(env.SEED_CONFIG_FILE_GIT_REPOSITORY, env.SEED_CONFIG_FILE_GIT_AUTHOR_NAME, env.SEED_CONFIG_FILE_GIT_BRANCH, false, env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID))
+        sh "git checkout ${env.SEED_CONFIG_FILE_GIT_BRANCH}"
+    }
+    return dirName
+}
+
+def readMainBranchConfig() {
+    if (!mainBranchConfig) {
+        dir(checkoutMainBranchSeedConfigFileRepo()) {
+            mainBranchConfig = readYaml(file: "${getMainBranchConfigFilePath()}")
+        }
+    }
+    return mainBranchConfig
+}
+
+String checkoutMainBranchSeedConfigFileRepo() {
+    String dirName = "seed-branch-${getMainBranchConfigFileGitRepository()}"
+    dir(dirName) {
+        deleteDir()
+        checkout(githubscm.resolveRepository(getMainBranchConfigFileGitRepository(), getMainBranchConfigFileGitAuthorName(), getMainBranchConfigFileGitBranch(), false, getMainBranchConfigFileGitAuthorCredentialsId()))
+        sh "git checkout ${getMainBranchConfigFileGitBranch()}"
+    }
+    return dirName
+}
+
+String checkoutSeedRepo() {
+    assert env.SEED_REPO : 'Missing seed repo. Please check the job configuration.'
+    assert env.SEED_AUTHOR : 'Missing seed author. Please check the job configuration.'
+    assert env.SEED_CREDENTIALS_ID : 'Missing seed author credentials ID. Please check the job configuration.'
+    assert env.SEED_BRANCH : 'Missing seed branch. Please check the job configuration.'
+
+    String dirName = "seed-repo-${env.SEED_REPO}"
+    dir(dirName) {
+        deleteDir()
+        checkout(githubscm.resolveRepository(env.SEED_REPO, env.SEED_AUTHOR, env.SEED_BRANCH, false, env.SEED_CREDENTIALS_ID))
+        sh "git checkout ${env.SEED_BRANCH}"
+    }
+    return dirName
+}
+
+String getMainBranchConfigFileGitRepository() {
+    return readSeedConfig().seed.config_file.git.repository
+}
+
+String getMainBranchConfigFileGitAuthorName() {
+    return readSeedConfig().seed.config_file.git.author.name
+}
+
+String getMainBranchConfigFileGitAuthorCredentialsId() {
+    return readSeedConfig().seed.config_file.git.author.credentials_id
+}
+
+String getMainBranchConfigFileGitBranch() {
+    return readSeedConfig().seed.config_file.git.branch
+}
+
+String getMainBranchConfigFilePath() {
+    return readSeedConfig().seed.config_file.path
+}
+
+List getEcosystemProjects() {
+    return readSeedConfig().ecosystem.projects.findAll { ! (it.ignore_release ? it.ignore_release.toBoolean() : false)  }
+}
+
+String getEcosystemMainProject() {
+    return readSeedConfig().ecosystem.main_project
+}
+
+String getRepoNameCamelCase(String repo) {
+    List words = repo.split('-') as List
+    return words.collect { it.isEmpty() ? it : it.substring(0, 1).toUpperCase() + it.substring(1).toLowerCase() }.join(' ')
+}

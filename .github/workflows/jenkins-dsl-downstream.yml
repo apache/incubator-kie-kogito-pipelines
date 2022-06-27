@@ -25,7 +25,7 @@ jobs:
 
       - id: setmatrix
         run: |
-         matrixArray=$(./yq eval '.repositories[].name' dsl/seed/config/branch.yaml) # Creates array of all repositories
+         matrixArray=$(./yq eval '.repositories[].name' dsl/config/branch.yaml) # Creates array of all repositories
          # Start Generate Json String
          echo "$matrixArray" | \
          jq --slurp --raw-input 'split("\n")[:-1]' | \

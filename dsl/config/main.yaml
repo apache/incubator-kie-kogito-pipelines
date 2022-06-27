@@ -1,0 +1,67 @@
+ecosystem:
+  main_project: kogito
+  projects:
+  - name: drools
+    regexs:
+    - drools.*
+  - name: kogito
+    regexs:
+    - kogito.*
+  - name: optaplanner
+    regexs:
+    - opta.*
+  - name: kie-tools
+    ignore_release: true
+    regexs:
+    - kie-tools.*
+
+git:
+  branches:
+  # For each branch, you can also define specific `seed_config_file` information
+  # which will override the default defined below
+  - name: main
+  - name: 1.11.x
+    old_folder_structure: true
+    seed:
+      config_file:
+        path: dsl/seed/config/branch.yaml
+      jenkinsfile: dsl/seed/jobs/Jenkinsfile.seed.branch
+  - name: 1.13.x
+    old_folder_structure: true
+    seed:
+      config_file:
+        path: dsl/seed/config/branch.yaml
+      jenkinsfile: dsl/seed/jobs/Jenkinsfile.seed.branch
+  - name: 1.13.x-blue
+    old_folder_structure: true
+    seed:
+      config_file:
+        path: dsl/seed/config/branch.yaml
+      jenkinsfile: dsl/seed/jobs/Jenkinsfile.seed.branch
+  - name: 1.22.x
+    seed:
+      config_file:
+        path: dsl/seed/config/branch.yaml
+      jenkinsfile: dsl/seed/jobs/Jenkinsfile.seed.branch
+  - name: 1.23.x
+    seed:
+      config_file:
+        path: dsl/seed/config/branch.yaml
+      jenkinsfile: dsl/seed/jobs/Jenkinsfile.seed.branch
+  main_branch:
+    default: main
+    optaplanner-quickstarts: development
+
+seed:
+  config_file:
+    git:
+      repository: kogito-pipelines
+      author:
+        name: kiegroup
+        credentials_id: kie-ci
+      branch: main # Used only for main branch checkout. Else it should be defined for each branch at git.branches level. By default, this value will be overriden by the branch name.
+    path: dsl/config/branch.yaml
+  jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
+
+jenkins:
+  email_creds_id: KOGITO_CI_EMAIL_TO

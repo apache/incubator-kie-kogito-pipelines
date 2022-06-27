@@ -1,0 +1,200 @@
+/////////////////////////////////////////////////////////////////////////////////
+// This Jenkinsfile generate the respective Branch seed jobs
+/////////////////////////////////////////////////////////////////////////////////
+
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+scriptUtils = null
+seedConfig = [:]
+
+pipeline {
+    agent {
+        label 'kie-rhel8 && !master'
+    }
+
+    options {
+        timestamps()
+        timeout(time: 20, unit: 'MINUTES')
+    }
+
+    tools {
+        jdk 'kie-jdk1.8'
+    }
+
+    // parameters {
+    // See ./seed_job_main.groovy
+    // }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    checkout scm
+                    scriptUtils = load 'dsl/seed/jenkinsfiles/scripts/utils.groovy'
+
+                    currentBuild.displayName = readSeedConfig().git.branches.collect { it.name }.join(',')
+                }
+            }
+        }
+
+        stage('Generate root jobs') {
+            steps {
+                script {
+                    def releaseProjects = readSeedConfig().ecosystem.projects.findAll { ! (it.ignore_release ? it.ignore_release.toBoolean() : false)  }
+                    def envProperties = [
+                        JENKINS_EMAIL_CREDS_ID: readSeedConfig().jenkins.email_creds_id,
+                        RELEASE_PROJECTS: releaseProjects.collect{ it.name }.join(','),
+                        SEED_AUTHOR: "${SEED_AUTHOR}",
+                        SEED_BRANCH: "${SEED_BRANCH}",
+                        SEED_CONFIG_FILE_GIT_REPOSITORY: "${SEED_CONFIG_FILE_GIT_REPOSITORY}",
+                        SEED_CONFIG_FILE_GIT_AUTHOR_NAME: "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}",
+                        SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}",
+                        SEED_CONFIG_FILE_GIT_BRANCH: "${SEED_CONFIG_FILE_GIT_BRANCH}",
+                        SEED_CONFIG_FILE_PATH: "${SEED_CONFIG_FILE_PATH}",
+                    ]
+                    echo 'Got envProperties for generation'
+                    echo "${envProperties}"
+                    dir(scriptUtils.getDslSeedFolderAbsolutePath()) {
+                        println "[INFO] Generate root jobs with properties ${envProperties}"
+                        jobDsl(targets: 'jobs/root_jobs.groovy',
+                                sandbox: false,
+                                ignoreExisting: false,
+                                ignoreMissingFiles: false,
+                                removedJobAction: 'IGNORE',
+                                removedViewAction: 'IGNORE',
+                                //removedConfigFilesAction: 'IGNORE',
+                                lookupStrategy: 'SEED_JOB',
+                                additionalClasspath: 'src/main/groovy',
+                                additionalParameters : envProperties
+                        )
+                    }
+                }
+            }
+        }
+
+        stage('Generate branch seed jobs') {
+            steps {
+                script {
+                    readSeedConfig().git.branches.each { branchInfo ->
+                        def envProperties = [
+                            JOB_NAME: getBranchSeedJobName(),
+                            GENERATION_BRANCH: branchInfo.name,
+                            MAIN_BRANCHES: writeJSON(json: readSeedConfig().git.main_branch, returnText: true),
+                            OLD_FOLDER_STRUCTURE: branchInfo.old_folder_structure,
+                            SEED_AUTHOR: "${SEED_AUTHOR}",
+                            SEED_BRANCH: branchInfo.name,
+                            SEED_JENKINSFILE: branchInfo.seed?.jenkinsfile ?: readSeedConfig().seed.jenkinsfile,
+                            SEED_CONFIG_FILE_GIT_REPOSITORY: branchInfo.seed?.config_file?.git?.repository ?: readSeedConfig().seed.config_file.git.repository,
+                            SEED_CONFIG_FILE_GIT_AUTHOR_NAME: branchInfo.seed?.config_file?.git?.author?.name ?: readSeedConfig().seed.config_file.git.author.name,
+                            SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: branchInfo.seed?.config_file?.git?.author?.credentials_id ?: readSeedConfig().seed.config_file.git.author.credentials_id,
+                            SEED_CONFIG_FILE_GIT_BRANCH: branchInfo.seed?.config_file?.git?.branch ?: branchInfo.name,
+                            SEED_CONFIG_FILE_PATH: branchInfo.seed?.config_file?.path ?: readSeedConfig().seed.config_file.path,
+                        ]
+                        echo 'Got envProperties for generation'
+                        echo "${envProperties}"
+                        dir(scriptUtils.getDslSeedFolderAbsolutePath()) {
+                            println "[INFO] Generate branch seed job for branch ${branchInfo.name} with properties ${envProperties}"
+                            jobDsl(targets: 'jobs/seed_job_branch.groovy',
+                                    sandbox: false,
+                                    ignoreExisting: false,
+                                    ignoreMissingFiles: false,
+                                    removedJobAction: 'IGNORE',
+                                    removedViewAction: 'IGNORE',
+                                    //removedConfigFilesAction: 'IGNORE',
+                                    lookupStrategy: 'SEED_JOB',
+                                    additionalClasspath: 'src/main/groovy',
+                                    additionalParameters : envProperties
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Generate main jobs') {
+            steps {
+                script {
+                    def envProperties = [
+                        SEED_AUTHOR: "${SEED_AUTHOR}",
+                        SEED_BRANCH: "${SEED_BRANCH}",
+                        SEED_CONFIG_FILE_GIT_REPOSITORY: "${SEED_CONFIG_FILE_GIT_REPOSITORY}",
+                        SEED_CONFIG_FILE_GIT_AUTHOR_NAME: "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}",
+                        SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}",
+                        SEED_CONFIG_FILE_GIT_BRANCH: "${SEED_CONFIG_FILE_GIT_BRANCH}",
+                        SEED_CONFIG_FILE_PATH: "${SEED_CONFIG_FILE_PATH}",
+                    ]
+                    dir(scriptUtils.getDslSeedFolderAbsolutePath()) {
+                        println "[INFO] Generate main seed job with properties ${envProperties}"
+                        jobDsl(targets: 'jobs/seed_job_main.groovy',
+                                sandbox: false,
+                                ignoreExisting: false,
+                                ignoreMissingFiles: false,
+                                removedJobAction: 'DELETE',
+                                removedViewAction: 'DELETE',
+                                //removedConfigFilesAction: 'IGNORE',
+                                lookupStrategy: 'SEED_JOB',
+                                additionalClasspath: 'src/main/groovy',
+                                additionalParameters : envProperties
+                        )
+                    }
+                }
+            }
+        }
+
+        stage('Launch branch seed jobs') {
+            steps {
+                script {
+                    Map parallelJobs = [:]
+                    readSeedConfig().git.branches.collect { it.name }.each { branch ->
+                        parallelJobs.put(branch, { launchBranchSeedJob(branch) })
+                    }
+
+                    parallel parallelJobs
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
+
+String getBranchSeedJobName() {
+    return '0-seed-job'
+}
+
+void launchBranchSeedJob(String branch) {
+    println "[INFO] Launch branch seed job for branch ${branch}"
+
+    List jobParams = []
+    jobParams.add(booleanParam(name: 'DEBUG', value: params.DEBUG))
+    jobParams.add(booleanParam(name: 'SKIP_TESTS', value: params.SKIP_TESTS))
+
+    echo "Build ./${branch}/${getBranchSeedJobName()} with parameters ${jobParams}"
+    build(job: "./${branch}/${getBranchSeedJobName()}", parameters: jobParams, wait: false)
+}
+
+def readSeedConfig() {
+    assert params.SEED_CONFIG_FILE_GIT_REPOSITORY : 'Missing main seed config file Git Repository into the parameters. Please check the job configuration.'
+    assert params.SEED_CONFIG_FILE_GIT_AUTHOR_NAME : 'Missing main seed config file Git Author Name into the parameters. Please check the job configuration.'
+    assert params.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID : 'Missing main seed config file Git Author Credentials ID into the parameters. Please check the job configuration.'
+    assert params.SEED_CONFIG_FILE_GIT_BRANCH : 'Missing main seed config file Git Branch into the parameters. Please check the job configuration.'
+    assert params.SEED_CONFIG_FILE_PATH : 'Missing main seed config file Path into the parameters. Please check the job configuration.'
+
+    if (!seedConfig) {
+        dir("seed-${params.SEED_CONFIG_FILE_GIT_REPOSITORY}") {
+            deleteDir()
+            checkout(githubscm.resolveRepository(params.SEED_CONFIG_FILE_GIT_REPOSITORY, params.SEED_CONFIG_FILE_GIT_AUTHOR_NAME, params.SEED_CONFIG_FILE_GIT_BRANCH, false, params.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID))
+            seedConfig = readYaml(file: "${params.SEED_CONFIG_FILE_PATH}")
+            if (scriptUtils.isDebug()) {
+                println '[DEBUG] Seed config:'
+                println "[DEBUG] ${seedConfig}"
+            }
+        }
+    }
+    return seedConfig
+}

@@ -20,24 +20,31 @@
 
 We use [Jenkins Job DSL](https://github.com/jenkinsci/job-dsl-plugin) to create the different Kogito jobs
 
-## Structure
+## Jenkins jobs generation structure
 
-### Seed structure
+We identify 3 different parts for the job generation:
+
+* Seed API  
+  This is the seed repository containing the common API to generate jobs
+* Config files  
+  Yaml files which setup the configuration for the jobs generation (repositories, branches, ...)
+* Repositories' jobs definition
+  This is where each repository decide which job(s) to generate
+
+### Seed library
 
 The seed structure is as follow:
 
     .
     ├── dsl                     # main folder for seed job generation and configuration of Kogito jobs
     │   ├── seed                # contains all information and configuration of the seed job
-    |   │   └── config
-    |   │   │   ├── main.yaml       # main configuration for the whole seed job
-    |   │   │   └── branch.yaml     # jobs configuration for the current branch
-    |   │   └── jobs
+    |   │   └── jenkinsfiles
     |   │   │   ├── scripts                         # common script for seed generation
-    |   |   │   │   ├── util.groovy                 # common script used by seed pipelines
+    |   |   │   │   ├── utils.groovy                 # common script used by seed pipelines
     |   |   │   │   └── ...
     |   │   │   ├── Jenkinsfile.seed.branch         # pipeline for the branch seed job
     |   │   │   ├── Jenkinsfile.seed.main           # pipeline for the main seed job
+    |   │   └── jobs
     |   │   │   ├── seed_job_branch.groovy          # generate a branch seed job
     |   │   │   ├── seed_job_main.groovy            # generate a main seed job
     |   │   │   └── seed_job_repo.groovy            # generate a repo seed job
@@ -45,16 +52,158 @@ The seed structure is as follow:
     |   │   │   ├── main/*      # common classes which can be reused into the different groovy scripts for jobs generation
     |   │   │   └── test/*      # test classes to check groovy script are well formed
 
-The entry point is the main seed job `0-seed-repo`.  
-This job will read the [main config](../dsl/seed/config/main.yaml) and generate a branch seed job `z-seed-{branch}-job` for each branch defined in the config file.
+The entry point is the main seed job `0-seed-job`. It configuration can be found in the [main dsl groovy file](../dsl/seed/jobs/seed_job_main.groovy).
 
-Each branch seed job will then read the [branch config](../dsl/seed/config/branch.yaml) and generate a repo seed job `z-seed-{branch}-{repo}-job` for each repository defined there.
+This job will read the main config file (see below) and will generate a folder for each defined branch. In each of those folders, it will generate a `0-seed-job` based on the [branch dsl groovy file](../dsl/seed/jobs/seed_job_branch.groovy) which will generate the repositories jobs based on the branch config file (see below). It also generates trigger jobs which will listen to modifications on specific paths.
 
-Each repo seed job will get the [branch config](../dsl/seed/config/branch.yaml) and generate the job stored in the repository's dsl path (see after).
+Next to that it will generate root jobs defined into the [root jobs dsl groovy file](../dsl/seed/jobs/root_jobs.groovy).
 
-### Jobs Structure
+### Seed config files
 
-Each repository which want its job to be generated should be registered into the [seed job branch config](../dsl/seed/config/branch.yaml) and should contain this folder structure in it root:
+Config files can be defined anywhere. The seed jobs will know how to retrieve from:
+
+- The parameters for the main 0-seed-job
+- The main config file for the branch 0-seed-job
+
+#### Seed main config file
+
+The seed main config file will be given to the `0-seed-job` as a parameter.
+
+```yaml
+# Ecosystem contains all different projects concerned by this configuration
+# It is used by the seed jobs and the prepare release job
+ecosystem: 
+  main_project: kogito
+  projects:
+  - name: drools
+    regexs:
+    - drools.*
+  - name: kogito
+    regexs:
+    - kogito.*
+
+# This part describes all branches which need generation
+git:
+  branches:
+  # For each branch, you can also define specific `seed_config_file` information
+  # which will override the default defined below
+  - name: improve_dsl_generation_test
+  main_branch:
+    default: main
+
+# This can be overriden for each defined git branches
+# This gives the branch config information (see below for branch configuration)
+seed:
+  config_file: # main branch seed config file
+    git:
+      repository: kogito-pipelines
+      author:
+        name: radtriste
+        credentials_id: radtriste
+      branch: branch_config_file # Used only for main branch checkout. Else it should be defined for each branch at git.branches level. By default, this value will be overriden by the branch name.
+    path: dsl/config/branch.yaml
+
+# For any notification
+jenkins:
+  email_creds_id: KOGITO_CI_EMAIL_TO_PERSO
+```
+
+#### Seed branch config file
+
+The branch config file is given to the seed job via the configuration into the main config file (see above).
+
+All values from this config file will be available to job generation as env variables.
+
+```yaml
+# Define the different environments
+environment:
+  quarkus:
+    main:
+      enabled: true
+    branch:
+      enabled: true
+      version: '2.9'
+    lts:
+      enabled: true
+      version: '2.7'
+
+  native:
+    enabled: true
+
+  mandrel:
+    enabled: true
+    builder_image: quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11
+
+  runtimes_bdd:
+    enabled: true
+
+productized_branch: true
+
+# 
+disable:
+  triggers: true
+
+repositories:
+  - name: kogito-pipelines
+    branch: any_branch
+  - name: drools
+    branch: any_branch
+
+# Main Git configuration
+# This information can be overriden in any of the repositories above
+git:
+  author:
+    name: radtriste
+    credentials_id: radtriste
+    token_credentials_id: radtriste-gh-token
+  bot_author:
+    name: radtriste-bot-account
+    credentials_id: radtriste-bot
+  jenkins_config_path: .ci/jenkins
+
+# Full repository Example
+# repositories:
+#   - name: NAME
+#     branch: branch_name
+#     disabled: false
+#     author:
+#       name: another_gh_author
+#       credentials_id: another_gh_author_creds
+#       token_credentials_id: another_gh_author_creds_token
+#     bot_author:
+#       name: another_gh_bot_author
+#       credentials_id: another_gh_bot_author_creds
+#     jenkins_config_path: .ci/jenkins/
+
+maven:
+  settings_file_id: 2bd418aa-56fa-4403-9232-8c77a50fc528
+  nexus:
+    release_url: https://repository.stage.jboss.org/nexus
+    release_repository: jboss-releases-repository
+    staging_profile_url: https://repository.stage.jboss.org/nexus/content/groups/kogito-public/
+    staging_profile_id: 2161b7b8da0080
+    build_promotion_profile_id: 1966c60aff37d
+  artifacts_repository: http://nexus3-tradisso-nexus.apps.kogito-cloud.hosted.psi.rdu2.redhat.com/repository/kogito-test/
+  #artifacts_repository: ''
+  pr_checks:
+    repository:
+      url: https://bxms-qe.rhev-ci-vms.eng.rdu2.redhat.com:8443/nexus/content/repositories/kogito-runtimes-pr-full-testing/
+      creds_id: unpacks-zip-on-qa-nexus
+cloud:
+  image:
+    registry_credentials_nightly: tradisso_registry_token
+    registry_credentials_release: tradisso_registry_token
+    registry: quay.io
+    namespace: tradisso
+    latest_git_branch: main
+jenkins:
+  email_creds_id: KOGITO_CI_EMAIL_TO_PERSO
+
+```
+
+### Repository jobs definition
+
+Each repository which want its job to be generated should be registered into the branch config file (see above) and should contain this folder structure at its root folder:
 
     .
     ├── .ci/jenkins                
@@ -62,25 +211,28 @@ Each repository which want its job to be generated should be registered into the
     │   │   ├── jobs.groovy      # contains the jobs for the current branch to be generated
     │   └── tests                # (optional) tests for Jenkinsfiles
 
+*NOTE: The main folder, aka `.ci/jenkins` can be changed but must be specified into the branch config file*
+
 ### Generated jobs structure
 
 Here is an example of the generated job hierarchy:
 
     .
     ├── 0-seed-job                   # main seed job to create other branch & repo jobs.
-    ├── nightly                      # all related nightly jobs
-    │   ├── main                     # main nightly jobs
-    │   └── ...{RELEASE BRANCHES}    # nightly jobs related to specific release branches
-    ├── other                        # some other jobs
-    ├── pullrequest                  # all related pr jobs
-    │   ├── main                     # main pr jobs
-    │   ├── {RELEASE_BRANCH}         # release branch pr jobs
-    │   └── kogito-runtimes.bdd      # PR jobs for running BDD tests from kogito-runtimes repository
-    ├── release                      # all related release jobs
-    │   ├── prepare-release          # Prepare all repo/jenkins jobs with a new release branch
-    │   └── ...{RELEASE BRANCHES}    # release jobs related to specific release branches
-    │── tools                        # tools jobs
-    └── z-seed-*                     # branch & repo seed jobs used to generate the other jobs
+    ├── 0-prepare-release-branch     # prepare new release branch
+    ├── main                         # all main jobs
+        ├── 0-seed-job               # branch seed job to create other branch & repo jobs.
+    │   ├── nightly                  # all related nightly jobs
+    │   ├── other                    # some other jobs
+    │   ├── pullrequest              # all related pr jobs
+    │   └── tools                    # tools jobs
+    ├── {RELEASE BRANCH}             # all release branch specific jobs
+    │   ├── nightly                  # all related nightly jobs
+    │   ├── other                    # some other jobs
+    │   ├── pullrequest              # all related pr jobs
+    │   ├── release                  # release jobs
+    │   └── tools                    # tools jobs
+    └── z-seed-trigger-job           # Trigger job which listen to change on kgoito-pipelines
 
 ## Testing
 
@@ -102,24 +254,11 @@ Then, you can also add a small `.ci/jenkins/dsl/test.sh` to test your groovy scr
 ```bash
 #!/bin/bash -e
 
-TEMP_DIR=`mktemp -d`
-
-branch=$1
-author=$2
-
-if [ -z $branch ]; then
-branch='main'
-fi
-
-if [ -z $author ]; then
-author='kiegroup'
-fi
-
-echo "----- Cloning pipelines repo from ${author} on branch ${branch}"
-git clone --single-branch --branch ${branch} https://github.com/${author}/kogito-pipelines.git $TEMP_DIR
-
-echo '----- Launching seed tests'
-${TEMP_DIR}/dsl/seed/scripts/seed_test.sh ${TEMP_DIR}
+file=$(mktemp)
+# For more usage of the script, use ./test.sh -h
+curl -o ${file} https://raw.githubusercontent.com/kiegroup/kogito-pipelines/main/dsl/seed/scripts/seed_test.sh
+chmod u+x ${file}
+${file} $@
 ```
 
 The script clones the `kogito-pipelines` repository and then call the `seed_test.sh` which should copy the jobs and run the tests.
@@ -128,69 +267,30 @@ Then you can call the script:
 
 ```bash
 $ chmod u+x .ci/jenkins/dsl/test.sh
-$ cd .ci/jenkins/dsl && ./test.sh
+$ .ci/jenkins/dsl/test.sh .ci/jenkins/dsl
 ```
 
 ### Test on Jenkins
 
-#### Test specific repository jobs
+The best way to test your changes is to copy the `/KIE/kogito/0-seed-job` into your custom folder, create a test branch and generate jobs from this test branch. You can then in that config file setup the repositories you want to generate to avoid useless generation.
 
-You can use the description in [seed_job_repo.groovy](../dsl/seed/jobs/seed_job_repo.groovy) and create the repo seed job directly by setting then the Seed author/branch (take the `kiegroup/main` by default if you don't have any) and then set correctly those environement variables:
-
-* **REPO_NAME**  
-  This is the repository you want to test
-* **GIT_BRANCH**  
-  Branch you want to test on your repository
-* **GIT_AUTHOR**  
-  Usually your Git author name
-* **GENERATION_BRANCH**  
-  The "key" for job generation. You can use the same value as `GIT_BRANCH`
-* **GIT_MAIN_BRANCH**
-  This is to define what is the main branch when processing jobs.  
-  If the jobs you want to test is branch agnostic, then you can just set `main` or anything else.  
-  If the job you want to test is only for the main branch, then you should set the same value as `GIT_BRANCH`.
-* **GIT_JENKINS_CONFIG_PATH**  
-  This is where to find the jenkins seed file for job generation. Default is `.ci/jenkins`
-
-#### Test the whole Kogito jobs
-
-To generate the jobs you need for testing, you will need to create the main seed job with the configuration that you can find in the [seed job definition](../dsl/seed/jobs/seed_job_main.groovy).  
+If you don't have access to the Kogito `0-seed-job`, you can also create one based its [dsl job groovy file](../dsl/seed/jobs/seed_job_main.groovy).
 
 **WARNINGS**
 
 * **You should never used the production seed job for testing as you may overwrite some production configuration by doing so ...**
 
-* **If you plan to test nightly and/or release pipelines, you need to have a special branch on a fork with your own [branch seed configuration](../dsl/seed/config/branch.yaml), because you will need specific Jenkins credentials (Git, Registry), Maven repository (see annex), Container registry namespace, so that you are not altering the production artifacts/images. An example of a branch with a special configuration can be found here: https://github.com/radtriste/kogito-pipelines/tree/test-setup**
+* **You need to have a special branch on a fork with your own [branch seed configuration](../dsl/config/branch.yaml), because you will need specific Jenkins credentials (Git, Registry), Maven repository (see annex), Container registry namespace, so that you are not altering the production artifacts/images. An example of a branch with a special configuration can be found here: https://github.com/radtriste/kogito-pipelines/tree/test-setup**
 
-#### Generate only specific repositories
+#### Test steps
 
-Once that main seed job is created, just execute it with the correct `CUSTOM` parameters.
+1) Setup your [main config file](../dsl/config/main.yaml) to have only the testing branch.
+2) Setup your [branch config file](../dsl/config/branch.yaml) with test repositories and credentials/author.
+3) Copy the create the `0-seed-job` and point the parameters of the job to the main config file you created.
 
-For example, if you are working with `kogito-images` and `kogito-operator` pipelines on branch `kogito-998756`:
+**Again, please make sure that you setup your own configuration !**
 
-* CUSTOM_BRANCH_KEY=kogito-998756
-* CUSTOM_REPOSITORIES=kogito-images:kogito-998756,kogito-operator:kogito-998756
-* CUSTOM_AUTHOR=<YOUR_GITHUB_AUTHOR>
-* CUSTOM_MAIN_BRANCH=kogito-998756  
-  => This will allow to generate pull requests, else it considers the main branch to be the one defined into the seed config (most of the time `main`) and does not generate those.
-
-By default, in `CUSTOM_REPOSITORIES`, if you don't define any branch, `main` is taken.
-
-*NOTE: If you are testing nightly/release pipelines, you will need to set the correct `SEED_AUTHOR` and `SEED_BRANCH` because you will need specific credentials for your test. Else you can use directly the `kiegroup/main` repository.*
-
-#### Generate all
-
-Setup your [main seed configuration](../dsl/seed/config/main.yaml) to have only the testing branch.
-
-The, just run the created seed job with no `CUSTOM_XXX` parameters but correct `SEED_*` parameters. It will generate all jobs.
-
-This is useful if you want to test the full nightly and/or release pipeline(s).
-
-**Again, please make sure in that case that you setup your own configuration !**
-
-## Annex
-
-### Create specific Maven repository for testing
+#### Create specific Maven repository for testing
 
 For deploying runtimes and examples artifacts, and to avoid any conflict with main repository on snapshot artifacts, you will need to provide a nexus repository to deploy the artifacts.
 

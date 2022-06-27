@@ -331,14 +331,15 @@ class KogitoJobTemplate {
             if (useBuildChain) {
                 // Buildchain uses centralized configuration for Jenkinsfile.buildchain to checkout
                 // Overrides configuration already done
-                String buildChainCheckoutBranch = VersionUtils.getProjectTargetBranch(KogitoConstants.KOGITO_PIPELINES_REPOSITORY, jobParams.git.branch, jobParams.git.repository)
+                String buildChainCheckoutBranch = Utils.getSeedBranch(script)
                 jobParams.pr.checkout_branch = buildChainCheckoutBranch
+                jobParams.git.author = Utils.getSeedAuthor(script)
                 jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository ?: jobParams.git.repository}")
                 jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
                 jobParams.env.put('BUILDCHAIN_CONFIG_BRANCH', buildChainCheckoutBranch)
                 jobParams.env.put('NOTIFICATION_JOB_NAME', "(${testTypeId}) - ${jobCfg.repository ?: jobParams.git.repository}")
-                jobParams.git.repository = KogitoConstants.KOGITO_PIPELINES_REPOSITORY
-                jobParams.jenkinsfile = Utils.getPipelinesJenkinsfilePath(script, KogitoConstants.BUILDCHAIN_JENKINSFILE)
+                jobParams.git.repository = Utils.getSeedRepo(script)
+                jobParams.jenkinsfile = Utils.getSeedJenkinsfilePath(script, 'Jenkinsfile.buildchain')
 
                 // Status messages are sent directly by the pipeline as comments
                 jobParams.pr.putAll([

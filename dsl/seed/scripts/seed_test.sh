@@ -24,9 +24,10 @@ usage() {
     echo '  -h BRANCH                   Git Branch to checkout'
     echo '  -t TARGET FULL_REPOSITORY   Full name of the PR target repository, aka `owner/repo`'
     echo '  -b TARGET_BRANCH            PR target branch'
-    echo '  -r REPOSITORY        Repository to test jobs from. Please reference the PATH if the jobs.groovy file is not present at the root of the project'
-    echo '  -p PATH_TO_PIPELINES Absolute path to local pipelines repository. Else the pipelines repository will be checked out'
-    echo '  PATH                 Path to test'
+    echo '  -r REPOSITORY               Repository to test jobs from. Please reference the PATH if the jobs.groovy file is not present at the root of the project'
+    echo '  -p PATH_TO_PIPELINES        Absolute path to local pipelines repository. Else the pipelines repository will be checked out'
+    echo '  -c TEST_BRANCH_CONFIG_FILE  Path to the test branch config file. Default is the kogito branch config file path.'
+    echo '  PATH                        Path to test'
     echo
 }
 
@@ -56,8 +57,9 @@ branch=
 target_full_repository=
 target_branch='main'
 pipelines_repo=
+branch_config_file_path=
 
-while getopts "r:o:h:t:b:p:h" i
+while getopts "r:o:h:t:b:p:c:h" i
 do
     case "$i"
     in
@@ -67,6 +69,7 @@ do
         t) target_full_repository=${OPTARG} ;;
         b) target_branch=${OPTARG} ;;
         p) pipelines_repo=${OPTARG} ;;
+        c) branch_config_file_path=${OPTARG} ;;
         h) usage; exit 0 ;;
         \?) usage; exit 1 ;;
     esac
@@ -124,6 +127,7 @@ echo "target_owner.............${target_owner}"
 echo "target_repository........${target_repository}"
 echo "target_branch............${target_branch}"
 echo "pipelines_repo...........${pipelines_repo}"
+echo "branch_config_file_path..${branch_config_file_path}"
 
 current_repository="$(echo ${git_url}  | awk -F"${git_server}" '{print $2}' | awk -F'/' '{print $2}' | awk -F'.' '{print $1}')"
 echo "Got current repository = ${current_repository}"
@@ -142,21 +146,35 @@ if [ ! -z "${dsl_path}" ]; then
   cd ${dsl_path}
 fi
 
+pipelines_repo_path=
 if [ "${repository}" = 'kogito-pipelines' ]; then
   echo '----- Copying seed repo'
   mkdir -p ${TEMP_DIR}/dsl
-  cp -r ${script_dir_path}/../../../dsl/seed ${TEMP_DIR}/dsl
+  pipelines_repo_path="${script_dir_path}/../../.."
+  cp -r ${pipelines_repo_path}/dsl/seed ${TEMP_DIR}/dsl
 else
   if [ -z ${pipelines_repo} ]; then
     repository='kogito-pipelines'
     target_repository='kogito-pipelines'
     checkout_repository "${TEMP_DIR}"
+    pipelines_repo_path="${TEMP_DIR}"
   else
     echo '----- Copying given pipelines seed repo'
     mkdir -p ${TEMP_DIR}/dsl
-    cp -r ${pipelines_repo}/dsl/seed ${TEMP_DIR}/dsl
+    pipelines_repo_path=${pipelines_repo}
+    cp -r ${pipelines_repo_path}/dsl/seed ${TEMP_DIR}/dsl
   fi
 fi
+
+echo '----- Copying branch config file'
+if [ -z "${branch_config_file_path}" ]; then
+  if [ -f "${pipelines_repo_path}/dsl/config/branch.yaml" ]; then
+    branch_config_file_path="${pipelines_repo_path}/dsl/config/branch.yaml"
+  else
+    branch_config_file_path="${pipelines_repo_path}/dsl/seed/config/branch.yaml"
+  fi
+fi 
+cp "${branch_config_file_path}" ${TEMP_DIR}/dsl/seed/branch_config.yaml
 
 ${TEMP_DIR}/dsl/seed/scripts/copy_jobs.sh
 
