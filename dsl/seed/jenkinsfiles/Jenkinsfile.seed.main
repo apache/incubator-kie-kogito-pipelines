@@ -84,7 +84,7 @@ pipeline {
                             MAIN_BRANCHES: writeJSON(json: readSeedConfig().git.main_branch, returnText: true),
                             OLD_FOLDER_STRUCTURE: branchInfo.old_folder_structure,
                             SEED_AUTHOR: "${SEED_AUTHOR}",
-                            SEED_BRANCH: branchInfo.name,
+                            SEED_BRANCH: getEffectiveSeedBranch(branchInfo.name),
                             SEED_JENKINSFILE: branchInfo.seed?.jenkinsfile ?: readSeedConfig().seed.jenkinsfile,
                             SEED_CONFIG_FILE_GIT_REPOSITORY: branchInfo.seed?.config_file?.git?.repository ?: readSeedConfig().seed.config_file.git.repository,
                             SEED_CONFIG_FILE_GIT_AUTHOR_NAME: branchInfo.seed?.config_file?.git?.author?.name ?: readSeedConfig().seed.config_file.git.author.name,
@@ -176,6 +176,11 @@ void launchBranchSeedJob(String branch) {
 
     echo "Build ./${branch}/${getBranchSeedJobName()} with parameters ${jobParams}"
     build(job: "./${branch}/${getBranchSeedJobName()}", parameters: jobParams, wait: false)
+}
+
+String getEffectiveSeedBranch(String branch) {
+    def repo = githubscm.getRepositoryScm('kogito-pipelines', "${SEED_AUTHOR}", branch)
+    return repo ? branch : "${SEED_BRANCH}"
 }
 
 def readSeedConfig() {
