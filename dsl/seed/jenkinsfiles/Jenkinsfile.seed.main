@@ -149,13 +149,13 @@ pipeline {
                     Map parallelJobs = [:]
                     readSeedConfig().git.branches.collect { it.name }.each { branch ->
                         parallelJobs.put(branch, { launchBranchSeedJob(branch) })
-                }
+                    }
 
                     parallel parallelJobs
+                }
             }
         }
     }
-}
     post {
         always {
             cleanWs()
