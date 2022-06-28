@@ -179,8 +179,7 @@ void launchBranchSeedJob(String branch) {
 }
 
 String getEffectiveSeedBranch(String branch) {
-    def repo = githubscm.getRepositoryScm('kogito-pipelines', "${SEED_AUTHOR}", branch)
-    return repo ? branch : "${SEED_BRANCH}"
+    return githubscm.getRepositoryScm('kogito-pipelines', "${SEED_AUTHOR}", branch) ? branch : "${SEED_BRANCH}"
 }
 
 def readSeedConfig() {
