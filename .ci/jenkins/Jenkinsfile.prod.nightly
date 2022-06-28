@@ -87,12 +87,14 @@ pipeline {
                         def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
 
                         build job: env.KOGITO_PROPERTIES_GENERATOR_PATH, parameters: [
+                            [$class: 'StringParameterValue', name: 'REPO_URL', value: "http://bxms-qe.rhev-ci-vms.eng.rdu2.redhat.com:8081/nexus/content/repositories/kogito-${(PME_BUILD_VARIABLES['productVersion'] =~ /\\d+\\.\\d+/)[0]}-blue-nightly"],
                             [$class: 'BooleanParameterValue', name: 'IS_RELEASE', value: false],
                             [$class: 'StringParameterValue', name: 'BRANCH_NAME', value: env.BRANCH_NAME],
                             [$class: 'StringParameterValue', name: 'KOGITO_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['productVersion']],
                             [$class: 'StringParameterValue', name: 'OPTAPLANNER_PRODUCT_VERSION', value: PME_BUILD_VARIABLES['optaplannerProductVersion']],
                             [$class: 'StringParameterValue', name: 'TIME_STAMP', value: "${PME_BUILD_VARIABLES['datetimeSuffix']}"],
-                            [$class: 'StringParameterValue', name: 'GIT_INFORMATION_HASHES', value: "${treatGitHashes(env.GIT_INFORMATION_HASHES)}"]
+                            [$class: 'StringParameterValue', name: 'GIT_INFORMATION_HASHES', value: "${treatGitHashes(env.GIT_INFORMATION_HASHES)}"],
+                            [$class: 'StringParameterValue', name: 'FILE_ID', value: 'kogito-blue-nightly-properties-template']
                         ]
                     } else {
                         println "[WARNING] No artifacts to upload. None project has been built."
