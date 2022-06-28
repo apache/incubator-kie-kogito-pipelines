@@ -4,20 +4,17 @@ inputs:
   main-config-file-repo:
     description: author/repository to find the main config file
     required: false
-    default: kiegroup/kogito-pipelines
   main-config-file-ref:
     description: reference to find the main config file
     required: false
-    default: main
   main-config-file-path:
     description: path to find the main config file
     required: false
-    default: dsl/config/main.yaml
   base-branch:
     description: base branch for the checks
     required: false
     default: ''
-  jobs_folder_path:
+  jobs-folder-path:
     description: folder path where to find the jobs.groovy file
     required: false
     default: .ci/jenkins/dsl
@@ -25,89 +22,36 @@ inputs:
 runs:
   using: "composite"
   steps:
-  - name: Update $PATH
-    shell: bash
-    run: |
-      mkdir -p "${HOME}/.local/bin"
-      echo "${HOME}/.local/bin" >> $GITHUB_PATH
-
-  - name: Install yq
-    shell: bash
-    run: |
-      wget https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_amd64.tar.gz -O - |  tar xz && ls -al && mv yq_linux_amd64 "${HOME}/.local/bin/yq"
-      yq --version
-
-  - name: Setup default base branch based on input (if any, else fallback)
-    shell: bash
-    run: |
-      branch=${{ inputs.base_branch }}
-      if [ -z ${branch} ]; then branch=${{ github.base_ref }}; fi
-      echo "Use base branch ${branch}"
-      echo "BASE_BRANCH=${branch}" >> $GITHUB_ENV
-
-  - name: Checkout 
-    uses: actions/checkout@v2
-
   - name: Set up JDK 1.11
     uses: actions/setup-java@v1
     with:
       java-version: 11
-  
-  - name: Checkout Main Config repo
+
+  - name: Checkout Seed repo
     uses: actions/checkout@v2
     with:
-      repository: ${{ inputs.main-config-file-repo }}
-      ref: ${{ inputs.main-config-file-ref }}
-      path: main_config_repo
+      repository: kiegroup/kogito-pipelines
+      ref: main
+      path: seed_repo
+
+  - name: Setup default base branch based on input (if any, else fallback)
+    shell: bash
+    run: |
+      branch=${{ inputs.base-branch }}
+      if [ -z ${branch} ]; then branch=${{ github.base_ref }}; fi
+      echo "Use base branch ${branch}"
+      echo "BASE_BRANCH=${branch}" >> $GITHUB_ENV
   
-  - name: Read main project
-    shell: bash
-    working-directory: main_config_repo
-    run: |
-      main_project=$(yq eval '.ecosystem.main_project' ${main_config_path})
-      echo "Use main project ${main_project}"
-      echo "MAIN_PROJECT=${main_project}" >> $GITHUB_ENV
-      
-  - name: Setup branch name for reading config
-    shell: bash
-    run: |
-      branch=${{ env.BASE_BRANCH }}
-      if [[ ${branch} =~ ^[0-9]+\.[0-9]+\.x$ ]]; then branch="${{ env.MAIN_PROJECT }}-${{ env.BASE_BRANCH }}"; fi
-      echo "Use branch config ${branch}"
-      echo "BRANCH_CONFIG_GIT_BRANCH=${branch}" >> $GITHUB_ENV
-
-  - name: Retrieve branch config file information
-    shell: bash
-    working-directory: main_config_repo
-    run: |
-      main_config_path='${{ inputs.main-config-file-path }}'
-      
-      branch_config_git_repository=$(yq eval '.git.branches[] | select(.name == "${env.BRANCH_CONFIG_GIT_BRANCH}") | .seed.config_file.git.repository' ${main_config_path})
-      if [ -z ${branch_config_git_repository} ]; then branch_config_git_repository=$(yq eval '.seed.config_file.git.repository' ${main_config_path}); fi
-
-      branch_config_git_author=$(yq eval '.git.branches[] | select(.name == "${env.BRANCH_CONFIG_GIT_BRANCH}") | .seed.config_file.git.author.name' ${main_config_path})
-      if [ -z ${branch_config_git_author} ]; then branch_config_git_author=$(yq eval '.seed.config_file.git.author.name' ${main_config_path}); fi
-
-      branch_config_path=$(yq eval '.git.branches[] | select(.name == "${env.BRANCH_CONFIG_GIT_BRANCH}") | .seed.config_file.path' ${main_config_path})
-      if [ -z ${branch_config_path} ]; then branch_config_path=$(yq eval '.seed.config_file.path' ${main_config_path}); fi
-
-      echo "BRANCH_CONFIG_GIT_REPOSITORY=${branch_config_git_repository}" >> $GITHUB_ENV
-      echo "BRANCH_CONFIG_GIT_AUTHOR=${branch_config_git_author}" >> $GITHUB_ENV
-      echo "BRANCH_CONFIG_PATH=${branch_config_path}" >> $GITHUB_ENV
-
-  - name: Checkout branch config repo
-    uses: actions/checkout@v2
-    with:
-      repository: ${{ env.BRANCH_CONFIG_GIT_AUTHOR }}/${{ env.BRANCH_CONFIG_GIT_REPOSITORY }}
-      ref: ${{ env.BRANCH_CONFIG_GIT_BRANCH }}
-      path: branch_config_repo
-  
-  - name: Setup branch config file path
-    shell: bash
-    working-directory: branch_config_repo
-    run: |
-      echo "BRANCH_CONFIG_ABSOLUTE_PATH=$(pwd)/${{ env.BRANCH_CONFIG_PATH }}" >> $GITHUB_ENV
-
   - name: Test DSL
     shell: bash
-    run: .ci/jenkins/dsl/test.sh -h ${{ github.head_ref }} -r ${{ github.event.pull_request.head.repo.full_name }} -b ${{ env.BASE_BRANCH }} -t ${{ github.event.pull_request.base.repo.full_name }} -c ${{ env.BRANCH_CONFIG_ABSOLUTE_PATH }} ${{ inputs.jobs_folder_path }}
+    working-directory: seed_repo
+    env:
+      DEFAULT_DSL_MAIN_CONFIG_FILE_REPO: ${{ inputs.main-config-file-repo }}
+      DEFAULT_DSL_MAIN_CONFIG_FILE_REF: ${{ inputs.main-config-file-ref }}
+      DEFAULT_DSL_MAIN_CONFIG_FILE_PATH: ${{ inputs.main-config-file-path }}
+    run: |
+      dsl/seed/scripts/seed_test.sh -h ${{ github.head_ref }} \
+              -r ${{ github.event.pull_request.head.repo.full_name }} \
+              -b ${{ env.BASE_BRANCH }} \
+              -t ${{ github.event.pull_request.base.repo.full_name }} \
+              ${{ inputs.jobs-folder-path }}
