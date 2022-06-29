@@ -98,8 +98,43 @@ class KogitoJobUtils {
         }
     }
 
+    /**
+    * Create a Quarkus update job which allow to update the quarkus version into a repository, via Maven or Gradle
+    */
     static def createQuarkusUpdateToolsJob(def script, String repository, def mavenUpdate = [:], def gradleUpdate = [:]) {
         return createVersionUpdateToolsJob(script, repository, 'Quarkus', mavenUpdate, gradleUpdate)
+    }
+
+    /**
+    * Create main quarkus update tools job which will update the quarkus version for the global ecosystem project
+    * and will call the different projects `update-quarkus-{project}` jobs. Those should be best created with method `createQuarkusUpdateToolsJob`.
+    */
+    static def createMainQuarkusUpdateToolsJob(def script, String notificationJobName, List projectsToUpdate) {
+        def jobParams = getSeedJobParams(script, 'update-quarkus-all', Folder.TOOLS, 'Jenkinsfile.ecosystem.update-quarkus-all', 'Update Quarkus version for the whole ecosystem')
+        jobParams.env.putAll([
+            JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
+
+            NOTIFICATION_JOB_NAME: notificationJobName,
+            BUILD_BRANCH_NAME: Utils.getGitBranch(script),
+
+            PROJECTS_TO_UPDATE: projectsToUpdate.join(','),
+
+            SEED_BRANCH_CONFIG_FILE_GIT_REPOSITORY: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_REPOSITORY'),
+            SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_NAME: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_AUTHOR_NAME'),
+            SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID'),
+            SEED_BRANCH_CONFIG_FILE_GIT_BRANCH: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_BRANCH'),
+            SEED_BRANCH_CONFIG_FILE_PATH: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_PATH'),
+
+            SEED_REPO: Utils.getSeedRepo(script),
+            SEED_AUTHOR_NAME: Utils.getSeedAuthor(script),
+            SEED_BRANCH: Utils.getSeedBranch(script),
+            SEED_AUTHOR_CREDS_ID: Utils.getSeedAuthorCredsId(script)
+        ])
+        KogitoJobTemplate.createPipelineJob(script, jobParams)?.with {
+            parameters {
+                stringParam('NEW_VERSION', '', 'Which version to set ?')
+            }
+        }
     }
 
     static List createAllEnvsPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {

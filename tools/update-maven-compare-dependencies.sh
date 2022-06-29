@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -eo pipefail
  
-# kogito-runtimes, optaplanner. kogito-examples or optaplanner-quickstarts
 REMOTE_POM=$1
 REMOTE_POM_VERSION=$2
 MODULE=$3

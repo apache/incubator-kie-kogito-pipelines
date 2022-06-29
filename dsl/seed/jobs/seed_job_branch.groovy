@@ -15,11 +15,11 @@ if (Utils.isOldFolderStructure(this)) {
 SeedJobUtils.createSeedJobTrigger(
     this,
     "${GENERATION_BRANCH}/z-seed-trigger-job",
-    KogitoConstants.KOGITO_PIPELINES_REPOSITORY,
-    "${SEED_AUTHOR}",
-    "${SEED_BRANCH}",
+    Utils.getSeedRepo(this),
+    Utils.getSeedAuthor(this),
+    Utils.getSeedAuthorCredsId(this),
+    Utils.getSeedBranch(this),
     [
-        'dsl/config/branch.yaml',
         'dsl/seed/gradle',
         'dsl/seed/jenkinsfiles/scripts',
         'dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch',
@@ -29,6 +29,19 @@ SeedJobUtils.createSeedJobTrigger(
         'dsl/seed/gradle.properties',
     ],
     "${JOB_NAME}")
+
+SeedJobUtils.createSeedJobTrigger(
+    this,
+    "${GENERATION_BRANCH}/z-seed-config-trigger-job",
+    "${SEED_CONFIG_FILE_GIT_REPOSITORY}",
+    "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}",
+    "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}",
+    "${SEED_CONFIG_FILE_GIT_BRANCH}",
+    [
+        "${SEED_CONFIG_FILE_PATH}",
+    ],
+    "${JOB_NAME}"
+)
 
 // Configuration of the seed and generated jobs is done via `dsl/seed/config.yaml`
 pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
@@ -58,9 +71,10 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
         env('SEED_CONFIG_FILE_GIT_BRANCH', "${SEED_CONFIG_FILE_GIT_BRANCH}")
         env('SEED_CONFIG_FILE_PATH', "${SEED_CONFIG_FILE_PATH}")
 
-        env('SEED_AUTHOR', "${SEED_AUTHOR}")
-        env('SEED_BRANCH', "${SEED_BRANCH}")
-        env('SEED_REPO', 'kogito-pipelines')
+        env('SEED_REPO', Utils.getSeedRepo(this))
+        env('SEED_AUTHOR', Utils.getSeedAuthor(this))
+        env('SEED_AUTHOR_CREDS_ID', Utils.getSeedAuthorCredsId(this))
+        env('SEED_BRANCH', Utils.getSeedBranch(this))
     }
 
     definition {
@@ -68,10 +82,10 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
             scm {
                 git {
                     remote {
-                        url("https://github.com/${SEED_AUTHOR}/kogito-pipelines.git")
-                        credentials(KogitoConstants.DEFAULT_CREDENTIALS_ID)
+                        url("https://github.com/${Utils.getSeedAuthor(this)}/${Utils.getSeedRepo(this)}.git")
+                        credentials(Utils.getSeedAuthorCredsId(this))
                     }
-                    branch("${SEED_BRANCH}")
+                    branch("${Utils.getSeedBranch(this)}")
                     extensions {
                         cleanBeforeCheckout()
                     }
@@ -82,6 +96,6 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
     }
 
     properties {
-        githubProjectUrl("https://github.com/${SEED_AUTHOR}/kogito-pipelines/")
+        githubProjectUrl("https://github.com/${Utils.getSeedAuthor(this)}/${Utils.getSeedRepo(this)}/")
     }
 }

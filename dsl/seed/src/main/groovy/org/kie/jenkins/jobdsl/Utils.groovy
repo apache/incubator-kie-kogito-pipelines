@@ -116,6 +116,10 @@ class Utils {
         return getBindingValue(script, 'SEED_AUTHOR')
     }
 
+    static String getSeedAuthorCredsId(def script) {
+        return getBindingValue(script, 'SEED_AUTHOR_CREDS_ID')
+    }
+
     static String getSeedBranch(def script) {
         return getBindingValue(script, 'SEED_BRANCH')
     }

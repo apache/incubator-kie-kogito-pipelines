@@ -31,10 +31,6 @@ Apart from this repository, pipelines are also concerning those repositories:
 * [kogito-examples](https://github.com/kiegroup/kogito-examples)
 * [kogito-images](https://github.com/kiegroup/kogito-images)
 * [kogito-operator](https://github.com/kiegroup/kogito-operator)
-* [optaplanner](https://github.com/kiegroup/optaplanner)
-* [optaweb-employee-rostering](https://github.com/kiegroup/optaweb-employee-rostering)
-* [optaweb-vehicle-routing](https://github.com/kiegroup/optaweb-vehicle-routing)
-* [optaplanner-quickstarts](https://github.com/kiegroup/optaplanner-quickstarts)
 * [kie-tools](https://github.com/kiegroup/kie-tools)
 
 # The different Kogito pipelines
@@ -43,7 +39,7 @@ Apart from this repository, pipelines are also concerning those repositories:
 
 Kogito has 2 main pipelines:
 
-* [Nightly pipeline](./.ci/jenkins/Jenkinsfile.nightly.kogito)  
+* [Nightly pipeline](./.ci/jenkins/Jenkinsfile.nightly)  
   is a multibranch pipeline which is run daily on each active branch
 * [Release pipeline](./.ci/jenkins/Jenkinsfile.release)  
   is a on-demand single pipeline job

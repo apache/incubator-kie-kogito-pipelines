@@ -1,6 +1,9 @@
 name: 'DSL tests'
 description: 'Tests DSL generation'
 inputs:
+  repository:
+    description: author/repository to check
+    required: false
   main-config-file-repo:
     description: author/repository to find the main config file
     required: false
@@ -9,6 +12,9 @@ inputs:
     required: false
   main-config-file-path:
     description: path to find the main config file
+    required: false
+  branch-config-branch:
+    description: branch config branch to look for
     required: false
   base-branch:
     description: base branch for the checks
@@ -46,9 +52,11 @@ runs:
     shell: bash
     working-directory: seed_repo
     env:
-      DEFAULT_DSL_MAIN_CONFIG_FILE_REPO: ${{ inputs.main-config-file-repo }}
-      DEFAULT_DSL_MAIN_CONFIG_FILE_REF: ${{ inputs.main-config-file-ref }}
-      DEFAULT_DSL_MAIN_CONFIG_FILE_PATH: ${{ inputs.main-config-file-path }}
+      DSL_DEFAULT_REPOSITORY: ${{ inputs.repository }}
+      DSL_DEFAULT_MAIN_CONFIG_FILE_REPO: ${{ inputs.main-config-file-repo }}
+      DSL_DEFAULT_MAIN_CONFIG_FILE_REF: ${{ inputs.main-config-file-ref }}
+      DSL_DEFAULT_MAIN_CONFIG_FILE_PATH: ${{ inputs.main-config-file-path }}
+      DSL_DEFAULT_BRANCH_CONFIG_BRANCH: ${{ inputs.branch-config-branch }}
     run: |
       dsl/seed/scripts/seed_test.sh -h ${{ github.head_ref }} \
               -r ${{ github.event.pull_request.head.repo.full_name }} \

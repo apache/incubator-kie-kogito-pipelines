@@ -21,8 +21,6 @@ Here is the list of jobs and link to Jenkinsfiles:
 * [drools-promote](https://github.com/kiegroup/drools/blob/main/Jenkinsfile.promote)
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.promote)
-* [optaplanner-deploy](https://github.com/kiegroup/optaplanner/blob/main/Jenkinsfile.deploy)
-* [optaplanner-promote](https://github.com/kiegroup/optaplanner/blob/main/Jenkinsfile.promote)
 * [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.deploy)
 * [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/main/Jenkinsfile.deploy)
@@ -57,7 +55,7 @@ Once a branch is created or another one should be deactivated, you just need to 
 ## Nightly pipeline Parameters
 
 If needed, the Nightly pipeline can be restarted with `SKIP_TESTS` or `SKIP` specific part options.  
-See the [Nightly Jenkinsfile](../Jenkinsfile.nightly.kogito) for more information on parameters.
+See the [Nightly Jenkinsfile](../Jenkinsfile.nightly) for more information on parameters.
 
 ### Launch a nightly with minimal parameters for nightly testing
 
@@ -77,7 +75,7 @@ In the Zulip kogito-ci stream, there should be a link to the failing job. Open i
 ### Nightly pipeline is failing
 
 In case the main pipeline is failing, this will be most likely a Groovy error.  
-This can happen when changes have been made to the [Nightly Jenkinsfile](../Jenkinsfile.nightly.kogito).
+This can happen when changes have been made to the [Nightly Jenkinsfile](../Jenkinsfile.nightly).
 
 The problem will need to be corrected on the corresponding branch and the pipeline can be restarted (or wait for the next run).
 
@@ -109,7 +107,7 @@ Here are some problems which can occur on a `Promote` job:
 
 ## Testing the Nightly Pipeline
 
-In order to test the full Nightly Pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.nightly.kogito](../Jenkinsfile.nightly.kogito), create jobs in Jenkins and setup some credentials.
+In order to test the full Nightly Pipeline, and in order to avoid any problem, you will need to change some env in [Jenkinsfile.nightly](../Jenkinsfile.nightly), create jobs in Jenkins and setup some credentials.
 
 * Have a specific container registry and credentials registered with `push` rights on it
 * Have a specific Maven repository to deploy jar artifacts

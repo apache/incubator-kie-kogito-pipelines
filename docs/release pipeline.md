@@ -42,8 +42,6 @@ Here is the list of jobs and link to Jenkinsfiles:
 * [drools-promote](https://github.com/kiegroup/drools/blob/main/Jenkinsfile.promote)
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.promote)
-* [optaplanner-deploy](https://github.com/kiegroup/optaplanner/blob/main/Jenkinsfile.deploy)
-* [optaplanner-promote](https://github.com/kiegroup/optaplanner/blob/main/Jenkinsfile.promote)
 * [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.deploy)
 * [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/main/Jenkinsfile.deploy)
@@ -204,7 +202,7 @@ Note that `PROJECT_VERSION` in that case is the Kogito artifacts' version.
 
 ## Architecture of the Release pipeline
 
-The Release Pipeline is composed of many steps, calling different other jobs to set the correct version, perform the build&test of runtimes/optaplanner/apps/examples/images/operator and then promote released artifacts and container images as production ready.
+The Release Pipeline is composed of many steps, calling different other jobs to set the correct version, perform the build&test of runtimes/apps/examples/images/operator and then promote released artifacts and container images as production ready.
 
 ![Flow](./images/release-flow.png)
 
@@ -290,7 +288,7 @@ See [Jenkins documentation](./jenkins.md) to create the different jobs for the t
 **IMPORTANT:**
 
 * When using `Optaplanner Promote` job, please also create a specific branch to be executed and comment the content of the `uploadDistribution` method.
-* When deploying artifacts for runtimes/apps/examples/optaplanner, make sure the branch you deploy is up to date to avoid any conflict with current deployed artifacts !
+* When deploying artifacts for drools/runtimes/apps/examples, make sure the branch you deploy is up to date to avoid any conflict with current deployed artifacts !
 
 ### Launch a release with minimal parameters for testing
 

@@ -6,88 +6,206 @@ name: Jenkins DSL
 on:
   pull_request:
     paths:
-    - 'dsl/**'
+      - "dsl/**"
+      - '.github/workflows/jenkins-dsl-downstream.yml'
 
 jobs:
-  getDslDownstreamMatrix:
+  #############################################################################
+  # Kogito
+  #############################################################################
+  getKogitoDslDownstreamMatrix:
     runs-on: ubuntu-latest
-    name: Get DSL downstream projects Matrix
+    name: Get Kogito DSL downstream projects
     outputs:
-        matrix: ${{ steps.setmatrix.outputs.repositories }}
+      matrix: ${{ steps.setmatrix.outputs.repositories }}
     steps:
-      - name: Checkout 
-        uses: actions/checkout@v2
+      - name: Setup PATH
+        run: |
+          mkdir -p "${HOME}/.local/bin"
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
 
       - name: Install yq
         run: |
-          echo $PATH
-          wget https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_amd64.tar.gz -O - |  tar xz && ls -al && mv yq_linux_amd64 yq
+          wget https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_amd64.tar.gz -O - |  tar xz && ls -al && mv yq_linux_amd64 "${HOME}/.local/bin/yq"
+          yq --version
 
-      - id: setmatrix
+      - name: Checkout Main Config repo from main branch
+        uses: actions/checkout@v2
+        with:
+          repository: kiegroup/kogito-pipelines
+          ref: main
+          path: main_config_repo
+
+      - name: Retrieve branch config file information
+        working-directory: main_config_repo
         run: |
-         matrixArray=$(./yq eval '.repositories[].name' dsl/config/branch.yaml) # Creates array of all repositories
-         # Start Generate Json String
-         echo "$matrixArray" | \
-         jq --slurp --raw-input 'split("\n")[:-1]' | \
-         jq  "{\"repository\": .[] }" | \
-         jq -sc "{ \"include\": . }" > tmp
-         cat ./tmp
-         # End Generate Json String
-         matrixStringifiedObject=$(cat ./tmp) # Use this as jq @sh wasn't cooperating
-         echo "::set-output name=repositories::$matrixStringifiedObject"
-  downstream-dsl-tests:
+          if [ -f 'dsl/config/main.yaml' ]; then main_config_path='dsl/config/main.yaml'; else main_config_path='dsl/seed/config/main.yaml'; fi
+          echo "BRANCH_CONFIG_GIT_REPOSITORY=$(yq '.seed.config_file.git.repository' ${main_config_path})" >> $GITHUB_ENV
+          echo "BRANCH_CONFIG_GIT_AUTHOR=$(yq '.seed.config_file.git.author.name' ${main_config_path})" >> $GITHUB_ENV
+          echo "BRANCH_CONFIG_GIT_BRANCH=$(yq '.seed.config_file.git.branch' ${main_config_path})" >> $GITHUB_ENV
+          echo "BRANCH_CONFIG_PATH=$(yq '.seed.config_file.path' ${main_config_path})" >> $GITHUB_ENV
+
+      - name: Checkout branch config repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.BRANCH_CONFIG_GIT_AUTHOR }}/${{ env.BRANCH_CONFIG_GIT_REPOSITORY }}
+          ref: ${{ env.BRANCH_CONFIG_GIT_BRANCH }}
+          path: branch_config_repo
+
+      - name: Set Downstream projects matrix
+        id: setmatrix
+        working-directory: branch_config_repo
+        run: |
+          matrixArray=$(yq '.repositories[].name' ${{ env.BRANCH_CONFIG_PATH }}) # Creates array of all repositories
+          defaultAuthor=$(yq '.git.author.name' ${{ env.BRANCH_CONFIG_PATH }})
+          fullArray=()
+          for repo in ${matrixArray}; 
+            do 
+              echo $repo
+              author="$(yq '.repositories[] | select(.name == "${repo}") | .author.name' ${{ env.BRANCH_CONFIG_PATH }})"
+              if [ -z $author ]; then
+                author=${defaultAuthor}
+              fi
+            fullArray+=("${author}/${repo}")
+          done
+          echo "${fullArray[@]}"
+          # Start Generate Json String
+          echo "${fullArray[@]}" | \
+          jq --slurp --raw-input 'split(" ")[:-1]' | \
+          jq  "{\"repository\": .[] }" | \
+          jq -sc "{ \"include\": . }" > tmp
+          cat ./tmp
+          # End Generate Json String
+          matrixStringifiedObject=$(cat ./tmp) # Use this as jq @sh wasn't cooperating
+          echo "::set-output name=repositories::$matrixStringifiedObject"
+
+  runKogitoDownstreamDslTests:
     runs-on: ubuntu-latest
-    needs: getDslDownstreamMatrix
+    needs: getKogitoDslDownstreamMatrix
     strategy:
-      matrix: ${{fromJson(needs.getDslDownstreamMatrix.outputs.matrix)}}
+      matrix: ${{fromJson(needs.getKogitoDslDownstreamMatrix.outputs.matrix)}}
       fail-fast: false
-    name: Downstream - ${{ matrix.repository }}
+    name: Kogito DSL Downstream tests - ${{ matrix.repository }}
     steps:
-    - name: Checkout 
-      uses: actions/checkout@v2
+      - name: Setup default branch
+        run: |
+          echo 'BASE_BRANCH=${{ github.base_ref }}' >> $GITHUB_ENV
 
-    - name: Set up JDK 1.11
-      uses: actions/setup-java@v1
-      with:
-        java-version: 11
+      - name: Setup correct base branch for drools repositories
+        if: ${{ startsWith(matrix.repository, 'drools') && github.base_ref != 'main' }}
+        run: |
+          IFS='.' read -ra ver <<< "${{ github.base_ref }}"
+          release=${ver[2]}
+          minor=${ver[1]}
+          major=${ver[0]}
+          echo "BASE_BRANCH=$((major+7)).$minor.$release" >> $GITHUB_ENV
 
-    - name: Setup default branches
-      run: |
-        echo 'BASE_BRANCH=${{ github.base_ref }}' >> $GITHUB_ENV
-    
-    - name: Setup correct base branch for opta repositories
-      if: ${{ startsWith(matrix.repository, 'opta') && github.base_ref != 'main' }}
-      run: |
-        IFS='.' read -ra ver <<< "${{ github.base_ref }}"
-        release=${ver[2]}
-        minor=${ver[1]}
-        major=${ver[0]}
-        echo "BASE_BRANCH=$((major+7)).$minor.$release" >> $GITHUB_ENV
+      - name: DSL tests
+        uses: kiegroup/kogito-pipelines/.ci/actions/dsl-tests@main
+        with:
+          repository: ${{ matrix.repository }}
+          main-config-file-repo: kiegroup/kogito-pipelines
+          main-config-file-ref: main
+          main-config-file-path: dsl/config/main.yaml
+          branch-config-branch: ${{ github.base_ref }}
+          base-branch: ${{ env.BASE_BRANCH }}
 
-    - name: Setup correct base branch for drools repositories
-      if: ${{ startsWith(matrix.repository, 'drools') && github.base_ref != 'main' }}
-      run: |
-        IFS='.' read -ra ver <<< "${{ github.base_ref }}"
-        release=${ver[2]}
-        minor=${ver[1]}
-        major=${ver[0]}
-        echo "BASE_BRANCH=$((major+7)).$minor.$release" >> $GITHUB_ENV
+  #############################################################################
+  # Optaplanner
+  #############################################################################
+  getOptaPlannerDslDownstreamMatrix:
+    runs-on: ubuntu-latest
+    name: Get OptaPlanner DSL downstream projects
+    outputs:
+      matrix: ${{ steps.setmatrix.outputs.repositories }}
+      branch_config_git_repository: ${{ steps.setbranchconfig.outputs.branch_config_git_repository }}
+      branch_config_git_author: ${{ steps.setbranchconfig.outputs.branch_config_git_author }}
+      branch_config_git_branch: ${{ steps.setbranchconfig.outputs.branch_config_git_branch }}
+      branch_config_path: ${{ steps.setbranchconfig.outputs.branch_config_path }}
+    steps:
+      - name: Setup PATH
+        run: |
+          mkdir -p "${HOME}/.local/bin"
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
 
-    - name: Setup correct base branch for optaplanner-quickstarts
-      if: github.base_ref == 'main' && matrix.repository == 'optaplanner-quickstarts'
-      run: |
-        echo 'BASE_BRANCH=development' >> $GITHUB_ENV
+      - name: Install yq
+        run: |
+          wget https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_amd64.tar.gz -O - |  tar xz && ls -al && mv yq_linux_amd64 "${HOME}/.local/bin/yq"
+          yq --version
 
-    - name: Test DSL
-      env:
-        DSL_DEFAULT_MAIN_CONFIG_FILE_REPO: kiegroup/kogito-pipelines
-        DSL_DEFAULT_MAIN_CONFIG_FILE_REF: main
-        DSL_DEFAULT_MAIN_CONFIG_FILE_PATH: .ci/jenkins/config/main.yaml
-      run: |
-        dsl/seed/scripts/seed_test.sh -o ${{ matrix.repository }} \
-                  -h ${{ github.head_ref }} \
-                  -r ${{ github.event.pull_request.head.repo.full_name }} \
-                  -b ${{ env.BASE_BRANCH }} \
-                  -t ${{ github.event.pull_request.base.repo.full_name }} \
-                  -d ${{ github.base_ref }} \
-                  .ci/jenkins/dsl
+      - name: Checkout Main Config repo from main branch
+        uses: actions/checkout@v2
+        with:
+          repository: kiegroup/optaplanner
+          ref: main
+          path: main_config_repo
+
+      - name: Retrieve branch config file information
+        working-directory: main_config_repo
+        run: |
+          main_config_path='.ci/jenkins/config/main.yaml'
+          echo "BRANCH_CONFIG_GIT_REPOSITORY=$(yq '.seed.config_file.git.repository' ${main_config_path})" >> $GITHUB_ENV
+          echo "BRANCH_CONFIG_GIT_AUTHOR=$(yq '.seed.config_file.git.author.name' ${main_config_path})" >> $GITHUB_ENV
+          echo "BRANCH_CONFIG_GIT_BRANCH=$(yq '.seed.config_file.git.branch' ${main_config_path})" >> $GITHUB_ENV
+          echo "BRANCH_CONFIG_PATH=$(yq '.seed.config_file.path' ${main_config_path})" >> $GITHUB_ENV
+
+      - name: Checkout branch config repo
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.BRANCH_CONFIG_GIT_AUTHOR }}/${{ env.BRANCH_CONFIG_GIT_REPOSITORY }}
+          ref: ${{ env.BRANCH_CONFIG_GIT_BRANCH }}
+          path: branch_config_repo
+
+      - name: Set Downstream projects matrix
+        id: setmatrix
+        working-directory: branch_config_repo
+        run: |
+          matrixArray=$(yq '.repositories[].name' ${{ env.BRANCH_CONFIG_PATH }}) # Creates array of all repositories
+          defaultAuthor=$(yq '.git.author.name' ${{ env.BRANCH_CONFIG_PATH }})
+          fullArray=()
+          for repo in ${matrixArray}; 
+            do 
+              echo $repo
+              author="$(yq '.repositories[] | select(.name == "${repo}") | .author.name' ${{ env.BRANCH_CONFIG_PATH }})"
+              if [ -z $author ]; then
+                author=${defaultAuthor}
+              fi
+            fullArray+=("${author}/${repo}")
+          done
+          echo "${fullArray[@]}"
+          # Start Generate Json String
+          echo "${fullArray[@]}" | \
+          jq --slurp --raw-input 'split(" ")[:-1]' | \
+          jq  "{\"repository\": .[] }" | \
+          jq -sc "{ \"include\": . }" > tmp
+          cat ./tmp
+          # End Generate Json String
+          matrixStringifiedObject=$(cat ./tmp) # Use this as jq @sh wasn't cooperating
+          echo "::set-output name=repositories::$matrixStringifiedObject"
+
+  runOtaPlannerDownstreamDslTests:
+    runs-on: ubuntu-latest
+    needs: getOptaPlannerDslDownstreamMatrix
+    strategy:
+      matrix: ${{fromJson(needs.getOptaPlannerDslDownstreamMatrix.outputs.matrix)}}
+      fail-fast: false
+    name: OptaPlanner DSL Downstream tests - ${{ matrix.repository }}
+    steps:
+      - name: Setup default base branch
+        run: |
+          echo 'BASE_BRANCH=${{ github.base_ref }}' >> $GITHUB_ENV
+
+      - name: Setup correct base branch for optaplanner-quickstarts
+        if: github.base_ref == 'main' && matrix.repository == 'optaplanner-quickstarts'
+        run: |
+          echo 'BASE_BRANCH=development' >> $GITHUB_ENV
+      
+      - name: DSL tests
+        uses: kiegroup/kogito-pipelines/.ci/actions/dsl-tests@main
+        with:
+          repository: ${{ matrix.repository }}
+          main-config-file-repo: kiegroup/optaplanner
+          main-config-file-ref: main
+          main-config-file-path: .ci/jenkins/config/main.yaml
+          branch-config-branch: ${{ github.base_ref }}
+          base-branch: ${{ env.BASE_BRANCH }}

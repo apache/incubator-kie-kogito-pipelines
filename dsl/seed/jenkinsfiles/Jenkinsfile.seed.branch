@@ -19,7 +19,8 @@ SeedJobUtils.createSeedJobTrigger(
     this,
     "z-seed-trigger-${REPO_NAME}-job",
     "${REPO_NAME}",
-    "${GIT_AUTHOR}",
+    "${GIT_AUTHOR_NAME}",
+    "${GIT_AUTHOR_CREDS_ID}",
     "${GIT_BRANCH}",
     [ "${GIT_JENKINS_CONFIG_PATH}" ],
     "${JOB_NAME}")
@@ -108,8 +109,16 @@ pipeline {
                         envProps += [
                             GIT_MAIN_BRANCH: getMainBranch(repository),
                             REPO_NAME: "${repository}",
+
+                            SEED_CONFIG_FILE_GIT_REPOSITORY: "${SEED_CONFIG_FILE_GIT_REPOSITORY}",
+                            SEED_CONFIG_FILE_GIT_AUTHOR_NAME: "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}",
+                            SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}",
+                            SEED_CONFIG_FILE_GIT_BRANCH: "${SEED_CONFIG_FILE_GIT_BRANCH}",
+                            SEED_CONFIG_FILE_PATH: "${SEED_CONFIG_FILE_PATH}",
+
                             SEED_REPO: "${SEED_REPO}",
                             SEED_AUTHOR: "${SEED_AUTHOR}",
+                            SEED_AUTHOR_CREDS_ID: "${SEED_AUTHOR_CREDS_ID}",
                             SEED_BRANCH: "${SEED_BRANCH}",
                         ]
                         // Add other repos `jenkins_config_path` var (useful if multijob PR checks for example)
@@ -145,9 +154,15 @@ pipeline {
                         def envProps = [
                             REPO_NAME: repository,
                             GIT_BRANCH: repoConfig.git.branch,
-                            GIT_AUTHOR: repoConfig.git.author.name,
+                            GIT_AUTHOR_NAME: repoConfig.git.author.name,
+                            GIT_AUTHOR_CREDS_ID: repoConfig.git.author.credentials_id,
                             GIT_JENKINS_CONFIG_PATH: repoConfig.git.jenkins_config_path,
-                            JOB_NAME: "${JOB_NAME}"
+                            JOB_NAME: "${JOB_NAME}",
+                            SEED_CONFIG_FILE_GIT_REPOSITORY: "${SEED_CONFIG_FILE_GIT_REPOSITORY}",
+                            SEED_CONFIG_FILE_GIT_AUTHOR_NAME: "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}",
+                            SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}",
+                            SEED_CONFIG_FILE_GIT_BRANCH: "${SEED_CONFIG_FILE_GIT_BRANCH}",
+                            SEED_CONFIG_FILE_PATH: "${SEED_CONFIG_FILE_PATH}",
                         ]
 
                         println "[INFO] Generate trigger jobs for branch ${GENERATION_BRANCH} and repo ${repository}"
@@ -202,7 +217,7 @@ String checkoutBranchConfig() {
     assert env.SEED_CONFIG_FILE_GIT_AUTHOR_NAME : 'Missing main seed config file Git Author Name into the environment. Please check the job configuration.'
     assert env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID : 'Missing main seed config file Git Author Credentials ID into the environment. Please check the job configuration.'
     assert env.SEED_CONFIG_FILE_GIT_BRANCH : 'Missing main seed config file Git Branch into the environment. Please check the job configuration.'
-    
+
     String dirName = "seed-${env.SEED_CONFIG_FILE_GIT_REPOSITORY}"
     dir(dirName) {
         deleteDir()

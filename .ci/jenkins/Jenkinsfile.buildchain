@@ -14,7 +14,9 @@ downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : fals
 native_build = env.NATIVE ? env.NATIVE.toBoolean() : false
 native_builder_image = env.NATIVE_BUILDER_IMAGE ?: ''
 
+buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
+buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:kiegroup}'
 buildChainDefinitionFile = env.QUARKUS_BRANCH ? 'pull-request-config-quarkus.yaml' : 'pull-request-config.yaml'
 buildChainAction = isFDB() ? 'fd' : prType
 buildChainAdditionalArguments = buildChainProject ? "-sp=${buildChainProject}" : ''
@@ -79,7 +81,7 @@ pipeline {
 
                     configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
                         withCredentials([string(credentialsId: 'kie-ci3-token', variable: 'GITHUB_TOKEN')]) {
-                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/kiegroup/kogito-pipelines/${buildChainConfigBranch}/.ci/${buildChainDefinitionFile}' -folder='bc' build ${buildChainAction} -url=${env.ghprbPullLink} ${buildChainAdditionalArguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'"
+                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/.ci/${buildChainDefinitionFile}' -folder='bc' build ${buildChainAction} -url=${env.ghprbPullLink} ${buildChainAdditionalArguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'"
                         }
                     }
                 }

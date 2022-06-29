@@ -12,7 +12,6 @@ APPS_DEPLOY = 'kogito-apps-deploy'
 EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
-OPTAPLANNER_DEPLOY = 'optaplanner-deploy'
 
 // Map of executed jobs
 // See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
@@ -46,27 +45,6 @@ pipeline {
                     echo "build name is ${env.BUILD_NAME}"
 
                     currentBuild.displayName = env.BUILD_NAME
-                }
-            }
-        }
-
-        stage('Build & Deploy OptaPlanner') {
-            steps {
-                script {
-                    echo "Call ${OPTAPLANNER_DEPLOY} job"
-                    def buildParams = getDefaultBuildParams()
-
-                    def targetBranch = (changeTarget != 'main') ? getOptaPlannerBranch() : ''
-                    addAuthorBranchParamsIfExist(buildParams, 'optaplanner', targetBranch)
-                    addStringParam(buildParams, 'PR_TARGET_BRANCH', targetBranch)
-                    addStringParam(buildParams, 'QUICKSTARTS_BUILD_BRANCH_NAME', targetBranch)
-
-                    buildJob(OPTAPLANNER_DEPLOY, buildParams, false)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage()
                 }
             }
         }
@@ -223,18 +201,6 @@ void addAuthorBranchParamsIfExist(List params, String repo, String targetBranch 
     } else if (targetBranch != 'main' && doesBranchExist(repo, 'kiegroup', targetBranch)) {
         addStringParam(params, 'BUILD_BRANCH_NAME', targetBranch)
     }
-}
-
-String getOptaPlannerBranch() {
-    /* The OptaPlanner major version is shifted by 7 from the Kogito major version:
-       Kogito 1.x.y -> OptaPlanner 8.x.y. */
-    int majorVersionShift = 7
-    String [] changeTargetSplit = changeTarget.split("\\.")
-    if (changeTargetSplit.length == 3) {
-        Integer optaplannerMajorVersion = Integer.parseInt(changeTargetSplit[0]) + majorVersionShift
-        return "${optaplannerMajorVersion}.${changeTargetSplit[1]}.${changeTargetSplit[2]}"
-    }
-    return changeTarget
 }
 
 void addAppsParams(List buildParams) {

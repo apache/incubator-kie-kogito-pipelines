@@ -62,7 +62,7 @@ checkout_repository() {
   set +e
 }
 
-full_repository=
+full_repository=${DSL_DEFAULT_REPOSITORY}
 repository=
 branch=
 target_full_repository=
@@ -102,7 +102,7 @@ if [ ! -z "$1" ]; then
   shift
 fi
 
-if [ -z ${target_branch} ]; then
+if [ -z ${branch_config_branch} ]; then
   branch_config_branch=${target_branch}
 fi
 
