@@ -85,10 +85,10 @@ pipeline {
                 script {
                     if(env.ALREADY_BUILT_PROJECTS?.trim()) {
                         def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
-			println "PME_BUILD_VARIABLES values ${PME_BUILD_VARIABLES}"
-			def matcher = productVersion =~ /\d+\.\d+/
-			def repositoryId = "kogito-${matcher[0]}-blue-nightly"
-			println "repositoryId: ${repositoryId}"
+                        println "PME_BUILD_VARIABLES values ${PME_BUILD_VARIABLES}"
+                        def matcher = PME_BUILD_VARIABLES['productVersion'] =~ /\d+\.\d+/
+                        def repositoryId = "kogito-${matcher[0]}-blue-nightly"
+                        println "repositoryId: ${repositoryId}"
                         build job: env.KOGITO_PROPERTIES_GENERATOR_PATH, parameters: [
                             [$class: 'StringParameterValue', name: 'REPO_URL', value: "http://bxms-qe.rhev-ci-vms.eng.rdu2.redhat.com:8081/nexus/content/repositories/${repositoryId}"],
                             [$class: 'BooleanParameterValue', name: 'IS_RELEASE', value: false],
