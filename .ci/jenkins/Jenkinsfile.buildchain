@@ -86,7 +86,7 @@ pipeline {
             }
             post {
                 always {
-                    junit '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml'
+                    junit '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml, **/target/invoker-reports/**/*.xml'
                     archiveArtifacts(artifacts: '**/cypress/screenshots/**,**/cypress/videos/**', fingerprint: false, allowEmptyArchive: true)
                 }
                 unsuccessful {
