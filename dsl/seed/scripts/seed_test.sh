@@ -32,6 +32,7 @@ usage() {
     echo '  -f MAIN_CONFIG_FILE_REF       Main config file branch to the MAIN_CONFIG_REPO. Default can be given via `DSL_DEFAULT_MAIN_CONFIG_FILE_REF` env var'
     echo '  -g MAIN_CONFIG_FILE_PATH      Path to the test config file in MAIN_CONFIG_REPO. If no MAIN_CONFIG_REPO is given, then it will look locally. Default can be given via `DSL_DEFAULT_MAIN_CONFIG_FILE_PATH` env var'
     echo '  -c BRANCH_CONFIG_FILE_PATH    Local Path to the branch config file. `MAIN_CONFIG_*` will be ignored if that one is given. Default can be given via `DSL_DEFAULT_BRANCH_CONFIG_FILE_PATH` env var'
+    echo '  -d BRANCH_CONFIG_BRANCH       Base branch to checkout the branch config. Default is `TARGET_BRANCH` or via `DSL_DEFAULT_BRANCH_CONFIG_BRANCH` env var'
     echo '  PATH                          Path to test'
     echo
 }
@@ -72,8 +73,9 @@ main_config_file_repo="${DSL_DEFAULT_MAIN_CONFIG_FILE_REPO}"
 main_config_file_ref="${DSL_DEFAULT_MAIN_CONFIG_FILE_REF}"
 main_config_file_path="${DSL_DEFAULT_MAIN_CONFIG_FILE_PATH}"
 branch_config_file_path="${DSL_DEFAULT_BRANCH_CONFIG_FILE_PATH}"
+branch_config_branch="${DSL_DEFAULT_BRANCH_CONFIG_BRANCH}"
 
-while getopts "r:o:h:t:b:p:e:f:c:g:h" i
+while getopts "r:o:h:t:b:p:e:f:g:c:d:h" i
 do
     case "$i"
     in
@@ -87,6 +89,7 @@ do
         f) main_config_file_ref=${OPTARG} ;;
         g) main_config_file_path=${OPTARG} ;;
         c) branch_config_file_path=${OPTARG} ;;
+        d) branch_config_branch=${OPTARG} ;;
         h) usage; exit 0 ;;
         \?) usage; exit 1 ;;
     esac
@@ -97,6 +100,10 @@ dsl_path=
 if [ ! -z "$1" ]; then
   dsl_path=$1
   shift
+fi
+
+if [ -z ${target_branch} ]; then
+  branch_config_branch=${target_branch}
 fi
 
 git_url=$(git remote -v | grep origin | awk -F' ' '{print $2}' | head -n 1)
@@ -147,6 +154,7 @@ echo "pipelines_repo...........${pipelines_repo}"
 echo "main_config_file_repo....${main_config_file_repo}"
 echo "main_config_file_ref.....${main_config_file_ref}"
 echo "main_config_file_path....${main_config_file_path}"
+echo "branch_config_branch.....${branch_config_branch}"
 echo "branch_config_file_path..${branch_config_file_path}"
 
 current_repository="$(echo ${git_url}  | awk -F"${git_server}" '{print $2}' | awk -F'/' '{print $2}' | awk -F'.' '{print $1}')"
@@ -216,7 +224,7 @@ if [ -z "${branch_config_file_path}" ]; then
     echo "Use main project ${main_project}"
 
     echo '--------- Setup branch name for reading config'
-    branch_config_file_ref="${target_branch}"
+    branch_config_file_ref="${branch_config_branch}"
     if [[ ${branch_config_file_ref} =~ ^[0-9]+\.[0-9]+\.x$ ]]; then 
       branch_config_file_ref="${main_project}-${branch_config_file_ref}"; 
     fi
