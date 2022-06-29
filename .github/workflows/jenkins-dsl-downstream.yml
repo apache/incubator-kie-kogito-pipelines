@@ -51,7 +51,7 @@ jobs:
       with:
         java-version: 11
 
-    - name: Setup default base branch
+    - name: Setup default branches
       run: |
         echo 'BASE_BRANCH=${{ github.base_ref }}' >> $GITHUB_ENV
     
@@ -79,4 +79,15 @@ jobs:
         echo 'BASE_BRANCH=development' >> $GITHUB_ENV
 
     - name: Test DSL
-      run: .ci/jenkins/dsl/test.sh -o ${{ matrix.repository }} -h ${{ github.head_ref }} -r ${{ github.event.pull_request.head.repo.full_name }} -b ${{ env.BASE_BRANCH }} -t ${{ github.event.pull_request.base.repo.full_name }} .ci/jenkins/dsl
+      env:
+        DSL_DEFAULT_MAIN_CONFIG_FILE_REPO: kiegroup/kogito-pipelines
+        DSL_DEFAULT_MAIN_CONFIG_FILE_REF: main
+        DSL_DEFAULT_MAIN_CONFIG_FILE_PATH: .ci/jenkins/config/main.yaml
+      run: |
+        dsl/seed/scripts/seed_test.sh -o ${{ matrix.repository }} \
+                  -h ${{ github.head_ref }} \
+                  -r ${{ github.event.pull_request.head.repo.full_name }} \
+                  -b ${{ env.BASE_BRANCH }} \
+                  -t ${{ github.event.pull_request.base.repo.full_name }} \
+                  -d ${{ github.base_ref }} \
+                  .ci/jenkins/dsl
