@@ -8,32 +8,25 @@ environment:
     lts:
       enabled: true
       version: '2.7'
-
   native:
     enabled: true
-
   mandrel:
     enabled: true
     builder_image: quay.io/quarkus/ubi-quarkus-mandrel:22.0-java11
-
   runtimes_bdd:
     enabled: true
-
 productized_branch: true
-
 disable:
   triggers: false
-
 repositories:
-  - name: kogito-pipelines
-  - name: drools
-  - name: kogito-runtimes
-  - name: kogito-apps
-  - name: kogito-examples
-  - name: kogito-images
-  - name: kogito-operator
-  - name: kie-tools
-
+- name: kogito-pipelines
+- name: drools
+- name: kogito-runtimes
+- name: kogito-apps
+- name: kogito-examples
+- name: kogito-images
+- name: kogito-operator
+- name: kie-tools
 git:
   author:
     name: kiegroup
