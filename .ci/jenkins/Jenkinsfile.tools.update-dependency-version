@@ -116,7 +116,9 @@ pipeline {
                         getFilepathReplaceRegex().each { filepathReplaceregex ->
                             String filepath = filepathReplaceregex.filepath
                             String regex = filepathReplaceregex.regex
-                            sh "find . -name ${filepath} -exec sed -i 's|${regex}.*|${regex} \"${getNewVersion()}\"|g' {} \;"
+                            sh """
+                                sed -i 's|${regex}.*|${regex}${getNewVersion()}|g' ${filepath}
+                            """
                         }
                     }
                 }
