@@ -149,8 +149,9 @@ List getRepositoriesToBranch() {
     if (!repositoriesToBranch) {
         String newBranch = getBranchSeedReleaseBranch()
         repositoriesToBranch = readMainBranchConfig().repositories.findAll { getProjectFromRepository(it.name) }
+        def mainBranches = readSeedConfig().git.main_branch
         repositoriesToBranch.each { repoConfig ->
-            repoConfig.branch = repoConfig.branch ?: mainBranches.get(mainBranches.containsKey(repoConfig.name) ? repository : 'default')
+            repoConfig.branch = repoConfig.branch ?: mainBranches.get(mainBranches.containsKey(repoConfig.name) ? repoConfig.name : 'default')
 
             if (repoConfig.name == getMainBranchConfigFileGitRepository()) {
                 String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
