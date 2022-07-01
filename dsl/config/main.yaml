@@ -11,7 +11,6 @@ ecosystem:
     ignore_release: true
     regexs:
     - kie-tools.*
-
 git:
   branches:
   - name: main
@@ -43,9 +42,9 @@ git:
       config_file:
         path: dsl/seed/config/branch.yaml
       jenkinsfile: dsl/seed/jobs/Jenkinsfile.seed.branch
+  - name: kogito-1.24.x
   main_branch:
     default: main
-
 seed:
   config_file:
     git:
@@ -56,6 +55,5 @@ seed:
       branch: main
     path: dsl/config/branch.yaml
   jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
-
 jenkins:
   email_creds_id: KOGITO_CI_EMAIL_TO
