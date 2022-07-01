@@ -44,7 +44,7 @@ pipeline {
                         def pipelineHelper = new PipelineHelper(this)
                         pipelineHelper.retry(
                         {
-                            def SETTINGS_XML_ID = 'kogito-nightly-version'
+                            def SETTINGS_XML_ID = '5d9884a1-178a-4d67-a3ac-9735d2df2cef'
                             def projectCollection = ['drools', 'kogito-runtimes', 'kogito-apps', 'kogito-examples']
                             def projectVariableMap = [:]
                             def additionalVariables = [
@@ -67,10 +67,10 @@ pipeline {
                         if(fileExists("${env.WORKSPACE}/deployDirectory")){
                             dir("${env.WORKSPACE}/deployDirectory") {
                                 sh 'zip -r maven-repository .'
-                                def folder="${env.RCM_GUEST_FOLDER}/openshift-serverless-logic/openshift-serverless-logic-\${PRODUCT_VERSION}.nightly"
+                                def folder="${env.RCM_GUEST_FOLDER}/openshift-serverless-logic/openshift-serverless-logic-${PRODUCT_VERSION}.nightly"
                                 sshagent(credentials: ['rcm-publish-server']) {
-                                    sh "ssh 'rhba@\${env.RCM_HOST}' 'mkdir -p \${folder}'"
-                                    sh "scp -o StrictHostKeyChecking=no maven-repository.zip rhba@\${env.RCM_HOST}:\${folder}"
+                                    sh "ssh 'rhba@${env.RCM_HOST}' 'mkdir -p ${folder}'"
+                                    sh "scp -o StrictHostKeyChecking=no maven-repository.zip rhba@${env.RCM_HOST}:${folder}"
                                 }
                             }
                         }
