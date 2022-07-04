@@ -24,17 +24,17 @@ usage() {
     echo
     echo 'Examples:'#!/bin/sh
     echo '  # Stage the PR'
-    echo '  #  - Bump Kogito 1.7.0.Final
+    echo '  #  - Bump Kogito 1.24.0.Final
     echo '  #  - Add staging repositories'
     echo '  #  - Push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run'
-    echo '  sh update-quarkus-platform.sh -v 1.7.0.Final -p kogito -f evacchi -n stage'
+    echo '  sh update-quarkus-platform.sh -v 1.24.0.Final -p kogito -f evacchi -n stage'
     echo
     echo '  # Finalize the PR:'
     echo '  #  - Remove staging repositories'
     echo '  #  - Force-push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run'
-    echo '  sh update-quarkus-platform.sh -v 7.0.Final -f evacchi -n finalize'
+    echo '  sh update-quarkus-platform.sh -v 1.24.0.Final -p kogito -f evacchi -n finalize'
 }
 
 args=`getopt v:p:f:b:snh $*`
