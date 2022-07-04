@@ -50,6 +50,9 @@ pipeline {
                             def additionalVariables = [
                                 'droolsProductVersion': env.DROOLS_PRODUCT_VERSION, 
                                 'drools-scmRevision': getDroolsBranch(), 
+                                'kogito-runtimes-scmRevision': getBuildBranch(), 
+                                'kogito-apps-scmRevision': getBuildBranch(), 
+                                'kogito-examples-scmRevision': getBuildBranch()
                             ]
                             configFileProvider([configFile(fileId: '49737697-ebd6-4396-9c22-11f7714808eb', variable: 'PRODUCTION_PROJECT_LIST')]) {
                                 pmebuild.buildProjects(projectCollection, "${SETTINGS_XML_ID}", "$WORKSPACE/build_config/openshift-serverless-logic/nightly", "${env.PME_CLI_PATH}", projectVariableMap, additionalVariables, [:])
@@ -170,4 +173,10 @@ String calculateKieRepoBranch(String branch) {
     } else {
        return branch
     }
+}
+
+String getBuildBranch() {
+    def branch = env.CHANGE_BRANCH ?: BRANCH_NAME
+    def match = branch =~ /(kogito-)(.*)/
+    return match.size() && match[0].size() == 3 ? match[0][2] : branch
 }
