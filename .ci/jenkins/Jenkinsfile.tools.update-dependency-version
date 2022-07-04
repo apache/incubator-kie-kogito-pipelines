@@ -106,6 +106,24 @@ pipeline {
                 }
             }
         }
+        stage('Update other files') {
+            when {
+                expression { return getFilepathReplaceRegex() }
+            }
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        getFilepathReplaceRegex().each { filepathReplaceregex ->
+                            String filepath = filepathReplaceregex.filepath
+                            String regex = filepathReplaceregex.regex
+                            sh """
+                                sed -i 's|${regex}.*|${regex}${getNewVersion()}|g' ${filepath}
+                            """
+                        }
+                    }
+                }
+            }
+        }
         stage('Create PRs') {
             steps {
                 script {
@@ -195,4 +213,8 @@ List getMavenProperties() {
 
 List getGradleRegex() {
   return env.GRADLE_REGEX ? readJSON(text: env.GRADLE_REGEX) : []
+}
+
+List getFilepathReplaceRegex() {
+  return env.FILEPATH_REPLACE_REGEX ? readJSON(text: env.FILEPATH_REPLACE_REGEX) : []
 }
