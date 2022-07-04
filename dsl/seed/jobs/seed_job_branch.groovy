@@ -82,10 +82,10 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
             scm {
                 git {
                     remote {
-                        url("https://github.com/${Utils.getSeedAuthor(this)}/${Utils.getSeedRepo(this)}.git")
-                        credentials(Utils.getSeedAuthorCredsId(this))
+                        url('https://github.com/${SEED_AUTHOR}/${SEED_REPO}.git')
+                        credentials('${SEED_AUTHOR_CREDS_ID}')
                     }
-                    branch("${Utils.getSeedBranch(this)}")
+                    branch('${SEED_BRANCH}')
                     extensions {
                         cleanBeforeCheckout()
                     }

@@ -51,7 +51,7 @@ pipeline {
             steps {
                 script {
                     String branchConfigFile = getMainBranchConfigFilePath()
-                    String newBranch = getBranchSeedReleaseBranch()
+                    String newBranch = getBranchConfigReleaseBranch()
                     def repositories = getRepositoriesToBranch()
 
                     dir(checkoutMainBranchSeedConfigFileRepo()) {
@@ -89,7 +89,7 @@ pipeline {
                 script {
                     // Create seed branch if not already exist
                     dir(checkoutSeedRepo()) {
-                        getOrCreateGitBranch(getBranchSeedReleaseBranch(), "${SEED_CREDENTIALS_ID}")
+                        getOrCreateGitBranch(getSeedRepoReleaseBranch(), "${SEED_CREDENTIALS_ID}")
                     }
                 }
             }
@@ -98,7 +98,7 @@ pipeline {
         stage('Update main seed config') {
             steps {
                 script {
-                    String newBranch = getBranchSeedReleaseBranch()
+                    String newBranch = getBranchConfigReleaseBranch()
                     String prBranch = "${newBranch}-${util.generateHash(10)}"
                     String seedConfigFile = env.SEED_CONFIG_FILE_PATH
 
@@ -107,8 +107,18 @@ pipeline {
 
                         def seedConfig = readYaml file: seedConfigFile
 
-                        if (!seedConfig.git.branches.find { it.name == newBranch }) {
-                            seedConfig.git.branches.add([ name: newBranch ])
+                        if (!seedConfig.git.branches.find { it.name == getEcosystemReleaseBranch() }) {
+                            def branchConfig = [ name: getEcosystemReleaseBranch() ]
+                            if (newBranch != getEcosystemReleaseBranch()) {
+                                branchConfig.seed = [
+                                    config_file: [
+                                        git: [
+                                            branch: newBranch
+                                        ]
+                                    ]
+                                ]
+                            }
+                            seedConfig.git.branches.add(branchConfig)
                         }
 
                         echo "Write seed config => ${seedConfig}"
@@ -147,7 +157,6 @@ pipeline {
 
 List getRepositoriesToBranch() {
     if (!repositoriesToBranch) {
-        String newBranch = getBranchSeedReleaseBranch()
         repositoriesToBranch = readMainBranchConfig().repositories.findAll { getProjectFromRepository(it.name) }
         def mainBranches = readSeedConfig().git.main_branch
         repositoriesToBranch.each { repoConfig ->
@@ -159,16 +168,7 @@ List getRepositoriesToBranch() {
                     repoConfig.branch == getMainBranchConfigFileGitBranch()) {
                     // we are already going to branch it with the setup of the branch config
                     echo "Repository ${repoConfig.name} is branch config repository"
-                    repoConfig.new_branch = newBranch
-                }
-            }
-            if (repoConfig.name == "${SEED_REPO}") {
-                String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
-                if (gitAuthor == "${SEED_AUTHOR}" &&
-                    repoConfig.branch == "${SEED_BRANCH}") {
-                    // we are already going to branch it with the setup of the branch config
-                    echo "Repository ${repoConfig.name} is seed config repository"
-                    repoConfig.new_branch = newBranch
+                    repoConfig.is_branch_config_repo = true
                 }
             }
         }
@@ -180,7 +180,7 @@ void createBranches(List repositories) {
     repositories.each { repoConfig ->
         String repoName = repoConfig.name
         String baseBranch = repoConfig.branch
-        String releaseBranch = repoConfig.new_branch ?: getReleaseBranchFromRepository(repoConfig.name)
+        String releaseBranch = getReleaseBranchFromRepository(repoConfig.name)
         String gitAuthorCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
         assert gitAuthorCredsId : "Cannot find any credentials Id for git author ${repoConfig.author.name}. Please check your branch seed config file."
         String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
@@ -193,7 +193,6 @@ void createBranches(List repositories) {
         }
         // Update the branch with the new release branch
         repoConfig.branch = releaseBranch
-        repoConfig.remove('new_branch')
     }
 }
 
@@ -213,7 +212,7 @@ void getOrCreateGitBranch(String branch, String credentialsId) {
 void sendNotification(String body) {
     echo 'Send Notification'
     echo body
-    emailext body: body, subject: "[${getBranchSeedReleaseBranch()}] ${getEcosystemMainProject()}",
+    emailext body: body, subject: "[${getEcosystemReleaseBranch()}] ${getEcosystemMainProject()}",
                 to: env.CI_EMAIL_TO
 }
 
@@ -244,8 +243,13 @@ String getReleaseBranchFromProject(String projectName) {
     return util.getReleaseBranchFromVersion(getVersionFromProject(projectName))
 }
 
-String getBranchSeedReleaseBranch() {
-    return "${getEcosystemMainProject()}-${getReleaseBranchFromProject(getEcosystemMainProject())}"
+String getBranchConfigReleaseBranch() {
+    // Check if repository already branched
+    return (getRepositoriesToBranch().find { it -> it.is_branch_config_repo }?.branch) ?: "${getEcosystemMainProject()}-${getEcosystemReleaseBranch()}"
+}
+
+String getSeedRepoReleaseBranch() {
+    return "seed-${getEcosystemMainProject()}-${getEcosystemReleaseBranch()}"
 }
 
 def readSeedConfig() {
@@ -333,6 +337,10 @@ List getEcosystemProjects() {
 
 String getEcosystemMainProject() {
     return readSeedConfig().ecosystem.main_project
+}
+
+String getEcosystemReleaseBranch() {
+    return getReleaseBranchFromProject(getEcosystemMainProject())
 }
 
 String getRepoNameCamelCase(String repo) {

@@ -16,6 +16,10 @@ inputs:
   branch-config-branch:
     description: branch config branch to look for
     required: false
+    deprecationMessage: Please use the `branch-config-name` input instead
+  branch-config-name:
+    description: branch config name to look for
+    required: false
   base-branch:
     description: base branch for the checks
     required: false
@@ -56,6 +60,7 @@ runs:
       DSL_DEFAULT_MAIN_CONFIG_FILE_REPO: ${{ inputs.main-config-file-repo }}
       DSL_DEFAULT_MAIN_CONFIG_FILE_REF: ${{ inputs.main-config-file-ref }}
       DSL_DEFAULT_MAIN_CONFIG_FILE_PATH: ${{ inputs.main-config-file-path }}
+      DSL_DEFAULT_BRANCH_CONFIG_NAME: ${{ inputs.branch-config-name }}
       DSL_DEFAULT_BRANCH_CONFIG_BRANCH: ${{ inputs.branch-config-branch }}
     run: |
       dsl/seed/scripts/seed_test.sh -h ${{ github.head_ref }} \
