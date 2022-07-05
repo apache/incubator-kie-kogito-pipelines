@@ -68,6 +68,7 @@ jobs:
               fi
             fullArray+=("${author}/${repo}")
           done
+          fullArray+=("") # Trick so that the latest repository is also taken
           echo "${fullArray[@]}"
           # Start Generate Json String
           echo "${fullArray[@]}" | \

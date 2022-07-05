@@ -12,7 +12,7 @@ setupKogitoRuntimesBDDPrJob()
 setupCreateIssueToolsJob()
 setupCleanOldNamespacesToolsJob()
 setupCleanOldNightlyImagesToolsJob()
-KogitoJobUtils.createMainQuarkusUpdateToolsJob(this, 'Kogito Pipelines', [ 'drools', 'kogito-runtimes', 'kogito-examples' ])
+KogitoJobUtils.createMainQuarkusUpdateToolsJob(this, 'Kogito Pipelines', [ 'drools', 'kogito-runtimes', 'kogito-examples', 'kogito-docs' ])
 
 // Nightly
 setupNightlyJob()
