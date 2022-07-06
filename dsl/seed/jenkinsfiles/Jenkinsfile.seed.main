@@ -183,7 +183,10 @@ void launchBranchSeedJob(String branch) {
 }
 
 String getEffectiveSeedBranch(String branch) {
-    return githubscm.getRepositoryScm('kogito-pipelines', "${SEED_AUTHOR}", branch) ? branch : "${SEED_BRANCH}"
+    String ecosystemProject = getEcosystemMainProject()
+    String prefixBranch = branch.startsWith("${ecosystemProject}-") ? branch : "${ecosystemProject}-${branch}"
+    String seedBranch = "seed-${prefixBranch}"
+    return githubscm.getRepositoryScm('kogito-pipelines', "${SEED_AUTHOR}", seedBranch) ? seedBranch : "${SEED_BRANCH}"
 }
 
 def readSeedConfig() {
@@ -205,4 +208,8 @@ def readSeedConfig() {
         }
     }
     return seedConfig
+}
+
+String getEcosystemMainProject() {
+    return readSeedConfig().ecosystem.main_project
 }

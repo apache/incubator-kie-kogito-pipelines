@@ -40,10 +40,36 @@ jobs:
         working-directory: main_config_repo
         run: |
           if [ -f 'dsl/config/main.yaml' ]; then main_config_path='dsl/config/main.yaml'; else main_config_path='dsl/seed/config/main.yaml'; fi
-          echo "BRANCH_CONFIG_GIT_REPOSITORY=$(yq '.seed.config_file.git.repository' ${main_config_path})" >> $GITHUB_ENV
-          echo "BRANCH_CONFIG_GIT_AUTHOR=$(yq '.seed.config_file.git.author.name' ${main_config_path})" >> $GITHUB_ENV
-          echo "BRANCH_CONFIG_GIT_BRANCH=$(yq '.seed.config_file.git.branch' ${main_config_path})" >> $GITHUB_ENV
-          echo "BRANCH_CONFIG_PATH=$(yq '.seed.config_file.path' ${main_config_path})" >> $GITHUB_ENV
+          branch_config_name=${{ github.base_ref }}
+          
+          branch_config_file_ref="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.git.branch' ${main_config_path})"
+          if [ -z ${branch_config_file_ref} ]; then 
+            branch_config_file_ref="$(yq '.seed.config_file.git.branch' ${main_config_path})"
+          fi
+          echo "Use branch config branch ${branch_config_file_ref}"
+
+          branch_config_file_git_repository="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.git.repository' ${main_config_path})"
+          if [ -z ${branch_config_file_git_repository} ]; then 
+            branch_config_file_git_repository=$(yq '.seed.config_file.git.repository' ${main_config_path}); 
+          fi
+          echo "Use branch config file repo ${branch_config_file_git_repository}"
+
+          branch_config_file_git_author="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.git.author.name' ${main_config_path})"
+          if [ -z ${branch_config_file_git_author} ]; then 
+            branch_config_file_git_author=$(yq '.seed.config_file.git.author.name' ${main_config_path}); 
+          fi
+          echo "Use branch config file author ${branch_config_file_git_author}"
+
+          branch_config_file_path="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.path' ${main_config_path})"
+          if [ -z ${branch_config_file_path} ]; then 
+            branch_config_file_path=$(yq '.seed.config_file.path' ${main_config_path}); 
+          fi
+          echo "Use branch config file path ${branch_config_file_path}"
+
+          echo "BRANCH_CONFIG_GIT_REPOSITORY=${branch_config_file_git_repository}" >> $GITHUB_ENV
+          echo "BRANCH_CONFIG_GIT_AUTHOR=${branch_config_file_git_author}" >> $GITHUB_ENV
+          echo "BRANCH_CONFIG_GIT_BRANCH=${branch_config_file_ref}" >> $GITHUB_ENV
+          echo "BRANCH_CONFIG_PATH=${branch_config_file_path}" >> $GITHUB_ENV
 
       - name: Checkout branch config repo
         uses: actions/checkout@v2
@@ -145,10 +171,36 @@ jobs:
         working-directory: main_config_repo
         run: |
           main_config_path='.ci/jenkins/config/main.yaml'
-          echo "BRANCH_CONFIG_GIT_REPOSITORY=$(yq '.seed.config_file.git.repository' ${main_config_path})" >> $GITHUB_ENV
-          echo "BRANCH_CONFIG_GIT_AUTHOR=$(yq '.seed.config_file.git.author.name' ${main_config_path})" >> $GITHUB_ENV
-          echo "BRANCH_CONFIG_GIT_BRANCH=$(yq '.seed.config_file.git.branch' ${main_config_path})" >> $GITHUB_ENV
-          echo "BRANCH_CONFIG_PATH=$(yq '.seed.config_file.path' ${main_config_path})" >> $GITHUB_ENV
+          branch_config_name=${{ github.base_ref }}
+
+          branch_config_file_ref="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.git.branch' ${main_config_path})"
+          if [ -z ${branch_config_file_ref} ]; then 
+            branch_config_file_ref="$(yq '.seed.config_file.git.branch' ${main_config_path})"
+          fi
+          echo "Use branch config branch ${branch_config_file_ref}"
+
+          branch_config_file_git_repository="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.git.repository' ${main_config_path})"
+          if [ -z ${branch_config_file_git_repository} ]; then 
+            branch_config_file_git_repository=$(yq '.seed.config_file.git.repository' ${main_config_path}); 
+          fi
+          echo "Use branch config file repo ${branch_config_file_git_repository}"
+
+          branch_config_file_git_author="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.git.author.name' ${main_config_path})"
+          if [ -z ${branch_config_file_git_author} ]; then 
+            branch_config_file_git_author=$(yq '.seed.config_file.git.author.name' ${main_config_path}); 
+          fi
+          echo "Use branch config file author ${branch_config_file_git_author}"
+
+          branch_config_file_path="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.path' ${main_config_path})"
+          if [ -z ${branch_config_file_path} ]; then 
+            branch_config_file_path=$(yq '.seed.config_file.path' ${main_config_path}); 
+          fi
+          echo "Use branch config file path ${branch_config_file_path}"
+
+          echo "BRANCH_CONFIG_GIT_REPOSITORY=${branch_config_file_git_repository}" >> $GITHUB_ENV
+          echo "BRANCH_CONFIG_GIT_AUTHOR=${branch_config_file_git_author}" >> $GITHUB_ENV
+          echo "BRANCH_CONFIG_GIT_BRANCH=${branch_config_file_ref}" >> $GITHUB_ENV
+          echo "BRANCH_CONFIG_PATH=${branch_config_file_path}" >> $GITHUB_ENV
 
       - name: Checkout branch config repo
         uses: actions/checkout@v2

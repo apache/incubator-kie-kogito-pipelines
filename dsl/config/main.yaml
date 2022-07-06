@@ -42,7 +42,11 @@ git:
       config_file:
         path: dsl/seed/config/branch.yaml
       jenkinsfile: dsl/seed/jobs/Jenkinsfile.seed.branch
-  - name: kogito-1.24.x
+  - name: 1.24.x
+    seed:
+      config_file:
+        git:
+          branch: kogito-1.24.x
   main_branch:
     default: main
 seed:
