@@ -80,6 +80,7 @@ pipeline {
             steps {
                 script {
                     readSeedConfig().git.branches.each { branchInfo ->
+                        String branchConfigBranch = branchInfo.seed?.config_file?.git?.branch ?: branchInfo.name
                         def envProperties = [
                             JOB_NAME: getBranchSeedJobName(),
                             GENERATION_BRANCH: branchInfo.name,
@@ -88,12 +89,12 @@ pipeline {
                             SEED_REPO: "${SEED_REPO}",
                             SEED_AUTHOR: "${SEED_AUTHOR}",
                             SEED_AUTHOR_CREDS_ID: "${SEED_AUTHOR_CREDS_ID}",
-                            SEED_BRANCH: branchInfo.seed?.branch ?: getEffectiveSeedBranch(branchInfo.name),
+                            SEED_BRANCH: branchInfo.seed?.branch ?: branchConfigBranch,
                             SEED_JENKINSFILE: branchInfo.seed?.jenkinsfile ?: (readSeedConfig().seed.jenkinsfile ?: 'dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch'),
                             SEED_CONFIG_FILE_GIT_REPOSITORY: branchInfo.seed?.config_file?.git?.repository ?: readSeedConfig().seed.config_file.git.repository,
                             SEED_CONFIG_FILE_GIT_AUTHOR_NAME: branchInfo.seed?.config_file?.git?.author?.name ?: readSeedConfig().seed.config_file.git.author.name,
                             SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: branchInfo.seed?.config_file?.git?.author?.credentials_id ?: readSeedConfig().seed.config_file.git.author.credentials_id,
-                            SEED_CONFIG_FILE_GIT_BRANCH: branchInfo.seed?.config_file?.git?.branch ?: branchInfo.name,
+                            SEED_CONFIG_FILE_GIT_BRANCH: branchConfigBranch,
                             SEED_CONFIG_FILE_PATH: branchInfo.seed?.config_file?.path ?: readSeedConfig().seed.config_file.path,
                         ]
                         echo 'Got envProperties for generation'
@@ -180,16 +181,6 @@ void launchBranchSeedJob(String branch) {
 
     echo "Build ./${branch}/${getBranchSeedJobName()} with parameters ${jobParams}"
     build(job: "./${branch}/${getBranchSeedJobName()}", parameters: jobParams, wait: false)
-}
-
-String getEffectiveSeedBranch(String branch) {
-    if (branch == 'main') { // Main seed branch will be always main
-        return branch
-    }
-    String ecosystemProject = getEcosystemMainProject()
-    String prefixBranch = branch.startsWith("${ecosystemProject}-") ? branch : "${ecosystemProject}-${branch}"
-    String seedBranch = "seed-${prefixBranch}"
-    return githubscm.getRepositoryScm('kogito-pipelines', "${SEED_AUTHOR}", seedBranch) ? seedBranch : "${SEED_BRANCH}"
 }
 
 def readSeedConfig() {

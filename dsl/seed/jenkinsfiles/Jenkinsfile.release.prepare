@@ -111,6 +111,7 @@ pipeline {
                             def branchConfig = [ name: getEcosystemReleaseBranch() ]
                             if (newBranch != getEcosystemReleaseBranch()) {
                                 branchConfig.seed = [
+                                    branch: getSeedRepoReleaseBranch(),
                                     config_file: [
                                         git: [
                                             branch: newBranch
