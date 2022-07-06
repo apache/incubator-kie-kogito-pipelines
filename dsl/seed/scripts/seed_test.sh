@@ -248,7 +248,7 @@ if [ -z "${branch_config_file_path}" ]; then
     echo "Use branch config name ${branch_config_name}"
 
     echo '--------- Retrieve branch config branch'
-    branch_config_file_ref="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.git.repository' ${main_config_file_path})"
+    branch_config_file_ref="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.git.branch' ${main_config_file_path})"
     if [ -z ${branch_config_file_ref} ]; then 
       branch_config_file_ref="${branch_config_name}"
     fi
