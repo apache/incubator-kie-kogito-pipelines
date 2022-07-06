@@ -14,6 +14,8 @@ ecosystem:
 git:
   branches:
   - name: main
+    seed:
+      branch: main
   - name: 1.11.x
     old_folder_structure: true
     seed:
@@ -49,6 +51,7 @@ git:
       jenkinsfile: dsl/seed/jobs/Jenkinsfile.seed.branch
   - name: kogito-1.24.x
     seed:
+      branch: seed-kogito-1.24.x
       config_file:
         git:
           branch: kogito-1.24.x

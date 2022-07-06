@@ -224,15 +224,13 @@ if [ "${repository}" = 'kogito-pipelines' ]; then
   cp -r ${pipelines_repo_path}/dsl/seed ${pipelines_final_dir}/dsl
 else
   if [ -z ${pipelines_repo} ]; then
-    echo "----- Checkout Pipelines repo"
-    seed_branch=${target_branch}
-    regex_release_branch="^[0-9]+\.[0-9]+\.x$"
-    regex_release_branch_with_project="^${main_project}-[0-9]+\.[0-9]+\.x$"
-    if [[ ${seed_branch} =~ ${regex_release_branch} ]]; then 
-      seed_branch="seed-${main_project}-${seed_branch}"
-    elif [[ ${seed_branch} =~ ${regex_release_branch_with_project} ]]; then 
-      seed_branch="seed-${seed_branch}"
+    echo "----- Checkout Pipelines repo"    
+    seed_branch="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.branch' ${main_config_file_path})"
+    if [ -z ${seed_branch} ]; then
+      echo "Could not find seed branch ... Failing back to current target_branch"
+      seed_branch="${target_branch}"
     fi
+    echo "Use seed branch ${seed_branch}"
     checkout_repository "${pipelines_final_dir}" "${owner}" 'kogito-pipelines' "${branch}" 'kiegroup' 'kogito-pipelines' "${seed_branch}"
     pipelines_repo_path="${pipelines_final_dir}"
   else
