@@ -33,27 +33,27 @@ configurations.all*.exclude group: 'xalan'
 configurations.all*.exclude group: 'org.netbeans.modules', module: 'org-netbeans-insane'
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.5.13'
-    compile "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}@jar"
+    implementation 'org.codehaus.groovy:groovy-all:2.5.13'
+    implementation "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}@jar"
 
-    testCompile 'org.spockframework:spock-core:1.3-groovy-2.5'
-    testCompile 'cglib:cglib-nodep:3.3.0' // used by Spock
+    testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
+    testImplementation 'cglib:cglib-nodep:3.3.0' // used by Spock
 
-    testCompile 'org.yaml:snakeyaml:1.21' // used by TestUtil
+    testImplementation 'org.yaml:snakeyaml:1.21' // used by TestUtil
 
     // Jenkins test harness dependencies
-    testCompile 'org.jenkins-ci.main:jenkins-test-harness:2.66'
-    testCompile "org.jenkins-ci.main:jenkins-war:${jenkinsVersion}"
-    //testCompile "org.jenkins-ci.main:jenkins-war:${jenkinsVersion}:war-for-test@jar"
+    testImplementation 'org.jenkins-ci.main:jenkins-test-harness:2.66'
+    testImplementation "org.jenkins-ci.main:jenkins-war:${jenkinsVersion}"
+    //testImplementation "org.jenkins-ci.main:jenkins-war:${jenkinsVersion}:war-for-test@jar"
 
     // Job DSL plugin including plugin dependencies
-    testCompile "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}"
-    testCompile "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}@jar"
-    testCompile 'org.jenkins-ci.plugins:structs:1.22@jar'
-    testCompile "org.jenkins-ci.plugins:config-file-provider:3.7.0@jar"
-    testCompile 'org.jenkins-ci.plugins:credentials:2.3.17@jar'
-    testCompile 'org.jenkins-ci.plugins:cloudbees-folder:6.15@jar'
-    testCompile 'org.jenkins-ci.plugins.workflow:workflow-aggregator:2.6@jar'
+    testImplementation "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}"
+    testImplementation "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}@jar"
+    testImplementation 'org.jenkins-ci.plugins:structs:1.22@jar'
+    testImplementation "org.jenkins-ci.plugins:config-file-provider:3.7.0@jar"
+    testImplementation 'org.jenkins-ci.plugins:credentials:2.3.17@jar'
+    testImplementation 'org.jenkins-ci.plugins:cloudbees-folder:6.15@jar'
+    testImplementation 'org.jenkins-ci.plugins.workflow:workflow-aggregator:2.6@jar'
 
 // plugins to install in test instance (all plugins used by the DSL scripts needs to be specified)
     // keep the alphabetical order
