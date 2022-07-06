@@ -88,7 +88,7 @@ pipeline {
                             SEED_REPO: "${SEED_REPO}",
                             SEED_AUTHOR: "${SEED_AUTHOR}",
                             SEED_AUTHOR_CREDS_ID: "${SEED_AUTHOR_CREDS_ID}",
-                            SEED_BRANCH: getEffectiveSeedBranch(branchInfo.name),
+                            SEED_BRANCH: branchInfo.seed?.branch ?: getEffectiveSeedBranch(branchInfo.name),
                             SEED_JENKINSFILE: branchInfo.seed?.jenkinsfile ?: (readSeedConfig().seed.jenkinsfile ?: 'dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch'),
                             SEED_CONFIG_FILE_GIT_REPOSITORY: branchInfo.seed?.config_file?.git?.repository ?: readSeedConfig().seed.config_file.git.repository,
                             SEED_CONFIG_FILE_GIT_AUTHOR_NAME: branchInfo.seed?.config_file?.git?.author?.name ?: readSeedConfig().seed.config_file.git.author.name,
