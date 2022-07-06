@@ -183,6 +183,9 @@ void launchBranchSeedJob(String branch) {
 }
 
 String getEffectiveSeedBranch(String branch) {
+    if (branch == 'main') { // Main seed branch will be always main
+        return branch
+    }
     String ecosystemProject = getEcosystemMainProject()
     String prefixBranch = branch.startsWith("${ecosystemProject}-") ? branch : "${ecosystemProject}-${branch}"
     String seedBranch = "seed-${prefixBranch}"
