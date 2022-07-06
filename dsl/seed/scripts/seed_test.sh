@@ -225,8 +225,8 @@ if [ "${repository}" = 'kogito-pipelines' ]; then
 else
   if [ -z ${pipelines_repo} ]; then
     echo "----- Checkout Pipelines repo"    
-    seed_branch="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.branch' ${main_config_file_path})"
-    if [ -z ${seed_branch} ]; then
+    seed_branch="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.branch" ${main_config_file_path})"
+    if [ $? != 0 ]; then 
       echo "Could not find seed branch ... Failing back to current target_branch"
       seed_branch="${target_branch}"
     fi
@@ -247,30 +247,30 @@ if [ -z "${branch_config_file_path}" ]; then
   if [ ! -z ${main_config_file_path} ]; then
     echo "Use branch config name ${branch_config_name}"
 
-    echo '--------- Retrieve branch config branch'
-    branch_config_file_ref="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.git.branch' ${main_config_file_path})"
-    if [ -z ${branch_config_file_ref} ]; then 
+    echo '--------- Retrieve branch config file information'
+    branch_config_file_ref="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.git.branch" ${main_config_file_path})"
+    if [ $? != 0 ]; then 
       branch_config_file_ref="${branch_config_name}"
     fi
+
+    branch_config_file_git_repository="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.git.repository" ${main_config_file_path})"
+    if [ $? != 0 ]; then
+      branch_config_file_git_repository="$(yq '.seed.config_file.git.repository' ${main_config_file_path})"
+    fi
+
+    branch_config_file_git_author="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.git.author.name" ${main_config_file_path})"
+    if [ $? != 0 ]; then 
+      branch_config_file_git_author="$(yq '.seed.config_file.git.author.name' ${main_config_file_path})"
+    fi
+
+    branch_config_file_path="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.path" ${main_config_file_path})"
+    if [ $? != 0 ]; then 
+      branch_config_file_path="$(yq '.seed.config_file.path' ${main_config_file_path})"
+    fi
+
     echo "Use branch config branch ${branch_config_file_ref}"
-
-    echo '--------- Retrieve branch config file information'
-    branch_config_file_git_repository="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.git.repository' ${main_config_file_path})"
-    if [ -z ${branch_config_file_git_repository} ]; then 
-      branch_config_file_git_repository=$(yq '.seed.config_file.git.repository' ${main_config_file_path}); 
-    fi
     echo "Use branch config file repo ${branch_config_file_git_repository}"
-
-    branch_config_file_git_author="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.git.author.name' ${main_config_file_path})"
-    if [ -z ${branch_config_file_git_author} ]; then 
-      branch_config_file_git_author=$(yq '.seed.config_file.git.author.name' ${main_config_file_path}); 
-    fi
     echo "Use branch config file author ${branch_config_file_git_author}"
-
-    branch_config_file_path="$(yq '.git.branches[] | select(.name == "${branch_config_name}") | .seed.config_file.path' ${main_config_file_path})"
-    if [ -z ${branch_config_file_path} ]; then 
-      branch_config_file_path=$(yq '.seed.config_file.path' ${main_config_file_path}); 
-    fi
     echo "Use branch config file path ${branch_config_file_path}"
 
     echo '--------- Retrieve branch config file'
