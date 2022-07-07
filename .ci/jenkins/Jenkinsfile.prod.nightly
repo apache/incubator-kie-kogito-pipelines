@@ -151,10 +151,10 @@ def getMessageBody(String mavenRepositoryFileUrl, String alreadyBuiltProjects, M
     def alreadyBuiltProjectsArray = (alreadyBuiltProjects ?: '').split(";")
     return """
 {
-    "mavenRepositoryFileUrl": "${mavenRepositoryFileUrl}",
+    "maven_repository_file_url": "${mavenRepositoryFileUrl}",
     "version": ${new groovy.json.JsonBuilder(versions).toString()},
-    "scmHash": ${new groovy.json.JsonBuilder(scmHashes).toString()},
-    "builtProjects": ${new groovy.json.JsonBuilder(alreadyBuiltProjectsArray).toString()}
+    "scm_hash": ${new groovy.json.JsonBuilder(scmHashes).toString()},
+    "built_projects": ${new groovy.json.JsonBuilder(alreadyBuiltProjectsArray).toString()}
 }"""    
 }
 
