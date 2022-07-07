@@ -64,13 +64,14 @@ pipeline {
                 script {
                     if(env.ALREADY_BUILT_PROJECTS?.trim()) {
                         echo "[INFO] Start uploading ${env.WORKSPACE}/deployDirectory"
+                        def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
                         if(fileExists("${env.WORKSPACE}/deployDirectory")){
                             dir("${env.WORKSPACE}/deployDirectory") {
-                                sh 'zip -r maven-repository .'
+                                sh "zip -r maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']} ."
                                 def folder="${env.RCM_GUEST_FOLDER}/openshift-serverless-logic/openshift-serverless-logic-${PRODUCT_VERSION}.nightly"
                                 sshagent(credentials: ['rcm-publish-server']) {
                                     sh "ssh 'rhba@${env.RCM_HOST}' 'mkdir -p ${folder}'"
-                                    sh "scp -o StrictHostKeyChecking=no maven-repository.zip rhba@${env.RCM_HOST}:${folder}"
+                                    sh "scp -o StrictHostKeyChecking=no maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip rhba@${env.RCM_HOST}:${folder}"
                                 }
                             }
                         }
@@ -87,10 +88,10 @@ pipeline {
                         echo '[INFO] Sending OPENSHIFT SERVERLESS LOGIC UMB message to QE.'
                         def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
 
-                        def propertiesFileUrl = "${env.STAGING_SERVER_URL}/openshift-serverless-logic/OPENSHIFT-SERVERLESS-LOGIC-${PME_BUILD_VARIABLES['productVersion']}.${PME_BUILD_VARIABLES['milestone']}/openshift-serverless-logic-${PME_BUILD_VARIABLES['datetimeSuffix']}.properties"
+                        def mavenRepositoryFileUrl = "${env.STAGING_SERVER_URL}/openshift-serverless-logic/openshift-serverless-logic-${PRODUCT_VERSION}.nightly/maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip"
                         def topic = "VirtualTopic.qe.ci.ba.openshift-serverless-logic.${env.UMB_VERSION}.nightly.trigger"
                         def eventType = "openshift-serverless-logic-${env.UMB_VERSION}-nightly-qe-trigger"
-                        def messageBody = getMessageBody(propertiesFileUrl, env.ALREADY_BUILT_PROJECTS)
+                        def messageBody = getMessageBody(mavenRepositoryFileUrl, env.ALREADY_BUILT_PROJECTS)
                         echo "[INFO] Message Body: ${messageBody}"
                         echo "[INFO] Topic: ${topic}"
                         echo "[INFO] Event Type: ${eventType}"
@@ -141,11 +142,11 @@ pipeline {
     }
 }
 
-def getMessageBody(String propertiesFileUrl, String alreadyBuiltProjects) { 
+def getMessageBody(String mavenRepositoryFileUrl, String alreadyBuiltProjects) { 
     def alreadyBuiltProjectsArray = (alreadyBuiltProjects ?: '').split(";")
     return """
 {
-	"propertiesFileUrl": "${propertiesFileUrl}",
+	"mavenRepositoryFileUrl": "${mavenRepositoryFileUrl}",
 	"builtProjects": ${new groovy.json.JsonBuilder(alreadyBuiltProjectsArray).toString()}
 }"""    
 }
