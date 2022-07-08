@@ -91,7 +91,12 @@ pipeline {
                         def mavenRepositoryFileUrl = "${env.STAGING_SERVER_URL}/openshift-serverless-logic/openshift-serverless-logic-${PRODUCT_VERSION}.nightly/maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip"
                         def topic = "VirtualTopic.qe.ci.ba.openshift-serverless-logic.${env.UMB_VERSION}.nightly.trigger"
                         def eventType = "openshift-serverless-logic-${env.UMB_VERSION}-nightly-qe-trigger"
-                        def messageBody = getMessageBody(mavenRepositoryFileUrl, env.ALREADY_BUILT_PROJECTS)
+                        def messageBody = getMessageBody(
+                            mavenRepositoryFileUrl, 
+                            env.ALREADY_BUILT_PROJECTS,
+                            ['serverlesslogic': PME_BUILD_VARIABLES['productVersion'], 'serverlesslogic-rhba': PME_BUILD_VARIABLES['productVersion']], 
+                            gitHashesToCollection(env.GIT_INFORMATION_HASHES)
+                        )
                         echo "[INFO] Message Body: ${messageBody}"
                         echo "[INFO] Topic: ${topic}"
                         echo "[INFO] Event Type: ${eventType}"
@@ -142,17 +147,19 @@ pipeline {
     }
 }
 
-def getMessageBody(String mavenRepositoryFileUrl, String alreadyBuiltProjects) { 
+def getMessageBody(String mavenRepositoryFileUrl, String alreadyBuiltProjects, Map<String, String> versions, Map<String, String> scmHashes) {
     def alreadyBuiltProjectsArray = (alreadyBuiltProjects ?: '').split(";")
     return """
 {
-	"mavenRepositoryFileUrl": "${mavenRepositoryFileUrl}",
-	"builtProjects": ${new groovy.json.JsonBuilder(alreadyBuiltProjectsArray).toString()}
+    "maven_repository_file_url": "${mavenRepositoryFileUrl}",
+    "version": ${new groovy.json.JsonBuilder(versions).toString()},
+    "scm_hash": ${new groovy.json.JsonBuilder(scmHashes).toString()},
+    "built_projects": ${new groovy.json.JsonBuilder(alreadyBuiltProjectsArray).toString()}
 }"""    
 }
 
-def treatGitHashes(String gitInformationHashes) {
-    return gitInformationHashes.replace('-', '.').replaceAll(/([\w\d\-\_\.]*\/)([\w\d\-\_\.]*)/,'$2.scm.hash').replace(';', '\n')
+def gitHashesToCollection(String gitInformationHashes) {
+    return gitInformationHashes.replaceAll(/([\w\d\-\_\.]*\/)([\w\d\-\_\.]*)/,'$2').split(';').findAll { it.split('=').size() }.collectEntries{ [it.split('=')[0], it.split('=')[1]] }
 }
 
 String getDroolsBranch() {
