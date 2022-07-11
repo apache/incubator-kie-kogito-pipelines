@@ -244,7 +244,7 @@ jobs:
               echo "main branch is not existing as config branch... Please verify your main config for Kogito"
               exit 1
             else
-              echo "${github.base_ref} branch is not existing as config branch... Ignoring"
+              echo "${{ github.base_ref }} branch is not existing as config branch... Ignoring"
             fi
           fi
 
