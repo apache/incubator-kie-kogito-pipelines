@@ -19,10 +19,12 @@ jobs:
     outputs:
       matrix: ${{ steps.setmatrix.outputs.repositories }}
     steps:
-      - name: Setup PATH
+      - name: Setup env
         run: |
           mkdir -p "${HOME}/.local/bin"
           echo "${HOME}/.local/bin" >> $GITHUB_PATH
+
+          mkdir -p branch_config_repo
 
       - name: Install yq
         run: |
@@ -103,30 +105,33 @@ jobs:
         id: setmatrix
         working-directory: branch_config_repo
         run: |
-          touch ./tmp
+          matrixArray=''
+          defaultAuthor=kiegroup
           if [ "${{ env.BRANCH_CONFIG_UNKNOWN }}" != "true" ]; then
             matrixArray=$(yq '.repositories[].name' ${{ env.BRANCH_CONFIG_PATH }}) # Creates array of all repositories
             defaultAuthor=$(yq '.git.author.name' ${{ env.BRANCH_CONFIG_PATH }})
-            fullArray=()
-            for repo in ${matrixArray}; 
-              do 
-                echo $repo
-                author="$(yq '.repositories[] | select(.name == "${repo}") | .author.name' ${{ env.BRANCH_CONFIG_PATH }})"
-                if [ -z $author ]; then
-                  author=${defaultAuthor}
-                fi
-              fullArray+=("${author}/${repo}")
-            done
-            fullArray+=("") # Trick so that the latest repository is also taken
-            echo "${fullArray[@]}"
-            # Start Generate Json String
-            echo "${fullArray[@]}" | \
-            jq --slurp --raw-input 'split(" ")[:-1]' | \
-            jq  "{\"repository\": .[] }" | \
-            jq -sc "{ \"include\": . }" > tmp
           fi
-          # End Generate Json String
+
+          fullArray=()
+          for repo in ${matrixArray}; 
+            do 
+              echo $repo
+              author="$(yq '.repositories[] | select(.name == "${repo}") | .author.name' ${{ env.BRANCH_CONFIG_PATH }})"
+              if [ -z $author ]; then
+                author=${defaultAuthor}
+              fi
+            fullArray+=("${author}/${repo}")
+          done
+          fullArray+=("") # Trick so that the latest repository is also taken
+          echo "${fullArray[@]}"
+          # Start Generate Json String
+          echo "${fullArray[@]}" | \
+          jq --slurp --raw-input 'split(" ")[:-1]' | \
+          jq  "{\"repository\": .[] }" | \
+          jq -sc "{ \"include\": . }" > tmp
           cat ./tmp
+
+          # End Generate Json String
           matrixStringifiedObject=$(cat ./tmp) # Use this as jq @sh wasn't cooperating
           echo "::set-output name=repositories::$matrixStringifiedObject"
 
@@ -174,10 +179,12 @@ jobs:
       branch_config_git_branch: ${{ steps.setbranchconfig.outputs.branch_config_git_branch }}
       branch_config_path: ${{ steps.setbranchconfig.outputs.branch_config_path }}
     steps:
-      - name: Setup PATH
+      - name: Setup env
         run: |
           mkdir -p "${HOME}/.local/bin"
           echo "${HOME}/.local/bin" >> $GITHUB_PATH
+          
+          mkdir -p branch_config_repo
 
       - name: Install yq
         run: |
@@ -260,28 +267,32 @@ jobs:
         id: setmatrix
         working-directory: branch_config_repo
         run: |
-          touch ./tmp
+          matrixArray=''
+          defaultAuthor=kiegroup
           if [ "${{ env.BRANCH_CONFIG_UNKNOWN }}" != "true" ]; then
             matrixArray=$(yq '.repositories[].name' ${{ env.BRANCH_CONFIG_PATH }}) # Creates array of all repositories
             defaultAuthor=$(yq '.git.author.name' ${{ env.BRANCH_CONFIG_PATH }})
-            fullArray=()
-            for repo in ${matrixArray}; 
-              do 
-                echo $repo
-                author="$(yq '.repositories[] | select(.name == "${repo}") | .author.name' ${{ env.BRANCH_CONFIG_PATH }})"
-                if [ -z $author ]; then
-                  author=${defaultAuthor}
-                fi
-              fullArray+=("${author}/${repo}")
-            done
-            echo "${fullArray[@]}"
-            # Start Generate Json String
-            echo "${fullArray[@]}" | \
-            jq --slurp --raw-input 'split(" ")[:-1]' | \
-            jq  "{\"repository\": .[] }" | \
-            jq -sc "{ \"include\": . }" > tmp
           fi
+
+          fullArray=()
+          for repo in ${matrixArray}; 
+            do 
+              echo $repo
+              author="$(yq '.repositories[] | select(.name == "${repo}") | .author.name' ${{ env.BRANCH_CONFIG_PATH }})"
+              if [ -z $author ]; then
+                author=${defaultAuthor}
+              fi
+            fullArray+=("${author}/${repo}")
+          done
+          fullArray+=("") # Trick so that the latest repository is also taken
+          echo "${fullArray[@]}"
+          # Start Generate Json String
+          echo "${fullArray[@]}" | \
+          jq --slurp --raw-input 'split(" ")[:-1]' | \
+          jq  "{\"repository\": .[] }" | \
+          jq -sc "{ \"include\": . }" > tmp
           cat ./tmp
+
           # End Generate Json String
           matrixStringifiedObject=$(cat ./tmp) # Use this as jq @sh wasn't cooperating
           echo "::set-output name=repositories::$matrixStringifiedObject"
