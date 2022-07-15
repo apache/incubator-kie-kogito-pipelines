@@ -8,7 +8,7 @@ GITHUB_URL_SSH="git@github.com:"
 
 MAVEN_VERSION=3.6.3
 
-# kogito-runtimes, optaplanner. kogito-examples or optaplanner-quickstarts
+# kogito-runtimes, kogito-examples
 REPO=kogito-runtimes
 DRY_RUN=false
 BRANCH=main
@@ -17,7 +17,7 @@ usage() {
     echo 'Usage: update-quarkus-versions.sh -p $PROJECT -s $QUARKUS_VERSION -m $MAVEN_VERSION -b $BASE_BRANCH -f $FORK [-s] [-n]'
     echo
     echo 'Options:'
-    echo '  -p $PROJECT          set kogito-runtimes, optaplanner. kogito-examples or optaplanner-quickstarts -- default is kogito-runtimes'
+    echo '  -p $PROJECT          set kogito-runtimes, kogito-examples -- default is kogito-runtimes'
     echo '  -q $QUARKUS_VERSION  set version'
     echo '  -m $MAVEN_VERSION    set version'
     echo '  -s                   Use SSH to connect to GitHub'
@@ -87,18 +87,9 @@ case $REPO in
         QUARKUS_PROPERTIES[0]=version.io.quarkus
         QUARKUS_PROPERTIES[1]=version.io.quarkus.quarkus-test-maven
         ;;
-    optaplanner)
-        MODULES[0]=optaplanner-build-parent
-        QUARKUS_PROPERTIES[0]=version.io.quarkus
-        ;;
     kogito-examples)
         QUARKUS_PROPERTIES[0]=quarkus-plugin.version
         QUARKUS_PROPERTIES[1]=quarkus.platform.version
-        ;;
-    optaplanner-quickstarts)
-        QUARKUS_PROPERTIES[0]=version.io.quarkus
-        GRADLE_REGEX[0]='id "io.quarkus" version'
-        GRADLE_REGEX[1]='def quarkusVersion ='
         ;;
     *)
         >&2 echo ERROR: Unknown project: $REPO.
@@ -118,7 +109,7 @@ fi
 ORIGIN=kiegroup/$REPO
 PR_FORK=$FORK/$REPO
 
-# kogito-runtimes or optaplanner
+# kogito-runtimes
 PR_BRANCH=${BRANCH}-bump-quarkus-$QUARKUS_VERSION
 
 echo PROJECT................$REPO 

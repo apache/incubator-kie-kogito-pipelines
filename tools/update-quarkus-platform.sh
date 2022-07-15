@@ -13,7 +13,7 @@ usage() {
     echo
     echo 'Options:'
     echo '  -v $MINOR_VERSION    set MINOR version'
-    echo '                       e.g. 6.0.Final for Kogito 1.6.0.Final and OptaPlanner 8.6.0.Final'
+    echo '                       e.g. 6.0.Final for Kogito 1.6.0.Final'
     echo '  -f $FORK             GH account where the branch should be pushed'
     echo '  -s                   Use SSH to connect to GitHub'
     echo '  -b $BRANCH           Quarkus Platform branch (optional. Default is `main`)'
@@ -22,7 +22,7 @@ usage() {
     echo
     echo 'Examples:'#!/bin/sh
     echo '  # Stage the PR'
-    echo '  #  - Bump Kogito 1.7.0.Final + OptaPlanner 8.7.0.Final'
+    echo '  #  - Bump Kogito 1.7.0.Final'
     echo '  #  - Add staging repositories'
     echo '  #  - Push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run'
@@ -109,9 +109,8 @@ PR_FORK=$FORK/$REPO
 ORIGIN=quarkusio/$REPO
 
 KOGITO_VERSION=1.$MINOR_VERSION
-OPTAPLANNER_VERSION=8.$MINOR_VERSION
 
-PR_BRANCH=bump-kogito-$KOGITO_VERSION+optaplanner-$OPTAPLANNER_VERSION
+PR_BRANCH=bump-kogito-$KOGITO_VERSION
 
 
 echo GITHUB_URL...............$GITHUB_URL
@@ -120,7 +119,6 @@ echo PR_FORK..................$PR_FORK
 echo BRANCH...................$BRANCH
 echo PR_BRANCH................$PR_BRANCH
 echo KOGITO_VERSION...........$KOGITO_VERSION
-echo OPTAPLANNER_VERSION......$OPTAPLANNER_VERSION
 echo COMMAND..................$COMMAND
 echo
 if [ "$DRY_RUN" = "true" ]; then
@@ -150,12 +148,6 @@ stage() {
     -Dproperty=kogito-quarkus.version \
     -DnewVersion=$KOGITO_VERSION \
     -DgenerateBackupPoms=false
-    ./mvnw \
-    -s .github/mvn-settings.xml \
-    versions:set-property \
-    -Dproperty=optaplanner-quarkus.version \
-    -DnewVersion=$OPTAPLANNER_VERSION \
-    -DgenerateBackupPoms=false
     
     # update pom metadata
     ./mvnw -s .github/mvn-settings.xml validate -Pregen-kogito -N
@@ -163,7 +155,7 @@ stage() {
     ./mvnw -s .github/mvn-settings.xml -Dsync
     
     # commit all
-    git commit -am "Kogito $KOGITO_VERSION + OptaPlanner $OPTAPLANNER_VERSION"
+    git commit -am "Kogito $KOGITO_VERSION"
 
     if [ "$DRY_RUN" = "false" ]; then
         # push the branch to a remote

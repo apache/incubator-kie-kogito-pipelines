@@ -1,0 +1,151 @@
+/////////////////////////////////////////////////////////////////////////////////////
+// This Jenkinsfile generate the respective repository seed jobs based on configured branch
+/////////////////////////////////////////////////////////////////////////////////////
+
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+util = null
+
+pipeline {
+    agent {
+        label 'kie-rhel8-priority'
+    }
+
+    tools {
+        jdk 'kie-jdk1.8'
+    }
+
+    options {
+        timestamps()
+    }
+
+    // parameters {
+    // See ./jobs/seed_job.groovy
+    // }
+
+    environment {
+        SEED_FOLDER = 'dsl/seed'
+    }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    checkout scm
+
+                    util = load 'dsl/seed/jobs/scripts/util.groovy'
+                }
+            }
+        }
+
+        stage('Prepare jobs') {
+            steps {
+                script {
+                    getAllRepos().each { repository ->
+                        println "[INFO] Generate repo seed job for repository ${repository}"
+                        def repoConfig = getRepoConfig(repository)
+                        dir("repos/${repository}") {
+                            checkout(githubscm.resolveRepository(repository, repoConfig.git.author.name, repoConfig.git.branch, false))
+                            String jobsFilePath = "${repoConfig.git.jenkins_config_path}/dsl/jobs.groovy"
+                            echo "Copying DSL jobs file ${jobsFilePath}"
+                            sh "cp ${jobsFilePath} ${WORKSPACE}/${SEED_FOLDER}/jobs/${repository}_jobs.groovy"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Test jobs') {
+            steps {
+                script {
+                    if (!params.SKIP_TESTS) {
+                        try {
+                            sh './gradlew clean test'
+                        } finally {
+                            junit 'build/test-results/**/*.xml'
+                            archiveArtifacts 'build/reports/**'
+                        }
+                    } else {
+                        echo 'Tests are skipped'
+                    }
+                }
+            }
+        }
+
+        stage('Generate jobs') {
+            steps {
+                script {
+                    getAllRepos().each { repository ->
+                        def envProps = getRepoConfigAsEnvProperties(repository)
+                        def repoConfig = getRepoConfig(repository)
+                        envProps.put('GIT_MAIN_BRANCH', getMainBranch(repository))
+                        envProps.put('REPO_NAME', "${repository}")
+
+                        // Add other repos `jenkins_config_path` var (useful if multijob PR checks for example)
+                        getAllRepos().each { repoName ->
+                            String key = util.generateEnvKey(repoName, 'jenkins_config_path')
+                            envProps.put(key, getRepoConfig(repoName).git.jenkins_config_path)
+                        }
+
+                        if (util.isDebug()) {
+                            println '[DEBUG] Modified environment properties:'
+                            envProps.each {
+                                println "[DEBUG] ${it.key} = ${it.value}"
+                            }
+                        }
+
+                        println "[INFO] Generate jobs for branch ${GENERATION_BRANCH} and repo ${REPO_NAME}"
+                        println "[INFO] Additional parameters: ${envProps}"
+                        jobDsl targets: 'jobs/jobs.groovy\njobs/seed_job_repo.groovy',
+                            sandbox: false,
+                            ignoreExisting: false,
+                            ignoreMissingFiles: false,
+                            removedJobAction: repoConfig.disable.branch || repoConfig.disabled ? 'DISABLE' : 'DELETE',
+                            removedViewAction: 'DELETE',
+                            //removedConfigFilesAction: 'IGNORE',
+                            lookupStrategy: 'SEED_JOB',
+                            additionalClasspath: 'src/main/groovy',
+                            additionalParameters : envProps
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+        }
+    }
+}
+
+boolean getMainBranch(String repository) {
+    return util.getMainBranch(readJSON(text: "${MAIN_BRANCHES}"), repository)
+}
+
+def getRepoConfig(String repoName) {
+    def cfg = util.getRepoConfig(repoName, "${GENERATION_BRANCH}", "${SEED_REPO}")
+
+    String author = "${GIT_AUTHOR}"
+    String branch = "${GIT_BRANCH}"
+
+    // Override with data from environment
+    cfg.git.branch = branch
+    cfg.git.author.name = author
+
+    if (util.isDebug()) {
+        println '[DEBUG] Modified repo config:'
+        println "[DEBUG] ${cfg}"
+    }
+
+    return cfg
+}
+
+def getRepoConfigAsEnvProperties(String repoName) {
+    return util.convertConfigToEnvProperties(getRepoConfig(repoName))
+}
+
+List getAllRepos() {
+    return util.readBranchConfig().repositories.collect { it.name }
+}

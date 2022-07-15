@@ -11,7 +11,7 @@ Jobs should then be created for the branch and nightly are automatically activat
 ## Before Release day
 
 - Is Quarkus version up to date ?  
-  If not, update it on kogito-runtimes/optaplanner/optaplanner-quickstarts with the [update script](../tools/update-quarkus-versions.sh)
+  If not, update it on kogito-runtimes with the [update script](../tools/update-quarkus-versions.sh)
 - Is KIE version up to date ?  
   If not, update it on kogito-runtimes with the [update script](../tools/update-kie7-versions.sh)
 

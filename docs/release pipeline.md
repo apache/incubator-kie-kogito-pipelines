@@ -40,8 +40,6 @@ Here is the list of jobs and link to Jenkinsfiles:
 
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.promote)
-* [optaplanner-deploy](https://github.com/kiegroup/optaplanner/blob/main/Jenkinsfile.deploy)
-* [optaplanner-promote](https://github.com/kiegroup/optaplanner/blob/main/Jenkinsfile.promote)
 * [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.deploy)
 * [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/main/Jenkinsfile.deploy)
@@ -69,7 +67,7 @@ It will create the different release branches for the whole projects as well as 
 
 #### How to create a new release branch ?
 
-You just need to call the **[Prepare Release](../Jenkinsfile.release.prepare)** job with the correct Kogito and Optaplanner versions.
+You just need to call the **[Prepare Release](../Jenkinsfile.release.prepare)** job with the correct Kogito version.
 
 After that, if the seed job (`0-seed-job`, at the root of the Jenkins folder) has not been launched automatically, you should start it.
 
@@ -93,7 +91,6 @@ Before starting the pipeline, please create the issues for the different compone
 * Core
 * Image
 * Operator
-* Optaplanner
 
 **NOTE:** There is, for now, no automatic creation/update of JIRA issues into the pipeline. This has to be done manually...
 
@@ -109,8 +106,6 @@ In order to start, here are the minimal parameters to the Release Pipeline:
 
 * **PROJECT_VERSION**  
   Corresponds to the Kogito version to be set during the release.
-* **OPTAPLANNER_VERSION**  
-  Corresponds to the Optaplanner version to be set during the release (usually it is `Kogito Major + 7`)
 * **DEPLOY_AS_LATEST**
   Should be set to true if we want the container images to be tagged as `latest`.
 
@@ -202,7 +197,7 @@ Note that `PROJECT_VERSION` in that case is the Kogito artifacts' version.
 
 ## Architecture of the Release pipeline
 
-The Release Pipeline is composed of many steps, calling different other jobs to set the correct version, perform the build&test of runtimes/optaplanner/apps/examples/images/operator and then promote released artifacts and container images as production ready.
+The Release Pipeline is composed of many steps, calling different other jobs to set the correct version, perform the build&test of runtimes/examples/images/operator and then promote released artifacts and container images as production ready.
 
 ![Flow](./images/release-flow.png)
 
@@ -287,13 +282,11 @@ See [Jenkins documentation](./jenkins.md) to create the different jobs for the t
 
 **IMPORTANT:**
 
-* When using `Optaplanner Promote` job, please also create a specific branch to be executed and comment the content of the `uploadDistribution` method.
-* When deploying artifacts for runtimes/apps/examples/optaplanner, make sure the branch you deploy is up to date to avoid any conflict with current deployed artifacts !
+* When deploying artifacts for runtimes/examples, make sure the branch you deploy is up to date to avoid any conflict with current deployed artifacts !
 
 ### Launch a release with minimal parameters for testing
 
 * `PROJECT_VERSION`
-* `OPTAPLANNER_VERSION`
 * (optional) `SKIP_TESTS` (usually you will want that)
 * (optional) `SKIP_*` to skip different phases
 
