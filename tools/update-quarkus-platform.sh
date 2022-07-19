@@ -11,19 +11,21 @@ DRY_RUN=false
 BASE_BRANCH=main
 PR_BRANCH=
 DISABLE_CHECKOUT=false
+COMMIT_MSG=
 
 usage() {
-    echo 'Usage: update-quarkus-platform.sh -v $VERSION [-p PROJECT] -f $FORK [-d] [-s] [-b BASE_BRANCH] [-h PR_BRANCH] [-n] COMMAND'
+    echo 'Usage: update-quarkus-platform.sh -v $VERSION [-p PROJECT] -f $FORK [-d] [-s] [-b BASE_BRANCH] [-h PR_BRANCH] [-m COMMIT_MESSAGE] [-n] COMMAND'
     echo
     echo 'Options:'
     echo '  -v $VERSION          set version'
     echo '  -p project           `kogito` or `optaplanner`. Default is kogito.'
     echo '  -f $FORK             GH account where the branch should be pushed'
-    echo '  -d                   Disable checkout. This means you are running the script in an already checked out quarkus-platform repository.'
     echo '  -s                   Use SSH to connect to GitHub'
     echo '  -b $BASE_BRANCH      Quarkus Platform branch (optional. Default is `main`)'
     echo '  -h $PR_BRANCH        Branch to use for the PR'
-    echo '  -n                   no execution: clones, creates the branch, but will not push or create the PR'
+    echo '  -m $COMMIT_MSG       Commit message to put'
+    echo '  -d                   Disable checkout. This means you are running the script in an already checked out quarkus-platform repository.'
+    echo '  -n                   no execution: this will neither push nor create the PR'
     echo '  COMMAND              may be `stage` or `finalize`'
     echo
     echo 'Examples:'
@@ -48,54 +50,39 @@ usage() {
     echo '  sh update-quarkus-platform.sh -v 1.24.0.Final -p kogito -f evacchi -n finalize'
 }
 
-args=`getopt v:p:f:b:h:dsnh $*`
-if [ "$#" -eq 0 -o $? != 0 ]; then
-    >&2 echo ERROR: no args given.
-
-    usage
-    exit 2
-fi
-set -- $args
-for i
+while getopts "v:p:f:b:h:m:dsnh" i
 do
-        case "$i"
-        in
-                -v)
-                        VERSION=$2;
-                        shift;shift ;;
-                -p)
-                        PROJECT=$2
-                        shift;shift ;;
-                -f)
-                        FORK=$2
-                        shift;shift ;;
-                -d)     
-                        DISABLE_CHECKOUT=true
-                        shift;;
-                -s)     
-                        GITHUB_URL=${GITHUB_URL_SSH}
-                        shift;;
-                -b)     
-                        BASE_BRANCH=$2
-                        shift;shift ;;
-                -h)     
-                        PR_BRANCH=$2
-                        shift;shift ;;
-                -n)     
-                        DRY_RUN=true
-                        shift;;
-                -h)     
-                        usage;
-                        exit 0;
-                        ;;
-                --)
-                        COMMAND=$2
-                        shift; shift
-                        ;;
-                            
-        esac
+    case "$i"
+    in
+        v)  VERSION=${OPTARG} ;;
+        p)  PROJECT=${OPTARG} ;;
+        f)  FORK=${OPTARG} ;;
+        b)  BASE_BRANCH=${OPTARG} ;;
+        h)  PR_BRANCH=${OPTARG} ;;
+        m)  COMMIT_MSG=${OPTARG} ;;
+        s)  GITHUB_URL=${GITHUB_URL_SSH} ;;
+        d)  DISABLE_CHECKOUT=true ;;
+        n)  DRY_RUN=true ;;
+        h)  usage; exit 0 ;;
+        \?) usage; exit 1 ;;
+    esac
 done
+shift "$((OPTIND-1))"
 
+case "$1"
+in
+    stage)
+        COMMAND=stage
+        ;;
+    finalize)
+        COMMAND=finalize
+        ;;
+    *)
+        >&2 echo ERROR: invalid command $COMMAND.
+        usage
+
+        exit 2
+esac
 
 if [ -z "$VERSION" ]; then 
     >&2 echo ERROR: no version specified.
@@ -111,35 +98,24 @@ if [ -z "$FORK" ]; then
     exit 2
 fi
 
-case "$COMMAND"
-in
-    stage)
-        COMMAND=stage
-        ;;
-    finalize)
-        COMMAND=finalize
-        ;;
-    *)
-        >&2 echo ERROR: invalid command $COMMAND.
-        usage
-
-        exit 2
-esac
-
-REPO=quarkus-platform
-PR_FORK=$FORK/$REPO
-ORIGIN=quarkusio/$REPO
-
 if [ -z "$PR_BRANCH" ]; then 
     PR_BRANCH=bump-${PROJECT}-${VERSION}
 fi
 
+if [ -z "$COMMIT_MSG" ]; then 
+    COMMIT_MSG="${PROJECT} ${VERSION}"
+fi
+
+REPO=quarkus-platform
+PR_FORK=$FORK/$REPO
+ORIGIN=quarkusio/$REPO
 
 echo GITHUB_URL...............$GITHUB_URL
 echo ORIGIN...................$ORIGIN
 echo PR_FORK..................$PR_FORK
 echo BASE_BRANCH..............$BASE_BRANCH
 echo PR_BRANCH................$PR_BRANCH
+echo COMMIT_MSG...............$COMMIT_MSG
 echo VERSION..................$VERSION
 echo COMMAND..................$COMMAND
 echo
@@ -147,7 +123,6 @@ if [ "$DRY_RUN" = "true" ]; then
 echo DRY_RUN! No changes will be pushed!
 echo
 fi
-
 
 stage() {
     set -x
@@ -186,7 +161,7 @@ stage() {
     ./mvnw -s ${MAVEN_SETTINGS_FILE} -Dsync
     
     # commit all
-    git commit -am "${PROJECT} ${VERSION}"
+    git commit -am "${COMMIT_MSG}"
 
     if [ "$DRY_RUN" = "false" ]; then
         git push -u ${GITHUB_URL}$PR_FORK $PR_BRANCH
@@ -220,8 +195,10 @@ finalize() {
 
     ./mvnw -Dsync
 
-    # overwrite old commit (no need to squash)
-    git commit --amend --no-edit pom.xml
+    # squash commits
+    git reset $(git merge-base main $(git rev-parse --abbrev-ref HEAD))
+    git add -A
+    git commit -m "${COMMIT_MSG}"
     
     if [ "$DRY_RUN" = "false" ]; then
         # push forced (we are overwriting the old commit)
