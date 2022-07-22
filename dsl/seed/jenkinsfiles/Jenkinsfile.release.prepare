@@ -108,14 +108,16 @@ pipeline {
                         def seedConfig = readYaml file: seedConfigFile
 
                         if (!seedConfig.git.branches.find { it.name == getEcosystemReleaseBranch() }) {
-                            def branchConfig = [ name: getEcosystemReleaseBranch() ]
-                            if (newBranch != getEcosystemReleaseBranch()) {
-                                branchConfig.seed = [
+                            def branchConfig = [ 
+                                name: getEcosystemReleaseBranch(),
+                                seed: [
                                     branch: getSeedRepoReleaseBranch(),
-                                    config_file: [
-                                        git: [
-                                            branch: newBranch
-                                        ]
+                                ]
+                            ]
+                            if (newBranch != getEcosystemReleaseBranch()) {
+                                branchConfig.seed.config_file = [
+                                    git: [
+                                        branch: newBranch
                                     ]
                                 ]
                             }
