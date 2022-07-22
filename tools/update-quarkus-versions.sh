@@ -6,19 +6,16 @@ script_dir_path=`dirname "${BASH_SOURCE[0]}"`
 GITHUB_URL="https://github.com/"
 GITHUB_URL_SSH="git@github.com:"
 
-MAVEN_VERSION=3.6.3
-
 REPO=kogito-runtimes
 DRY_RUN=false
 BRANCH=main
 
 usage() {
-    echo 'Usage: update-quarkus-versions.sh -p $PROJECT -s $QUARKUS_VERSION -m $MAVEN_VERSION -b $BASE_BRANCH -f $FORK [-s] [-n]'
+    echo 'Usage: update-quarkus-versions.sh -p $PROJECT -q $QUARKUS_VERSION -b $BASE_BRANCH -f $FORK [-s] [-n]'
     echo
     echo 'Options:'
     echo '  -p $PROJECT          set kogito-runtimes, optaplanner. kogito-examples or optaplanner-quickstarts -- default is kogito-runtimes'
     echo '  -q $QUARKUS_VERSION  set version'
-    echo '  -m $MAVEN_VERSION    set version'
     echo '  -s                   Use SSH to connect to GitHub'
     echo '  -b $BASE_BRANCH      should be main or a version branch'
     echo '  -f $FORK             GH account where the branch should be pushed'
@@ -26,7 +23,6 @@ usage() {
     echo
     echo 'Examples:'
     echo '  #  - Update Kogito to Quarkus 2.0.0.Final, '
-    echo '  #  - Pin MAVEN_VERSION to 3.6.2'
     echo '  #  - Base branch is main'
     echo '  #  - Push the branch to evacchi/quarkus-platform'
     echo '  #  - Dry Run '
@@ -34,7 +30,7 @@ usage() {
     echo
 }
 
-args=`getopt p:q:m:b:f:snh $*`
+args=`getopt p:q:b:f:snh $*`
 if [ $? != 0 ]
 then
         usage
@@ -50,9 +46,6 @@ do
                         shift;shift ;;
                 -q)
                         QUARKUS_VERSION=$2;
-                        shift;shift ;;
-                -m)
-                        MAVEN_VERSION=$2
                         shift;shift ;;
                 -s)     
                         GITHUB_URL=${GITHUB_URL_SSH}
@@ -79,10 +72,16 @@ QUARKUS_PROPERTIES=
 GRADLE_REGEX=
 
 case $REPO in
+    drools)
+        MODULES[0]=drools-build-parent
+        QUARKUS_PROPERTIES[0]=version.io.quarkus
+        QUARKUS_PROPERTIES[1]=version.io.quarkus.quarkus-test-maven
+        ;;
     kogito-runtimes)
         MODULES[0]=kogito-dependencies-bom
         MODULES[1]=kogito-build-parent
         MODULES[2]=kogito-quarkus-bom
+        MODULES[3]=kogito-build-no-bom-parent
         QUARKUS_PROPERTIES[0]=version.io.quarkus
         QUARKUS_PROPERTIES[1]=version.io.quarkus.quarkus-test
         ;;
@@ -135,13 +134,13 @@ fi
 # print all commands
 set -x
 
-git clone ${GITHUB_URL}${ORIGIN}
-cd $REPO
+# git clone ${GITHUB_URL}${ORIGIN}
+# cd $REPO
 
-git checkout $BRANCH
+# git checkout $BRANCH
 
-# create branch named like version
-git checkout -b $PR_BRANCH
+# # create branch named like version
+# git checkout -b $PR_BRANCH
 
 # update Quarkus version
 function update_quarkus_properties() {
@@ -166,9 +165,6 @@ else
     ${script_dir_path}/update-maven-compare-dependencies.sh 'io.quarkus:quarkus-bom' ${QUARKUS_VERSION} ${i}
   
     update_quarkus_properties ${i}
-  
-    # pin Maven version
-    ${script_dir_path}/update-maven-module-property.sh 'version.maven' ${MAVEN_VERSION} ${i}
   done
 fi
 
@@ -179,11 +175,11 @@ fi
 # commit all
 git commit -am "Bump Quarkus $QUARKUS_VERSION"
 
-if [ "$DRY_RUN" = "false" ]; then
-   # push the branch to a remote
-   git push -u ${GITHUB_URL}${PR_FORK} ${PR_BRANCH}
+# if [ "$DRY_RUN" = "false" ]; then
+#    # push the branch to a remote
+#    git push -u ${GITHUB_URL}${PR_FORK} ${PR_BRANCH}
    
-   # Open a PR to kogito-runtimes using the commit as a title
-   # e.g. see https://github.com/kiegroup/kogito-runtimes/pull/1200
-   gh pr create --fill --base $BRANCH -R $ORIGIN
-fi
+#    # Open a PR to kogito-runtimes using the commit as a title
+#    # e.g. see https://github.com/kiegroup/kogito-runtimes/pull/1200
+#    gh pr create --fill --base $BRANCH -R $ORIGIN
+# fi
