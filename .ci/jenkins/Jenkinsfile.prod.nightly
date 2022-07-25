@@ -66,7 +66,10 @@ pipeline {
                         echo "[INFO] Start uploading ${env.WORKSPACE}/deployDirectory"
                         def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
                         if(fileExists("${env.WORKSPACE}/deployDirectory")){
-                            dir("${env.WORKSPACE}/deployDirectory") {
+                            def destDir = "${env.WORKSPACE}/deployDirectoryFinal/openshift-serverless-logic-${PRODUCT_VERSION}-maven-repository/maven-repository/"
+                            sh "mkdir -p ${destDir}"
+                            sh "mv ${env.WORKSPACE}/deployDirectory/* ${destDir}"
+                            dir("${env.WORKSPACE}/deployDirectoryFinal") {
                                 sh "zip -r maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']} ."
                                 def folder="${env.RCM_GUEST_FOLDER}/openshift-serverless-logic/openshift-serverless-logic-${PRODUCT_VERSION}.nightly"
                                 sshagent(credentials: ['rcm-publish-server']) {
