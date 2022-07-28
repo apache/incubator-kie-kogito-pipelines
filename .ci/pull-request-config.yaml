@@ -6,7 +6,7 @@ dependencies: ./project-dependencies.yaml
 # https://github.com/quarkusio/quarkus/issues/23205
 pre: |
   export BUILD_MVN_OPTS="${{ env.BUILD_MVN_OPTS }} -nsu -ntp -fae -e -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false dependency:tree -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 -Dmaven.wagon.http.retryHandler.count=3"
-  echo "BUILD_MVN_OPTS=${{ env.BUILD_MVN_OPTS }}"
+  echo "BUILD_MVN_OPTS=${{ env.BUILD_MVN_OPTS }} -Dproductized"
   export BUILD_MVN_OPTS_CURRENT="${{ env.BUILD_MVN_OPTS_CURRENT }} -Dquarkus.bootstrap.effective-model-builder"
   echo "BUILD_MVN_OPTS_CURRENT=${{ env.BUILD_MVN_OPTS_CURRENT }}"
 
