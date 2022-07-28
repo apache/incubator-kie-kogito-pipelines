@@ -151,9 +151,9 @@ void setupAllCloudNightlyJobs() {
             parameters {
                 booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
-                booleanParam('SKIP_IMAGES', false, 'To skip Images Deployment')
-                booleanParam('SKIP_EXAMPLES_IMAGES', false, 'To skip Examples Images Deployment')
-                booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
+                booleanParam('SKIP_KOGITO_IMAGES', false, 'To skip Images Deployment')
+                booleanParam('SKIP_KOGITO_EXAMPLES_IMAGES', false, 'To skip Examples Images Deployment')
+                booleanParam('SKIP_KOGITO_OPERATOR', false, 'To skip Operator Deployment')
 
                 booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
             }

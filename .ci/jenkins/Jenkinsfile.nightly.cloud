@@ -21,7 +21,7 @@ REPOSITORIES = [
             extraParams: getImageBuildParams(env.NIGHTLY_TAG, kogitoImagesParamsPrefix) +
                             getImageBuildParams(env.NIGHTLY_TAG, examplesImagesParamsPrefix) +
                             getKeyConstructStringParam(defaultImageParamsPrefix, 'NAME_PREFIX', 'examples') +
-                            getKeyConstructStringParam(defaultImageParamsPrefix, 'CACHE_MODE', isExamplesImagesDeploy() ? 'always' : 'never')
+                            getKeyConstructStringParam(defaultImageParamsPrefix, 'CACHE_MODE', skipRepository('kogito-examples-images') ? 'always' : 'never')
         ]
     ],
 ]
@@ -73,36 +73,38 @@ pipeline {
             steps {
                 script {
                     REPOSITORIES.each { repo, repoConfig ->
-                        // No parallel here as each steps depends on the previous one
-                        stage("Build & Deploy ${repo}") {
-                            boolean buildOk = false
+                        if(!skipRepository(repo)){
+                            // No parallel here as each steps depends on the previous one
+                            stage("Build & Deploy ${repo}") {
+                                boolean buildOk = false
 
-                            if (!repoConfig.build?.disabled) {
-                                // Call build & test job
-                                def buildParams = getDefaultBuildParams()
-                                buildParams.putAll(getImageBuildParams(env.NIGHTLY_TAG))
-                                buildParams.putAll(getSkipTestsParams())
-                                buildParams.putAll(getAppsParams())
-                                buildParams.putAll(getExamplesParams())
-                                if (repoConfig.build?.extraParams) {
-                                    buildParams.putAll(repoConfig.build.extraParams)
+                                if (!repoConfig.build?.disabled) {
+                                    // Call build & test job
+                                    def buildParams = getDefaultBuildParams()
+                                    buildParams.putAll(getImageBuildParams(env.NIGHTLY_TAG))
+                                    buildParams.putAll(getSkipTestsParams())
+                                    buildParams.putAll(getAppsParams())
+                                    buildParams.putAll(getExamplesParams())
+                                    if (repoConfig.build?.extraParams) {
+                                        buildParams.putAll(repoConfig.build.extraParams)
+                                    }
+
+                                    String jobName = buildJob(repo, 'build-and-test', buildParams)
+                                    buildOk = isJobSucceeded(jobName) || isJobUnstable(jobName)
                                 }
 
-                                String jobName = buildJob(repo, 'build-and-test', buildParams)
-                                buildOk = isJobSucceeded(jobName) || isJobUnstable(jobName)
-                            }
+                                if (buildOk && !repoConfig.deploy?.disabled) {
+                                    // Call deploy artifacts job
+                                    def buildParams = getDefaultBuildParams()
+                                    buildParams.putAll(getImageBuildParams(env.NIGHTLY_TAG, baseImageParamsPrefix))
+                                    buildParams.putAll(getImageBuildParams(env.NIGHTLY_TAG, promoteImageParamsPrefix))
+                                    buildParams.putAll(getDeployImageWithLatestTagParams())
+                                    if (repoConfig.deploy?.extraParams) {
+                                        buildParams.putAll(repoConfig.deploy.extraParams)
+                                    }
 
-                            if (buildOk && !repoConfig.deploy?.disabled) {
-                                // Call deploy artifacts job
-                                def buildParams = getDefaultBuildParams()
-                                buildParams.putAll(getImageBuildParams(env.NIGHTLY_TAG, baseImageParamsPrefix))
-                                buildParams.putAll(getImageBuildParams(env.NIGHTLY_TAG, promoteImageParamsPrefix))
-                                buildParams.putAll(getDeployImageWithLatestTagParams())
-                                if (repoConfig.deploy?.extraParams) {
-                                    buildParams.putAll(repoConfig.deploy.extraParams)
+                                    buildJob(repo, 'promote-images', buildParams)
                                 }
-
-                                buildJob(repo, 'promote-images', buildParams)
                             }
                         }
                     }
@@ -228,18 +230,17 @@ boolean isDeployImagesLatestTag() {
     return getGitBranch() == env.BRANCH_FOR_LATEST
 }
 
-boolean isImagesDeploy() {
-    return !params.SKIP_IMAGES
-}
-
-boolean isExamplesImagesDeploy() {
-    return !params.SKIP_EXAMPLES_IMAGES
-}
-
-boolean isOperatorDeploy() {
-    return !params.SKIP_OPERATOR
+boolean skipRepository(String repository) {
+    String key = "SKIP_${repository.replaceAll('-',"_").toUpperCase()}"
+    echo "skip ${key} ?"
+    return params."SKIP_${repository.replaceAll('-',"_").toUpperCase()}"
 }
 
 String getJobEnvironment() {
     return (env.JOB_ENVIRONMENT ?: 'Default').toLowerCase()
+}
+
+String getRepoNameCamelCase(String repo) {
+    List words = repo.split('-') as List
+    return words.collect { it.isEmpty() ? it : it.substring(0, 1).toUpperCase() + it.substring(1).toLowerCase() }.join(' ')
 }
