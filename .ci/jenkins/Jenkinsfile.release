@@ -754,7 +754,7 @@ boolean hasReleaseProperty(String key) {
 }
 
 def getReleaseProperty(String key) {
-    return releaseProperties[key]
+    return hasReleaseProperty(key) ? releaseProperties[key] : ''
 }
 
 boolean areArtifactsStaged() {
