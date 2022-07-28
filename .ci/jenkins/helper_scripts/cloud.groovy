@@ -37,13 +37,11 @@ String getOpenshiftRegistry() {
     return 'openshift_registry.simulated.com'
 }
 
-List pullImages(List imageNames, String paramsPrefix, String imageTag) {
-    loginContainerRegistry(paramsPrefix)
-
+List pullImages(List imageNames, Closure imageNameBuilder) {
     List pulledImages = []
     for (String imageName : imageNames) {
         catchError {
-            pullImage(buildImageName(paramsPrefix, imageName, imageTag))
+            pullImage(imageNameBuilder(imageName))
             pulledImages.add(imageName)
         }
     }
@@ -57,13 +55,11 @@ void pullImage(String fullImageName) {
     }
 }
 
-List pushImages(List imageNames, String paramsPrefix, String imageTag) {
-    loginContainerRegistry(paramsPrefix)
-
+List pushImages(List imageNames, Closure imageNameBuilder) {
     List pushedImages = []
     for (String imageName : imageNames) {
         catchError {
-            pushImage(buildImageName(paramsPrefix, imageName, imageTag))
+            pushImage(imageNameBuilder(imageName))
             pushedImages.add(imageName)
         }
     }
@@ -77,9 +73,9 @@ void pushImage(String fullImageName) {
     }
 }
 
-void tagImages(List imageNames, String oldParamsPrefix, String oldImageTag, String newParamsPrefix, String newImageTag) {
+void tagImages(List imageNames, Closure oldImageNameBuilder, Closure newImageNameBuilder) {
     for (String imageName : imageNames) {
-        tagImage(buildImageName(oldParamsPrefix, imageName, oldImageTag), buildImageName(newParamsPrefix, imageName, newImageTag))
+        tagImage(oldImageNameBuilder(imageName), newImageNameBuilder(imageName))
     }
 }
 
@@ -92,7 +88,7 @@ String getReducedTag(String version) {
         String[] versionSplit = version.split("\\.")
         return "${versionSplit[0]}.${versionSplit[1]}"
     } catch (error) {
-        echo "${getNewImageTag()} cannot be reduced to the format X.Y"
+        echo "${version} cannot be reduced to the format X.Y"
     }
     return ''
 }
@@ -137,11 +133,11 @@ String getImageRegistryCredentials(String paramsPrefix) {
 }
 
 String getImageRegistry(String paramsPrefix) {
-    return getDeployImageOpenshiftAPI(paramsPrefix) ? getOpenshiftRegistry() : getParamValue('IMAGE_REGISTRY', paramsPrefix)
+    return getImageOpenshiftAPI(paramsPrefix) ? getOpenshiftRegistry() : getParamValue('IMAGE_REGISTRY', paramsPrefix)
 }
 
 String getImageNamespace(String paramsPrefix) {
-    return getDeployImageOpenshiftAPI(paramsPrefix) ? 'openshift' : getParamValue('IMAGE_NAMESPACE', paramsPrefix)
+    return getImageOpenshiftAPI(paramsPrefix) ? 'openshift' : getParamValue('IMAGE_NAMESPACE', paramsPrefix)
 }
 
 String getImageNameSuffix(String paramsPrefix) {

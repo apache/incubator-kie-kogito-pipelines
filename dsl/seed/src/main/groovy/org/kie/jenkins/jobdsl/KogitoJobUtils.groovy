@@ -26,7 +26,7 @@ class KogitoJobUtils {
 
     /**
     * This create a default structure for job params with information taken from the DSL environment
-    */ 
+    */
     static def getDefaultJobParams(def script) {
         return [
             job: [
@@ -119,6 +119,28 @@ class KogitoJobUtils {
     static def setupJobParamsCloudPodmanContainerEnv(def script, def jobParams, int maxRegistryRetries = 3) {
         jobParams.env = jobParams.env ?: [:]
         jobParams.env.putAll(getCloudContainerEnv('podman', '--tls-verify=false', maxRegistryRetries))
+    }
+
+    static def setupJobParamsImageInfoParams(def script, def jobParams, String paramsPrefix = '') {
+        jobParams.parametersClosures = jobParams.parametersClosures ?: []
+        def jobFolder = jobParams.job.folder
+        if (!jobFolder) {
+            throw new RuntimeException('Folder is not defined. Cannot set properly the Image parameters...')
+        }
+
+        String prefix = paramsPrefix ? "${paramsPrefix.toUpperCase()}_" : ''
+        String cloudImageRegistry = Utils.getCloudImageRegistry(script)
+        String cloudImageNamespace = Utils.getCloudImageNamespace(script)
+        String cloudImageRegistryCredentials = jobFolder.isRelease() ? Utils.getCloudImageRegistryCredentialsRelease(script) : Utils.getCloudImageRegistryCredentialsNightly(script)
+        jobParams.parametersClosures.add({
+            stringParam("${prefix}IMAGE_OPENSHIFT_API", '', "Setup the Openshift API if ${paramsPrefix} images need the openshift as registry/namespace")
+            stringParam("${prefix}IMAGE_OPENSHIFT_CREDS_KEY", '', "Setup the Openshift API if ${paramsPrefix} images need to access the openshift API")
+            stringParam("${prefix}IMAGE_REGISTRY_CREDENTIALS", "${cloudImageRegistryCredentials}", "Image registry credentials to use for ${paramsPrefix} images. Will be ignored if no IMAGE_REGISTRY is given")
+            stringParam("${prefix}IMAGE_REGISTRY", "${cloudImageRegistry}", "Image registry to use for ${paramsPrefix} images")
+            stringParam("${prefix}IMAGE_NAMESPACE", "${cloudImageNamespace}", "Image namespace to use for ${paramsPrefix} images")
+            stringParam("${prefix}IMAGE_NAME_SUFFIX", '', "Image name suffix to use for ${paramsPrefix} images. In case you need to change the final image name, you can add a suffix to it.")
+            stringParam("${prefix}IMAGE_TAG", '', "Image tag to use for ${paramsPrefix} images")
+        })
     }
 
     /**
@@ -498,7 +520,7 @@ class KogitoJobUtils {
     *   - defaultJobParamsGetter: (optional) Closure to get the job default params
     */
     static def createCloudPromoteImagesJob(def script, Folder jobFolder, Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
-        JobId jobId = JobId.DEPLOY_IMAGES
+        JobId jobId = JobId.PROMOTE_IMAGES
         String repository = Utils.getRepoName(script)
 
         def jobParams = getSeedJobParams(script, "${repository}.${jobId.toId()}", jobFolder, 'Jenkinsfile.promote-images', "${Utils.allFirstLetterUpperCase(jobId.toId())} for ${repository}", defaultJobParamsGetter)
@@ -510,42 +532,23 @@ class KogitoJobUtils {
 
             GIT_AUTHOR: Utils.getGitAuthor(script),
 
-            // Documentation part, should not uncomment
-            // DEFAULT_IMAGE_NAMES: '', // Hardcoded default image names
-            // DEFAULT_IMAGE_NAMES_SHELL_SCRIPT: '', // Shell script to retrieve the image names
+        // Documentation part, should not uncomment
+        // DEFAULT_IMAGE_NAMES: '', // Hardcoded default image names
+        // DEFAULT_IMAGE_NAMES_SHELL_SCRIPT: '', // Shell script to retrieve the image names
         ])
 
-        String cloudImageRegistry = Utils.getCloudImageRegistry(script)
-        String cloudImageNamespace = Utils.getCloudImageNamespace(script)
-        String cloudImageRegistryCredentials = jobFolder.isRelease() ? Utils.getCloudImageRegistryCredentialsRelease(script) : Utils.getCloudImageRegistryCredentialsNightly(script)
-
+        setupJobParamsImageInfoParams(script, jobParams, KogitoConstants.CLOUD_IMAGE_BASE_PARAMS_PREFIX)
+        setupJobParamsImageInfoParams(script, jobParams, KogitoConstants.CLOUD_IMAGE_PROMOTE_PARAMS_PREFIX)
         jobParams.parametersClosures.add({
             stringParam('DISPLAY_NAME', '', 'Setup a specific build display name')
             stringParam('GIT_BRANCH_NAME', Utils.getGitBranch(script), 'Set the Git branch to checkout')
 
             stringParam('BUILD_IMAGES_JOB_URL', '', 'Url to a job in which job properties contains the image names.')
             stringParam('IMAGE_NAMES', '', 'Comma-separated image names to promote.')
-
-            stringParam('BASE_IMAGE_OPENSHIFT_API', '', 'Setup the Openshift API if images need to be pushed to Openshift internal registry')
-            stringParam('BASE_IMAGE_OPENSHIFT_CREDS_KEY', '', 'Setup the Openshift API if images need to be pushed to Openshift internal registry')
-            stringParam('BASE_IMAGE_REGISTRY_CREDENTIALS', "${cloudImageRegistryCredentials}", 'Image registry credentials to use to deploy images. Will be ignored if no IMAGE_REGISTRY is given')
-            stringParam('BASE_IMAGE_REGISTRY', "${cloudImageRegistry}", 'Image registry to use to deploy images')
-            stringParam('BASE_IMAGE_NAMESPACE', "${cloudImageNamespace}", 'Image namespace to use to deploy images')
-            stringParam('BASE_IMAGE_NAME_SUFFIX', '', 'Image name suffix to use to deploy images. In case you need to change the final image name, you can add a suffix to it.')
-            stringParam('BASE_IMAGE_TAG', '', 'Image tag to use to deploy images')
-
-            stringParam('PROMOTE_IMAGE_OPENSHIFT_API', '', 'Setup the Openshift API if images need to be pushed to Openshift internal registry')
-            stringParam('PROMOTE_IMAGE_OPENSHIFT_CREDS_KEY', '', 'Setup the Openshift API if images need to be pushed to Openshift internal registry')
-            stringParam('PROMOTE_IMAGE_REGISTRY_CREDENTIALS', "${cloudImageRegistryCredentials}", 'Image registry credentials to use to deploy images. Will be ignored if no IMAGE_REGISTRY is given')
-            stringParam('PROMOTE_IMAGE_REGISTRY', "${cloudImageRegistry}", 'Image registry to use to deploy images')
-            stringParam('PROMOTE_IMAGE_NAMESPACE', "${cloudImageNamespace}", 'Image namespace to use to deploy images')
-            stringParam('PROMOTE_IMAGE_NAME_SUFFIX', '', 'Image name suffix to use to deploy images. In case you need to change the final image name, you can add a suffix to it.')
-            stringParam('PROMOTE_IMAGE_TAG', '', 'Image tag to use to deploy images')
         })
 
         return KogitoJobTemplate.createPipelineJob(script, jobParams)
     }
-
 
     private static Closure overrideDefaultParamsGetter(Closure defaultJobParamsGetter, Map jobConfig) {
         if (!jobConfig) {
@@ -608,11 +611,11 @@ class KogitoJobUtils {
     static void applyInAllFolders(def script, JobType jobType, List<Environment> environments, Closure applyInFolderClosure, Closure folderFilterClosure = null) {
         def folders = Folder.getAllFoldersByJobTypeAndEnvironments(script, jobType, environments)
             .findAll { folder -> folder.shouldAutoGenerateJobs() }
-        
+
         if (folderFilterClosure != null) {
             folders = folders.findAll(folderFilterClosure)
         }
-        
+
         folders.each { folder -> applyInFolderClosure(folder) }
     }
 

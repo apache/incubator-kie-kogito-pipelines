@@ -77,6 +77,7 @@ pipeline {
                             // No parallel here as each steps depends on the previous one
                             stage("Build & Deploy ${repo}") {
                                 boolean buildOk = false
+                                String buildJobName = ''
 
                                 if (!repoConfig.build?.disabled) {
                                     // Call build & test job
@@ -89,8 +90,8 @@ pipeline {
                                         buildParams.putAll(repoConfig.build.extraParams)
                                     }
 
-                                    String jobName = buildJob(repo, 'build-and-test', buildParams)
-                                    buildOk = isJobSucceeded(jobName) || isJobUnstable(jobName)
+                                    buildJobName = buildJob(repo, 'build-and-test', buildParams)
+                                    buildOk = isJobSucceeded(buildJobName) || isJobUnstable(buildJobName)
                                 }
 
                                 if (buildOk && !repoConfig.deploy?.disabled) {
@@ -99,6 +100,7 @@ pipeline {
                                     buildParams.putAll(getImageBuildParams(env.NIGHTLY_TAG, baseImageParamsPrefix))
                                     buildParams.putAll(getImageBuildParams(env.NIGHTLY_TAG, promoteImageParamsPrefix))
                                     buildParams.putAll(getDeployImageWithLatestTagParams())
+                                    buildParams.put('BUILD_IMAGES_JOB_URL', string(name: 'BUILD_IMAGES_JOB_URL', value: getJobUrl(buildJobName)))
                                     if (repoConfig.deploy?.extraParams) {
                                         buildParams.putAll(repoConfig.deploy.extraParams)
                                     }
@@ -169,6 +171,10 @@ boolean isJobSucceeded(String jobName) {
     return getJobResult(jobName) == 'SUCCESS'
 }
 
+boolean isJobUnstable(String jobName) {
+    return getJobResult(jobName) == 'UNSTABLE'
+}
+
 Map getDefaultBuildParams() {
     return [
         DISPLAY_NAME: string(name: 'DISPLAY_NAME', value: "${env.NIGHTLY_TAG}")
@@ -184,7 +190,8 @@ Map getSkipTestsParams() {
 Map getExamplesParams() {
     return [
         EXAMPLES_URI: string(name: 'EXAMPLES_URI', value: "https://github.com/${getGitAuthor()}/kogito-examples"),
-        EXAMPLES_REF: string(name: 'EXAMPLES_REF', value: "nightly-${getGitBranch()}"),
+        // EXAMPLES_REF: string(name: 'EXAMPLES_REF', value: "nightly-${getGitBranch()}"), // TODO set back
+        EXAMPLES_REF: string(name: 'EXAMPLES_REF', value: "main"),
     ]
 }
 

@@ -3,7 +3,7 @@ jobPropertiesFilename = 'job_properties.yaml'
 
 void add(String key, def value) {
     if (value) {
-        props.put(key, value)
+        jobProperties.put(key, value)
     }
 }
 
@@ -16,18 +16,18 @@ void readFromJobUrl(String jobUrl) {
 }
 
 void writeToFile(boolean archive = true) {
-    writeYaml(file: jobPropertiesFilename, data: props, overwrite: true)
+    writeYaml(file: jobPropertiesFilename, data: jobProperties, overwrite: true)
     if (archive) {
         archiveArtifacts(artifacts: jobPropertiesFilename)
     }
 }
 
 boolean contains(String key) {
-    return props[key]
+    return jobProperties[key]
 }
 
 String retrieve(String key) {
-    return props[key]
+    return jobProperties[key]
 }
 
 return this
