@@ -46,7 +46,7 @@ pipeline {
                         {
                             def SETTINGS_XML_ID = '5d9884a1-178a-4d67-a3ac-9735d2df2cef'
                             def projectCollection = ['drools', 'kogito-runtimes', 'kogito-apps', 'kogito-examples']
-                            def projectVariableMap = ['kiegroup_kogito-runtimes': 'kogitoProductVersion']
+                            def projectVariableMap = ['kiegroup_kogito-runtimes': 'kogitoProductVersion', 'kiegroup_drools': 'droolsProductVersion']
                             def additionalVariables = [
                                 'droolsProductVersion': env.DROOLS_PRODUCT_VERSION, 
                                 'drools-scmRevision': getDroolsBranch(), 
@@ -97,7 +97,7 @@ pipeline {
                         def messageBody = getMessageBody(
                             mavenRepositoryFileUrl, 
                             env.ALREADY_BUILT_PROJECTS,
-                            ['serverlesslogic': PME_BUILD_VARIABLES['kogitoProductVersion'], 'serverlesslogic-rhba': PME_BUILD_VARIABLES['kogitoProductVersion']], 
+                            ['serverlesslogic': PME_BUILD_VARIABLES['kogitoProductVersion'], 'serverlesslogic-rhba': PME_BUILD_VARIABLES['kogitoProductVersion'], 'drools': PME_BUILD_VARIABLES['droolsProductVersion']], 
                             gitHashesToCollection(env.GIT_INFORMATION_HASHES)
                         )
                         echo "[INFO] Message Body: ${messageBody}"
