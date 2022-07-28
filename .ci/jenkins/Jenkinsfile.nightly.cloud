@@ -128,11 +128,8 @@ String buildJob(String repo, String jobNameSuffix, Map buildParams) {
     String jobName = constructJobName(repo, jobNameSuffix)
     echo "Build ${jobName} with params ${buildParams.values()}"
 
-    // def job = build(job: "./${jobName}", parameters: buildParams.values(), wait: true, propagate: false)
-    registerJob(jobName, [
-        absoluteUrl: 'URL',
-        result: 'SUCCESS',
-    ])
+    def job = build(job: "./${jobName}", parameters: buildParams.values(), wait: true, propagate: false)
+    registerJob(jobName, job)
     echo "Job ${jobName} finished with result ${getJobResult(jobName)}"
 
     // Set Unstable if job did not succeed
