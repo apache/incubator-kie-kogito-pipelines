@@ -16,7 +16,7 @@ IMAGES = []
 
 pipeline {
     agent {
-        label 'kogito-image-slave && !master'
+        label 'kie-rhel7 && !master'
     }
 
     options {

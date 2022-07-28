@@ -159,7 +159,11 @@ class Utils {
     static String getCloudImageRegistryCredentialsRelease(def script) {
         return getBindingValue(script, 'CLOUD_IMAGE_REGISTRY_CREDENTIALS_RELEASE')
     }
-    
+
+    static String getMavenArtifactRepository(def script) {
+        return getBindingValue(script, 'MAVEN_ARTIFACTS_REPOSITORY')
+    }
+
 
     /**
     *   Return the given string with all words beginning with first letter as upper case
