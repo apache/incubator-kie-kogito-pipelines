@@ -90,6 +90,12 @@ class Folder {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Folder Management
 
+    public static final Folder INIT = new Folder(
+        name: 'INIT',
+        jobType: JobType.INIT,
+        environment: Environment.DEFAULT,
+    )
+
     public static final Folder NIGHTLY = new Folder(
         name: 'NIGHTLY',
         jobType: JobType.NIGHTLY,
@@ -207,19 +213,20 @@ class Folder {
     )
 
     private static Set<Folder> FOLDERS = [
-        NIGHTLY, 
-        NIGHTLY_SONARCLOUD, 
-        NIGHTLY_NATIVE, 
-        NIGHTLY_MANDREL, 
-        NIGHTLY_QUARKUS_MAIN, 
+        INIT,
+        NIGHTLY,
+        NIGHTLY_SONARCLOUD,
+        NIGHTLY_NATIVE,
+        NIGHTLY_MANDREL,
+        NIGHTLY_QUARKUS_MAIN,
         NIGHTLY_QUARKUS_BRANCH,
         NIGHTLY_QUARKUS_LTS,
-        PULLREQUEST, 
-        PULLREQUEST_NATIVE, 
-        PULLREQUEST_MANDREL, 
-        PULLREQUEST_QUARKUS_MAIN, 
-        PULLREQUEST_QUARKUS_BRANCH, 
-        PULLREQUEST_QUARKUS_LTS, 
+        PULLREQUEST,
+        PULLREQUEST_NATIVE,
+        PULLREQUEST_MANDREL,
+        PULLREQUEST_QUARKUS_MAIN,
+        PULLREQUEST_QUARKUS_BRANCH,
+        PULLREQUEST_QUARKUS_LTS,
         PULLREQUEST_RUNTIMES_BDD,
         RELEASE, TOOLS, OTHER
     ]
@@ -237,7 +244,8 @@ class Folder {
     }
 
     static List<Folder> getAllFolders(def script) {
-        return getAllNightlyFolders(script) +
+        return getAllInitFolders(script) +
+            getAllNightlyFolders(script) +
             getAllPullRequestFolders(script) +
             getAllReleaseFolders(script) +
             getAllToolsFolders(script) +
@@ -246,6 +254,10 @@ class Folder {
 
     static List<Folder> getAllActiveFolders(def script) {
         return getAllRegistered().findAll { folder -> folder.isActive(script) }
+    }
+
+    static List<Folder> getAllInitFolders(def script) {
+        return getAllFoldersByJobTypeAndEnvironments(script, JobType.INIT, Environment.getActiveEnvironments(script))
     }
 
     static List<Folder> getAllNightlyFolders(def script) {

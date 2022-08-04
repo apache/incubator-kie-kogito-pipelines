@@ -10,6 +10,9 @@ import org.kie.jenkins.jobdsl.Utils
 */
 class JobType {
 
+    public static final JobType INIT = new JobType(
+        name: 'INIT',
+    )
     public static final JobType PULLREQUEST = new JobType(
         name: 'PULLREQUEST',
     )
@@ -46,6 +49,7 @@ class JobType {
     }
 
     private static Set<JobType> JOB_TYPES = [
+        INIT,
         PULLREQUEST,
         NIGHTLY,
         RELEASE,
