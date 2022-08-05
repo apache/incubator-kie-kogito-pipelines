@@ -23,7 +23,14 @@ build:
       upstream: mvn clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.DROOLS_BUILD_MVN_OPTS_UPSTREAM }}
     clone:
       - drools
-  
+
+  - project: kiegroup/drools/drools-docs
+    build-command:
+      current: mvn -f drools/drools-docs/pom.xml clean install -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.DROOLS_BUILD_MVN_OPTS }}
+      upstream: mvn clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.DROOLS_BUILD_MVN_OPTS_UPSTREAM }}
+    clone:
+      - drools
+
   - project: kiegroup/kogito-runtimes
     build-command:
       current: |
