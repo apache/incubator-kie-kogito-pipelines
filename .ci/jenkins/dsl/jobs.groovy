@@ -14,6 +14,9 @@ setupCleanOldNamespacesToolsJob()
 setupCleanOldNightlyImagesToolsJob()
 KogitoJobUtils.createMainQuarkusUpdateToolsJob(this, 'Kogito Pipelines', [ 'drools', 'kogito-runtimes', 'kogito-examples', 'kogito-docs' ])
 
+// Init branch
+setupInitBranchJob()
+
 // Nightly
 setupNightlyJob()
 
@@ -65,6 +68,21 @@ void setupCreateIssueToolsJob() {
             textParam('ISSUE_BODY', '', 'Body of the issue')
         }
     }
+}
+
+void setupInitBranchJob() {
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, '0-init-branch', Folder.INIT_BRANCH, "${JENKINSFILE_PATH}/Jenkinsfile.init-branch", 'Kogito Init Branch')
+    jobParams.env.putAll([
+        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+
+        GIT_BRANCH_NAME: "${GIT_BRANCH}",
+        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
+
+        IMAGE_REGISTRY_CREDENTIALS: "${CLOUD_IMAGE_REGISTRY_CREDENTIALS_NIGHTLY}",
+        IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
+        IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
+    ])
+    KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
 void setupNightlyJob() {

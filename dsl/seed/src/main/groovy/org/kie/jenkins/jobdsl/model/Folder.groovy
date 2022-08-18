@@ -90,9 +90,9 @@ class Folder {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Folder Management
 
-    public static final Folder INIT = new Folder(
-        name: 'INIT',
-        jobType: JobType.INIT,
+    public static final Folder INIT_BRANCH = new Folder(
+        name: 'INIT_BRANCH',
+        jobType: JobType.INIT_BRANCH,
         environment: Environment.DEFAULT,
     )
 
@@ -213,7 +213,7 @@ class Folder {
     )
 
     private static Set<Folder> FOLDERS = [
-        INIT,
+        INIT_BRANCH,
         NIGHTLY,
         NIGHTLY_SONARCLOUD,
         NIGHTLY_NATIVE,
@@ -244,7 +244,7 @@ class Folder {
     }
 
     static List<Folder> getAllFolders(def script) {
-        return getAllInitFolders(script) +
+        return getAllInitBranchFolders(script) +
             getAllNightlyFolders(script) +
             getAllPullRequestFolders(script) +
             getAllReleaseFolders(script) +
@@ -256,8 +256,8 @@ class Folder {
         return getAllRegistered().findAll { folder -> folder.isActive(script) }
     }
 
-    static List<Folder> getAllInitFolders(def script) {
-        return getAllFoldersByJobTypeAndEnvironments(script, JobType.INIT, Environment.getActiveEnvironments(script))
+    static List<Folder> getAllInitBranchFolders(def script) {
+        return getAllFoldersByJobTypeAndEnvironments(script, JobType.INIT_BRANCH, Environment.getActiveEnvironments(script))
     }
 
     static List<Folder> getAllNightlyFolders(def script) {
