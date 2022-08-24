@@ -391,28 +391,6 @@ pipeline {
                 }
             }
         }
-
-        // To be enabled later
-        // stage("Deploy docs") {
-        //     steps {
-        //         script {
-        //             sendStageNotification()
-
-        //             // TODO manual confirmation from Stetson
-
-        //             // Set params
-        //             def buildParams = [:]
-        //             // TODO how to set oldVersion ?
-        //             addStringParam(buildParams, "oldVersion", "???")
-        //             addStringParam(buildParams, "newVersion", getKogitoArtifactsVersion())
-        //             addStringParam(buildParams, "tagName", "${getKogitoArtifactsVersion()}-kogito")
-        //             // TODO how to set nextSnapshot ?
-        //             addStringParam(buildParams, "nextSnapshot", "???")
-
-    //             buildJob(OPERATOR_DEPLOY, '../../kogito-docs/kogito-docs-upload', buildParams)
-    //         }
-    //     }
-    // }
     }
     post {
         always {

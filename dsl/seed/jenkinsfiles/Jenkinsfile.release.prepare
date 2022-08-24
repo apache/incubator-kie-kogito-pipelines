@@ -27,8 +27,7 @@ pipeline {
                 script {
                     checkout scm
 
-                    List projects = getEcosystemProjects().collect { it.name }
-                    String projectListStr = projects.collect { "${getRepoNameCamelCase(it)} ${getVersionFromRepository(it)}" }.join(' / ')
+                    String projectListStr = getEcosystemProjects().collect { it.name }.collect { "${getRepoNameCamelCase(it)} ${getVersionFromRepository(it)}" }.join(' / ')
                     currentBuild.displayName = "Cut-Off ${projectListStr}"
 
                     sendNotification("Cut-off for ${projectListStr} has started...\n=> ${env.BUILD_URL}")
@@ -127,47 +126,97 @@ pipeline {
                         sh "rm ${seedConfigFile}"
                         writeYaml file: seedConfigFile, data: seedConfig, overwrite: true
 
-                        githubscm.commitChanges("Add release branch ${newBranch} after cut-off")
-                        githubscm.pushObject('origin', env.SEED_CONFIG_FILE_GIT_BRANCH, env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID)
-                    }
-                }
-            }
-        }
+                        if (githubscm.isThereAnyChanges()) {
+                            sh 'git diff'
+                            githubscm.commitChanges("Add release branch ${newBranch} after cut-off")
+                            githubscm.pushObject('origin', env.SEED_CONFIG_FILE_GIT_BRANCH, env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID)
 
-        stage('Call init job on new branch') {
-            steps {
-                script {
-                    String newBranch = getBranchConfigReleaseBranch()
-                    try {
-                        // Retry 20 times every 5 min
-                        retry(20) {
-                            sleep 300
-                            build(job: "./${newBranch}/init-branch/0-init-branch", wait: false, propagate: false)
+                            sendNotification("Main config has been updated with release branch ${newBranch}")
+                        } else {
+                            println '[WARN] No changes to commit'
                         }
-                } catch (err) {
-                        unstable("Cannot find the ${getBranchConfigReleaseBranch()} main init job ...")
                     }
                 }
             }
         }
 
-        // TODO be uncommented once reset branch param is set
-        // See https://issues.redhat.com/browse/KOGITO-7798
-        // stage('Call reset job on main branch') {
-        //     steps {
-        //         script {
-        //             List buildParams = [
-        //                 booleanParam(name: 'RESET_BRANCH', value: true)
-        //             ]
-        //             build(job: "./main/init-branch/0-init-branch", wait: false, parameters: buildParams, propagate: false)
-        //         }
-        //     }
-        // }
+        stage('Call setup jobs') {
+            parallel {
+                stage('Call init job on new branch') {
+                    steps {
+                        script {
+                            String newBranch = getBranchConfigReleaseBranch()
+                            sendNotification("Waiting for setup branch job on newly created release branch '${newBranch}' and calling it once available.\nPlease wait for it to be successful before any action on the release branch...")
+                            List buildParams = []
+                            def job = [:]
+                            try {
+                                // Retry 20 times every 5 min
+                                retry(20) {
+                                    sleep 300
+                                    echo "Call job './${newBranch}/setup-branch/0-setup-branch' with buildParams ${buildParams}"
+                                    job = build(job: "./${newBranch}/setup-branch/0-setup-branch", wait: true, parameters: buildParams, propagate: false)
+                                }
+                                if(job.result != 'SUCCESS') {
+                                    error "Job ended with unsuccessful result. Please review..."
+                                }
+                                sendNotification("Setup branch job on newly created release branch '${newBranch}' finished successfully. ")
+                            } catch (err) {
+                                unstable("Error executing the ${getBranchConfigReleaseBranch()} setup job ...")
+                                String msg = "ERROR: Setup branch job on newly created release branch '${newBranch}' was unsuccessful."
+                                if(job) {
+                                    msg += "\nPlease review job ${job.absoluteUrl}..."
+                                }
+                                sendNotification(msg)
+                            }
+                        }
+                    }
+                }
+
+                stage('Call setup job on main branch') {
+                    steps {
+                        script {
+                            String mainBranch = getMainBranchConfigFileGitBranch()
+                            if (mainBranch) {
+                                sendNotification("Calling setup branch job on main branch.\nPlease wait for it to be successful before any action on the main branch...")
+
+                                List buildParams = []
+                                for (def project : getEcosystemProjects()) {
+                                    String paramKey = getVersionParameterKey(project.name)
+                                    String version = project.default_main_version ?: util.getNextVersion(getVersionFromProject(project.name), 'minor')
+                                    buildParams.add(string(name: paramKey, value: version))
+                                }
+
+                                def job = [:]
+                                echo "Call job './${mainBranch}/setup-branch/0-setup-branch' with buildParams ${buildParams}"
+                                job = build(job: "./${mainBranch}/setup-branch/0-setup-branch", wait: true, parameters: buildParams, propagate: false)
+                                if(job.result != 'SUCCESS') {
+                                    unstable("Error executing the main setup job ...")
+                                    String msg = "ERROR: Setup branch job on main branch was unsuccessful."
+                                    if(job) {
+                                        msg += "\nPlease review job ${job.absoluteUrl}..."
+                                    }
+                                    sendNotification(msg)
+                                } else {
+                                    sendNotification("Setup branch job on main branch finished successfully. ")
+                                }
+                            } else {
+                                echo 'No main branch defined into the configuration ... Cannot init it ...'
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     post {
         unsuccessful {
             script {
                 sendNotification("${getEcosystemMainProject()}: Cut-off Pipeline job #${BUILD_NUMBER} was: ${currentBuild.currentResult}\nPlease look here: ${BUILD_URL}")
+            }
+        }
+        success {
+            script {
+                sendNotification("${getEcosystemMainProject()}: Cut-off Pipeline job #${BUILD_NUMBER} was: ${currentBuild.currentResult}")
             }
         }
     }
@@ -248,9 +297,13 @@ String getVersionFromRepository(String repository) {
 }
 
 String getVersionFromProject(String projectName) {
-    String key = "${projectName}_VERSION".toUpperCase()
+    String key = getVersionParameterKey(projectName)
     assert params."${key}" : "No parameter ${key} available for project ${projectName}. Please check job configuration."
     return params."${key}"
+}
+
+String getVersionParameterKey(String projectName) {
+    return "${projectName}_VERSION".toUpperCase()
 }
 
 String getReleaseBranchFromRepository(String repository) {

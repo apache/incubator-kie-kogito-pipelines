@@ -18,7 +18,7 @@ if (Utils.isMainBranch(this)) {
 }
 
 // Init branch
-setupInitBranchJob()
+createSetupBranchJob()
 
 // Nightly
 setupNightlyJob()
@@ -73,8 +73,8 @@ void setupCreateIssueToolsJob() {
     }
 }
 
-void setupInitBranchJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, '0-init-branch', Folder.INIT_BRANCH, "${JENKINSFILE_PATH}/Jenkinsfile.init-branch", 'Kogito Init Branch')
+void createSetupBranchJob() {
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, '0-setup-branch', Folder.SETUP_BRANCH, "${JENKINSFILE_PATH}/Jenkinsfile.setup-branch", 'Kogito Init Branch')
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
@@ -84,8 +84,15 @@ void setupInitBranchJob() {
         IMAGE_REGISTRY_CREDENTIALS: "${CLOUD_IMAGE_REGISTRY_CREDENTIALS_NIGHTLY}",
         IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
         IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
+
+        IS_MAIN_BRANCH: "${Utils.isMainBranch(this)}"
     ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)
+    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
+        parameters {
+            stringParam('DROOLS_VERSION', '', 'Drools version')
+            stringParam('KOGITO_VERSION', '', 'Kogito version')
+        }
+    }
 }
 
 void setupNightlyJob() {

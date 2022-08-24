@@ -5,6 +5,7 @@ ecosystem:
     regexs:
     - drools.*
   - name: kogito
+    default_main_version: 2.0.0-SNAPSHOT
     regexs:
     - kogito.*
   - name: kie-tools
@@ -14,6 +15,7 @@ ecosystem:
 git:
   branches:
   - name: main
+    main_branch: true
     seed:
       branch: main
   - name: 1.13.x

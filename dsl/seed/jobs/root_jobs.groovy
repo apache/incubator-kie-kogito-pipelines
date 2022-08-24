@@ -18,6 +18,7 @@ def jobParams = [
     env: [:],
     jenkinsfile: 'dsl/seed/jenkinsfiles/Jenkinsfile.release.prepare',
 ]
+
 KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
     parameters {
         RELEASE_PROJECTS.split(',').each { projectName ->
