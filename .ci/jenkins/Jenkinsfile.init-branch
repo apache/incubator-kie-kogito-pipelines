@@ -1,0 +1,296 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+// Map of executed jobs
+// See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
+// for more options on built job entity
+JOBS = [:]
+
+FAILED_STAGES = [:]
+UNSTABLE_STAGES = [:]
+
+defaultImageParamsPrefix = 'IMAGE'
+kogitoImagesParamsPrefix = 'KOGITO_IMAGES'
+examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
+
+// Should be multibranch pipeline
+pipeline {
+    agent {
+        label 'kie-rhel7 && !master'
+    }
+
+    options {
+        timeout(time: 180, unit: 'MINUTES')
+    }
+
+    // parameters {
+    // For parameters, check into ./dsl/jobs.groovy file
+    // }
+
+    environment {
+        // Some generated env is also defined into ./dsl/jobs.groovy file
+
+        KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+
+        IMAGE_NAME_NIGHTLY_SUFFIX = 'nightly'
+
+        // Use branch name in nightly tag as we may have parallel main and release branch builds
+        NIGHTLY_TAG = """${getBuildBranch()}-${sh(
+                returnStdout: true,
+                script: 'date -u "+%Y-%m-%d"'
+            ).trim()}"""
+}
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    echo "nightly tag is ${env.NIGHTLY_TAG}"
+
+                    currentBuild.displayName = env.NIGHTLY_TAG
+                }
+            }
+        }
+
+        stage('Init Drools') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addDroolsVersionParam(buildParams)
+                    buildJob('drools', buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage('drools')
+                }
+            }
+        }
+
+        stage('Init Kogito Runtimes') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addDroolsVersionParam(buildParams)
+                    addKogitoVersionParam(buildParams)
+                    buildJob('kogito-runtimes', buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage('kogito-runtimes')
+                }
+            }
+        }
+
+        stage('Init Kogito Apps') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addKogitoVersionParam(buildParams)
+                    buildJob('kogito-apps', buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage('kogito-apps')
+                }
+            }
+        }
+
+        stage('Init Kogito Examples') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addDroolsVersionParam(buildParams)
+                    addKogitoVersionParam(buildParams)
+                    buildJob('kogito-examples', buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage('kogito-examples')
+                }
+            }
+        }
+
+        stage('Init Images') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addStringParam(buildParams, 'APPS_REF', "${getBuildBranch()}")
+                    addStringParam(buildParams, 'APPS_URI', "https://github.com/${getGitAuthor()}/kogito-apps")
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                    addStringParam(buildParams, 'KOGITO_VERSION', getKogitoVersion().toLowerCase())
+                    addStringParam(buildParams, 'KOGITO_ARTIFACTS_VERSION', getKogitoVersion())
+                    buildJob('kogito-images', buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage('kogito-images')
+                }
+            }
+        }
+
+        stage('Init Examples Images') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+                    addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
+                    addStringParam(buildParams, 'EXAMPLES_REF', "nightly-${getBuildBranch()}")
+                    buildJob('kogito-examples-images', buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage('kogito-examples-images')
+                }
+            }
+        }
+        stage('Init Operator') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                    buildJob('kogito-operator', buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage('kogito-operator')
+                }
+            }
+        }
+    }
+    post {
+        unsuccessful {
+            sendPipelineErrorNotification()
+        }
+    }
+}
+
+def buildJob(String jobName, List buildParams, String jobKey = jobName) {
+    echo "[${jobKey}] Build ${jobName} with params ${buildParams}"
+
+    def job = build(job: "${jobName}", wait: true, parameters: buildParams, propagate: false)
+    JOBS[jobKey] = job
+
+    // Set Unstable if job did not succeed
+    if (!isJobSucceeded(jobKey)) {
+        addUnstableStage(jobKey)
+        unstable("Job ${jobName} finished with result ${job.result}")
+    }
+    return job
+}
+
+def getJob(String jobKey) {
+    return JOBS[jobKey]
+}
+
+String getJobUrl(String jobKey) {
+    echo "getJobUrl for ${jobKey}"
+    return getJob(jobKey)?.absoluteUrl ?: ''
+}
+
+boolean isJobSucceeded(String jobKey) {
+    return getJob(jobKey)?.result == 'SUCCESS'
+}
+
+void addFailedStage(String jobKey = '') {
+    FAILED_STAGES.put("${STAGE_NAME}", jobKey)
+}
+void addUnstableStage(String jobKey = '') {
+    UNSTABLE_STAGES.put("${STAGE_NAME}", jobKey)
+}
+
+void sendPipelineErrorNotification() {
+    String bodyMsg = "Kogito init job #${BUILD_NUMBER} was: ${currentBuild.currentResult}"
+
+    if (FAILED_STAGES.size()) {
+        bodyMsg += '\nFailed stages: \n- '
+        bodyMsg += FAILED_STAGES.collect { "${it.key} => ${getJobUrl(it.value)}" }.join('\n- ')
+    }
+    bodyMsg += '\n'
+    if (UNSTABLE_STAGES.size()) {
+        bodyMsg += '\nUnstable stages: \n- '
+        bodyMsg += UNSTABLE_STAGES.collect { "${it.key} => ${getJobUrl(it.value)}" }.join('\n- ')
+    }
+    bodyMsg += '\n'
+    bodyMsg += "\nPlease look here: ${BUILD_URL}"
+    emailext body: bodyMsg, subject: "[${getBuildBranch()}][d] Init Pipeline",
+                to: env.KOGITO_CI_EMAIL_TO
+}
+
+List getDefaultBuildParams() {
+    List buildParams = []
+    addStringParam(buildParams, 'DISPLAY_NAME', "${env.NIGHTLY_TAG}")
+    addBooleanParam(buildParams, 'SEND_NOTIFICATION', true)
+
+    return buildParams
+}
+
+void addDroolsVersionParam(buildParams) {
+    addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
+}
+
+void addKogitoVersionParam(buildParams) {
+    addStringParam(buildParams, 'KOGITO_VERSION', getKogitoVersion())
+}
+
+void addImageBuildParams(List buildParams, String tag, String paramsPrefix = defaultImageParamsPrefix, String extraSuffix = '') {
+    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'NAME_SUFFIX'), (extraSuffix ? "${extraSuffix}-" : '') + env.IMAGE_NAME_NIGHTLY_SUFFIX)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)
+}
+
+void addDeployImageWithLatestTagParam(buildParams) {
+    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
+}
+
+void addStringParam(List params, String key, String value) {
+    params.add(string(name: key, value: value))
+}
+
+void addBooleanParam(List params, String key, boolean value) {
+    params.add(booleanParam(name: key, value: value))
+}
+
+String constructKey(String prefix, String paramId) {
+    return prefix ? "${prefix}_${paramId}" : paramId
+}
+
+String getBuildBranch() {
+    return env.GIT_BRANCH_NAME
+}
+
+String getGitAuthor() {
+    return env.GIT_AUTHOR
+}
+
+String getDroolsVersion() {
+    return getVersionFromReleaseBranch(util.calculateTargetReleaseBranch(getBuildBranch(), 7))
+}
+
+String getKogitoVersion() {
+    return getVersionFromReleaseBranch(getBuildBranch())
+}
+
+String getVersionFromReleaseBranch(String releaseBranch, int microVersion = 0, String suffix = 'SNAPSHOT') {
+    String [] versionSplit = releaseBranch.split("\\.")
+    if (versionSplit.length == 3
+        && versionSplit[0].isNumber()
+        && versionSplit[1].isNumber()
+        && versionSplit[2] == 'x') {
+        return "${versionSplit[0]}.${versionSplit[1]}.${microVersion}${suffix ? '-' + suffix : ''}"
+    } else {
+        error 'Cannot parse given branch as a release branch, aka [M].[m].x ...'
+    }
+}

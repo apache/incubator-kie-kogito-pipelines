@@ -10,8 +10,9 @@ import org.kie.jenkins.jobdsl.Utils
 */
 class JobType {
 
-    public static final JobType INIT = new JobType(
-        name: 'INIT',
+    public static final JobType INIT_BRANCH = new JobType(
+        name: 'INIT_BRANCH',
+        isActiveClosure: { script -> !Utils.isMainBranch(script) },
     )
     public static final JobType PULLREQUEST = new JobType(
         name: 'PULLREQUEST',
@@ -23,7 +24,7 @@ class JobType {
     public static final JobType RELEASE = new JobType(
         name: 'RELEASE',
         optional: true,
-        isActiveClosure: { script -> !Utils.isMainBranch(script) }
+        isActiveClosure: { script -> !Utils.isMainBranch(script) },
     )
     public static final JobType TOOLS = new JobType(
         name: 'TOOLS'
@@ -49,7 +50,7 @@ class JobType {
     }
 
     private static Set<JobType> JOB_TYPES = [
-        INIT,
+        INIT_BRANCH,
         PULLREQUEST,
         NIGHTLY,
         RELEASE,
