@@ -212,27 +212,12 @@ void addUnstableStage(String jobKey = '') {
 void sendPipelineErrorNotification() {
     String bodyMsg = "Kogito init job #${BUILD_NUMBER} was: ${currentBuild.currentResult}"
 
-    paramsStr = ''
-    if (params.SKIP_TESTS) {
-        paramsStr += '\n- Tests skipped'
-    }
-    if (params.SKIP_ARTIFACTS) {
-        paramsStr += '\n- Artifacts skipped'
-    }
-    if (params.SKIP_IMAGES) {
-        paramsStr += '\n- Images skipped'
-    }
-    if (params.SKIP_OPERATOR) {
-        paramsStr += '\n- Operator skipped'
-    }
-    bodyMsg += paramsStr ? "\n\nConfiguration:${paramsStr}" : '\n'
-
-    if (FAILED_STAGES.size() > 0) {
+    if (FAILED_STAGES.size()) {
         bodyMsg += '\nFailed stages: \n- '
         bodyMsg += FAILED_STAGES.collect { "${it.key} => ${getJobUrl(it.value)}" }.join('\n- ')
     }
     bodyMsg += '\n'
-    if (UNSTABLE_STAGES.size() > 0) {
+    if (UNSTABLE_STAGES.size()) {
         bodyMsg += '\nUnstable stages: \n- '
         bodyMsg += UNSTABLE_STAGES.collect { "${it.key} => ${getJobUrl(it.value)}" }.join('\n- ')
     }
