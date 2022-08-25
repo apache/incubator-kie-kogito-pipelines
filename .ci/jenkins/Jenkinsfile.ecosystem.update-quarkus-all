@@ -31,7 +31,7 @@ pipeline {
         stage('Update quarkus version in branch config') {
             steps {
                 script {
-                    String prBranch = getPRBranch("${SEED_BRANCH_CONFIG_FILE_GIT_BRANCH}")
+                    String prBranch = getSeedPRBranch("${SEED_BRANCH_CONFIG_FILE_GIT_BRANCH}")
                     dir("${SEED_BRANCH_CONFIG_FILE_GIT_REPOSITORY}") {
                         deleteDir()
                         checkout(githubscm.resolveRepository("${SEED_BRANCH_CONFIG_FILE_GIT_REPOSITORY}", "${SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_NAME}", "${SEED_BRANCH_CONFIG_FILE_GIT_BRANCH}", false, "${SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}"))
@@ -64,7 +64,7 @@ pipeline {
         stage('Update quarkus version in seed repo') {
             steps {
                 script {
-                    String prBranch = getPRBranch("${SEED_BRANCH}")
+                    String prBranch = getSeedPRBranch("${SEED_BRANCH}")
                     dir("${SEED_REPO}") {
                         deleteDir()
                         checkout(githubscm.resolveRepository("${SEED_REPO}", "${SEED_AUTHOR_NAME}", "${SEED_BRANCH}", false, "${SEED_AUTHOR_CREDS_ID}"))
@@ -86,7 +86,7 @@ pipeline {
                             if ("${SEED_REPO}" != "${SEED_BRANCH_CONFIG_FILE_GIT_REPOSITORY}" ||
                                     "${SEED_AUTHOR_NAME}" != "${SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_NAME}" ||
                                     "${SEED_BRANCH}" != "${SEED_BRANCH_CONFIG_FILE_GIT_BRANCH}") {
-                                        String prLink = githubscm.createPR(commitMsg, 'Please review and merge', "${SEED_BRANCH}", "${SEED_AUTHOR_CREDS_ID}")
+                                String prLink = githubscm.createPR(commitMsg, 'Please review and merge', "${SEED_BRANCH}", "${SEED_AUTHOR_CREDS_ID}")
                                 echo "Created PR ${prLink}"
 
                                 sendNotification("PR was created to update quarkus version in seed repo to ${getNewVersion()}.\nPlease review and merge ${prLink}")
@@ -139,6 +139,7 @@ void launchUpdateQuarkusJob(String repo) {
     String jobName = "update-quarkus-${repo}"
     List jobParams = []
     jobParams.add(stringParam(name: 'NEW_VERSION', value: getNewVersion()))
+    jobParams.add(stringParam(name: 'PR_BRANCH', value: params.PR_BRANCH))
 
     echo "Build ./${jobName} with parameters ${jobParams}"
     build(job: "./${jobName}", parameters: jobParams, wait: false)
@@ -157,8 +158,8 @@ String getBuildBranch() {
     return "${BUILD_BRANCH_NAME}"
 }
 
-String getPRBranch(String branch) {
-    return "bump-seed-${branch}-quarkus-${getNewVersion()}"
+String getSeedPRBranch(String branch) {
+    return params.PR_BRANCH ? "${params.PR_BRANCH}-seed" : "bump-seed-${branch}-quarkus-${getNewVersion()}"
 }
 
 String getNotificationJobName() {

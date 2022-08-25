@@ -113,6 +113,7 @@ class KogitoJobUtils {
         return job.with {
             parameters {
                 stringParam('NEW_VERSION', '', 'Which version to set ?')
+                stringParam('PR_BRANCH', '', '(Optional) Which PR branch name to use ? If none given, a name will be generated automatically.')
             }
         }
     }
@@ -152,6 +153,7 @@ class KogitoJobUtils {
         KogitoJobTemplate.createPipelineJob(script, jobParams)?.with {
             parameters {
                 stringParam('NEW_VERSION', '', 'Which version to set ?')
+                stringParam('PR_BRANCH', '', '(Optional) Which PR branch name to use ? If none given, a name will be generated automatically.')
             }
         }
     }
