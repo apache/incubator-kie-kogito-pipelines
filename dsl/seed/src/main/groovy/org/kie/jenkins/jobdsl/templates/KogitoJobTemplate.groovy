@@ -43,7 +43,7 @@ class KogitoJobTemplate {
                     """.stripMargin())
 
             logRotator {
-                numToKeep(10)
+                numToKeep(5)
             }
 
             if (jobParams.disable_concurrent) {
