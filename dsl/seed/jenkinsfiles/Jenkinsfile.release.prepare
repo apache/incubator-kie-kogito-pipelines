@@ -64,7 +64,7 @@ pipeline {
 
                         // Disable some environments when branching as they make no sense by default
                         branchConfig.environment.quarkus.main.enabled = false
-                        branchConfig.environment.quarkus.lts.enabled = false
+                        branchConfig.environment.quarkus.lts.enabled = params.PRODUCTIZED_BRANCH
 
                         echo "Write dsl branch_config => ${branchConfig}"
                         sh "rm -f ${branchConfigFile}"
