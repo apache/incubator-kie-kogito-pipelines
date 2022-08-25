@@ -2,6 +2,8 @@
 
 import org.kie.jenkins.MavenCommand
 
+branchCreated = false
+
 pipeline {
     agent {
         label 'kie-rhel7 && !master'
@@ -38,7 +40,7 @@ pipeline {
 
                     dir(getRepoName()) {
                         deleteDir()
-                        checkout(githubscm.resolveRepository(getRepoName(), getGitAuthor(), getBuildBranch(), false))
+                        checkout(githubscm.resolveRepository(getRepoName(), getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsId()))
                     }
                 }
             }
@@ -47,7 +49,7 @@ pipeline {
             steps {
                 script {
                     dir(getRepoName()) {
-                        githubscm.createBranch(getPRBranch())
+                        branchCreated = getOrCreateGitBranch(getPRBranch(), getGitAuthorCredsId())
                     }
                 }
             }
@@ -130,12 +132,15 @@ pipeline {
                     dir(getRepoName()) {
                         String commitMsg = "[${getBuildBranch()}] Bump ${getDependencyName()} version to ${getNewVersion()}"
                         githubscm.commitChanges(commitMsg)
-                        githubscm.pushObject('origin', getPRBranch(), getAuthorCredsId())
+                        githubscm.pushObject('origin', getPRBranch(), getGitAuthorCredsId())
 
-                        String prLink = githubscm.createPR(commitMsg, 'Please review and merge', getBuildBranch(), getAuthorCredsId())
-                        echo "Created PR ${prLink}"
-
-                        sendNotification("PR was created to update ${getDependencyName()} version to ${getNewVersion()}.\nPlease review and merge ${prLink}")
+                        if (branchCreated) {
+                            String prLink = githubscm.createPR(commitMsg, 'Please review and merge', getBuildBranch(), getGitAuthorCredsId())
+                            echo "Created PR ${prLink}"
+                            sendNotification("PR was created to update ${getDependencyName()} version to ${getNewVersion()}.\nPlease review and merge ${prLink}")
+                        } else {
+                            echo "Branch ${getPRBranch()} was already created so assuming the PR exists alrerady ..."
+                        }
                     }
                 }
             }
@@ -175,12 +180,12 @@ String getGitAuthor() {
     return "${GIT_AUTHOR}"
 }
 
-String getAuthorCredsId() {
+String getGitAuthorCredsId() {
     return "${AUTHOR_CREDS_ID}"
 }
 
 String getPRBranch() {
-    return "bump-${getPRPrefixBranch() ?: getBuildBranch()}-${getDependencyName().toLowerCase()}-${getNewVersion()}"
+    return params.PR_BRANCH ?: "bump-${getPRPrefixBranch() ?: getBuildBranch()}-${getDependencyName().toLowerCase()}-${getNewVersion()}"
 }
 
 String getPRPrefixBranch() {
@@ -217,4 +222,22 @@ List getGradleRegex() {
 
 List getFilepathReplaceRegex() {
   return env.FILEPATH_REPLACE_REGEX ? readJSON(text: env.FILEPATH_REPLACE_REGEX) : []
+}
+
+/**
+* Return true if the branch was created
+*/
+boolean getOrCreateGitBranch(String branch, String credentialsId) {
+    sh 'git fetch origin'
+    String branchRemoteResult = sh(script: "git ls-remote origin ${branch} | wc -l", returnStdout: true).trim()
+    if (Integer.parseInt(branchRemoteResult) > 0) {
+        echo "Branch ${branch} already exist ... will not create it. Checking out !"
+        sh "git checkout origin/${branch} -b ${branch}"
+        return false
+    } else {
+        echo "Branch ${branch} does not exist ... gonna create it"
+        githubscm.createBranch(branch)
+        githubscm.pushObject('origin', branch,  credentialsId)
+        return true
+    }
 }
