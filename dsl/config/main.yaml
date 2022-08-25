@@ -16,13 +16,6 @@ git:
   - name: main
     seed:
       branch: main
-  - name: 1.11.x
-    old_folder_structure: true
-    seed:
-      branch: 1.11.x
-      config_file:
-        path: dsl/seed/config/branch.yaml
-      jenkinsfile: dsl/seed/jobs/Jenkinsfile.seed.branch
   - name: 1.13.x
     old_folder_structure: true
     seed:
@@ -37,15 +30,6 @@ git:
       config_file:
         path: dsl/seed/config/branch.yaml
       jenkinsfile: dsl/seed/jobs/Jenkinsfile.seed.branch
-  - name: 1.24.x
-    seed:
-      branch: seed-kogito-1.24.x
-  - name: 1.25.x
-    seed:
-      branch: seed-kogito-1.25.x
-  - name: 1.26.x
-    seed:
-      branch: seed-kogito-1.26.x
   main_branch:
     default: main
 seed:
