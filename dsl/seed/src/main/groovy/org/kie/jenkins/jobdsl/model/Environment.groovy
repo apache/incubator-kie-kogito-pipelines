@@ -99,7 +99,7 @@ class Environment {
         isActiveClosure: { script -> Utils.isEnvironmentQuarkusLTSEnabled(script) },
         getDefaultEnvVarsClosure: { script -> [ 
             QUARKUS_BRANCH: Utils.getEnvironmentQuarkusLTSVersion(script),
-            BUILD_MVN_OPTS: '-Dproductized',
+            BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
             DISABLE_PERSISTENCE: 'true',
         ] }
     )
