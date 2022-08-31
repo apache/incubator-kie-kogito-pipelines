@@ -6,7 +6,7 @@ environment:
       enabled: true
       version: '2.12'
     lts:
-      enabled: false
+      enabled: true
       version: '2.7'
   native:
     enabled: true
@@ -15,7 +15,7 @@ environment:
     builder_image: quay.io/quarkus/ubi-quarkus-mandrel:22.0-java11
   runtimes_bdd:
     enabled: true
-productized_branch: false
+productized_branch: true
 disable:
   triggers: false
 repositories:
