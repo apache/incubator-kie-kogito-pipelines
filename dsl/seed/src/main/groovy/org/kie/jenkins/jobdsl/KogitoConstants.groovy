@@ -6,5 +6,5 @@ class KogitoConstants {
     
     static String SEED_JENKINSFILES_PATH = '.ci/jenkins'
 
-    static String GH_JENKINS_TRIGGER_LABEL = 'jenkins-ci'
+    static String GH_JENKINS_TRIGGER_LABEL = 'safe_for_ci'
 }
