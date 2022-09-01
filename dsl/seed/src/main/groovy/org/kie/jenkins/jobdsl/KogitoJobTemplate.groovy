@@ -308,16 +308,18 @@ class KogitoJobTemplate {
                 jobParams.jenkinsfile = jobCfg.jenkinsfile
             }
 
+            jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
             if (Utils.isTestEnvironment(script)) {
                 jobParams.pr.putAll([
-                    run_only_for_labels: ['dsl-test'],
+                    run_only_for_labels: [KogitoConstants.LABEL_DSL_TEST],
                     run_only_for_branches: [ jobParams.git.repository == 'optaplanner-quickstarts' ? 'development' : 'main' ],
                     authorized_users: [ 'kiegroup' ],
                     authorized_groups: [ 'kiegroup' ],
                 ])
-                jobParams.git.project_url = "https://github.com/kiegroup/${jobParams.git.repository}/"
-            } else {
-                jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
+                // Enable PR test only if main branch
+                if (Utils.isMainBranch(script)) {
+                    jobParams.git.project_url = "https://github.com/kiegroup/${jobParams.git.repository}/"
+                }
             }
 
             boolean downstream = jobCfg.repository && jobCfg.repository != jobParams.git.repository

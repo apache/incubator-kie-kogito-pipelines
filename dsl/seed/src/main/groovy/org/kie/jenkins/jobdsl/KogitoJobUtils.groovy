@@ -8,7 +8,6 @@ import org.kie.jenkins.jobdsl.model.JobType
 import org.kie.jenkins.jobdsl.KogitoJobTemplate
 import org.kie.jenkins.jobdsl.KogitoConstants
 import org.kie.jenkins.jobdsl.Utils
-import org.kie.jenkins.jobdsl.VersionUtils
 
 /**
 * Job utils
@@ -17,7 +16,7 @@ class KogitoJobUtils {
 
     static def getDefaultJobParams(def script, String repoName = '') {
         String repository = repoName ?: Utils.getRepoName(script)
-        return [
+        def jobParams = [
             job: [
                 name: repository
             ],
@@ -41,6 +40,10 @@ class KogitoJobUtils {
                 ignore_for_labels: [ 'skip-ci' ],
             ]
         ]
+        if (Utils.isProdEnvironment(script)) {
+            jobParams.pr.ignore_for_labels.add(KogitoConstants.LABEL_DSL_TEST)
+        }
+        return jobParams
     }
 
     static def getBasicJobParams(def script, String jobName, Folder jobFolder, String jenkinsfilePath, String jobDescription = '', Closure defaultJobParamsGetter = null) {

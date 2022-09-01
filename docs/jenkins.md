@@ -280,13 +280,17 @@ If you don't have access to the Kogito `0-seed-job`, you can also create one bas
 
 * **You should never used the production seed job for testing as you may overwrite some production configuration by doing so ...**
 
-* **You need to have a special branch on a fork with your own [branch seed configuration](../dsl/config/branch.yaml), because you will need specific Jenkins credentials (Git, Registry), Maven repository (see annex), Container registry namespace, so that you are not altering the production artifacts/images. An example of a branch with a special configuration can be found here: https://github.com/radtriste/kogito-pipelines/tree/test-setup**
+* **You need to have a special branch on a fork with your own [branch seed configuration](../dsl/config/branch.yaml), because you will need specific Jenkins credentials (Git, Registry), Maven repository (see annex), Container registry namespace, so that you are not altering the production artifacts/images. An example of a branch with a special configuration can be found here: https://github.com/radtriste/kogito-pipelines/tree/test-config**
 
 #### Test steps
 
 1) Setup your [main config file](../dsl/config/main.yaml) to have only the testing branch.
 2) Setup your [branch config file](../dsl/config/branch.yaml) with test repositories and credentials/author.
-3) Copy the create the `0-seed-job` and point the parameters of the job to the main config file you created.
+3) Copy the create the `0-seed-job` and point the parameters of the job to the main config file you created.  
+   Depending on what you changed and need to test, you may have different parameters to update:
+   * Setup `SEED_CONFIG_FILE_*` parameters correctly to the author/branch you pushed your test modifications. This is always required.
+   * Change the `SEED_*` parameters only if you did some changes in the Kogito Pipelines `dsl/seed` folder. Else you can use the default, aka `kiegroup/main`.
+4) Launch the `0-seed-job` and it should create all the needed jobs
 
 **Again, please make sure that you setup your own configuration !**
 
