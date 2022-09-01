@@ -192,16 +192,17 @@ class KogitoJobTemplate {
                             skipBuildPhrase(".*\\[skip\\W+ci\\].*")
                             displayBuildErrorsOnDownstreamBuilds(false)
                             cron('')
+                            authorized_labels = jobParams.pr.run_only_for_labels ? jobParams.pr.run_only_for_labels : []
                             if (jobParams.pr.use_gha_label_triggers) {
                                 // No whitelist here, we rely on a GHA/manual which will set the jenkins trigger label
                                 // if the user is authorized
-                                whiteListLabels(KogitoConstants.GH_JENKINS_TRIGGER_LABEL)
+                                authorized_labels += KogitoConstants.GH_JENKINS_TRIGGER_LABEL
                             } else {
                                 whitelist(jobParams.pr.authorized_users ? jobParams.pr.authorized_users.join('\n') : jobParams.git.author)
                                 orgslist(jobParams.pr.authorized_groups ? jobParams.pr.authorized_groups.join('\n') : jobParams.git.author)
                                 allowMembersOfWhitelistedOrgsAsAdmin(true)
-                                whiteListLabels(jobParams.pr.run_only_for_labels ? jobParams.pr.run_only_for_labels.join('\n') : '')
                             }
+                            whiteListLabels(authorized_labels.join('\n'))
                             blackListLabels(jobParams.pr.ignore_for_labels ? jobParams.pr.ignore_for_labels.join('\n') : '')                            
                             buildDescTemplate('')
                             blackListCommitAuthor('')
