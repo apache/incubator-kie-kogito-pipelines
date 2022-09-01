@@ -48,15 +48,19 @@ class SeedJobUtils {
             properties {
                 githubProjectUrl("https://github.com/${gitAuthor}/${repository}/")
 
-                // pipelineTriggers {
-                //     triggers {
-                //         githubPush()
-                //     }
-                // }
+                if (Utils.isProdEnvironment(jenkinsScript)) {
+                    pipelineTriggers {
+                        triggers {
+                            githubPush()
+                        }
+                    }
+                }
             }
         }
         // Trigger jobs need to be executed once for the hook to work ...
-        // jenkinsScript.queue(jobName)
+        if (Utils.isProdEnvironment(jenkinsScript)) {
+            jenkinsScript.queue(jobName)
+        }
         return job
     }
 }

@@ -92,6 +92,14 @@ class Utils {
         return getBindingValue(script, 'GIT_AUTHOR_NAME')
     }
 
+    static boolean isProdEnvironment(def script) {
+        return getGitAuthor(script) == 'kiegroup'
+    }
+
+    static boolean isTestEnvironment(def script) {
+        return !isProdEnvironment(script)
+    }
+
     static String getGitAuthorCredsId(def script) {
         return getBindingValue(script, 'GIT_AUTHOR_CREDENTIALS_ID')
     }

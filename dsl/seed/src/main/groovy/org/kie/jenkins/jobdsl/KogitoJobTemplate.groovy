@@ -307,19 +307,17 @@ class KogitoJobTemplate {
                 jobParams.jenkinsfile = jobCfg.jenkinsfile
             }
 
-            // TODO remove after testing
-            jobParams.pr.putAll([
-                run_only_for_labels: ['dsl-test'],
-                run_only_for_branches: [ jobParams.git.repository == 'optaplanner-quickstarts' ? 'development' : 'main' ],
-                authorized_users: [ 'kiegroup' ],
-                authorized_groups: [ 'kiegroup' ],
-            ])
-            // TODO remove after testing
-
-            // TODO set back after testing
-            // jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
-            jobParams.git.project_url = "https://github.com/kiegroup/${jobParams.git.repository}/"
-            // TODO set back after testing
+            if (Utils.isTestEnvironment(script)) {
+                jobParams.pr.putAll([
+                    run_only_for_labels: ['dsl-test'],
+                    run_only_for_branches: [ jobParams.git.repository == 'optaplanner-quickstarts' ? 'development' : 'main' ],
+                    authorized_users: [ 'kiegroup' ],
+                    authorized_groups: [ 'kiegroup' ],
+                ])
+                jobParams.git.project_url = "https://github.com/kiegroup/${jobParams.git.repository}/"
+            } else {
+                jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
+            }
 
             boolean downstream = jobCfg.repository && jobCfg.repository != jobParams.git.repository
 
@@ -350,7 +348,7 @@ class KogitoJobTemplate {
             if (useBuildChain) {
                 // Buildchain uses centralized configuration for Jenkinsfile.buildchain to checkout
                 // Overrides configuration already done
-                String buildChainCheckoutBranch = 'optaplanner_pr_jenkins_label_upstream'
+                String buildChainCheckoutBranch = Utils.getSeedBranch(script)
                 // TODO Test -> to change back
                 jobParams.pr.checkout_branch = buildChainCheckoutBranch
                 jobParams.git.author = Utils.getSeedAuthor(script)
