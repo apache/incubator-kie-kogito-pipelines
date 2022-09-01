@@ -302,6 +302,18 @@ class KogitoJobTemplate {
             }
 
             jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
+            if (Utils.isTestEnvironment(script)) {
+                jobParams.pr.putAll([
+                    run_only_for_labels: [KogitoConstants.LABEL_DSL_TEST],
+                    run_only_for_branches: [ jobParams.git.repository == 'optaplanner-quickstarts' ? 'development' : 'main' ],
+                    authorized_users: [ 'kiegroup' ],
+                    authorized_groups: [ 'kiegroup' ],
+                ])
+                // Enable PR test only if main branch
+                if (Utils.isMainBranch(script)) {
+                    jobParams.git.project_url = "https://github.com/kiegroup/${jobParams.git.repository}/"
+                }
+            }
 
             boolean downstream = jobCfg.repository && jobCfg.repository != jobParams.git.repository
 
@@ -335,7 +347,7 @@ class KogitoJobTemplate {
                 String buildChainCheckoutBranch = Utils.getSeedBranch(script)
                 jobParams.pr.checkout_branch = buildChainCheckoutBranch
                 jobParams.git.author = Utils.getSeedAuthor(script)
-                jobParams.env.put('BUILDCHAIN_PROJECT', "${jobParams.git.author}/${jobCfg.repository ?: jobParams.git.repository}")
+                jobParams.env.put('BUILDCHAIN_PROJECT', "kiegroup/${jobCfg.repository ?: jobParams.git.repository}")
                 jobParams.env.put('BUILDCHAIN_PR_TYPE', 'pr')
                 jobParams.env.put('BUILDCHAIN_CONFIG_REPO', Utils.getSeedRepo(script))
                 jobParams.env.put('BUILDCHAIN_CONFIG_AUTHOR', Utils.getSeedAuthor(script))

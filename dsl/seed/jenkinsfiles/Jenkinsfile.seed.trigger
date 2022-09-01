@@ -4,7 +4,7 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 pipeline {
     agent {
-        label 'kie-rhel8 && !master'
+        label "${env.AGENT_LABEL}"
     }
 
     options {
