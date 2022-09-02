@@ -197,6 +197,9 @@ class KogitoJobTemplate {
                                 // No whitelist here, we rely on a GHA/manual which will set the jenkins trigger label
                                 // if the user is authorized
                                 authorized_labels += KogitoConstants.GH_JENKINS_TRIGGER_LABEL
+                                whitelist('')
+                                orgslist('')
+                                allowMembersOfWhitelistedOrgsAsAdmin(false)
                             } else {
                                 whitelist(jobParams.pr.authorized_users ? jobParams.pr.authorized_users.join('\n') : jobParams.git.author)
                                 orgslist(jobParams.pr.authorized_groups ? jobParams.pr.authorized_groups.join('\n') : jobParams.git.author)
