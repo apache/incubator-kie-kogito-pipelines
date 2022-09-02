@@ -192,7 +192,7 @@ class KogitoJobTemplate {
                             skipBuildPhrase(".*\\[skip\\W+ci\\].*")
                             displayBuildErrorsOnDownstreamBuilds(false)
                             cron('')
-                            authorized_labels = jobParams.pr.run_only_for_labels ? jobParams.pr.run_only_for_labels : []
+                            def authorized_labels = jobParams.pr.run_only_for_labels ? jobParams.pr.run_only_for_labels : []
                             if (jobParams.pr.use_gha_label_triggers) {
                                 // No whitelist here, we rely on a GHA/manual which will set the jenkins trigger label
                                 // if the user is authorized
