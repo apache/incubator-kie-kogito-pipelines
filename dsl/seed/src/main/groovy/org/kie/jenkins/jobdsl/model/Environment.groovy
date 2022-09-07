@@ -61,7 +61,8 @@ class Environment {
         getDefaultEnvVarsClosure: { script ->
             [
                 NATIVE: 'true',
-                ADDITIONAL_TIMEOUT: 720
+                ADDITIONAL_TIMEOUT: 720,
+                BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
             ]
         }
     )
@@ -74,7 +75,8 @@ class Environment {
             [
                 NATIVE: 'true',
                 NATIVE_BUILDER_IMAGE: Utils.getEnvironmentMandrelBuilderImage(script),
-                ADDITIONAL_TIMEOUT: 720
+                ADDITIONAL_TIMEOUT: 720,
+                BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
             ]
         }
     )
@@ -83,14 +85,24 @@ class Environment {
         name: 'QUARKUS_MAIN',
         optional: true,
         isActiveClosure: { script -> Utils.isEnvironmentQuarkusMainEnabled(script) },
-        getDefaultEnvVarsClosure: { script -> [ QUARKUS_BRANCH: 'main' ] }
+        getDefaultEnvVarsClosure: { script -> 
+            [ 
+                QUARKUS_BRANCH: 'main',
+                BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+            ] 
+        }
     )
 
     public static final Environment QUARKUS_BRANCH = new Environment(
         name: 'QUARKUS_BRANCH',
         optional: true,
         isActiveClosure: { script -> Utils.isEnvironmentQuarkusBranchEnabled(script) },
-        getDefaultEnvVarsClosure: { script -> [ QUARKUS_BRANCH: Utils.getEnvironmentQuarkusBranchVersion(script) ] }
+        getDefaultEnvVarsClosure: { script -> 
+            [ 
+                QUARKUS_BRANCH: Utils.getEnvironmentQuarkusBranchVersion(script),
+                BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+            ] 
+        }
     )
 
     public static final Environment QUARKUS_LTS = new Environment(
