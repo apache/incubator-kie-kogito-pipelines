@@ -12,6 +12,10 @@ inputs:
   cache-key-prefix:
     description: "the cache key"
     required: false
+  allow-snapshots:
+    description: "the cache key"
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
@@ -32,3 +36,72 @@ runs:
         path:  ~/.m2
         key: ${{ inputs.cache-key-prefix }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys:  ${{ inputs.cache-key-prefix }}-m2
+    - name: Setup Maven Settings
+      uses: whelk-io/maven-settings-xml-action@v20
+      with:
+        repositories: >
+          [
+            {
+              "id": "jboss-public-repository-group",
+              "name": "JBoss Public Repository Group",
+              "url": "https://repository.jboss.org/nexus/content/groups/public",
+              "releases": {
+                "enabled": "true",
+                "updatePolicy": "never"
+              },
+              "snapshots": {
+                "enabled": "${{ inputs.allow-snapshots }}",
+                "updatePolicy": "never"
+              }
+            },
+            {
+              "id": "kogito-staging-repository-group",
+              "name": "Kogito Staging Repositories",
+              "url": "https://repository.jboss.org/nexus/content/groups/kogito-public",
+              "releases": {
+                "enabled": "true",
+                "updatePolicy": "never"
+              },
+              "snapshots": {
+                "enabled": "${{ inputs.allow-snapshots }}",
+                "updatePolicy": "never"
+              }
+            }
+          ]
+        plugin_repositories: >
+          [
+            {
+              "id": "jboss-public-repository-group",
+              "name": "JBoss Public Repository Group",
+              "url": "https://repository.jboss.org/nexus/content/groups/public",
+              "releases": {
+                "enabled": "true",
+                "updatePolicy": "never"
+              },
+              "snapshots": {
+                "enabled": "${{ inputs.allow-snapshots }}",
+                "updatePolicy": "never"
+              }
+            },
+            {
+              "id": "kogito-staging-repository-group",
+              "name": "Kogito Staging Repositories",
+              "url": "https://repository.jboss.org/nexus/content/groups/kogito-public",
+              "releases": {
+                "enabled": "true",
+                "updatePolicy": "never"
+              },
+              "snapshots": {
+                "enabled": "${{ inputs.allow-snapshots }}",
+                "updatePolicy": "never"
+              }
+            }
+          ]
+        plugin_groups: >
+          [
+            "org.zanata"
+          ]
+    - name: Debug settings.xml
+      shell: bash
+      run: |
+        cat ~/.m2/settings.xml
