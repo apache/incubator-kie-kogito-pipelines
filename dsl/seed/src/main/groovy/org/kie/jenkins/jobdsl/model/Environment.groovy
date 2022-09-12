@@ -79,6 +79,22 @@ class Environment {
         }
     )
 
+    public static final Environment MANDREL_LTS = new Environment(
+        name: 'MANDREL_LTS',
+        optional: true,
+        isActiveClosure: { script -> Utils.isEnvironmentMandrelLTSEnabled(script) },
+        getDefaultEnvVarsClosure: { script ->
+            [
+                NATIVE: 'true',
+                NATIVE_BUILDER_IMAGE: Utils.getEnvironmentMandrelBuilderImage(script),
+                ADDITIONAL_TIMEOUT: 720,
+                QUARKUS_BRANCH: Utils.getEnvironmentQuarkusLTSVersion(script),
+                BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+                DISABLE_PERSISTENCE: 'true',
+            ]
+        }
+    )
+
     public static final Environment QUARKUS_MAIN = new Environment(
         name: 'QUARKUS_MAIN',
         optional: true,

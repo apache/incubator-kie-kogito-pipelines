@@ -120,6 +120,12 @@ class Folder {
         environment: Environment.MANDREL,
     )
 
+    public static final Folder NIGHTLY_MANDREL_LTS = new Folder(
+        name: 'NIGHTLY_MANDREL_LTS',
+        jobType: JobType.NIGHTLY,
+        environment: Environment.MANDREL_LTS,
+    )
+
     public static final Folder NIGHTLY_QUARKUS_MAIN = new Folder(
         name: 'NIGHTLY_QUARKUS_MAIN',
         jobType: JobType.NIGHTLY,
@@ -164,6 +170,12 @@ class Folder {
         name: 'PULLREQUEST_MANDREL',
         jobType: JobType.PULLREQUEST,
         environment: Environment.MANDREL,
+    )
+
+    public static final Folder PULLREQUEST_MANDREL_LTS = new Folder(
+        name: 'PULLREQUEST_MANDREL_LTS',
+        jobType: JobType.PULLREQUEST,
+        environment: Environment.MANDREL_LTS,
     )
 
     public static final Folder PULLREQUEST_QUARKUS_MAIN = new Folder(
