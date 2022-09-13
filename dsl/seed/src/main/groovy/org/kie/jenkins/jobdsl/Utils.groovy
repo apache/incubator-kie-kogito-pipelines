@@ -23,7 +23,11 @@ class Utils {
     }
 
     static def getBindingValue(def script, String key) {
-        return script.getBinding().hasVariable(key) ? script.getBinding().getVariable(key) : ''
+        return hasBindingValue(script, key) ? script.getBinding().getVariable(key) : ''
+    }
+
+    static boolean hasBindingValue(def script, String key) {
+        return script.getBinding().hasVariable(key)
     }
 
     static boolean isEnvironmentQuarkusMainEnabled(def script) {
@@ -88,12 +92,27 @@ class Utils {
         return getBindingValue(script, 'GIT_MAIN_BRANCH')
     }
 
+    static boolean hasGitAuthor(def script) {
+        return hasBindingValue(script, 'GIT_AUTHOR_NAME')
+    }
+
     static String getGitAuthor(def script) {
         return getBindingValue(script, 'GIT_AUTHOR_NAME')
     }
 
+    static boolean hasSeedConfigFileGitAuthor(def script) {
+        return hasBindingValue(script, 'SEED_CONFIG_FILE_GIT_AUTHOR_NAME')
+    }
+
+    static String getSeedConfigFileGitAuthor(def script) {
+        return getBindingValue(script, 'SEED_CONFIG_FILE_GIT_AUTHOR_NAME')
+    }
+
     static boolean isProdEnvironment(def script) {
-        return getGitAuthor(script) == 'kiegroup' && getSeedAuthor(script) == 'kiegroup'
+        // Check for all possible `GIT_AUTHOR_NAME` variables
+        return getSeedAuthor(script) == 'kiegroup' 
+            && (hasGitAuthor(script) ? getGitAuthor(script) == 'kiegroup' : true)
+            && (hasSeedConfigFileGitAuthor(script) ? getSeedConfigFileGitAuthor(script) == 'kiegroup' : true)
     }
 
     static boolean isTestEnvironment(def script) {
