@@ -110,9 +110,9 @@ class Utils {
 
     static boolean isProdEnvironment(def script) {
         // Check for all possible `GIT_AUTHOR_NAME` variables
-        return getSeedAuthor(script) == 'kiegroup' 
-            && (hasGitAuthor(script) ? getGitAuthor(script) == 'kiegroup' : true)
-            && (hasSeedConfigFileGitAuthor(script) ? getSeedConfigFileGitAuthor(script) == 'kiegroup' : true)
+        return getSeedAuthor(script) == 'kiegroup' &&
+            (hasGitAuthor(script) ? getGitAuthor(script) == 'kiegroup' : true) &&
+            (hasSeedConfigFileGitAuthor(script) ? getSeedConfigFileGitAuthor(script) == 'kiegroup' : true)
     }
 
     static boolean isTestEnvironment(def script) {
