@@ -37,6 +37,8 @@ class SeedJobUtils {
 
                 env('JOB_RELATIVE_PATH_TO_TRIGGER', jobRelativePathToTrigger)
                 env('LISTEN_TO_MODIFIED_PATHS', new groovy.json.JsonBuilder(pathsToListen).toString())
+
+                env('AGENT_LABEL', Utils.isProdEnvironment(jenkinsScript) ? 'kie-rhel8 && !master' : 'kie-rhel8-priority')
             }
 
             definition {
@@ -48,15 +50,19 @@ class SeedJobUtils {
             properties {
                 githubProjectUrl("https://github.com/${gitAuthor}/${repository}")
 
-                pipelineTriggers {
-                    triggers {
-                        githubPush()
+                if (Utils.isProdEnvironment(jenkinsScript)) {
+                    pipelineTriggers {
+                        triggers {
+                            githubPush()
+                        }
                     }
                 }
             }
         }
         // Trigger jobs need to be executed once for the hook to work ...
-        jenkinsScript.queue(jobName)
+        if (Utils.isProdEnvironment(jenkinsScript)) {
+            jenkinsScript.queue(jobName)
+        }
         return job
     }
 }

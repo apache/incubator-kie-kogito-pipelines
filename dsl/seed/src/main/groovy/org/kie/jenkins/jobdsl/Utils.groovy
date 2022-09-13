@@ -19,7 +19,7 @@ class Utils {
     }
 
     static boolean areTriggersDisabled(def script) {
-        return getBindingValue(script, 'DISABLE_TRIGGERS').toBoolean()
+        return getBindingValue(script, 'DISABLE_TRIGGERS').toBoolean() || isTestEnvironment(script)
     }
 
     static def getBindingValue(def script, String key) {
@@ -90,6 +90,14 @@ class Utils {
 
     static String getGitAuthor(def script) {
         return getBindingValue(script, 'GIT_AUTHOR_NAME')
+    }
+
+    static boolean isProdEnvironment(def script) {
+        return getGitAuthor(script) == 'kiegroup' && getSeedAuthor(script) == 'kiegroup'
+    }
+
+    static boolean isTestEnvironment(def script) {
+        return !isProdEnvironment(script)
     }
 
     static String getGitAuthorCredsId(def script) {
