@@ -19,6 +19,7 @@ pipeline {
                     checkout(githubscm.resolveRepository("${REPO_NAME}", "${GIT_AUTHOR_NAME}", "${GIT_BRANCH_NAME}", false, "${GIT_AUTHOR_CREDS_ID}"))
 
                     List listenToModifiedPaths = readJSON(text: env.LISTEN_TO_MODIFIED_PATHS)
+                    echo "Listening to paths: ${listenToModifiedPaths}"
 
                     if (params.FORCE_REBUILD ?: arePathsModified(listenToModifiedPaths)) {
                         echo "Build ${JOB_RELATIVE_PATH_TO_TRIGGER}"
