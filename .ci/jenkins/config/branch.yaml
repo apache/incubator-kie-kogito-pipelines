@@ -1,3 +1,20 @@
+generation_config:
+  missing_environment: ignore
+
+job_types:
+  setup-branch:
+    disabled: true
+  nightly:
+    disabled: false
+  other:
+    disabled: true
+  pullrequest:
+    disabled: false
+  release:
+    disabled: true
+  tools:
+    disabled: true
+
 environments:
   native:
     env_vars:
@@ -61,6 +78,7 @@ environments:
 productized_branch: true
 disable:
   triggers: false
+
 repositories:
 - name: kogito-pipelines
 - name: kogito-runtimes
@@ -84,16 +102,16 @@ productized_repositories:
 - name: kogito-docs
 git:
   author:
-    name: kiegroup
-    credentials_id: kie-ci3
-    token_credentials_id: kie-ci3-token
-  fork_author:
-    name: kie-ci
-    credentials_id: kie-ci
-  quarkus:
+    name: radtriste
+    credentials_id: radtriste
+    token_credentials_id: radtriste-gh-token
+  fork_author: # Used on repository where a fork is needed
+    name: radtriste-bot-account
+    credentials_id: radtriste-bot
+  quarkus: # Used by quarkus platform jobs
     author:
-      name: quarkusio
-      credentials_id: kie-ci
+      name: radtriste
+      credentials_id: radtriste
     branch: main
   jenkins_config_path: .ci/jenkins
 buildchain_config:
@@ -101,29 +119,29 @@ buildchain_config:
     repository: kogito-pipelines
     file_path: .ci/pull-request-config.yaml
 maven:
-  settings_file_id: kogito_release_settings
+  settings_file_id: 2bd418aa-56fa-4403-9232-8c77a50fc528
   nexus:
-    release_url: https://repository.jboss.org/nexus
+    release_url: https://repository.stage.jboss.org/nexus
     release_repository: jboss-releases-repository
-    staging_profile_url: https://repository.jboss.org/nexus/content/groups/kogito-public/
-    staging_profile_id: 1976dd1c18392a
-    build_promotion_profile_id: ea49ccd6f174
-  artifacts_repository: ''
+    staging_profile_url: https://repository.stage.jboss.org/nexus/content/groups/kogito-public/
+    staging_profile_id: 2161b7b8da0080
+    build_promotion_profile_id: 1966c60aff37d
+  artifacts_repository: http://nexus3-tradisso-nexus.apps.kogito-cloud.hosted.psi.rdu2.redhat.com/repository/kogito-test/
   artifacts_upload_repository:
-    url: https://repository.jboss.org/nexus/content/repositories/snapshots/
-    creds_id: kogito-snapshots-upload
+    url: http://nexus3-tradisso-nexus.apps.kogito-cloud.hosted.psi.rdu2.redhat.com/nexus/content/repositories/snapshots/
+    creds_id: radtriste-nexus
   quarkus_platform_repository:
-    url: https://repository.jboss.org/nexus/content/repositories/kogito-internal-repository/
-    creds_id: kogito-internal-nexus-creds
+    url: http://nexus3-tradisso-nexus.apps.kogito-cloud.hosted.psi.rdu2.redhat.com/nexus/content/repositories/snapshots/
+    creds_id: radtriste-nexus
 cloud:
   image:
-    registry_credentials_nightly: nightly_kogito
-    registry_credentials_release: release_kogito
+    registry_credentials_nightly: tradisso_registry_token
+    registry_credentials_release: tradisso_registry_token
     registry: quay.io
-    namespace: kiegroup
+    namespace: tradisso
     latest_git_branch: main
 jenkins:
-  email_creds_id: KOGITO_CI_EMAIL_TO
+  email_creds_id: KOGITO_CI_EMAIL_TO_PERSO
   default_tools:
     jdk: kie-jdk11
     maven: kie-maven-3.8.7
