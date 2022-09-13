@@ -81,7 +81,7 @@ pipelineJob('0-seed-job') {
     throttleConcurrentBuilds {
         maxTotal(1)
     }
-    
+
     environmentVariables {
         env('AGENT_LABEL', Utils.isProdEnvironment(this) ? 'kie-rhel8 && !master' : 'kie-rhel8-priority')
     }
