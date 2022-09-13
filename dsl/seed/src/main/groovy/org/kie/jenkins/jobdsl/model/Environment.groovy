@@ -139,6 +139,7 @@ class Environment {
         SONARCLOUD,
         NATIVE,
         MANDREL,
+        MANDREL_LTS,
         QUARKUS_MAIN,
         QUARKUS_BRANCH,
         QUARKUS_LTS,

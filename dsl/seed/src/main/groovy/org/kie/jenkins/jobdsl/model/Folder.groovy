@@ -67,6 +67,10 @@ class Folder {
         return this.environment == Environment.MANDREL
     }
 
+    boolean isMandrelLTS() {
+        return this.environment == Environment.MANDREL_LTS
+    }
+
     boolean isQuarkusMain() {
         return this.environment == Environment.QUARKUS_MAIN
     }
@@ -230,12 +234,14 @@ class Folder {
         NIGHTLY_SONARCLOUD,
         NIGHTLY_NATIVE,
         NIGHTLY_MANDREL,
+        NIGHTLY_MANDREL_LTS,
         NIGHTLY_QUARKUS_MAIN,
         NIGHTLY_QUARKUS_BRANCH,
         NIGHTLY_QUARKUS_LTS,
         PULLREQUEST,
         PULLREQUEST_NATIVE,
         PULLREQUEST_MANDREL,
+        PULLREQUEST_MANDREL_LTS,
         PULLREQUEST_QUARKUS_MAIN,
         PULLREQUEST_QUARKUS_BRANCH,
         PULLREQUEST_QUARKUS_LTS,
