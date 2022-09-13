@@ -71,7 +71,7 @@ pipeline {
                             sh "mv ${env.WORKSPACE}/deployDirectory/* ${destDir}"
                             dir("${env.WORKSPACE}/deployDirectoryFinal") {
                                 sh "zip -r maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']} ."
-                                def folder="${env.RCM_GUEST_FOLDER}/openshift-serverless-logic/openshift-serverless-logic-${PRODUCT_VERSION}.nightly"
+                                def folder="${env.RCM_GUEST_FOLDER}/rhoss/rhoss-logic-${PRODUCT_VERSION}.nightly"
                                 sshagent(credentials: ['rcm-publish-server']) {
                                     sh "ssh 'rhba@${env.RCM_HOST}' 'mkdir -p ${folder}'"
                                     sh "scp -o StrictHostKeyChecking=no maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip rhba@${env.RCM_HOST}:${folder}"
@@ -91,7 +91,7 @@ pipeline {
                         echo '[INFO] Sending OPENSHIFT SERVERLESS LOGIC UMB message to QE.'
                         def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
 
-                        def mavenRepositoryFileUrl = "${env.STAGING_SERVER_URL}/openshift-serverless-logic/openshift-serverless-logic-${PRODUCT_VERSION}.nightly/maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip"
+                        def mavenRepositoryFileUrl = "${env.STAGING_SERVER_URL}/rhoss/rhoss-logic-${PRODUCT_VERSION}.nightly/maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip"
                         def topic = "VirtualTopic.qe.ci.ba.openshift-serverless-logic.${env.UMB_VERSION}.nightly.trigger"
                         def eventType = "openshift-serverless-logic-${env.UMB_VERSION}-nightly-qe-trigger"
                         def messageBody = getMessageBody(
