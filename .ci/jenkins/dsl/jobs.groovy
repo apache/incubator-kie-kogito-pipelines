@@ -13,6 +13,9 @@ setupCreateIssueToolsJob()
 setupCleanOldNamespacesToolsJob()
 setupCleanOldNightlyImagesToolsJob()
 KogitoJobUtils.createMainQuarkusUpdateToolsJob(this, 'Kogito Pipelines', [ 'drools', 'kogito-runtimes', 'kogito-examples', 'kogito-docs' ])
+if (Utils.isMainBranch(this)) {
+    setupBuildOperatorNode()
+}
 
 // Init branch
 setupInitBranchJob()
@@ -163,4 +166,9 @@ void setupReleaseJob() {
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
         }
     }
+}
+
+void setupBuildOperatorNode() {
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'build-operator-node', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.build-operator-node")
+    KogitoJobTemplate.createPipelineJob(this, jobParams)
 }

@@ -1,12 +1,9 @@
 name: kogito-operator-jenkins-node
-version: "1.12.0"
-from: registry.redhat.io/openshift4/ose-jenkins-agent-base
+version: "1.28.0"
+# 4.11 is not yet up to date ...
+from: quay.io/openshift/origin-jenkins-agent-base:4.10 
 description: Image used by dynamic jenkins agent to build kogito-cloud-operator using podman
 packages:
-  content_sets:
-    x86_64:
-      - rhel-8-for-x86_64-baseos-rpms
-      - rhel-8-for-x86_64-appstream-rpms
   manager: dnf
   install:
     - gcc
@@ -18,10 +15,13 @@ modules:
   repositories:
     - path: modules
   install:
+    # - name: org.kie.kogito.system-upgrade
     - name: org.kie.kogito.golang.114
       version: "1.14"
     - name: org.kie.kogito.golang.116
       version: "1.16"
+    - name: org.kie.kogito.golang.117
+      version: "1.17"
     - name: org.kie.kogito.mercurial
       version: "5.3.1"
     - name: org.kie.kogito.graalvm

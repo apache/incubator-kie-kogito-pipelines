@@ -4,7 +4,7 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 pipeline {
     agent {
-        label 'operator-node && !master'
+        label 'kie-rhel8-priority && !master'
     }
 
     options {
@@ -20,7 +20,6 @@ pipeline {
             steps {
                 script {
                     deleteDir()
-                    // TODO to change
                     checkout(githubscm.resolveRepository('kogito-pipelines', 'kiegroup', 'main', false))
                 }
             }
@@ -37,12 +36,25 @@ pipeline {
         stage('Tag and push') {
             steps {
                 script {
-                    sh 'podman tag kogito-operator-jenkins-node:latest quay.io/tradisso/kogito-operator-jenkins-node:latest'
+                    String version = ''
+                    dir('kogito-operator-jenkins-node') {
+                        version = sh(returnStdout:true, script: 'grep ^version: image.yaml | awk -F\\" \'{print $2}\'').trim()
+                    }
+                    echo "Got version for tagging -> ${version}"
 
-                    withCredentials([usernamePassword(credentialsId: 'tradisso-quay', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PWD')]) {
+                    sh """
+                        podman tag kogito-operator-jenkins-node:latest quay.io/kiegroup/kogito-operator-jenkins-node:${version}
+                        podman tag kogito-operator-jenkins-node:latest quay.io/kiegroup/kogito-operator-jenkins-node:latest
+                    """
+
+                    withCredentials([usernamePassword(credentialsId: 'nightly_kogito', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PWD')]) {
                         sh "podman login --tls-verify=false -u ${REGISTRY_USER} -p ${REGISTRY_PWD} quay.io"
                     }
-                    sh 'podman push quay.io/tradisso/kogito-operator-jenkins-node:latest'
+
+                    sh """
+                        podman push quay.io/kiegroup/kogito-operator-jenkins-node:${version}
+                        podman push quay.io/kiegroup/kogito-operator-jenkins-node:latest
+                    """
                 }
             }
         }
