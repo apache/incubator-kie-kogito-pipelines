@@ -58,6 +58,10 @@ class Utils {
         return getBindingValue(script, 'ENVIRONMENT_MANDREL_ENABLED').toBoolean()
     }
 
+    static boolean isEnvironmentMandrelLTSEnabled(def script) {
+        return getBindingValue(script, 'ENVIRONMENT_MANDREL_LTS_ENABLED').toBoolean()
+    }
+
     static String getEnvironmentMandrelBuilderImage(def script) {
         return getBindingValue(script, 'ENVIRONMENT_MANDREL_BUILDER_IMAGE')
     }

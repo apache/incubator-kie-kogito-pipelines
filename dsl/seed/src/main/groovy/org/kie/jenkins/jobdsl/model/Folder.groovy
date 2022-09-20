@@ -67,6 +67,10 @@ class Folder {
         return this.environment == Environment.MANDREL
     }
 
+    boolean isMandrelLTS() {
+        return this.environment == Environment.MANDREL_LTS
+    }
+
     boolean isQuarkusMain() {
         return this.environment == Environment.QUARKUS_MAIN
     }
@@ -120,6 +124,12 @@ class Folder {
         environment: Environment.MANDREL,
     )
 
+    public static final Folder NIGHTLY_MANDREL_LTS = new Folder(
+        name: 'NIGHTLY_MANDREL_LTS',
+        jobType: JobType.NIGHTLY,
+        environment: Environment.MANDREL_LTS,
+    )
+
     public static final Folder NIGHTLY_QUARKUS_MAIN = new Folder(
         name: 'NIGHTLY_QUARKUS_MAIN',
         jobType: JobType.NIGHTLY,
@@ -164,6 +174,12 @@ class Folder {
         name: 'PULLREQUEST_MANDREL',
         jobType: JobType.PULLREQUEST,
         environment: Environment.MANDREL,
+    )
+
+    public static final Folder PULLREQUEST_MANDREL_LTS = new Folder(
+        name: 'PULLREQUEST_MANDREL_LTS',
+        jobType: JobType.PULLREQUEST,
+        environment: Environment.MANDREL_LTS,
     )
 
     public static final Folder PULLREQUEST_QUARKUS_MAIN = new Folder(
@@ -218,12 +234,14 @@ class Folder {
         NIGHTLY_SONARCLOUD,
         NIGHTLY_NATIVE,
         NIGHTLY_MANDREL,
+        NIGHTLY_MANDREL_LTS,
         NIGHTLY_QUARKUS_MAIN,
         NIGHTLY_QUARKUS_BRANCH,
         NIGHTLY_QUARKUS_LTS,
         PULLREQUEST,
         PULLREQUEST_NATIVE,
         PULLREQUEST_MANDREL,
+        PULLREQUEST_MANDREL_LTS,
         PULLREQUEST_QUARKUS_MAIN,
         PULLREQUEST_QUARKUS_BRANCH,
         PULLREQUEST_QUARKUS_LTS,
