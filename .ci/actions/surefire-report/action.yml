@@ -17,4 +17,5 @@ runs:
         skip_publishing: true
         report_paths: ${{ inputs.report_paths }}
       env:
+        # https://github.com/ScaCap/action-surefire-report/issues/17
         NODE_OPTIONS: '--max_old_space_size=4096'
