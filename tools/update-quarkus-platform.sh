@@ -11,10 +11,11 @@ DRY_RUN=false
 BASE_BRANCH=main
 PR_BRANCH=
 DISABLE_CHECKOUT=false
+IGNORE_GIT=false
 COMMIT_MSG=
 
 usage() {
-    echo 'Usage: update-quarkus-platform.sh -v $VERSION [-p PROJECT] -f $FORK [-d] [-s] [-b BASE_BRANCH] [-h PR_BRANCH] [-m COMMIT_MESSAGE] [-n] COMMAND'
+    echo 'Usage: update-quarkus-platform.sh -v $VERSION [-p PROJECT] -f $FORK [-d] [-s] [-b BASE_BRANCH] [-h PR_BRANCH] [-m COMMIT_MESSAGE] [-n] [-r] COMMAND'
     echo
     echo 'Options:'
     echo '  -v $VERSION          set version'
@@ -27,6 +28,7 @@ usage() {
     echo '  -d                   Disable checkout. This means you are running the script in an already checked out quarkus-platform repository.'
     echo '  -n                   no execution: this will neither push nor create the PR'
     echo '  COMMAND              may be `stage` or `finalize`'
+    echo '  -r                   where does the script run: on Jenkins or locally'
     echo
     echo 'Examples:'
     echo '  # Stage the PR'
@@ -50,7 +52,7 @@ usage() {
     echo '  sh update-quarkus-platform.sh -v 1.24.0.Final -p kogito -f evacchi -n finalize'
 }
 
-while getopts "v:p:f:b:h:m:dsnh" i
+while getopts "v:p:f:b:h:m:dsnrh" i
 do
     case "$i"
     in
@@ -63,6 +65,7 @@ do
         s)  GITHUB_URL=${GITHUB_URL_SSH} ;;
         d)  DISABLE_CHECKOUT=true ;;
         n)  DRY_RUN=true ;;
+        r)  IGNORE_GIT=true ;;
         h)  usage; exit 0 ;;
         \?) usage; exit 1 ;;
     esac
@@ -84,25 +87,25 @@ in
         exit 2
 esac
 
-if [ -z "$VERSION" ]; then 
+if [ -z "$VERSION" ]; then
     >&2 echo ERROR: no version specified.
     usage
 
     exit 2
 fi
 
-if [ -z "$FORK" ]; then 
+if [ -z "$FORK" ]; then
     >&2 echo ERROR: no fork specified.
     usage
 
     exit 2
 fi
 
-if [ -z "$PR_BRANCH" ]; then 
+if [ -z "$PR_BRANCH" ]; then
     PR_BRANCH=bump-${PROJECT}-${VERSION}
 fi
 
-if [ -z "$COMMIT_MSG" ]; then 
+if [ -z "$COMMIT_MSG" ]; then
     COMMIT_MSG="${PROJECT} ${VERSION}"
 fi
 
@@ -126,29 +129,33 @@ fi
 
 stage() {
     set -x
+    if [ "$IGNORE_GIT" != 'true' ]; then
 
-    if [ "${DISABLE_CHECKOUT}" != 'true' ]; then
-        git clone ${GITHUB_URL}${ORIGIN}
-        cd $REPO
+      if [ "${DISABLE_CHECKOUT}" != 'true' ]; then
+          git clone ${GITHUB_URL}${ORIGIN}
+          cd $REPO
+      fi
+
+      # ensure base branch
+      git checkout $BASE_BRANCH
+
+      # create branch if needed
+      set +e
+      git checkout $PR_BRANCH
+      if [ "$?" != "0" ]; then
+          git checkout -b $PR_BRANCH
+      fi
+      set -e
     fi
 
-    # ensure base branch
-    git checkout $BASE_BRANCH
-    
-    # create branch if needed
-    set +e
-    git checkout $PR_BRANCH
-    if [ "$?" != "0" ]; then
-        git checkout -b $PR_BRANCH
-    fi
-    
     # add custom repositories
+    set +e
     cat ${MAVEN_SETTINGS_FILE} | grep ${KOGITO_STAGING_REPOSITORY}
     if [ "$?" != "0" ]; then
-        echo "$DIFF_FILE" | patch ${MAVEN_SETTINGS_FILE}
+      echo "$DIFF_FILE" | patch ${MAVEN_SETTINGS_FILE}
     fi
     set -e
-    
+
     # process versions
     ./mvnw \
     -s ${MAVEN_SETTINGS_FILE} \
@@ -156,55 +163,61 @@ stage() {
     -Dproperty=${PROJECT}-quarkus.version \
     -DnewVersion=${VERSION} \
     -DgenerateBackupPoms=false
-    
+
     # update pom metadata
     ./mvnw -s ${MAVEN_SETTINGS_FILE} -Dsync
-    
-    # commit all
-    git commit -am "${COMMIT_MSG}"
 
-    if [ "$DRY_RUN" = "false" ]; then
-        git push -u ${GITHUB_URL}$PR_FORK $PR_BRANCH
-        gh pr create --fill --base $BASE_BRANCH -R $ORIGIN
-    else
-        echo 'Do not push/create PR as per parameters...'
+    if [ "$IGNORE_GIT" != 'true' ]; then
+        # commit all
+        git commit -am "${COMMIT_MSG}"
+
+        if [ "$DRY_RUN" = "false" ]; then
+            git push -u ${GITHUB_URL}$PR_FORK $PR_BRANCH
+            gh pr create --fill --base $BASE_BRANCH -R $ORIGIN
+        else
+            echo 'Do not push/create PR as per parameters...'
+        fi
     fi
 }
 
 finalize() {
     set -x
+    if [ "$IGNORE_GIT" != 'true' ]; then
 
-    if [ "${DISABLE_CHECKOUT}" != 'true' ]; then
-        if [ -d "$REPO" ]; then
-            cd $REPO
-        else
-            git clone ${GITHUB_URL}$PR_FORK
-            cd $REPO;
+        if [ "${DISABLE_CHECKOUT}" != 'true' ]; then
+            if [ -d "$REPO" ]; then
+                cd $REPO
+            else
+                git clone ${GITHUB_URL}$PR_FORK
+                cd $REPO;
+            fi
         fi
-    fi
 
-    git checkout $PR_BRANCH
+        git checkout $PR_BRANCH
+    fi
 
     # undo patch to add repos
     set +e
     cat ${MAVEN_SETTINGS_FILE} | grep ${KOGITO_STAGING_REPOSITORY}
-    if [ "$?" = "0" ]; then
-        echo "$DIFF_FILE" | patch -R ${MAVEN_SETTINGS_FILE}
-    fi
+        if [ "$?" = "0" ]; then
+            echo "$DIFF_FILE" | patch -R ${MAVEN_SETTINGS_FILE}
+        fi
     set -e
 
     ./mvnw -Dsync
 
-    # squash commits
-    git reset $(git merge-base main $(git rev-parse --abbrev-ref HEAD))
-    git add -A
-    git commit -m "${COMMIT_MSG}"
-    
-    if [ "$DRY_RUN" = "false" ]; then
-        # push forced (we are overwriting the old commit)
-        git push --force-with-lease
-    else
-        echo 'Do not push as per parameters...'
+    if [ "$IGNORE_GIT" != 'true' ]; then
+        # squash commits
+        git reset $(git merge-base main $(git rev-parse --abbrev-ref HEAD))
+        git add -A
+        git commit -m "${COMMIT_MSG}"
+
+        if [ "$DRY_RUN" = "false" ]; then
+            # push forced (we are overwriting the old commit)
+            git push --force-with-lease
+        else
+            echo 'Do not push as per parameters...'
+        fi
     fi
 }
 
