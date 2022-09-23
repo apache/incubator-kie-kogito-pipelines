@@ -1,8 +1,10 @@
-package org.kie.jenkins.jobdsl
+package org.kie.jenkins.jobdsl.utils
 
 /*
+* *DEPRECATED*
 * This class is deprecated and will be removed in the future, once all maitained branches do not need it anymore !
 */
+@Deprecated
 class FolderUtils {
 
     static String NIGHTLY_FOLDER = 'nightly'

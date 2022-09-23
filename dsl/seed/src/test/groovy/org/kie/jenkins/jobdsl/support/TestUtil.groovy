@@ -36,6 +36,7 @@ class TestUtil {
 
         Map props = [:]
         fillEnvProperties(props, '', config)
+        props.put('ENVIRONMENTS', config.environments ? config.environments.keySet().join(',') : '')
         return props
     }
 

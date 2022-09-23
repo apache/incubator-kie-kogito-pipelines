@@ -1,24 +1,77 @@
-environment:
-  quarkus:
-    main:
-      enabled: true
-    branch:
-      enabled: true
-      version: '2.15'
-    lts:
-      enabled: true
-      version: '2.13'
+environments:
   native:
-    enabled: true
+    env_vars:
+      NATIVE: 'true'
+      ADDITIONAL_TIMEOUT: 720
+      DISABLE_PERSISTENCE: 'true'
+      DISABLE_EVENTS: 'true'
+    ids:
+    - native
+  
   mandrel:
-    enabled: true
-    builder_image: quay.io/quarkus/ubi-quarkus-mandrel:22.3-java17
-  mandrel_lts:
-    enabled: true
-    builder_image: quay.io/quarkus/ubi-quarkus-mandrel:22.3-java17
-    quarkus_version: 2.13
-  runtimes_bdd:
-    enabled: true
+    env_vars:
+      NATIVE: 'true'
+      NATIVE_BUILDER_IMAGE: quay.io/quarkus/ubi-quarkus-mandrel:22.3-java17
+      ADDITIONAL_TIMEOUT: 720
+      DISABLE_PERSISTENCE: 'true'
+      DISABLE_EVENTS: 'true'
+    ids:
+    - native
+    - prod
+  
+  quarkus-main:
+    env_vars:
+      QUARKUS_BRANCH: main
+    ids:
+    - quarkus
+  
+  quarkus-branch:
+    env_vars:
+      QUARKUS_BRANCH: '2.15'
+    ids:
+    - quarkus
+
+  # LTS part
+  quarkus-lts:
+    env_vars:
+      QUARKUS_BRANCH: '2.13'
+      BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral'
+      DISABLE_PERSISTENCE: 'true'
+    ids:
+    - quarkus
+    - lts
+
+  mandrel-lts:
+    env_vars:
+      NATIVE: 'true'
+      NATIVE_BUILDER_IMAGE: quay.io/quarkus/ubi-quarkus-mandrel:22.3-java17
+      ADDITIONAL_TIMEOUT: 720
+      QUARKUS_BRANCH: '2.13'
+      BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral'
+      DISABLE_PERSISTENCE: 'true'
+      DISABLE_EVENTS: 'true'
+    ids:
+    - native
+    - prod
+    - lts
+
+  # Others
+  runtimes-bdd:
+    auto_generation: false
+    ids:
+    - cloud
+
+  sonarcloud:
+    auto_generation: false
+    ids:
+    - sonarcloud
+    - coverage
+
+  ecosystem:
+    auto_generation: false
+    ids:
+    - ecosystem
+
 productized_branch: true
 disable:
   triggers: false

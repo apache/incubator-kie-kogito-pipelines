@@ -1,4 +1,4 @@
-package org.kie.jenkins.jobdsl
+package org.kie.jenkins.jobdsl.utils
 
 import org.kie.jenkins.jobdsl.KogitoConstants
 import org.kie.jenkins.jobdsl.Utils

@@ -1,5 +1,5 @@
 
-package org.kie.jenkins.jobdsl
+package org.kie.jenkins.jobdsl.utils
 
 class VersionUtils {
 

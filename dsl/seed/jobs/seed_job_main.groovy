@@ -1,6 +1,6 @@
 // +++++++++++++++++++++++++++++++++++++++++++ create a seed job ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-import org.kie.jenkins.jobdsl.SeedJobUtils
+import org.kie.jenkins.jobdsl.utils.SeedJobUtils
 import org.kie.jenkins.jobdsl.Utils
 
 KOGITO_PIPELINES_REPOSITORY = 'kogito-pipelines'

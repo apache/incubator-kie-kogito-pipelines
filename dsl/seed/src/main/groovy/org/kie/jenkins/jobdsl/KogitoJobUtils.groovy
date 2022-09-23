@@ -5,6 +5,9 @@ import groovy.json.JsonOutput
 import org.kie.jenkins.jobdsl.model.Folder
 import org.kie.jenkins.jobdsl.model.Environment
 import org.kie.jenkins.jobdsl.model.JobType
+import org.kie.jenkins.jobdsl.utils.EnvUtils
+import org.kie.jenkins.jobdsl.utils.JobParamsUtils
+import org.kie.jenkins.jobdsl.utils.PrintUtils
 import org.kie.jenkins.jobdsl.KogitoJobTemplate
 import org.kie.jenkins.jobdsl.KogitoConstants
 import org.kie.jenkins.jobdsl.Utils
@@ -14,47 +17,10 @@ import org.kie.jenkins.jobdsl.Utils
 **/
 class KogitoJobUtils {
 
-    static final Closure DEFAULT_PARAMS_GETTER = { script ->
-        return getDefaultJobParams(script)
-    }
-
-    static def getDefaultJobParams(def script) {
-        def jobParams = [
-            job: [
-                name: Utils.getRepoName(script)
-            ],
-            git: [
-                author: Utils.getGitAuthor(script),
-                branch: Utils.getGitBranch(script),
-                repository: Utils.getRepoName(script),
-                credentials: Utils.getGitAuthorCredsId(script),
-                token_credentials: Utils.getGitAuthorTokenCredsId(script)
-            ],
-            parametersClosures: [],
-            env: [
-                REPO_NAME: Utils.getRepoName(script)
-            ],
-            pr: [
-                excluded_regions: [
-                    'LICENSE',
-                    '\\.gitignore',
-                    '.*\\.md',
-                    '.*\\.adoc',
-                    '.*\\.txt',
-                    '\\.github/.*',
-                    '\\.ci/jenkins/.*',
-                    'docsimg/.*',
-                ],
-                ignore_for_labels: [ 'skip-ci' ],
-            ]
-        ]
-        if (Utils.isProdEnvironment(script)) {
-            jobParams.pr.ignore_for_labels.add(KogitoConstants.LABEL_DSL_TEST)
-        }
-        return jobParams
-    }
-
     /**
+    * *DEPRECATED* section
+    * Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
+    *
     * Agrement default job params with some more information given as parameters of the method
     *
     * parameters:
@@ -64,7 +30,8 @@ class KogitoJobUtils {
     *   - jobDescription: (optional) Update the job description, if given
     *   - defaultJobParamsGetter: (optional) Closure to get the job default params
     */
-    static def getBasicJobParams(def script, String jobName, Folder jobFolder, String jenkinsfilePath, String jobDescription = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+    @Deprecated
+    static def getBasicJobParams(def script, String jobName, Folder jobFolder, String jenkinsfilePath, String jobDescription = '', Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
         def jobParams = defaultJobParamsGetter(script)
         jobParams.job.name = jobName
         jobParams.job.folder = jobFolder
@@ -73,40 +40,28 @@ class KogitoJobUtils {
         return jobParams
     }
 
-    static def setupJobParamsSeedRepoEnv(def script, def jobParams) {
-        jobParams.env = jobParams.env ?: [:]
-        jobParams.env.putAll([
-            SEED_REPO: Utils.getSeedRepo(script),
-            SEED_AUTHOR: Utils.getSeedAuthor(script),
-            SEED_BRANCH: Utils.getSeedBranch(script),
-            SEED_AUTHOR_CREDS_ID: Utils.getSeedAuthorCredsId(script)
-        ])
-    }
-
-    static def setupJobParamsDefaultJDKConfiguration(def script, def jobParams) {
-        jobParams.env = jobParams.env ?: [:]
-        jobParams.env.putAll([
-            BUILD_JDK_TOOL: Utils.getJenkinsDefaultJDKTools(script),
-        ])
-    }
-
-    static def setupJobParamsDefaultMavenConfiguration(def script, def jobParams) {
-        jobParams.env = jobParams.env ?: [:]
-        setupJobParamsDefaultJDKConfiguration(script, jobParams)
-        jobParams.env.putAll([
-            BUILD_MAVEN_TOOL: Utils.getJenkinsDefaultMavenTools(script),
-        ])
-    }
-
     /**
+    * *DEPRECATED* section
+    * Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
+    *
     * Seed job params are used for `common` jenkinsfiles which are taken from the seed
     **/
-    static def getSeedJobParams(def script, String jobName, Folder jobFolder, String jenkinsfileName, String jobDescription = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+    @Deprecated
+    static def getSeedJobParams(def script, String jobName, Folder jobFolder, String jenkinsfileName, String jobDescription = '', Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
         def jobParams = getBasicJobParams(script, jobName, jobFolder, Utils.getSeedJenkinsfilePath(script, jenkinsfileName), jobDescription, defaultJobParamsGetter)
         jobParams.git.repository = Utils.getSeedRepo(script)
         jobParams.git.author = Utils.getSeedAuthor(script)
         jobParams.git.branch = Utils.getSeedBranch(script)
         return jobParams
+    }
+
+    /**
+    * *DEPRECATED* section
+    * Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
+    **/
+    @Deprecated
+    static def setupJobParamsDefaultMavenConfiguration(def script, def jobParams) {
+        JobParamsUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
     }
 
     /**
@@ -136,8 +91,8 @@ class KogitoJobUtils {
     *
     */
     static def createVersionUpdateToolsJob(def script, String repository, String dependencyName, def mavenUpdate = [:], def gradleUpdate = [:], def filepathReplaceRegex = [], def scriptCalls = []) {
-        def jobParams = getSeedJobParams(script, "update-${dependencyName.toLowerCase()}-${repository}", Folder.TOOLS, 'Jenkinsfile.tools.update-dependency-version', "Update ${dependencyName} version for ${repository}")
-        KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
+        def jobParams = JobParamsUtils.getSeedJobParams(script, "update-${dependencyName.toLowerCase()}-${repository}", JobType.TOOLS, 'Jenkinsfile.tools.update-dependency-version', "Update ${dependencyName} version for ${repository}")
+        JobParamsUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
         // Setup correct checkout branch for pipelines
         jobParams.env.putAll([
             JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
@@ -194,7 +149,7 @@ class KogitoJobUtils {
     * and will call the different projects `update-quarkus-{project}` jobs. Those should be best created with method `createQuarkusUpdateToolsJob`.
     */
     static def createMainQuarkusUpdateToolsJob(def script, List projectsToUpdate, List reviewers = []) {
-        def jobParams = getSeedJobParams(script, 'update-quarkus-all', Folder.TOOLS, 'Jenkinsfile.ecosystem.update-quarkus-all', 'Update Quarkus version for the whole ecosystem')
+        def jobParams = JobParamsUtils.getSeedJobParams(script, 'update-quarkus-all', JobType.TOOLS, 'Jenkinsfile.ecosystem.update-quarkus-all', 'Update Quarkus version for the whole ecosystem')
         jobParams.env.putAll([
             JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
 
@@ -213,7 +168,7 @@ class KogitoJobUtils {
             SEED_BRANCH_CONFIG_FILE_GIT_BRANCH: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_BRANCH'),
             SEED_BRANCH_CONFIG_FILE_PATH: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_PATH'),
         ])
-        setupJobParamsSeedRepoEnv(script, jobParams)
+        JobParamsUtils.setupJobParamsSeedRepoEnv(script, jobParams)
         def job = KogitoJobTemplate.createPipelineJob(script, jobParams)
         job?.with {
             parameters {
@@ -231,8 +186,8 @@ class KogitoJobUtils {
     *
     */
     static def createQuarkusPlatformUpdateToolsJob(def script, String project) {
-        def jobParams = getSeedJobParams(script, 'update-quarkus-platform', Folder.TOOLS, 'Jenkinsfile.update-quarkus-platform', "Update Quarkus platform with new version of ${project}")
-        KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
+        def jobParams = JobParamsUtils.getSeedJobParams(script, 'update-quarkus-platform', JobType.TOOLS, 'Jenkinsfile.update-quarkus-platform', "Update Quarkus platform with new version of ${project}")
+        JobParamsUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
         jobParams.env.putAll([
             JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
             BUILD_BRANCH_NAME: Utils.getGitBranch(script),
@@ -260,11 +215,23 @@ class KogitoJobUtils {
         return job
     }
 
-    static List createAllEnvsPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
+    /**
+    * *DEPRECATED* section
+    * Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
+    */
+    @Deprecated
+    static List createAllEnvsPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        PrintUtils.deprecated(script, "createAllEnvsPerRepoPRJobs", 'createAllEnvironmentsPerRepoPRJobs')
         return createPerEnvPerRepoPRJobs(script, Environment.getActiveEnvironments(script), jobsRepoConfigGetter, defaultParamsGetter)
     }
 
-    static List createPerEnvPerRepoPRJobs(def script, List<Environment> environments, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
+    /**
+    * *DEPRECATED* section
+    * Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
+    */
+    @Deprecated
+    static List createPerEnvPerRepoPRJobs(def script, List<Environment> environments, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        PrintUtils.deprecated(script, "createPerEnvPerRepoPRJobs for environments ${environments}", 'createPerEnvironmentPerRepoPRJobs')
         List allJobs = []
 
         Folder.getAllFoldersByJobTypeAndEnvironments(script, JobType.PULLREQUEST, environments)
@@ -280,104 +247,142 @@ class KogitoJobUtils {
         return allJobs
     }
 
-    static List createDefaultPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
-        return createPerEnvPerRepoPRJobs(script, [ Environment.DEFAULT ], jobsRepoConfigGetter, defaultParamsGetter)
+    static List createAllEnvironmentsPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        PrintUtils.debug(script, "createAllEnvironmentsPerRepoPRJobs")
+        return createPerEnvironmentPerRepoPRJobs(script, EnvUtils.getAllAutoGeneratedEnvironments(script), jobsRepoConfigGetter, defaultParamsGetter)
     }
 
-    static def createNativePerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
-        return createPerEnvPerRepoPRJobs(script, [ Environment.NATIVE ], jobsRepoConfigGetter, defaultParamsGetter)
-    }
+    static List createPerEnvironmentPerRepoPRJobs(def script, List<String> environments, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        PrintUtils.debug(script, "createPerEnvironmentPerRepoPRJobs for envs ${environments}")
+        List allJobs = []
 
-    static def createMandrelPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
-        return createPerEnvPerRepoPRJobs(script, [ Environment.MANDREL ], jobsRepoConfigGetter, defaultParamsGetter)
-    }
+        // Generate default env
+        allJobs.addAll(KogitoJobTemplate.createPerRepoPRJobs(script, '', jobsRepoConfigGetter, defaultParamsGetter))
 
-    static def createMandrelLTSPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
-        return createPerEnvPerRepoPRJobs(script, [ Environment.MANDREL_LTS ], jobsRepoConfigGetter, defaultParamsGetter)
-    }
+        // Generate environments one
+        environments.each { envName ->
+            allJobs.addAll(KogitoJobTemplate.createPerRepoPRJobs(script, envName, getOptionalJobsRepoConfigClosure(jobsRepoConfigGetter), defaultParamsGetter))
+        }
 
-    static def createQuarkusMainPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
-        return createPerEnvPerRepoPRJobs(script, [ Environment.QUARKUS_MAIN ], jobsRepoConfigGetter, defaultParamsGetter)
-    }
-
-    static def createQuarkusBranchPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
-        return createPerEnvPerRepoPRJobs(script, [ Environment.QUARKUS_BRANCH ], jobsRepoConfigGetter, defaultParamsGetter)
+        return allJobs
     }
 
     /**
+    * *DEPRECATED* section
+    * Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
+    *
     * Create a Build-Chain Build&Test job in the current folder for the current repo.
     *
-    * See also createBranchBuildChainJob(script, jobFolder, repository, ...)
+    * See also `createBranchBuildChainJob` method
     */
-    static def createNightlyBuildChainBuildAndTestJobForCurrentRepo(def script, Folder jobFolder, boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
-        return createNightlyBuildChainBuildAndTestJobForCurrentRepoWithEnv(script, jobFolder, [:], enableNotification, notificationJobName, defaultJobParamsGetter)
+    @Deprecated
+    static def createNightlyBuildChainBuildAndTestJobForCurrentRepo(def script, Folder jobFolder, boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        return createNightlyBuildChainBuildAndTestJob(script, jobFolder, Utils.getRepoName(script), [:], enableNotification, notificationJobName, defaultJobParamsGetter)
     }
 
     /**
-    * Create a Build-Chain Build&Test job in the current folder with an extra env for the current repo.
+    * Create a Nightly Build-Chain Build&Test job for the given env for the current repository
     *
-    * See also createBranchBuildChainJob(script, jobFolder, repository, ...)
+    * See also `createBranchBuildChainJob` method
     */
-    static def createNightlyBuildChainBuildAndTestJobForCurrentRepoWithEnv(def script, Folder jobFolder, Map extraEnv = [:], boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
-        return createNightlyBuildChainBuildAndTestJobWithEnv(script, jobFolder, Utils.getRepoName(script), extraEnv, enableNotification, notificationJobName, defaultJobParamsGetter)
+    static def createNightlyBuildChainBuildAndTestJobForCurrentRepo(def script, String envName = '', boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        return createNightlyBuildChainBuildAndTestJob(script, envName, Utils.getRepoName(script), [:], enableNotification, defaultJobParamsGetter)
     }
 
-        /**
+    /**
+    * *DEPRECATED* section
+    * Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
+    *
     * Create a Build-Chain Build&Test job in the current folder with an extra env.
     *
-    * See also createBranchBuildChainJob(script, jobFolder, repository, ...)
+    * See also `createBranchBuildChainJob` method
     */
-    static def createNightlyBuildChainBuildAndTestJobWithEnv(def script, Folder jobFolder, String repository, Map extraEnv = [:], boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
-        return createBranchBuildChainJob(script, jobFolder, repository, extraEnv, 'build-and-test', enableNotification, notificationJobName, defaultJobParamsGetter)
+    @Deprecated
+    static def createNightlyBuildChainBuildAndTestJob(def script, Folder jobFolder, String repository, Map extraEnv = [:], boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        def jobParams = getSeedJobParams(script, "${repository}.build-and-test", jobFolder, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
+        return createBranchBuildChainJob(script, jobParams, repository, enableNotification, notificationJobName)
     }
 
     /**
+    * Create a Nightly Build-Chain Build&Test job for the given env.
+    *
+    * See also `createBranchBuildChainJob` method
+    */
+    static def createNightlyBuildChainBuildAndTestJob(def script, String envName = '', String repository, Map extraEnv = [:], boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${repository}.build-and-test", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
+        jobParams.env.putAll(extraEnv)
+        return createBranchBuildChainJob(script, jobParams, repository, enableNotification, envName)
+    }
+
+    /**
+    * *DEPRECATED* section
+    * Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
+    *
     * Create a Build-Chain Build&Deploy job in the current folder for current repo.
     *
-    * See also createBranchBuildChainJob(script, jobFolder, repository, ...)
+    * See also `createBranchBuildChainJob` method
     */
-    static def createNightlyBuildChainBuildAndDeployJobForCurrentRepo(def script, Folder jobFolder, boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
-        return createNightlyBuildChainBuildAndDeployJobForCurrentRepoWithEnv(script, jobFolder, [:], enableNotification, notificationJobName, defaultJobParamsGetter)
+    @Deprecated
+    static def createNightlyBuildChainBuildAndDeployJobForCurrentRepo(def script, Folder jobFolder, boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        return createNightlyBuildChainBuildAndDeployJob(script, jobFolder, Utils.getRepoName(script), [:], enableNotification, notificationJobName, defaultJobParamsGetter)
     }
 
     /**
-    * Create a Build-Chain Build&Deploy job in the current folder with an extra env for current repo.
+    * Create a Nightly Build-Chain Build&Deploy job for the given env for the current repository
     *
-    * See also createBranchBuildChainJob(script, jobFolder, repository, ...)
+    * See also `createBranchBuildChainJob` method
     */
-    static def createNightlyBuildChainBuildAndDeployJobForCurrentRepoWithEnv(def script, Folder jobFolder, Map extraEnv = [:], boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
-        return createNightlyBuildChainBuildAndDeployJobWithEnv(script, jobFolder, Utils.getRepoName(script), extraEnv, enableNotification, notificationJobName, defaultJobParamsGetter)
+    static def createNightlyBuildChainBuildAndDeployJobForCurrentRepo(def script, String envName = '', boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        return createNightlyBuildChainBuildAndDeployJob(script, envName, Utils.getRepoName(script), [:], enableNotification, defaultJobParamsGetter)
     }
 
     /**
+    * *DEPRECATED* section
+    * Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
+    *
     * Create a Build-Chain Build&Deploy job in the current folder with an extra env.
     *
-    * See also createBranchBuildChainJob(script, jobFolder, repository, ...)
+    * See also `createBranchBuildChainJob` method
     */
-    static def createNightlyBuildChainBuildAndDeployJobWithEnv(def script, Folder jobFolder, String repository, Map extraEnv = [:], boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
-        extraEnv.putAll([
+    @Deprecated
+    static def createNightlyBuildChainBuildAndDeployJob(def script, Folder jobFolder, String repository, Map extraEnv = [:], boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        def jobParams = getSeedJobParams(script, "${repository}.build-and-deploy", jobFolder, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
+        jobParams.env.putAll([
             ENABLE_DEPLOY: true,
             MAVEN_DEPLOY_REPOSITORY: Utils.getMavenArtifactsUploadRepositoryUrl(script),
             MAVEN_DEPLOY_REPOSITORY_CREDS_ID: Utils.getMavenArtifactsUploadRepositoryCredentialsId(script),
         ])
-        return createBranchBuildChainJob(script, jobFolder, repository, extraEnv, 'build-and-deploy', enableNotification, notificationJobName, defaultJobParamsGetter)
+        jobParams.env.putAll(extraEnv)
+        return createBranchBuildChainJob(script, jobFolder, repository, extraEnv, 'build-and-deploy', enableNotification, notificationJobName)
     }
 
     /**
-    * Create a Build-Chain branch job in the given folder.
+    * Create a Nightly Build-Chain Build&Deploy job for the given env.
+    *
+    * See also `createBranchBuildChainJob` method
+    */
+    static def createNightlyBuildChainBuildAndDeployJob(def script, String envName = '', String repository, Map extraEnv = [:], boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${repository}.build-and-deploy", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
+        jobParams.env.putAll([
+            ENABLE_DEPLOY: true,
+            MAVEN_DEPLOY_REPOSITORY: Utils.getMavenArtifactsUploadRepositoryUrl(script),
+            MAVEN_DEPLOY_REPOSITORY_CREDS_ID: Utils.getMavenArtifactsUploadRepositoryCredentialsId(script),
+        ])
+        jobParams.env.putAll(extraEnv)
+        return createBranchBuildChainJob(script, jobParams, repository, enableNotification, envName)
+    }
+
+    /**
+    * Create a Build-Chain branch job.
     *
     * parameters:
-    *   - jobFolder: Folder for the job to be created in
-    *   - repoName: Will be taken from environment if not given
-    *   - enableDeploy: Whether deploy should be done after the build
+    *   - jobParams: Base job params (Please see `JobParamsUtils.getSeedJobParams*` to set them up)
+    *   - repository: Which repository should be tested ?
     *   - enableNotification: Whether notification should be sent in case of unsuccessful pipeline
     *   - notificationJobName: Identifier for the notification stream
-    *   - repoName: Will be taken from environment if not given
-    *   - defaultJobParamsGetter: (optional) Closure to get the job default params
     */
-    static def createBranchBuildChainJob(def script, Folder jobFolder, String repository, Map extraEnv = [:], String jobNameSuffix = '', boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
-        def jobParams = getSeedJobParams(script, "${repository}${jobNameSuffix ? ".${jobNameSuffix}" : ''}", jobFolder, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "${jobNameSuffix} for ${repository} using the build-chain", defaultJobParamsGetter)
-        KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
+    static def createBranchBuildChainJob(def script, def jobParams, String repository, boolean enableNotification = false, String notificationJobName = '') {
+        JobParamsUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
         jobParams.triggers = [ cron : '@midnight' ]
 
         jobParams.parametersClosures.add({
@@ -404,9 +409,6 @@ class KogitoJobUtils {
 
             MAVEN_SETTINGS_CONFIG_FILE_ID: Utils.getBindingValue(script, 'MAVEN_SETTINGS_FILE_ID'),
         ])
-
-        // Extra overrides default
-        jobParams.env.putAll(extraEnv)
 
         return KogitoJobTemplate.createPipelineJob(script, jobParams)
     }

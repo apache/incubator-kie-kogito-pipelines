@@ -1,5 +1,7 @@
 
-package org.kie.jenkins.jobdsl
+package org.kie.jenkins.jobdsl.utils
+
+import org.kie.jenkins.jobdsl.Utils
 
 class RegexUtils {
 
