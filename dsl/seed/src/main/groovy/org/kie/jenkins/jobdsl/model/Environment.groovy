@@ -78,6 +78,7 @@ class Environment {
                 NATIVE_BUILDER_IMAGE: Utils.getEnvironmentMandrelBuilderImage(script),
                 ADDITIONAL_TIMEOUT: 720,
                 DISABLE_EVENTS: 'true',
+                DISABLE_PERSISTENCE: 'true',
             ]
         }
     )
