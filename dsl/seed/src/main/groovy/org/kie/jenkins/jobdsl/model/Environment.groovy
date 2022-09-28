@@ -49,6 +49,7 @@ class Environment {
         getDefaultEnvVarsClosure: { script ->
             [
                 BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+                DISABLE_PERSISTENCE: 'true',
             ]
         }
     )
@@ -60,6 +61,7 @@ class Environment {
         getDefaultEnvVarsClosure: { script ->
             [
                 BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+                DISABLE_PERSISTENCE: 'true',
             ]
         }
     )
@@ -73,6 +75,7 @@ class Environment {
                 NATIVE: 'true',
                 ADDITIONAL_TIMEOUT: 720,
                 BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+                DISABLE_PERSISTENCE: 'true',
             ]
         }
     )
@@ -87,6 +90,7 @@ class Environment {
                 NATIVE_BUILDER_IMAGE: Utils.getEnvironmentMandrelBuilderImage(script),
                 ADDITIONAL_TIMEOUT: 720,
                 BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+                DISABLE_PERSISTENCE: 'true',
             ]
         }
     )
@@ -99,6 +103,7 @@ class Environment {
             [ 
                 QUARKUS_BRANCH: 'main',
                 BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+                DISABLE_PERSISTENCE: 'true',
             ] 
         }
     )
@@ -111,6 +116,7 @@ class Environment {
             [ 
                 QUARKUS_BRANCH: Utils.getEnvironmentQuarkusBranchVersion(script),
                 BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+                DISABLE_PERSISTENCE: 'true',
             ] 
         }
     )
@@ -133,6 +139,7 @@ class Environment {
         getDefaultEnvVarsClosure: { script ->
             [
                 BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+                DISABLE_PERSISTENCE: 'true',
             ]
         }
     )
@@ -146,6 +153,7 @@ class Environment {
         getDefaultEnvVarsClosure: { script ->
             [
                 BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+                DISABLE_PERSISTENCE: 'true',
             ]
         }
     )
