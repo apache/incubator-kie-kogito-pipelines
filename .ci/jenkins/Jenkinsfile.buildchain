@@ -1,6 +1,6 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
-agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'kie-rhel7 && kie-mem16g'} && !master"
+agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'kie-rhel7 && kie-mem16g'} && !built-in"
 timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: '180'
 jdkTool = env.BUILD_JDK_TOOL
 mavenTool = env.BUILD_MAVEN_TOOL
