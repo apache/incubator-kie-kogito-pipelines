@@ -83,7 +83,7 @@ pipelineJob('0-seed-job') {
     }
 
     environmentVariables {
-        env('AGENT_LABEL', Utils.isProdEnvironment(this) ? 'kie-rhel8 && !master' : 'kie-rhel8-priority')
+        env('AGENT_LABEL', Utils.isProdEnvironment(this) ? 'kie-rhel8 && !built-in' : 'kie-rhel8-priority')
     }
 
     parameters {

@@ -4,7 +4,7 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 pipeline {
     agent {
-        label 'kie-rhel8-priority && !master'
+        label 'kie-rhel8-priority && !built-in'
     }
 
     options {
