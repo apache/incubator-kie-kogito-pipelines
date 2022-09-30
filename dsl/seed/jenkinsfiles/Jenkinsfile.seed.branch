@@ -28,7 +28,7 @@ SeedJobUtils.createSeedJobTrigger(
 
 pipeline {
     agent {
-        label 'kie-rhel8 && !master'
+        label 'kie-rhel8 && !built-in'
     }
 
     tools {
