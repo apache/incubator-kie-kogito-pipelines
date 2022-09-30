@@ -76,7 +76,7 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
         env('SEED_AUTHOR_CREDS_ID', Utils.getSeedAuthorCredsId(this))
         env('SEED_BRANCH', Utils.getSeedBranch(this))
 
-        env('AGENT_LABEL', Utils.isProdEnvironment(this) ? 'kie-rhel8 && !master' : 'kie-rhel8-priority')
+        env('AGENT_LABEL', Utils.isProdEnvironment(this) ? 'kie-rhel8 && !built-in' : 'kie-rhel8-priority')
     }
 
     definition {
