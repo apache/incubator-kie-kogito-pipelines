@@ -71,7 +71,7 @@ Each repository which want its job to be generated should be registered into the
 @Library('jenkins-pipeline-shared-libraries')_
 
 seed_generation = null
-node('kie-rhel8 && !master') {
+node('kie-rhel8 && !built-in') {
     dir("${SEED_REPO}") {
         checkout(githubscm.resolveRepository("${SEED_REPO}", "${SEED_AUTHOR}", "${SEED_BRANCH}", false))
         seed_generation = load "${SEED_SCRIPTS_FILEPATH}"
