@@ -28,6 +28,10 @@ inputs:
     description: folder path where to find the jobs.groovy file
     required: false
     default: .ci/jenkins/dsl
+  save-results:
+    description: whether results of testing should be saved. Default to true.
+    required: false
+    default: 'true'
 
 runs:
   using: "composite"
@@ -52,6 +56,13 @@ runs:
       echo "Use base branch ${branch}"
       echo "BASE_BRANCH=${branch}" >> $GITHUB_ENV
   
+  - name: Prepare pipelines test dir
+    shell: bash
+    run: |
+      pipelines_test_dir=$(mktemp -d)
+      echo "Using pipelines test dir ${pipelines_test_dir}"
+      echo "PIPELINES_TEST_DIR=${pipelines_test_dir}" >> $GITHUB_ENV
+
   - name: Test DSL
     shell: bash
     working-directory: seed_repo
@@ -62,9 +73,28 @@ runs:
       DSL_DEFAULT_MAIN_CONFIG_FILE_PATH: ${{ inputs.main-config-file-path }}
       DSL_DEFAULT_BRANCH_CONFIG_NAME: ${{ inputs.branch-config-name }}
       DSL_DEFAULT_BRANCH_CONFIG_BRANCH: ${{ inputs.branch-config-branch }}
+      PIPELINES_TEST_DIR: ${{ env.PIPELINES_TEST_DIR }}
     run: |
       dsl/seed/scripts/seed_test.sh -h ${{ github.head_ref }} \
               -r ${{ github.event.pull_request.head.repo.full_name }} \
               -b ${{ env.BASE_BRANCH }} \
               -t ${{ github.event.pull_request.base.repo.full_name }} \
               ${{ inputs.jobs-folder-path }}
+  
+  - name: Setup upload artifact name
+    if: ${{ always() && inputs.save-results }}
+    shell: bash
+    run: |
+      artifact_name="${{ inputs.main-config-file-repo }}-dsl-downstream-${{ inputs.repository }}-test-results"
+      echo "artifact_name = ${artifact_name}"
+      artifact_name=$(echo "${artifact_name}" | tr / _)
+      echo "artifact_name = ${artifact_name}"
+      echo "UPLOAD_ARTIFACT_NAME=${artifact_name}" >> $GITHUB_ENV
+
+  - name: Upload result
+    if: ${{ always() && inputs.save-results }}
+    uses: actions/upload-artifact@v3
+    with:
+      name: ${{ env.UPLOAD_ARTIFACT_NAME }}
+      path: ${{ env.PIPELINES_TEST_DIR }}/dsl/seed/build/reports/tests/test/
+

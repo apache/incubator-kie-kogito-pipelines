@@ -30,6 +30,11 @@ class Utils {
         return script.getBinding().hasVariable(key)
     }
 
+    static boolean isJobTypeDisabled(def script, String jobType) {
+        String envVar = "JOB_TYPES_${jobType.toUpperCase()}_DISABLED"
+        return getBindingValue(script, envVar).toBoolean()
+    }
+
     static boolean isEnvironmentQuarkusMainEnabled(def script) {
         return getBindingValue(script, 'ENVIRONMENT_QUARKUS_MAIN_ENABLED').toBoolean()
     }

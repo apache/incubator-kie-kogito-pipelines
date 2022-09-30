@@ -83,12 +83,9 @@ class Folder {
         return this.environment == Environment.QUARKUS_LTS
     }
 
-    // A folder is active if
-    // - its job type is NOT optional (not matter the environment)
-    // OR
-    // - it is active and the environment is also active
+    // A folder is active if jobType AND environment are active
     boolean isActive(def script) {
-        return !this.jobType.isOptional() || (this.jobType.isActive(script) && this.environment.isActive(script))
+        return this.jobType.isActive(script) && this.environment.isActive(script)
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////
