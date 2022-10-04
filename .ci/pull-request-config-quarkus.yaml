@@ -21,12 +21,12 @@ build:
   - project: kiegroup/drools
     build-command:
       current: |
-        mvn -f drools/pom.xml versions:compare-dependencies -pl :drools-build-parent -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false
-        mvn -f drools/pom.xml versions:set-property -pl :drools-build-parent -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
+        mvn -f drools/pom.xml versions:compare-dependencies -pl :drools-build-parent -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.DROOLS_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
+        mvn -f drools/pom.xml versions:set-property -pl :drools-build-parent -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.DROOLS_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
         mvn -f drools/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS }}
       upstream: |
-        mvn versions:compare-dependencies -pl :drools-build-parent -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false
-        mvn versions:set-property -pl :drools-build-parent -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
+        mvn versions:compare-dependencies -pl :drools-build-parent -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.DROOLS_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
+        mvn versions:set-property -pl :drools-build-parent -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.DROOLS_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
         mvn clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.DROOLS_BUILD_MVN_OPTS_UPSTREAM }}
     clone:
       - drools
@@ -34,12 +34,12 @@ build:
   - project: kiegroup/kogito-runtimes
     build-command:
       current: |
-        mvn -f kogito-runtimes/pom.xml versions:compare-dependencies -pl :kogito-dependencies-bom -pl :kogito-build-parent -pl :kogito-quarkus-bom -pl :kogito-build-no-bom-parent -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false
-        mvn -f kogito-runtimes/pom.xml versions:set-property -pl :kogito-dependencies-bom -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
+        mvn -f kogito-runtimes/pom.xml versions:compare-dependencies -pl :kogito-dependencies-bom -pl :kogito-build-parent -pl :kogito-quarkus-bom -pl :kogito-build-no-bom-parent -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
+        mvn -f kogito-runtimes/pom.xml versions:set-property -pl :kogito-dependencies-bom -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
         mvn -f kogito-runtimes/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS }}
       upstream: |
-        mvn versions:compare-dependencies -pl :kogito-dependencies-bom -pl :kogito-build-parent -pl :kogito-quarkus-bom -pl :kogito-build-no-bom-parent -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false
-        mvn versions:set-property -pl :kogito-dependencies-bom -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
+        mvn versions:compare-dependencies -pl :kogito-dependencies-bom -pl :kogito-build-parent -pl :kogito-quarkus-bom -pl :kogito-build-no-bom-parent -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
+        mvn versions:set-property -pl :kogito-dependencies-bom -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
         mvn clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS_UPSTREAM }}
     clone:
       - kogito-runtimes
@@ -47,12 +47,12 @@ build:
   - project: kiegroup/optaplanner
     build-command: 
       current: | 
-        mvn -f optaplanner/pom.xml versions:compare-dependencies -pl :optaplanner-build-parent -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false
-        mvn -f optaplanner/pom.xml versions:set-property -pl :optaplanner-build-parent -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
+        mvn -f optaplanner/pom.xml versions:compare-dependencies -pl :optaplanner-build-parent -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.OPTAPLANNER_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
+        mvn -f optaplanner/pom.xml versions:set-property -pl :optaplanner-build-parent -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.OPTAPLANNER_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
         mvn -f optaplanner/pom.xml clean install -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAPLANNER_BUILD_MVN_OPTS }}
       upstream: |
-        mvn versions:compare-dependencies -pl :optaplanner-build-parent -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false
-        mvn versions:set-property -pl :optaplanner-build-parent -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
+        mvn versions:compare-dependencies -pl :optaplanner-build-parent -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.OPTAPLANNER_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
+        mvn versions:set-property -pl :optaplanner-build-parent -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.OPTAPLANNER_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
         mvn clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.OPTAPLANNER_BUILD_MVN_OPTS_UPSTREAM }}
     clone:
       - optaplanner
@@ -69,23 +69,19 @@ build:
     build-command: 
       current: |
         mvn -f kogito-examples/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
-        mvn -f kogito-examples/pom.xml versions:set-property -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
-        mvn -f kogito-examples/pom.xml versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
-        mvn -f kogito-examples/pom.xml versions:set-property -Dproperty=quarkus-plugin.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
+        mvn -f kogito-examples/pom.xml versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
+        mvn -f kogito-examples/pom.xml versions:set-property -Dproperty=quarkus-plugin.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
 
-        bash -c "if [ '${{ env.DISABLE_PERSISTENCE }}' != 'true' ]; then mvn -f kogito-examples-persistence/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}; fi"
-        bash -c "if [ '${{ env.DISABLE_PERSISTENCE }}' != 'true' ]; then mvn -f kogito-examples-persistence/pom.xml versions:set-property -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false; fi"
-        bash -c "if [ '${{ env.DISABLE_PERSISTENCE }}' != 'true' ]; then mvn -f kogito-examples-persistence/pom.xml versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false; fi"
+        bash -c "if [ '${{ env.DISABLE_PERSISTENCE }}' != 'true' ]; then mvn -f kogito-examples-persistence/pom.xml versions:set-property -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}; fi"
+        bash -c "if [ '${{ env.DISABLE_PERSISTENCE }}' != 'true' ]; then mvn -f kogito-examples-persistence/pom.xml versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}; fi"
         bash -c "if [ '${{ env.DISABLE_PERSISTENCE }}' != 'true' ]; then mvn -f kogito-examples-persistence/pom.xml clean install -Ppersistence ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}; fi"
 
-        bash -c "if [ '${{ env.DISABLE_PERSISTENCE }}' != 'true' ]; then mvn -f kogito-examples-events/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}; fi"
-        bash -c "if [ '${{ env.DISABLE_PERSISTENCE }}' != 'true' ]; then mvn -f kogito-examples-events/pom.xml versions:set-property -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false; fi"
-        bash -c "if [ '${{ env.DISABLE_PERSISTENCE }}' != 'true' ]; then mvn -f kogito-examples-events/pom.xml versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false; fi"
-        bash -c "if [ '${{ env.DISABLE_PERSISTENCE }}' != 'true' ]; then mvn -f kogito-examples-events/pom.xml clean install -Pevents ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}; fi"
+        bash -c "if [ '${{ env.DISABLE_EVENTS }}' != 'true' ]; then mvn -f kogito-examples-events/pom.xml versions:set-property -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}; fi"
+        bash -c "if [ '${{ env.DISABLE_EVENTS }}' != 'true' ]; then mvn -f kogito-examples-events/pom.xml versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}; fi"
+        bash -c "if [ '${{ env.DISABLE_EVENTS }}' != 'true' ]; then mvn -f kogito-examples-events/pom.xml clean install -Pevents ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}; fi"
       upstream: |
-        mvn versions:set-property -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
-        mvn versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
-        mvn versions:set-property -Dproperty=quarkus-plugin.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
+        mvn versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
+        mvn versions:set-property -Dproperty=quarkus-plugin.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
         mvn clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_UPSTREAM }}
     clone:
       - kogito-examples
@@ -104,12 +100,12 @@ build:
   - project: kiegroup/optaplanner-quickstarts
     build-command: 
       current: |
-        mvn -f optaplanner-quickstarts/pom.xml versions:compare-dependencies -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false
-        mvn -f optaplanner-quickstarts/pom.xml versions:set-property -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
+        mvn -f optaplanner-quickstarts/pom.xml versions:compare-dependencies -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAPLANNER_QUICKSTARTS_BUILD_MVN_OPTS }}
+        mvn -f optaplanner-quickstarts/pom.xml versions:set-property -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAPLANNER_QUICKSTARTS_BUILD_MVN_OPTS }}
         mvn -f optaplanner-quickstarts/pom.xml clean install -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAPLANNER_QUICKSTARTS_BUILD_MVN_OPTS }}
       upstream: |
-        mvn versions:compare-dependencies -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false
-        mvn versions:set-property -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false
+        mvn versions:compare-dependencies -DremotePom=io.quarkus:quarkus-bom:999-SNAPSHOT -DupdatePropertyVersions=true -DupdateDependencies=true -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAPLANNER_QUICKSTARTS_BUILD_MVN_OPTS }}
+        mvn versions:set-property -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAPLANNER_QUICKSTARTS_BUILD_MVN_OPTS }}
         mvn clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env..OPTAPLANNER_QUICKSTARTS_BUILD_MVN_OPTS_UPSTREAM }}
     clone:
       - optaplanner-quickstarts
