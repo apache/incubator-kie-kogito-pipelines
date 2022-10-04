@@ -71,6 +71,14 @@ class Utils {
         return getBindingValue(script, 'ENVIRONMENT_MANDREL_BUILDER_IMAGE')
     }
 
+    static String getEnvironmentMandrelLTSBuilderImage(def script) {
+        return getBindingValue(script, 'ENVIRONMENT_MANDREL_LTS_BUILDER_IMAGE')
+    }
+
+    static String getEnvironmentMandrelLTSQuarkusVersion(def script) {
+        return getBindingValue(script, 'ENVIRONMENT_MANDREL_LTS_QUARKUS_VERSION')
+    }
+
     static boolean isEnvironmentRuntimesBDDEnabled(def script) {
         return getBindingValue(script, 'ENVIRONMENT_RUNTIMES_BDD_ENABLED').toBoolean()
     }
