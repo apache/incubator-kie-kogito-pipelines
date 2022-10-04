@@ -84,7 +84,6 @@ case $REPO in
         MODULES[1]=kogito-build-parent
         MODULES[2]=kogito-quarkus-bom
         QUARKUS_PROPERTIES[0]=version.io.quarkus
-        QUARKUS_PROPERTIES[1]=version.io.quarkus.quarkus-test
         ;;
     optaplanner)
         MODULES[0]=optaplanner-build-parent
