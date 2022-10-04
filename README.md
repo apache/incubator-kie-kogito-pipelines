@@ -50,19 +50,40 @@ More information can be found [here](./docs/nightly_and_release.md).
 
 This is a set of cleanup utils jobs.
 
-## Repositories' specific pipelines
+## Repositories' specific nightlies (environments)
 
-### Native checks
+The jenkinsfile run in those environments can be found in each repository, at path `.ci/jenkins/Jenkinsfile.specific_nightly`.
 
-In some of the Kogito repositories, you can find native checks. If that is the case, the pipeline can be found in `.ci/jenkins/Jenkinsfile.native`.
+The different environments can also be found into the [dsl branch config](./dsl/config/branch.yaml) file.  
+Here is some explanation:
 
-### Mandrel check
+- `native`  
+  Run the checks with native mode enabled and GraalVM
+- `mandrel`  
+  Run the checks with native mode enabled and [Mandrel](https://github.com/graalvm/mandrel)
+- `quarkus branch`  
+  Run the checks against current Quarkus released branch
+- `quarkus main`  
+  Run the checks against Quarkus main branch
+- `quarkus lts`  
+  Run the checks against Quarkus LTS branch
+- `mandrel lts`  
+  Run the checks against Quarkus LTS branch, with native mode enabled and [Mandrel](https://github.com/graalvm/mandrel)
 
-Quarkus and Native checks are also performed against Mandrel builder image (see config `mandrel.builder_image`).
+#### Run against integration branch (POC)
 
-### Quarkus check
+As an experimentation, due to many conflicts with `quarkus lts` and `quarkus main` branches, it has been decided to try to use an integration branch for the those nightly checks, in order to be able to resolve conflicts that my occur, but which cannot be pushed directly to the tested branch.
 
-A nightly check against Quarkus is done every night. Pipeline can be found in https://github.com/kiegroup/kogito-runtimes/blob/main/.ci/jenkins/Jenkinsfile.quarkus.
+The integration branch nightly will:
+
+- Checkout the current integration branch
+- Try to merge the last changes from the tested branch (with `-no-ff`)
+  - If any conflict, raise an error and developers will have to correct the merge conflict on the integration branch
+  - If no conflict, run the tests !
+
+
+Those new nightly jobs are currently set up as new jobs and won't replace the current ones without the integration branch.  
+Once we decide, we may remove the "old" jobs and use only the integration branch.
 
 ### PR checks
 
@@ -74,6 +95,8 @@ There is one check per downstream repository. This allows parallelization and mo
 `kogito-images` is run only on Jenkins and is using its own `.ci/jenkins/Jenkinsfile`.
 
 `kogito-operator` is run on another Jenkins and is using its own `.ci/jenkins/Jenkinsfile`.
+
+**NOTE:** PR checks are also available for the different environments listed above. Please read the PR template to know which one are available for a specific repository.
 
 #### Jenkins artifacts PR checks
 
