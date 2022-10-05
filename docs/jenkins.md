@@ -115,6 +115,22 @@ The branch config file is given to the seed job via the configuration into the m
 All values from this config file will be available to job generation as env variables.
 
 ```yaml
+# Allow to disable job types
+# This is useful in testing to avoid to generate all jobs
+# Current jobtype can be found in ../dsl/seed/src/main/groovy/org/kie/jenkins/jobdsl/model/JobType.groovy
+# job_types:
+  # init-branch:
+  #   disabled: true
+  # nightly:
+  #   disabled: true
+  # other:
+  #   disabled: true
+  # pullrequest:
+  #   disabled: true
+  # release:
+  #   disabled: true
+  # tools:
+  #   disabled: true
 # Define the different environments
 environment:
   quarkus:
@@ -126,20 +142,20 @@ environment:
     lts:
       enabled: true
       version: '2.7'
-
   native:
     enabled: true
-
   mandrel:
     enabled: true
     builder_image: quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11
-
+  mandrel_lts:
+    enabled: true
   runtimes_bdd:
     enabled: true
 
 productized_branch: true
 
-# 
+# Used to force the disabling of triggers
+# Useful when a branch is no more maintained but you still want to keep job history
 disable:
   triggers: true
 

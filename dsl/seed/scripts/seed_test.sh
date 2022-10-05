@@ -12,7 +12,7 @@
 
 script_dir_path=$(cd `dirname "${BASH_SOURCE[0]}"`; pwd -P)
 
-pipelines_final_dir=`mktemp -d`
+pipelines_final_dir=${PIPELINES_TEST_DIR:-$(mktemp -d)}
 GIT_SERVER='github.com'
 
 usage() {

@@ -113,12 +113,13 @@ class KogitoJobUtils {
             jobParams.env.put('FILEPATH_REPLACE_REGEX', JsonOutput.toJson(filepathReplaceRegex))
         }
         def job = KogitoJobTemplate.createPipelineJob(script, jobParams)
-        return job.with {
+        job?.with {
             parameters {
                 stringParam('NEW_VERSION', '', 'Which version to set ?')
                 stringParam('PR_BRANCH', '', '(Optional) Which PR branch name to use ? If none given, a name will be generated automatically.')
             }
         }
+        return job
     }
 
     /**
@@ -153,12 +154,14 @@ class KogitoJobUtils {
             SEED_BRANCH: Utils.getSeedBranch(script),
             SEED_AUTHOR_CREDS_ID: Utils.getSeedAuthorCredsId(script)
         ])
-        KogitoJobTemplate.createPipelineJob(script, jobParams)?.with {
+        def job = KogitoJobTemplate.createPipelineJob(script, jobParams)
+        job?.with {
             parameters {
                 stringParam('NEW_VERSION', '', 'Which version to set ?')
                 stringParam('PR_BRANCH', '', '(Optional) Which PR branch name to use ? If none given, a name will be generated automatically.')
             }
         }
+        return job
     }
 
     static List createAllEnvsPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {

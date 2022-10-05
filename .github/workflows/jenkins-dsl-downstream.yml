@@ -14,6 +14,9 @@ jobs:
   # Kogito
   #############################################################################
   getKogitoDslDownstreamMatrix:
+    concurrency:
+      group: kogito_pipelines_pr-dsl_kogito_downstream_matrix-${{ github.head_ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     name: Get Kogito DSL downstream projects
     outputs:
@@ -136,6 +139,9 @@ jobs:
           echo "::set-output name=repositories::$matrixStringifiedObject"
 
   runKogitoDownstreamDslTests:
+    concurrency:
+      group: kogito_pipelines_pr-dsl_kogito_downstream_${{ matrix.repository }}_tests-${{ github.head_ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     needs: getKogitoDslDownstreamMatrix
     strategy:
@@ -163,13 +169,16 @@ jobs:
           main-config-file-repo: kiegroup/kogito-pipelines
           main-config-file-ref: main
           main-config-file-path: dsl/config/main.yaml
-          branch-config-branch: ${{ github.base_ref }}
+          branch-config-name: ${{ github.base_ref }}
           base-branch: ${{ env.BASE_BRANCH }}
 
   #############################################################################
   # Optaplanner
   #############################################################################
   getOptaPlannerDslDownstreamMatrix:
+    concurrency:
+      group: kogito_pipelines_pr-dsl_optaplanner_downstream_matrix-${{ github.head_ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     name: Get OptaPlanner DSL downstream projects
     outputs:
@@ -304,6 +313,9 @@ jobs:
     strategy:
       matrix: ${{fromJson(needs.getOptaPlannerDslDownstreamMatrix.outputs.matrix)}}
       fail-fast: false
+    concurrency:
+      group: kogito_pipelines_pr-dsl_optaplanner_downstream_${{ matrix.repository }}_tests-${{ github.head_ref }}
+      cancel-in-progress: true
     name: OptaPlanner DSL Downstream tests - ${{ matrix.repository }}
     steps:
       - name: Setup default base branch
@@ -322,5 +334,5 @@ jobs:
           main-config-file-repo: kiegroup/optaplanner
           main-config-file-ref: main
           main-config-file-path: .ci/jenkins/config/main.yaml
-          branch-config-branch: ${{ github.base_ref }}
+          branch-config-name: ${{ github.base_ref }}
           base-branch: ${{ env.BASE_BRANCH }}

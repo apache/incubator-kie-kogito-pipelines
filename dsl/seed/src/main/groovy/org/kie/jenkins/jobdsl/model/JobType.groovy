@@ -5,57 +5,53 @@ import org.kie.jenkins.jobdsl.Utils
 /*
 * JobType corresponds to a type of job.
 *
-* Also a job type can be optional.
 * So a job type can be disabled and the closture `isActiveClosure` should be initialized else it returns `true` by default.
 */
 class JobType {
 
     public static final JobType INIT_BRANCH = new JobType(
-        name: 'INIT_BRANCH',
+        name: 'init-branch',
         isActiveClosure: { script -> !Utils.isMainBranch(script) },
     )
-    public static final JobType PULLREQUEST = new JobType(
-        name: 'PULLREQUEST',
-    )
     public static final JobType NIGHTLY = new JobType(
-        name: 'NIGHTLY',
-        optional: true,
+        name: 'nightly',
+    )
+    public static final JobType OTHER = new JobType(
+        name: 'other'
+    )
+    public static final JobType PULLREQUEST = new JobType(
+        name: 'pullrequest',
     )
     public static final JobType RELEASE = new JobType(
-        name: 'RELEASE',
-        optional: true,
+        name: 'release',
         isActiveClosure: { script -> !Utils.isMainBranch(script) },
     )
     public static final JobType TOOLS = new JobType(
-        name: 'TOOLS'
-    )
-    public static final JobType OTHER = new JobType(
-        name: 'OTHER'
+        name: 'tools'
     )
 
     String name
-    boolean optional
     Closure isActiveClosure
 
     String toName() {
-        return this.name.toLowerCase().replaceAll('_', '-')
-    }
-
-    boolean isOptional() {
-        return this.optional
+        return this.name
     }
 
     boolean isActive(def script) {
-        return !this.isOptional() || (this.isActiveClosure ? this.isActiveClosure(script) : true)
+        return this.isActiveByConfig(script) && (this.isActiveClosure ? this.isActiveClosure(script) : true)
+    }
+
+    private boolean isActiveByConfig(def script) {
+        return !Utils.isJobTypeDisabled(script, this.name)
     }
 
     private static Set<JobType> JOB_TYPES = [
         INIT_BRANCH,
-        PULLREQUEST,
         NIGHTLY,
+        OTHER,
+        PULLREQUEST,
         RELEASE,
         TOOLS,
-        OTHER
     ]
 
     static void register(JobType jobType) {

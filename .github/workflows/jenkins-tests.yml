@@ -13,6 +13,9 @@ on:
 
 jobs:
   jenkinsfile-tests:
+    concurrency:
+      group: kogito_pipelines_pr-jenkins_tests-${{ github.head_ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     name: Jenkinsfiles
     steps:
