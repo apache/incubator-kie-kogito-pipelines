@@ -15,7 +15,7 @@ jobs:
   #############################################################################
   getKogitoDslDownstreamMatrix:
     concurrency:
-      group: kogito_pipelines_pr-dsl_kogito_downstream_matrix-${{ github.head_ref }}
+      group: ${{ github.repository.name }}-dsl_kogito_downstream_matrix-${{ github.head_ref }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
     name: Get Kogito DSL downstream projects
@@ -35,7 +35,7 @@ jobs:
           yq --version
 
       - name: Checkout Main Config repo from main branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: kiegroup/kogito-pipelines
           ref: main
@@ -98,7 +98,7 @@ jobs:
 
       - name: Checkout branch config repo
         if: ${{ env.BRANCH_CONFIG_UNKNOWN != 'true' }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ env.BRANCH_CONFIG_GIT_AUTHOR }}/${{ env.BRANCH_CONFIG_GIT_REPOSITORY }}
           ref: ${{ env.BRANCH_CONFIG_GIT_BRANCH }}
@@ -109,10 +109,9 @@ jobs:
         working-directory: branch_config_repo
         run: |
           matrixArray=''
-          defaultAuthor=kiegroup
+          defaultAuthor=${{ github.event.pull_request.head.user.login }}
           if [ "${{ env.BRANCH_CONFIG_UNKNOWN }}" != "true" ]; then
             matrixArray=$(yq '.repositories[].name' ${{ env.BRANCH_CONFIG_PATH }}) # Creates array of all repositories
-            defaultAuthor=$(yq '.git.author.name' ${{ env.BRANCH_CONFIG_PATH }})
           fi
 
           fullArray=()
@@ -135,12 +134,11 @@ jobs:
           cat ./tmp
 
           # End Generate Json String
-          matrixStringifiedObject=$(cat ./tmp) # Use this as jq @sh wasn't cooperating
-          echo "::set-output name=repositories::$matrixStringifiedObject"
+          echo "repositories=$(cat ./tmp)" >> $GITHUB_OUTPUT # Use this as jq @sh wasn't cooperating
 
   runKogitoDownstreamDslTests:
     concurrency:
-      group: kogito_pipelines_pr-dsl_kogito_downstream_${{ matrix.repository }}_tests-${{ github.head_ref }}
+      group: ${{ github.repository.name }}-dsl_kogito_downstream_${{ matrix.repository }}_tests-${{ github.head_ref }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
     needs: getKogitoDslDownstreamMatrix
@@ -177,7 +175,7 @@ jobs:
   #############################################################################
   getOptaPlannerDslDownstreamMatrix:
     concurrency:
-      group: kogito_pipelines_pr-dsl_optaplanner_downstream_matrix-${{ github.head_ref }}
+      group: ${{ github.repository.name }}-dsl_optaplanner_downstream_matrix-${{ github.head_ref }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
     name: Get OptaPlanner DSL downstream projects
@@ -201,7 +199,7 @@ jobs:
           yq --version
 
       - name: Checkout Main Config repo from main branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: kiegroup/optaplanner
           ref: main
@@ -266,7 +264,7 @@ jobs:
 
       - name: Checkout branch config repo
         if: ${{ env.BRANCH_CONFIG_UNKNOWN != 'true' }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: ${{ env.BRANCH_CONFIG_GIT_AUTHOR }}/${{ env.BRANCH_CONFIG_GIT_REPOSITORY }}
           ref: ${{ env.BRANCH_CONFIG_GIT_BRANCH }}
@@ -277,10 +275,9 @@ jobs:
         working-directory: branch_config_repo
         run: |
           matrixArray=''
-          defaultAuthor=kiegroup
+          defaultAuthor=${{ github.event.pull_request.head.user.login }}
           if [ "${{ env.BRANCH_CONFIG_UNKNOWN }}" != "true" ]; then
             matrixArray=$(yq '.repositories[].name' ${{ env.BRANCH_CONFIG_PATH }}) # Creates array of all repositories
-            defaultAuthor=$(yq '.git.author.name' ${{ env.BRANCH_CONFIG_PATH }})
           fi
 
           fullArray=()
@@ -303,8 +300,7 @@ jobs:
           cat ./tmp
 
           # End Generate Json String
-          matrixStringifiedObject=$(cat ./tmp) # Use this as jq @sh wasn't cooperating
-          echo "::set-output name=repositories::$matrixStringifiedObject"
+          echo "repositories=$(cat ./tmp)" >> $GITHUB_OUTPUT # Use this as jq @sh wasn't cooperating
 
 
   runOtaPlannerDownstreamDslTests:
@@ -314,7 +310,7 @@ jobs:
       matrix: ${{fromJson(needs.getOptaPlannerDslDownstreamMatrix.outputs.matrix)}}
       fail-fast: false
     concurrency:
-      group: kogito_pipelines_pr-dsl_optaplanner_downstream_${{ matrix.repository }}_tests-${{ github.head_ref }}
+      group: ${{ github.repository.name }}-dsl_optaplanner_downstream_${{ matrix.repository }}_tests-${{ github.head_ref }}
       cancel-in-progress: true
     name: OptaPlanner DSL Downstream tests - ${{ matrix.repository }}
     steps:
