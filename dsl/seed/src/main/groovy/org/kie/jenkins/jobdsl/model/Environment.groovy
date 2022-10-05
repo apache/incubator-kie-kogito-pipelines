@@ -90,9 +90,9 @@ class Environment {
         getDefaultEnvVarsClosure: { script ->
             [
                 NATIVE: 'true',
-                NATIVE_BUILDER_IMAGE: Utils.getEnvironmentMandrelBuilderImage(script),
+                NATIVE_BUILDER_IMAGE: Utils.getEnvironmentMandrelLTSBuilderImage(script),
                 ADDITIONAL_TIMEOUT: 720,
-                QUARKUS_BRANCH: Utils.getEnvironmentQuarkusLTSVersion(script),
+                QUARKUS_BRANCH: Utils.getEnvironmentMandrelLTSQuarkusVersion(script),
                 BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
                 DISABLE_PERSISTENCE: 'true',
                 DISABLE_EVENTS: 'true',
