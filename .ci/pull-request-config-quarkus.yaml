@@ -68,9 +68,9 @@ build:
   - project: kiegroup/kogito-examples
     build-command: 
       current: |
-        mvn -f kogito-examples/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
         mvn -f kogito-examples/pom.xml versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
         mvn -f kogito-examples/pom.xml versions:set-property -Dproperty=quarkus-plugin.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}
+        mvn -f kogito-examples/pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
 
         bash -c "if [ '${{ env.DISABLE_PERSISTENCE }}' != 'true' ]; then mvn -f kogito-examples-persistence/pom.xml versions:set-property -Dproperty=version.io.quarkus -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}; fi"
         bash -c "if [ '${{ env.DISABLE_PERSISTENCE }}' != 'true' ]; then mvn -f kogito-examples-persistence/pom.xml versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=999-SNAPSHOT -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}; fi"
