@@ -27,7 +27,7 @@ pipeline {
                 script {
                     checkout scm
 
-                    String projectListStr = getEcosystemProjects().collect { it.name }.collect { "${getRepoNameCamelCase(it)} ${getVersionFromRepository(it)}" }.join(' / ')
+                    String projectListStr = getEcosystemProjects().collect { "${getRepoNameCamelCase(it.name)} ${getVersionFromRepository(it.name)}" }.join(' / ')
                     currentBuild.displayName = "Cut-Off ${projectListStr}"
 
                     sendNotification("Cut-off for ${projectListStr} has started...\n=> ${env.BUILD_URL}")
