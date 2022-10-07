@@ -21,7 +21,7 @@ pipeline {
     }
 
     options {
-        timeout(time: 180, unit: 'MINUTES')
+        timeout(time: 360, unit: 'MINUTES')
     }
 
     // parameters {
@@ -167,6 +167,19 @@ pipeline {
                 }
             }
         }
+        stage('Init Docs') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    buildJob('kogito-docs', buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage('kogito-docs')
+                }
+            }
+        }
     }
     post {
         unsuccessful {
@@ -210,7 +223,7 @@ void addUnstableStage(String jobKey = '') {
 }
 
 void sendPipelineErrorNotification() {
-    String bodyMsg = "Kogito init job #${BUILD_NUMBER} was: ${currentBuild.currentResult}"
+    String bodyMsg = "Kogito setup branch job #${BUILD_NUMBER} was: ${currentBuild.currentResult}"
 
     if (FAILED_STAGES.size()) {
         bodyMsg += '\nFailed stages: \n- '
@@ -223,7 +236,7 @@ void sendPipelineErrorNotification() {
     }
     bodyMsg += '\n'
     bodyMsg += "\nPlease look here: ${BUILD_URL}"
-    emailext body: bodyMsg, subject: "[${getBuildBranch()}][d] Init Pipeline",
+    emailext body: bodyMsg, subject: "[${getBuildBranch()}][d] Setup branch",
                 to: env.KOGITO_CI_EMAIL_TO
 }
 
@@ -276,11 +289,11 @@ String getGitAuthor() {
 }
 
 String getDroolsVersion() {
-    return getVersionFromReleaseBranch(util.calculateTargetReleaseBranch(getBuildBranch(), 7))
+    return params.DROOLS_VERSION ?: getVersionFromReleaseBranch(util.calculateTargetReleaseBranch(getBuildBranch(), 7))
 }
 
 String getKogitoVersion() {
-    return getVersionFromReleaseBranch(getBuildBranch())
+    return params.KOGITO_VERSION ?: getVersionFromReleaseBranch(getBuildBranch())
 }
 
 String getVersionFromReleaseBranch(String releaseBranch, int microVersion = 0, String suffix = 'SNAPSHOT') {
