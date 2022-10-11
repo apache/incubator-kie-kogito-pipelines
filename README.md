@@ -149,3 +149,15 @@ Any message / error is sent to [kogito-ci](https://kie.zulipchat.com/#narrow/str
 ### Format
 
     [branch] Project
+    
+# Contributing / Opening issues
+
+The work on the pipelines has been separated into different epics:
+
+- [KOGITO-8034](https://issues.redhat.com/browse/KOGITO-8034) Kogito Pipelines maintenance / small changes
+- [KOGITO-8037](https://issues.redhat.com/browse/KOGITO-8037) Kogito Pipelines improvements for the release pipeline
+- [KOGITO-8038](https://issues.redhat.com/browse/KOGITO-8038) Kogito Pipelines improvements for the PR and nightly checks
+- [KOGITO-8036](https://issues.redhat.com/browse/KOGITO-8036) Kogito Pipelines infrastructure tasks
+- [KOGITO-8035](https://issues.redhat.com/browse/KOGITO-8035) Kogito Pipelines pipelines ideas / nice to have
+
+Please use one of those epics if you create any issue.
