@@ -130,16 +130,20 @@ pipeline {
             steps {
                 script {
                     dir(getRepoName()) {
-                        String commitMsg = "[${getBuildBranch()}] Bump ${getDependencyName()} version to ${getNewVersion()}"
-                        githubscm.commitChanges(commitMsg)
-                        githubscm.pushObject('origin', getPRBranch(), getGitAuthorCredsId())
+                        if (githubscm.isThereAnyChanges()) {
+                            String commitMsg = "[${getBuildBranch()}] Bump ${getDependencyName()} version to ${getNewVersion()}"
+                            githubscm.commitChanges(commitMsg)
+                            githubscm.pushObject('origin', getPRBranch(), getGitAuthorCredsId())
 
-                        if (branchCreated) {
-                            String prLink = githubscm.createPR(commitMsg, 'Please review and merge', getBuildBranch(), getGitAuthorCredsId())
-                            echo "Created PR ${prLink}"
-                            sendNotification("PR was created to update ${getDependencyName()} version to ${getNewVersion()}.\nPlease review and merge ${prLink}")
+                            if (branchCreated) {
+                                String prLink = githubscm.createPR(commitMsg, 'Please review and merge', getBuildBranch(), getGitAuthorCredsId())
+                                echo "Created PR ${prLink}"
+                                sendNotification("PR was created to update ${getDependencyName()} version to ${getNewVersion()}.\nPlease review and merge ${prLink}")
+                            } else {
+                                echo "Branch ${getPRBranch()} was already created so assuming the PR exists alrerady ..."
+                            }
                         } else {
-                            echo "Branch ${getPRBranch()} was already created so assuming the PR exists alrerady ..."
+                            println '[WARN] no changes to commit'
                         }
                     }
                 }
