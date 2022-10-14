@@ -186,9 +186,10 @@ void setupUpdateQuarkusPlatformJob() {
     KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(this, jobParams)
     jobParams.env.putAll([
             JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
-            PIPELINES_BRANCH_NAME: "${GIT_BRANCH}",
-            QUARKUS_BRANCH_NAME: 'main',
+            BUILD_BRANCH_NAME: "${GIT_BRANCH}",
+            QUARKUS_PLATFORM_BRANCH_NAME: 'main',
             PROJECT_NAME: 'kogito',
+            NOTIFICATION_JOB_NAME: 'Kogito',
             FORK_GIT_AUTHOR: "${GIT_FORK_AUTHOR}",
             FORK_GIT_AUTHOR_CREDS_ID: "${GIT_FORK_AUTHOR_CREDENTIALS_ID}",
     ])
