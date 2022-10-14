@@ -3,12 +3,12 @@
 ### This script should be launch by any dependent DSL scripts generation repo for local testing of changes
 ### Ideal dependent repo should have a `local_test.sh` script located in `.ci/jenkins/dsl` folder
 ### With that implementation:
-#!/bin/bash -e
-#file=$(mktemp)
-## For more usage of the script, use ./test.sh -h
-#curl -o ${file} https://raw.githubusercontent.com/kiegroup/kogito-pipelines/main/dsl/seed/scripts/seed_test.sh
-#chmod u+x ${file}
-#${file} $@
+# #!/bin/bash -e
+# file=$(mktemp)
+# # For more usage of the script, use ./test.sh -h
+# curl -o ${file} https://raw.githubusercontent.com/kiegroup/kogito-pipelines/main/dsl/seed/scripts/seed_test.sh
+# chmod u+x ${file}
+# ${file} $@
 
 script_dir_path=$(cd `dirname "${BASH_SOURCE[0]}"`; pwd -P)
 GIT_SERVER='github.com'
