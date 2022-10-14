@@ -2,8 +2,15 @@ name: 'DSL tests'
 description: 'Tests DSL generation'
 inputs:
   repository:
-    description: author/repository to check
+    description: author/repository to test
     required: false
+  reference:
+    description: reference to test
+    required: false
+  jobs-folder-path:
+    description: folder path where to find the jobs.groovy file
+    required: false
+    default: .ci/jenkins/dsl
   main-config-file-repo:
     description: author/repository to find the main config file
     required: false
@@ -13,10 +20,6 @@ inputs:
   main-config-file-path:
     description: path to find the main config file
     required: false
-  branch-config-branch:
-    description: branch config branch to look for
-    required: false
-    deprecationMessage: Please use the `branch-config-name` input instead
   branch-config-name:
     description: branch config name to look for
     required: false
@@ -24,10 +27,6 @@ inputs:
     description: base branch for the checks
     required: false
     default: ''
-  jobs-folder-path:
-    description: folder path where to find the jobs.groovy file
-    required: false
-    default: .ci/jenkins/dsl
   save-results:
     description: whether results of testing should be saved. Default to true.
     required: false
@@ -42,7 +41,7 @@ runs:
       java-version: 11
 
   - name: Checkout Seed repo
-    uses: actions/checkout@v2
+    uses: actions/checkout@v3
     with:
       repository: kiegroup/kogito-pipelines
       ref: main
@@ -63,23 +62,31 @@ runs:
       echo "Using pipelines test dir ${pipelines_test_dir}"
       echo "PIPELINES_TEST_DIR=${pipelines_test_dir}" >> $GITHUB_ENV
 
+  - name: Checkout current repo
+    uses: actions/checkout@v3
+    with:
+      path: dsl-tests-dir
+
   - name: Test DSL
     shell: bash
-    working-directory: seed_repo
+    working-directory: dsl-tests-dir
     env:
-      DSL_DEFAULT_REPOSITORY: ${{ inputs.repository }}
+      DSL_DEFAULT_TEST_REPO: ${{ inputs.repository }}
+      DSL_DEFAULT_TEST_REF: ${{ inputs.reference }}
+
       DSL_DEFAULT_MAIN_CONFIG_FILE_REPO: ${{ inputs.main-config-file-repo }}
       DSL_DEFAULT_MAIN_CONFIG_FILE_REF: ${{ inputs.main-config-file-ref }}
       DSL_DEFAULT_MAIN_CONFIG_FILE_PATH: ${{ inputs.main-config-file-path }}
+
       DSL_DEFAULT_BRANCH_CONFIG_NAME: ${{ inputs.branch-config-name }}
-      DSL_DEFAULT_BRANCH_CONFIG_BRANCH: ${{ inputs.branch-config-branch }}
-      PIPELINES_TEST_DIR: ${{ env.PIPELINES_TEST_DIR }}
+
+      DSL_DEFAULT_FALLBACK_PIPELINES_REF: ${{ env.BASE_BRANCH }}
+      DSL_DEFAULT_PIPELINES_TEST_DIR: ${{ env.PIPELINES_TEST_DIR }}
+
+      DSL_DEFAULT_CURRENT_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+      DSL_DEFAULT_CURRENT_REF: ${{ github.event.pull_request.head.ref }}
     run: |
-      dsl/seed/scripts/seed_test.sh -h ${{ github.head_ref }} \
-              -r ${{ github.event.pull_request.head.repo.full_name }} \
-              -b ${{ env.BASE_BRANCH }} \
-              -t ${{ github.event.pull_request.base.repo.full_name }} \
-              ${{ inputs.jobs-folder-path }}
+      ${GITHUB_WORKSPACE}/seed_repo/dsl/seed/scripts/seed_test.sh ${{ inputs.jobs-folder-path }}
   
   - name: Setup upload artifact name
     if: ${{ always() && inputs.save-results }}
