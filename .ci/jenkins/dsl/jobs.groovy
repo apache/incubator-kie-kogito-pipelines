@@ -12,6 +12,7 @@ setupKogitoRuntimesBDDPrJob()
 setupCreateIssueToolsJob()
 setupCleanOldNamespacesToolsJob()
 setupCleanOldNightlyImagesToolsJob()
+setupUpdateQuarkusPlatformJob()
 KogitoJobUtils.createMainQuarkusUpdateToolsJob(this, 'Kogito Pipelines', [ 'drools', 'kogito-runtimes', 'kogito-examples', 'kogito-docs' ])
 if (Utils.isMainBranch(this)) {
     setupBuildOperatorNode()
@@ -178,4 +179,18 @@ void setupReleaseJob() {
 void setupBuildOperatorNode() {
     def jobParams = KogitoJobUtils.getBasicJobParams(this, 'build-operator-node', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.build-operator-node")
     KogitoJobTemplate.createPipelineJob(this, jobParams)
+}
+
+void setupUpdateQuarkusPlatformJob() {
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'update-quarkus-platform', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.update-quarkus-platform", 'Update kogito in quarkus-platform')
+    jobParams.env.putAll([
+            JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+            GIT_BRANCH_NAME: "${GIT_BRANCH}",
+    ])
+    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
+        parameters {
+            stringParam('KOGITO_VERSION', '', 'Kogito version to upgrade as Major.minor.micro.Final')
+            choiceParam('COMMAND', ['stage', 'finalize'], 'Choose if you want to use staged artifacts or released artifacts.')
+        }
+    }
 }
