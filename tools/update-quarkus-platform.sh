@@ -6,7 +6,7 @@ GITHUB_URL="https://github.com/"
 GITHUB_URL_SSH="git@github.com:"
 
 VERSION=
-PROJECT=kogito
+PROJECT=
 DRY_RUN=false
 BASE_BRANCH=main
 PR_BRANCH=
@@ -19,7 +19,7 @@ usage() {
     echo
     echo 'Options:'
     echo '  -v $VERSION          set version'
-    echo '  -p project           `kogito` or `optaplanner`. Default is kogito.'
+    echo '  -p project           `kogito` or `optaplanner`.'
     echo '  -f $FORK             GH account where the branch should be pushed'
     echo '  -s                   Use SSH to connect to GitHub'
     echo '  -b $BASE_BRANCH      Quarkus Platform branch (optional. Default is `main`)'
@@ -86,6 +86,13 @@ in
 
         exit 2
 esac
+
+if [ -z "$PROJECT" ]; then
+    >&2 echo ERROR: no project specified.
+    usage
+
+    exit 2
+fi
 
 if [ -z "$VERSION" ]; then
     >&2 echo ERROR: no version specified.

@@ -1,33 +1,26 @@
+import org.jenkinsci.plugins.workflow.libs.Library
 @Library('jenkins-pipeline-shared-libraries')_
 
-import org.jenkinsci.plugins.workflow.libs.Library
 import org.kie.jenkins.MavenCommand
 
 AGENT_LABEL="kie-rhel7 && kie-mem8g && !built-in"
-MVN_TOOL="kie-maven-3.8.6"
-JDK_TOOL="kie-jdk11"
-VERSION="${params.KOGITO_VERSION}"
-COMMAND="${params.COMMAND}"
-PROJECT='kogito'
-FORK_GIT_AUTOR='kie-ci'
-pipelinesBaseBranch="${env.GIT_BRANCH_NAME}"
-quarkusBaseBranch='main'
 kogitoPipelinesRepo="kogito-pipelines"
 quarkusPlatformRepo="quarkus-platform"
 
 pipeline {
 
     agent {
-        label "$AGENT_LABEL"
+        label "${AGENT_LABEL}"
     }
 
     options{
         timestamps()
+        timeout(time: 60, unit: 'MINUTES')
     }
 
     tools {
-        maven "$MVN_TOOL"
-        jdk "$JDK_TOOL"
+        maven "${BUILD_MAVEN_TOOL}"
+        jdk "${BUILD_JDK_TOOL}"
     }
 
     stages{
@@ -36,18 +29,23 @@ pipeline {
                 cleanWs()
             }
         }
-		stage('clone kogito-pipelines') {
+		stage('Initialize') {
 			steps{
 				script{
                     dir(kogitoPipelinesRepo){
-                        checkoutRepo(kogitoPipelinesRepo, 'kiegroup', pipelinesBaseBranch)
+                        checkoutRepo(kogitoPipelinesRepo, 'kiegroup', env.PIPELINES_BRANCH_NAME)
+                    }
+
+                    dir(quarkusPlatformRepo){
+                        checkoutRepo(quarkusPlatformRepo, 'quarkusio', env.QUARKUS_BRANCH_NAME)
+                        githubscm.forkRepo()
                     }
 				}
 			}
 		}
-        stage('clone quarkus-platform and update kogito version: stage') {
+        stage('stage') {
 			when {
-				expression {COMMAND	== 'stage'}
+				expression { getCommand() == 'stage' }
 			}
             steps {
                 script {
@@ -55,49 +53,49 @@ pipeline {
                     String commitMsg = getCommitMessage()
                     String localBranch = getLocalBranchName()
                     dir(quarkusPlatformRepo){
-                        checkoutRepo(quarkusPlatformRepo, 'quarkusio', quarkusBaseBranch)
-                        githubscm.forkRepo()
                         githubscm.createBranch(localBranch)
                         // run update-quarkus-platform.sh with 'stage'
-                        sh "../${kogitoPipelinesRepo}/tools/update-quarkus-platform.sh -s -v ${VERSION} -f ${FORK_GIT_AUTOR} -h ${localBranch} -n -r ${COMMAND}"
+                        sh "${WORKSPACE}/${kogitoPipelinesRepo}/tools/update-quarkus-platform.sh -p ${getProjectName()} -s -v ${getNewVersion()} -f ${FORK_GIT_AUTHOR} -h ${localBranch} -n -r ${getCommand()}"
+                        
                         sh "git status"
+
                         // Add changed files, commit and open PR
-                        prLink = commitAndCreatePR(commitMsg, { sh "git add --all" }, localBranch, quarkusBaseBranch)
+                        prLink = commitAndCreatePR(commitMsg, { sh "git add --all" }, localBranch, env.QUARKUS_BRANCH_NAME)
                     }
                 }
             }
         }
-        stage('update kogito version: finalize') {
+        stage('finalize') {
 			when {
-				expression {COMMAND	== 'finalize'}
+				expression { getCommand() == 'finalize' }
 			}
             steps {
                 script {
                     String commitMsg = getCommitMessage()
                     String localBranch = getLocalBranchName()
                     dir(quarkusPlatformRepo){
-                        checkoutRepo(quarkusPlatformRepo, 'quarkusio', quarkusBaseBranch)
-                        githubscm.forkRepo()
                         sh "git fetch origin"
                         sh "git checkout ${localBranch}"
+                        
                         // run update-quarkus-platform.sh with 'finalize'
-                        sh "../${kogitoPipelinesRepo}/tools/update-quarkus-platform.sh -s -d -v ${VERSION} -f ${FORK_GIT_AUTOR} -h ${localBranch} -n -r ${COMMAND}"
-                        // squash commits
-                        branchName = sh (script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
-                        mergeName = sh (script: "git merge-base main ${branchName}", returnStdout: true).trim()
-                        sh "git reset ${mergeName}"
-                        sh "git add -A"
-                        sh "git commit -m \"${commitMsg}\" "
-                        withCredentials([usernamePassword(credentialsId: ${FORK_GIT_AUTOR}, usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')]) {
-                            githubscm.setUserConfig(FORK_GIT_AUTOR)
-                            sh("git config --local credential.helper \"!f() { echo username=\\$GITHUB_USER; echo password=\\$GITHUB_TOKEN; }; f\"")
-                            sh "git push --force-with-lease"
-                        }
+                        sh "${WORKSPACE}/${kogitoPipelinesRepo}/tools/update-quarkus-platform.sh -p ${getProjectName()} -s -d -v ${getNewVersion()} -f ${FORK_GIT_AUTHOR} -h ${localBranch} -n -r ${getCommand()}"
+                        
+                        squashCommits(env.QUARKUS_BRANCH_NAME, commitMsg)
+
+                        githubscm.pushObject('--force-with-lease origin', localBranch, "${FORK_GIT_AUTHOR_CREDS_ID}")
                     }
                 }
             }
         }
     }
+}
+
+def squashCommits(String baseBranch, String newCommitMsg) {
+    String branchName = sh (script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+    String mergeName = sh (script: "git merge-base ${baseBranch} ${branchName}", returnStdout: true).trim()
+    sh "git reset ${mergeName}"
+    sh "git add -A"
+    sh "git commit -m \"${commitMsg}\" "
 }
 
 String commitAndCreatePR(String commitMsg, Closure precommit, String localBranch, String targetBranch) {
@@ -114,9 +112,21 @@ void checkoutRepo(String repo, String GIT_AUTHOR, String branch) {
 }
 
 String getCommitMessage() {
-    return "bump up ${PROJECT} to ${VERSION}"
+    return "Bump up ${getProjectName()} to ${getNewVersion()}"
 }
 
 String getLocalBranchName() {
-    return "bump-${PROJECT}-${VERSION}"
+    return params.PR_BRANCH ?: "bump-${getProjectName()}-${getNewVersion()}"
+}
+
+String getNewVersion() {
+    return params.NEW_VERSION
+}
+
+String getCommand() {
+    return params.COMMAND
+}
+
+String getProjectName() {
+    return env.PROJECT_NAME
 }
