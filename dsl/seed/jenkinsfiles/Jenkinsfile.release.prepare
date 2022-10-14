@@ -146,7 +146,7 @@ pipeline {
                     steps {
                         script {
                             String newBranch = getBranchConfigReleaseBranch()
-                            sendNotification("Waiting for setup branch job on newly created release branch '${newBranch}' and calling it once available.\nPlease wait for it to be successful before any action on the release branch...")
+                            sendNotification("Waiting for setup branch job on newly created release branch '${newBranch}' and calling it once available.\n**Please wait for the job to be successful before performing any action on the release branch...**")
                             List buildParams = []
                             def job = [:]
                             try {
@@ -177,7 +177,7 @@ pipeline {
                         script {
                             String mainBranch = getMainBranchConfigFileGitBranch()
                             if (mainBranch) {
-                                sendNotification("Calling setup branch job on main branch.\nPlease wait for it to be successful before any action on the main branch...")
+                                sendNotification("Calling setup branch job on main branch.\n**Please wait for the job to be successful before performing any action on the main branch...**")
 
                                 List buildParams = []
                                 for (def project : getEcosystemProjects()) {
