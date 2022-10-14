@@ -39,6 +39,8 @@ pipeline {
 		stage('Initialize') {
 			steps{
 				script{
+                    sh 'printenv'
+                    
                     dir(kogitoPipelinesRepo){
                         checkoutRepo(kogitoPipelinesRepo, 'kiegroup', getBuildBranch())
                     }
