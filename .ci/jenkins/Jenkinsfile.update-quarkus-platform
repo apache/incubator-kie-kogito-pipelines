@@ -107,6 +107,7 @@ pipeline {
                         squashCommits(getQuarkusPlatformBranch(), commitMsg)
 
                         githubscm.pushObject('--force-with-lease origin', localBranch, "${FORK_GIT_AUTHOR_CREDS_ID}")
+                        sendNotification("PR was finalized with ${getProjectName()} to version ${getNewVersion()}.")
                     }
                 }
             }
@@ -149,7 +150,7 @@ def squashCommits(String baseBranch, String newCommitMsg) {
     String mergeName = sh (script: "git merge-base ${baseBranch} ${branchName}", returnStdout: true).trim()
     sh "git reset ${mergeName}"
     sh "git add -A"
-    sh "git commit -m \"${commitMsg}\" "
+    sh "git commit -m \"${newCommitMsg}\" "
 }
 
 void checkoutRepo(String repo, String GIT_AUTHOR, String branch) {
@@ -160,7 +161,7 @@ void checkoutRepo(String repo, String GIT_AUTHOR, String branch) {
 
 void sendNotification(String body) {
     emailext body: "${body}",
-             subject: "[${getBuildBranch()}] ${getNotificationJobName()}",
+             subject: "[${getBuildBranch()}] Quarkus Platform update",
              to: env.KOGITO_CI_EMAIL_TO
 }
 
@@ -190,10 +191,6 @@ String getProjectName() {
 
 String getBuildBranch() {
     return env.BUILD_BRANCH_NAME
-}
-
-String getNotificationJobName() {
-    return env.NOTIFICATION_JOB_NAME
 }
 
 String getQuarkusPlatformBranch() {
