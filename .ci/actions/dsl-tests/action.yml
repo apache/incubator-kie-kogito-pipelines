@@ -4,9 +4,6 @@ inputs:
   repository:
     description: author/repository to test
     required: false
-  reference:
-    description: reference to test
-    required: false
   jobs-folder-path:
     description: folder path where to find the jobs.groovy file
     required: false
@@ -14,14 +11,14 @@ inputs:
   main-config-file-repo:
     description: author/repository to find the main config file
     required: false
-  main-config-file-ref:
-    description: reference to find the main config file
-    required: false
   main-config-file-path:
     description: path to find the main config file
     required: false
-  branch-config-name:
-    description: branch config name to look for
+  branch-config-file-repo:
+    description: author/repository to find the branch config file
+    required: false
+  branch-config-file-path:
+    description: path to find the branch config file
     required: false
   base-branch:
     description: base branch for the checks
@@ -72,15 +69,15 @@ runs:
     working-directory: dsl-tests-dir
     env:
       DSL_DEFAULT_TEST_REPO: ${{ inputs.repository }}
-      DSL_DEFAULT_TEST_REF: ${{ inputs.reference }}
 
-      DSL_DEFAULT_MAIN_CONFIG_FILE_REPO: ${{ inputs.main-config-file-repo }}
-      DSL_DEFAULT_MAIN_CONFIG_FILE_REF: ${{ inputs.main-config-file-ref }}
       DSL_DEFAULT_MAIN_CONFIG_FILE_PATH: ${{ inputs.main-config-file-path }}
+      DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REPO: ${{ inputs.main-config-file-repo }}
+      
+      DSL_DEFAULT_BRANCH_CONFIG_NAME: ${{ github.base_ref }}
+      DSL_DEFAULT_BRANCH_CONFIG_FILE_PATH: ${{ inputs.branch-config-file-path }}
+      DSL_DEFAULT_FALLBACK_BRANCH_CONFIG_FILE_REPO: ${{ inputs.branch-config-file-repo }}
 
-      DSL_DEFAULT_BRANCH_CONFIG_NAME: ${{ inputs.branch-config-name }}
-
-      DSL_DEFAULT_FALLBACK_PIPELINES_REF: ${{ env.BASE_BRANCH }}
+      DSL_DEFAULT_FALLBACK_SEED_REF: ${{ env.BASE_BRANCH }}
       DSL_DEFAULT_PIPELINES_TEST_DIR: ${{ env.PIPELINES_TEST_DIR }}
 
       DSL_DEFAULT_CURRENT_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}

@@ -11,7 +11,7 @@
 # ${file} $@
 
 script_dir_path=$(cd `dirname "${BASH_SOURCE[0]}"`; pwd -P)
-GIT_SERVER='github.com'
+GITHUB_SERVER='github.com'
 declare -A checkout_map
 
 usage() {
@@ -21,35 +21,38 @@ usage() {
     echo 'Here is a list of those:'
     echo
     echo '  Main config file configuration:'
-    echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_REPO           Main config file repository (owner/repo)'
-    echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_REF            Main config file reference'
-    echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_PATH           Main config file path. Default is `dsl/config/main.yaml`'
-    echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_LOCAL_PATH     Main config file local path. If set, the other `DSL_DEFAULT_MAIN_CONFIG_FILE_*` envs will be ignored'
-    echo '    DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REPO  Fallback main config repository (owner/repo). Default is `kiegroup/kogito-pipelines`'
-    echo '    DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REF   Fallback main config reference. Default is `main`'
+    echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_REPO             Main config file repository (owner/repo)'
+    echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_REF              Main config file reference'
+    echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_PATH             Main config file path. Default is `dsl/config/main.yaml`'
+    echo '    DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REPO    Fallback main config repository (owner/repo). Default is `kiegroup/kogito-pipelines`'
+    echo '    DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REF     Fallback main config reference. Default is `main`'
+    echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_LOCAL_PATH       Main config file local path. If set, the other `DSL_DEFAULT_MAIN_CONFIG_FILE_*` envs will be ignored'
     echo
     echo '  Branch config file configuration:'
-    echo '    DSL_DEFAULT_BRANCH_CONFIG_NAME              DSL branch config name. Corresponding to the match in the main config branch'
-    echo '    DSL_DEFAULT_BRANCH_CONFIG_FILE_PATH         DSL local branch config file path. If that is set, the `DSL_DEFAULT_MAIN_CONFIG_*` and `DSL_DEFAULT_BRANCH_CONFIG_NAME` envs are ignored'
+    echo '    DSL_DEFAULT_BRANCH_CONFIG_NAME                DSL branch config name. Corresponding to the match in the main config branch'
+    echo '    DSL_DEFAULT_BRANCH_CONFIG_FILE_REPO           Branch config file repository (owner/repo). Override the branch config repo. Else it is read from main config.'
+    echo '    DSL_DEFAULT_BRANCH_CONFIG_FILE_REF            Branch config file reference. Override the branch config ref. Else it is read from main config.'
+    echo '    DSL_DEFAULT_BRANCH_CONFIG_FILE_PATH           Branch config file path. Override the branch config path. Else it is read from main config.'
+    echo '    DSL_DEFAULT_BRANCH_CONFIG_FILE_LOCAL_PATH     DSL local branch config file path. If that is set, the `DSL_DEFAULT_MAIN_CONFIG_*` and other `DSL_DEFAULT_BRANCH_CONFIG_*` envs are ignored'
     echo 
     echo '  Seed repository configuration:'
-    echo '    DSL_DEFAULT_SEED_REPO                       DSL seed repository (owner/repo). Else it will be calculated from the test repository.'
-    echo '    DSL_DEFAULT_SEED_REF                        DSL seed reference. Else it will be calculated from the branch config'
-    echo '    DSL_DEFAULT_SEED_REPO_LOCAL_PATH            DSL seed repository local path. If set, the other `DSL_DEFAULT_SEED_*` envs will be ignored'
-    echo '    DSL_DEFAULT_FALLBACK_SEED_REPO              Fallback seed repository (owner/repo). Default is `kiegroup/kogito-pipelines`'
-    echo '    DSL_DEFAULT_FALLBACK_SEED_REF               Fallback seed reference. Default is `main`'
+    echo '    DSL_DEFAULT_SEED_REPO                         DSL seed repository (owner/repo). Else it will be calculated from the test repository.'
+    echo '    DSL_DEFAULT_SEED_REF                          DSL seed reference. Else it will be calculated from the branch config'
+    echo '    DSL_DEFAULT_SEED_REPO_LOCAL_PATH              DSL seed repository local path. If set, the other `DSL_DEFAULT_SEED_*` envs will be ignored'
+    echo '    DSL_DEFAULT_FALLBACK_SEED_REPO                Fallback seed repository (owner/repo). Default is `kiegroup/kogito-pipelines`'
+    echo '    DSL_DEFAULT_FALLBACK_SEED_REF                 Fallback seed reference. Default is `main`'
     echo
     echo '   Test repository configuration:'
-    echo '    DSL_DEFAULT_TEST_REPO                       Repository to test. Default will be handled from current folder'
-    echo '    DSL_DEFAULT_TEST_REF                        Repository reference to test. Default will be guessed from current folder'
-    echo '    DSL_DEFAULT_TEST_JOBS_PATH                  Path on repository where to find the jobs file. Default to `.ci/jenkins/dsl`'
+    echo '    DSL_DEFAULT_TEST_REPO                         Repository to test. Default will be handled from current folder'
+    echo '    DSL_DEFAULT_TEST_REF                          Repository reference to test. Default will be guessed from current folder'
+    echo '    DSL_DEFAULT_TEST_JOBS_PATH                    Path on repository where to find the jobs file. Default to `.ci/jenkins/dsl`'
     echo
     echo '  Current repository information:'
-    echo '    DSL_DEFAULT_CURRENT_REPOSITORY              Force the current repository (owner/repo). Useful if the remote `origin` is not the needed one.'
-    echo '    DSL_DEFAULT_CURRENT_REF                     Force the current ref. Useful if the checkout was not done on a branch.'
+    echo '    DSL_DEFAULT_CURRENT_REPOSITORY                Force the current repository (owner/repo). Useful if the remote `origin` is not the needed one.'
+    echo '    DSL_DEFAULT_CURRENT_REF                       Force the current ref. Useful if the checkout was not done on a branch.'
     echo
     echo '  Other configuration:'
-    echo '    DSL_DEFAULT_PIPELINES_TEST_DIR              Where will be the pipelines test dir'
+    echo '    DSL_DEFAULT_PIPELINES_TEST_DIR                Where will be the pipelines test dir'
     echo
 }
 
@@ -122,9 +125,9 @@ fi
 
 git_server_url=
 if [[ "${git_url}" = https://* ]]; then
-  git_server_url="https://${GIT_SERVER}/"
+  git_server_url="https://${GITHUB_SERVER}/"
 elif [[ "${git_url}" = git@* ]]; then 
-  git_server_url="git@${GIT_SERVER}:"
+  git_server_url="git@${GITHUB_SERVER}:"
 else
   echo "Unknown protocol for url ${git_url}"
   exit 1
@@ -167,10 +170,15 @@ main_config_file_path=${DSL_DEFAULT_MAIN_CONFIG_FILE_PATH:-'dsl/config/main.yaml
 main_config_file_local_path=${DSL_DEFAULT_MAIN_CONFIG_FILE_LOCAL_PATH}
 
 branch_config_name=${DSL_DEFAULT_BRANCH_CONFIG_NAME}
-branch_config_file_path=${DSL_DEFAULT_BRANCH_CONFIG_FILE_PATH:-''}
+branch_config_file_repo=${DSL_DEFAULT_BRANCH_CONFIG_FILE_REPO}
+branch_config_file_ref=${DSL_DEFAULT_BRANCH_CONFIG_FILE_REF}
+branch_config_file_path=${DSL_DEFAULT_BRANCH_CONFIG_FILE_PATH}
+branch_config_file_local_path=${DSL_DEFAULT_BRANCH_CONFIG_FILE_LOCAL_PATH:-''}
 
 fallback_main_config_file_repo=${DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REPO:-'kiegroup/kogito-pipelines'}
 fallback_main_config_file_ref=${DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REF:-'main'}
+fallback_branch_config_file_repo=${DSL_DEFAULT_FALLBACK_BRANCH_CONFIG_FILE_REPO:-'kiegroup/kogito-pipelines'}
+fallback_branch_config_file_ref=${DSL_DEFAULT_FALLBACK_BRANCH_CONFIG_FILE_REF:-'main'}
 fallback_branch_config_name="${fallback_main_config_file_ref}"
 
 if [ -z "${main_config_file_repo}" ]; then
@@ -233,34 +241,46 @@ if [ -z "${branch_config_file_local_path}" ]; then
     echo "Branch config name cannot be found. Fallback to default branch config name: ${fallback_branch_config_name}"
   fi
 
+  if [ -z "${branch_config_file_repo}" ]; then
+    branch_config_file_owner="$(echo "${DSL_DEFAULT_TEST_REPO:-${current_repository}}" | awk -F/ '{print $1}')"
+    branch_config_file_repo_name="$(echo "${fallback_branch_config_file_repo}" | awk -F/ '{print $2}')"
+    branch_config_file_repo="${branch_config_file_owner}/${branch_config_file_repo_name}"
+  fi
+  if [ -z "${branch_config_file_ref}" ]; then
+    branch_config_file_ref="${DSL_DEFAULT_TEST_REF:-${current_ref}}"
+  fi
+
   echo "Retrieve branch config file information with branch config name ${branch_config_name}"
-  branch_config_file_ref="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.git.branch" ${main_config_file_path} 2> /dev/null)"
+  fallback_branch_config_file_ref="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.git.branch" ${main_config_file_path} 2> /dev/null)"
   if [ $? != 0 ]; then 
-    branch_config_file_ref="${branch_config_name}"
+    fallback_branch_config_file_ref="${branch_config_name}"
   fi
 
   branch_config_file_git_repository="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.git.repository" ${main_config_file_path} 2> /dev/null)"
   if [ $? != 0 ]; then
     branch_config_file_git_repository="$(yq '.seed.config_file.git.repository' ${main_config_file_path})"
   fi
-
   branch_config_file_git_author="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.git.author.name" ${main_config_file_path} 2> /dev/null)"
   if [ $? != 0 ]; then 
     branch_config_file_git_author="$(yq '.seed.config_file.git.author.name' ${main_config_file_path})"
   fi
+  fallback_branch_config_file_repo="${branch_config_file_git_author}/${branch_config_file_git_repository}"
 
-  branch_config_file_path="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.path" ${main_config_file_path} 2> /dev/null)"
-  if [ $? != 0 ]; then 
-    branch_config_file_path="$(yq '.seed.config_file.path' ${main_config_file_path})"
+  if [ -z "${branch_config_file_path}" ]; then
+    branch_config_file_path="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.path" ${main_config_file_path} 2> /dev/null)"
+    if [ $? != 0 ]; then 
+      branch_config_file_path="$(yq '.seed.config_file.path' ${main_config_file_path})"
+    fi
   fi
 
-  branch_config_file_repo="${branch_config_file_git_author}/${branch_config_file_git_repository}"
   echo "-----------------------------------------------------------------"
   echo "-- BRANCH CONFIG FILE CONFIGURATION"
   echo '--'
   echo "-- branch_config_file_repo.............. ${branch_config_file_repo}"
   echo "-- branch_config_file_ref............... ${branch_config_file_ref}"
   echo "-- branch_config_file_path.............. ${branch_config_file_path}"
+  echo "-- fallback_branch_config_file_repo..... ${fallback_branch_config_file_repo}"
+  echo "-- fallback_branch_config_file_ref...... ${fallback_branch_config_file_ref}"
   echo "-----------------------------------------------------------------"
 
   branch_config_repo_path=${checkout_map["${branch_config_file_repo}/${branch_config_file_ref}"]}
@@ -268,7 +288,7 @@ if [ -z "${branch_config_file_local_path}" ]; then
     echo 'Retrieve branch config file'
     branch_config_repo_path=$(mktemp -d)
     mkdir -p "${branch_config_repo_path}"
-    checkout_repository "${branch_config_repo_path}" "${branch_config_file_repo}" "${branch_config_file_ref}"
+    checkout_repository "${branch_config_repo_path}" "${branch_config_file_repo}" "${branch_config_file_ref}" "${fallback_branch_config_file_repo}" "${fallback_branch_config_file_ref}"
   else
     echo "Branch config file repository (${branch_config_file_repo}/${branch_config_file_ref}) already checked out. Using it ..."
   fi
@@ -365,7 +385,7 @@ if [ $? != 0 ]; then
 fi
 fallback_test_ref="$(yq -e ".repositories[] | select(.name == \"${test_repo_name}\") | .branch" ${branch_config_file_path} 2> /dev/null)"
 if [ $? != 0 ]; then 
-  fallback_test_ref="${main_config_file_ref}"
+  fallback_test_ref="${fallback_branch_config_file_ref}"
 fi
 
 echo "-----------------------------------------------------------------"
