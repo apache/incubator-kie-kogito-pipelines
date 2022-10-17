@@ -189,7 +189,7 @@ void setupUpdateQuarkusPlatformJob() {
             BUILD_BRANCH_NAME: "${GIT_BRANCH}",
             QUARKUS_PLATFORM_BRANCH_NAME: 'main',
             PROJECT_NAME: 'kogito',
-            FORK_GIT_AUTHOR: "${GIT_FORK_AUTHOR}",
+            FORK_GIT_AUTHOR: "${GIT_FORK_AUTHOR_NAME}",
             FORK_GIT_AUTHOR_CREDS_ID: "${GIT_FORK_AUTHOR_CREDENTIALS_ID}",
     ])
     KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
