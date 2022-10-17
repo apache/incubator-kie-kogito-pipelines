@@ -165,10 +165,8 @@ jobs:
         with:
           repository: ${{ matrix.repository }}
           main-config-file-repo: kiegroup/kogito-pipelines
-          main-config-file-ref: main
           main-config-file-path: dsl/config/main.yaml
           branch-config-file-repo: kiegroup/kogito-pipelines
-          branch-config-name: ${{ github.base_ref }}
           base-branch: ${{ env.BASE_BRANCH }}
 
   #############################################################################
@@ -329,8 +327,6 @@ jobs:
         with:
           repository: ${{ matrix.repository }}
           main-config-file-repo: kiegroup/optaplanner
-          main-config-file-ref: main
           main-config-file-path: .ci/jenkins/config/main.yaml
           branch-config-file-repo: kiegroup/optaplanner
-          branch-config-name: ${{ github.base_ref }}
           base-branch: ${{ env.BASE_BRANCH }}

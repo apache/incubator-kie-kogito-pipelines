@@ -385,7 +385,7 @@ if [ $? != 0 ]; then
 fi
 fallback_test_ref="$(yq -e ".repositories[] | select(.name == \"${test_repo_name}\") | .branch" ${branch_config_file_path} 2> /dev/null)"
 if [ $? != 0 ]; then 
-  fallback_test_ref="${main_config_file_ref}"
+  fallback_test_ref="${fallback_branch_config_file_ref}"
 fi
 
 echo "-----------------------------------------------------------------"
