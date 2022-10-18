@@ -18,7 +18,7 @@ if (Utils.isMainBranch(this)) {
     setupBuildOperatorNode()
 }
 
-// Init branch
+// Setup branch branch
 createSetupBranchJob()
 
 // Nightly
@@ -75,7 +75,7 @@ void setupCreateIssueToolsJob() {
 }
 
 void createSetupBranchJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, '0-setup-branch', Folder.SETUP_BRANCH, "${JENKINSFILE_PATH}/Jenkinsfile.setup-branch", 'Kogito Init Branch')
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, '0-setup-branch', Folder.SETUP_BRANCH, "${JENKINSFILE_PATH}/Jenkinsfile.setup-branch", 'Kogito Setup Branch')
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 

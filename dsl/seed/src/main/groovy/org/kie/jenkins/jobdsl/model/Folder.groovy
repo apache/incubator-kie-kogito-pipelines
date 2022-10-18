@@ -91,16 +91,6 @@ class Folder {
     ///////////////////////////////////////////////////////////////////////////////////////////
     // Folder Management
 
-    /**
-     * @deprecated Please use SETUP_BRANCH instead
-     */
-    @Deprecated
-    public static final Folder INIT_BRANCH = new Folder(
-        name: 'INIT_BRANCH',
-        jobType: JobType.INIT_BRANCH,
-        environment: Environment.DEFAULT,
-    )
-
     public static final Folder SETUP_BRANCH = new Folder(
         name: 'SETUP_BRANCH',
         jobType: JobType.SETUP_BRANCH,
@@ -236,7 +226,6 @@ class Folder {
     )
 
     private static Set<Folder> FOLDERS = [
-        INIT_BRANCH,
         SETUP_BRANCH,
         NIGHTLY,
         NIGHTLY_SONARCLOUD,
@@ -270,8 +259,7 @@ class Folder {
     }
 
     static List<Folder> getAllFolders(def script) {
-        return getAllInitBranchFolders(script) +
-            getAllSetupBranchFolders(script) +
+        return getAllSetupBranchFolders(script) +
             getAllNightlyFolders(script) +
             getAllPullRequestFolders(script) +
             getAllReleaseFolders(script) +
@@ -281,14 +269,6 @@ class Folder {
 
     static List<Folder> getAllActiveFolders(def script) {
         return getAllRegistered().findAll { folder -> folder.isActive(script) }
-    }
-
-    /**
-     * @deprecated Please use getAllSetupBranchFolders instead
-     */
-    @Deprecated
-    static List<Folder> getAllInitBranchFolders(def script) {
-        return getAllFoldersByJobTypeAndEnvironments(script, JobType.INIT_BRANCH, Environment.getActiveEnvironments(script))
     }
 
     static List<Folder> getAllSetupBranchFolders(def script) {

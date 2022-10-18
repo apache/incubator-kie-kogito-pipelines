@@ -9,14 +9,6 @@ import org.kie.jenkins.jobdsl.Utils
 */
 class JobType {
 
-    /**
-     * @deprecated Please use SETUP_BRANCH instead
-     */
-    @Deprecated
-    public static final JobType INIT_BRANCH = new JobType(
-        name: 'init-branch',
-        isActiveClosure: { script -> !Utils.isMainBranch(script) },
-    )
     public static final JobType SETUP_BRANCH = new JobType(
         name: 'setup-branch',
     )
@@ -53,7 +45,6 @@ class JobType {
     }
 
     private static Set<JobType> JOB_TYPES = [
-        INIT_BRANCH,
         SETUP_BRANCH,
         NIGHTLY,
         OTHER,
