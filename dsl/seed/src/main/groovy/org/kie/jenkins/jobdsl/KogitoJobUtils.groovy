@@ -84,7 +84,25 @@ class KogitoJobUtils {
         return jobParams
     }
 
-    static def createVersionUpdateToolsJob(def script, String repository, String dependencyName, def mavenUpdate = [:], def gradleUpdate = [:], def filepathReplaceRegex = [:]) {
+    /**
+    * Create a version update tools job
+    * 
+    * @param repository Repository to update
+    * @param dependencyName Name of the dependency which will be updated
+    * @param mavenUpdate Maven update configuration
+    *       .modules                  => Maven bom modules list to update with new version
+    *       .compare_deps_remote_poms => Remote poms to compare dependencies with
+    *       .properties               => Properties to update in the given modules
+    * @param gradleUpdate Gradle update configuration
+    *       .regex                    => Regex to update the version in build.gradle files
+    * @param filepathReplaceRegex List of Filepath/Regex sed commands. 
+    *   For each element:
+    *       .filepath                 => Filepath to update
+    *       .regex                    => Regex to use in sed command
+    * @param scriptCalls List of script calls string. 
+    * 
+    */
+    static def createVersionUpdateToolsJob(def script, String repository, String dependencyName, def mavenUpdate = [:], def gradleUpdate = [:], def filepathReplaceRegex = [], def scriptCalls = []) {
         def jobParams = getSeedJobParams(script, "update-${dependencyName.toLowerCase()}-${repository}", Folder.TOOLS, 'Jenkinsfile.tools.update-dependency-version', "Update ${dependencyName} version for ${repository}")
         KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
         // Setup correct checkout branch for pipelines
@@ -112,6 +130,9 @@ class KogitoJobUtils {
         if (filepathReplaceRegex) {
             jobParams.env.put('FILEPATH_REPLACE_REGEX', JsonOutput.toJson(filepathReplaceRegex))
         }
+        if (scriptCalls) {
+            jobParams.env.put('SCRIPTS_CALLS', JsonOutput.toJson(scriptCalls))
+        }
         def job = KogitoJobTemplate.createPipelineJob(script, jobParams)
         job?.with {
             parameters {
@@ -125,8 +146,8 @@ class KogitoJobUtils {
     /**
     * Create a Quarkus update job which allow to update the quarkus version into a repository, via Maven or Gradle
     */
-    static def createQuarkusUpdateToolsJob(def script, String repository, def mavenUpdate = [:], def gradleUpdate = [:], def filepathReplaceRegex = [:]) {
-        return createVersionUpdateToolsJob(script, repository, 'Quarkus', mavenUpdate, gradleUpdate, filepathReplaceRegex)
+    static def createQuarkusUpdateToolsJob(def script, String repository, def mavenUpdate = [:], def gradleUpdate = [:], def filepathReplaceRegex = [], def scriptCalls = []) {
+        return createVersionUpdateToolsJob(script, repository, 'Quarkus', mavenUpdate, gradleUpdate, filepathReplaceRegex, scriptCalls)
     }
 
     /**

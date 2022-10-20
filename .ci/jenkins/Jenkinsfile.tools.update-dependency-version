@@ -126,6 +126,22 @@ pipeline {
                 }
             }
         }
+        stage('Call scripts') {
+            when {
+                expression { return getScriptCalls() }
+            }
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        getScriptCalls().each { scriptCall ->
+                            sh """
+                                ${scriptCall.replaceAll('%new_version%', getNewVersion())}
+                            """
+                        }
+                    }
+                }
+            }
+        }
         stage('Create PRs') {
             steps {
                 script {
@@ -225,7 +241,11 @@ List getGradleRegex() {
 }
 
 List getFilepathReplaceRegex() {
-  return env.FILEPATH_REPLACE_REGEX ? readJSON(text: env.FILEPATH_REPLACE_REGEX) : []
+  return env.FILEPATH_REPLACE_REGEX ? readJSON(text: env.FILEPATH_REPLACE_REGEX) : [:]
+}
+
+List getScriptCalls() {
+    return env.SCRIPTS_CALLS ? readJSON(text: env.SCRIPTS_CALLS) : []
 }
 
 /**
