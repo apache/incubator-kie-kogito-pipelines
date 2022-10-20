@@ -76,11 +76,8 @@ pipeline {
             }
             steps {
                 script {
-                    env.BUILD_MVN_OPTS_CURRENT = env.BUILD_MVN_OPTS_CURRENT ?: ''
-                    env.BUILD_MVN_OPTS = env.BUILD_MVN_OPTS ?: ''
-                    
-                    env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
-                    env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT} ${getBuildMavenOptsCurrent()}"
+                    env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
+                    env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
 
                     configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
                         withCredentials([string(credentialsId: 'kie-ci3-token', variable: 'GITHUB_TOKEN')]) {
