@@ -76,12 +76,16 @@ pipeline {
             }
             steps {
                 script {
-                    env.BUILD_MVN_OPTS_CURRENT = getBuildMavenOptsCurrent()
-                    echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
+                    env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
+                    env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
 
                     configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
                         withCredentials([string(credentialsId: 'kie-ci3-token', variable: 'GITHUB_TOKEN')]) {
-                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/.ci/${buildChainDefinitionFile}' -folder='bc' build ${buildChainAction} -url=${env.ghprbPullLink} ${buildChainAdditionalArguments} --skipParallelCheckout -cct '(^mvn .*)||\$1 -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true'"
+                            env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS} -s ${MAVEN_SETTINGS_FILE}"
+                            echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
+                            echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
+                            
+                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/.ci/${buildChainDefinitionFile}' -folder='bc' build ${buildChainAction} -url=${env.ghprbPullLink} ${buildChainAdditionalArguments} --skipParallelCheckout"
                         }
                     }
                 }
