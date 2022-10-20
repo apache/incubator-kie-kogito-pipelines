@@ -86,7 +86,7 @@ class KogitoJobUtils {
 
     /**
     * Create a version update tools job
-    * 
+    *
     * @param repository Repository to update
     * @param dependencyName Name of the dependency which will be updated
     * @param mavenUpdate Maven update configuration
@@ -95,12 +95,12 @@ class KogitoJobUtils {
     *       .properties               => Properties to update in the given modules
     * @param gradleUpdate Gradle update configuration
     *       .regex                    => Regex to update the version in build.gradle files
-    * @param filepathReplaceRegex List of Filepath/Regex sed commands. 
+    * @param filepathReplaceRegex List of Filepath/Regex sed commands.
     *   For each element:
     *       .filepath                 => Filepath to update
     *       .regex                    => Regex to use in sed command
-    * @param scriptCalls List of script calls string. 
-    * 
+    * @param scriptCalls List of script calls string.
+    *
     */
     static def createVersionUpdateToolsJob(def script, String repository, String dependencyName, def mavenUpdate = [:], def gradleUpdate = [:], def filepathReplaceRegex = [], def scriptCalls = []) {
         def jobParams = getSeedJobParams(script, "update-${dependencyName.toLowerCase()}-${repository}", Folder.TOOLS, 'Jenkinsfile.tools.update-dependency-version', "Update ${dependencyName} version for ${repository}")
@@ -111,7 +111,7 @@ class KogitoJobUtils {
             JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
 
             DEPENDENCY_NAME: "${dependencyName}",
-            NOTIFICATION_JOB_NAME: Utils.getRepoNameCamelCase(repository),
+            PROPERTIES_FILENAME: KogitoConstants.PIPELINE_PROPERTIES_FILENAME,
 
             PR_PREFIX_BRANCH: Utils.getGenerationBranch(script),
 
@@ -154,15 +154,19 @@ class KogitoJobUtils {
     * Create main quarkus update tools job which will update the quarkus version for the global ecosystem project
     * and will call the different projects `update-quarkus-{project}` jobs. Those should be best created with method `createQuarkusUpdateToolsJob`.
     */
-    static def createMainQuarkusUpdateToolsJob(def script, String notificationJobName, List projectsToUpdate) {
+    static def createMainQuarkusUpdateToolsJob(def script, List projectsToUpdate, List reviewers = []) {
         def jobParams = getSeedJobParams(script, 'update-quarkus-all', Folder.TOOLS, 'Jenkinsfile.ecosystem.update-quarkus-all', 'Update Quarkus version for the whole ecosystem')
         jobParams.env.putAll([
             JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
 
-            NOTIFICATION_JOB_NAME: notificationJobName,
             BUILD_BRANCH_NAME: Utils.getGitBranch(script),
 
             PROJECTS_TO_UPDATE: projectsToUpdate.join(','),
+            REVIEWERS: reviewers.join(','),
+
+            PROPERTIES_FILENAME: KogitoConstants.PIPELINE_PROPERTIES_FILENAME,
+
+            GITHUB_TOKEN_CREDS_ID: Utils.getGitAuthorTokenCredsId(script),
 
             SEED_BRANCH_CONFIG_FILE_GIT_REPOSITORY: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_REPOSITORY'),
             SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_NAME: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_AUTHOR_NAME'),
