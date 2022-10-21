@@ -93,7 +93,7 @@ pipeline {
                                 prLinks.add(prLink)
                             } else {
                                 echo 'PR was already created. Will not try to create a new one ...'
-                                    }
+                            }
                         } else {
                             echo 'No changes to commit. No PR is created !'
                         }
@@ -256,7 +256,7 @@ void finalizePR(String prLink) {
         String newBody = """
 ${readJSON(text: currentBodyJson).body}
 ${getPRLinksSummary()}
-    """ 
+""" 
         echo "new body = ${newBody}"
         writeFile(file: 'prBody', text: newBody)
         sh "gh pr edit ${prLink} --body-file prBody ${getReviewers().collect { "--add-reviewer ${it}" }.join(' ')}"
