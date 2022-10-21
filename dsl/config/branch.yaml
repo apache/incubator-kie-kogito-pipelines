@@ -11,35 +11,35 @@ environment:
   native:
     enabled: true
   mandrel:
-    enabled: false
+    enabled: true
     builder_image: quay.io/quarkus/ubi-quarkus-mandrel:22.2-java11
   mandrel_lts:
-    enabled: false
+    enabled: true
     builder_image: quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11
     quarkus_version: 2.7
   runtimes_bdd:
-    enabled: true
-productized_branch: false
+    enabled: false
+productized_branch: true
 disable:
   triggers: false
 repositories:
-- name: kogito-pipelines
-  branch: 1.29.x
-  is_branch_config_repo: true
+# - name: kogito-pipelines
+#   branch: 1.29.x
+#   is_branch_config_repo: true
 - name: drools
   branch: 8.29.x
-- name: kogito-runtimes
-  branch: 1.29.x
-- name: kogito-apps
-  branch: 1.29.x
-- name: kogito-examples
-  branch: 1.29.x
-- name: kogito-images
-  branch: 1.29.x
-- name: kogito-operator
-  branch: 1.29.x
-- name: kogito-docs
-  branch: 1.29.x
+# - name: kogito-runtimes
+#   branch: 1.29.x
+# - name: kogito-apps
+#   branch: 1.29.x
+# - name: kogito-examples
+#   branch: 1.29.x
+# - name: kogito-images
+#   branch: 1.29.x
+# - name: kogito-operator
+#   branch: 1.29.x
+# - name: kogito-docs
+#   branch: 1.29.x
 git:
   author:
     name: kiegroup
