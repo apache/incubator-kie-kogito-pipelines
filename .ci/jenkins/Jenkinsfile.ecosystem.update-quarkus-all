@@ -2,6 +2,9 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 @Library('jenkins-pipeline-shared-libraries')_
 
+prLinks = []
+failingRepos = []
+
 pipeline {
     agent {
         label 'kie-rhel7 && !built-in'
@@ -39,7 +42,7 @@ pipeline {
                         getOrCreateGitBranch(prBranch, "${SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
 
                         updateYaml("${SEED_BRANCH_CONFIG_FILE_PATH}") { branchConfig ->
-                            if(branchConfig.environment?.quarkus?.branch?.version) {
+                            if (branchConfig.environment?.quarkus?.branch?.version) {
                                 branchConfig.environment.quarkus.branch.version = getNewVersionBranch()
                             }
                         }
@@ -51,8 +54,7 @@ pipeline {
 
                             String prLink = githubscm.createPR(commitMsg, 'Please review and merge', "${SEED_BRANCH_CONFIG_FILE_GIT_BRANCH}", "${SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
                             echo "Created PR ${prLink}"
-
-                            sendNotification("PR was created to update quarkus version in branch config to ${getNewVersion()}.\nPlease review and merge ${prLink}")
+                            prLinks.add(prLink)
                         } else {
                             echo 'No changes to commit. No PR is created !'
                         }
@@ -88,8 +90,7 @@ pipeline {
                                     "${SEED_BRANCH}" != "${SEED_BRANCH_CONFIG_FILE_GIT_BRANCH}") {
                                 String prLink = githubscm.createPR(commitMsg, 'Please review and merge', "${SEED_BRANCH}", "${SEED_AUTHOR_CREDS_ID}")
                                 echo "Created PR ${prLink}"
-
-                                sendNotification("PR was created to update quarkus version in seed repo to ${getNewVersion()}.\nPlease review and merge ${prLink}")
+                                prLinks.add(prLink)
                             } else {
                                 echo 'PR was already created. Will not try to create a new one ...'
                             }
@@ -104,14 +105,37 @@ pipeline {
         stage('Call update quarkus jobs') {
             steps {
                 script {
+                    parallelStages = [:]
+
                     env.PROJECTS_TO_UPDATE.split(',').each { repo ->
-                        launchUpdateQuarkusJob(repo)
+                        parallelStages[repo] = {
+                            launchUpdateQuarkusJob(repo)
+                        }
+                    }
+
+                    parallel parallelStages
+                }
+            }
+        }
+
+        stage('Finalizing') {
+            steps {
+                script {
+                    if (prLinks) {
+                        prLinks.each { finalizePR(it) }
+                    } else {
+                        echo 'No PR link to update'
                     }
                 }
             }
         }
     }
     post {
+        always {
+            script {
+                sendPRLinksNotification()
+            }
+        }
         unsuccessful {
             script {
                 sendErrorNotification()
@@ -124,13 +148,34 @@ pipeline {
 }
 
 void sendNotification(String body) {
-    emailext body: "**Quarkus version update job**\n${body}",
-             subject: "[${getBuildBranch()}] ${getNotificationJobName()}",
+    emailext body: "**Quarkus version update job to ${getNewVersion()}**\n${body}",
+             subject: "[${getBuildBranch()}] Quarkus update",
              to: env.KOGITO_CI_EMAIL_TO
 }
 
+void sendPRLinksNotification() {
+    if (prLinks) {
+        String body = """
+Those PRs have been created:
+${prLinks.collect { "- ${it}" }.join('\n')}
+"""
+        sendNotification(body)
+    }
+}
+
 void sendErrorNotification() {
-    sendNotification("Job #${BUILD_NUMBER} was: **${currentBuild.currentResult}**\nPlease look here: ${BUILD_URL}")
+    String body = """
+Job #${BUILD_NUMBER} was: **${currentBuild.currentResult}**
+
+Please look here: ${BUILD_URL}
+"""
+    if (failingRepos) {
+        body += """
+Failing jobs:
+${failingRepos.collect { "- ${it}" }.join('\n')}
+"""
+    }
+    sendNotification(body)
 }
 
 void launchUpdateQuarkusJob(String repo) {
@@ -142,7 +187,30 @@ void launchUpdateQuarkusJob(String repo) {
     jobParams.add(stringParam(name: 'PR_BRANCH', value: params.PR_BRANCH))
 
     echo "Build ./${jobName} with parameters ${jobParams}"
-    build(job: "./${jobName}", parameters: jobParams, wait: false)
+    def job = build(job: "./${jobName}", parameters: jobParams, wait: true, propagate: false)
+    if (job.result != 'SUCCESS') {
+        unstable("Update Quarkus on repository ${repo} was not successful")
+        failingRepos.add(repo)
+    } else {
+        String prLink = readPipelineProperties(job.absoluteUrl)?.'pr.link'
+        if (prLink) {
+            echo "Adding PR link ${prLink}"
+            prLinks.add(prLink)
+        }
+    }
+}
+
+def readPipelineProperties(String jobUrl) {
+    if (jobUrl != '') {
+        if (!jobUrl.endsWith('/')) {
+            jobUrl += '/'
+        }
+        sh "wget ${jobUrl}artifact/${PROPERTIES_FILENAME} -O ${PROPERTIES_FILENAME}"
+        pipelineProperties = readProperties file: "${PROPERTIES_FILENAME}"
+        // echo all properties
+        echo pipelineProperties.collect { entry -> "${entry.key}=${entry.value}" }.join('\n')
+    }
+    return pipelineProperties
 }
 
 String getNewVersion() {
@@ -162,10 +230,6 @@ String getSeedPRBranch(String branch) {
     return params.PR_BRANCH ? "${params.PR_BRANCH}-seed" : "bump-seed-${branch}-quarkus-${getNewVersion()}"
 }
 
-String getNotificationJobName() {
-    return "${NOTIFICATION_JOB_NAME}"
-}
-
 void updateYaml(String filePath, Closure updateClosure) {
     def yamlData = readYaml(file: filePath)
     updateClosure(yamlData)
@@ -183,4 +247,26 @@ void getOrCreateGitBranch(String branch, String credentialsId) {
         githubscm.createBranch(branch)
         githubscm.pushObject('origin', branch,  credentialsId)
     }
+}
+
+void finalizePR(String prLink) {
+    withCredentials([string(credentialsId: "${GITHUB_TOKEN_CREDS_ID}", variable: 'GITHUB_TOKEN')]) {
+        String currentBodyJson = sh(returnStdout: true, script: "gh pr view ${prLink} --json body").trim()
+        echo "currentBodyjson = ${currentBodyJson}"
+        String newBody = """
+${readJSON(text: currentBodyJson).body}
+${getPRLinksSummary()}
+""" 
+        echo "new body = ${newBody}"
+        writeFile(file: 'prBody', text: newBody)
+        sh "gh pr edit ${prLink} --body-file prBody ${getReviewers().collect { "--add-reviewer ${it}" }.join(' ')}"
+    }
+}
+
+String getPRLinksSummary() {
+    return prLinks.collect { "- ${it}" }.join('\n')
+}
+
+List getReviewers() {
+    return env.REVIEWERS?.split(',')
 }

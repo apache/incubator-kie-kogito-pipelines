@@ -3,6 +3,7 @@
 import org.kie.jenkins.MavenCommand
 
 branchCreated = false
+pipelineProperties = [:]
 
 pipeline {
     agent {
@@ -142,7 +143,7 @@ pipeline {
                 }
             }
         }
-        stage('Create PRs') {
+        stage('Create PR') {
             steps {
                 script {
                     dir(getRepoName()) {
@@ -154,7 +155,7 @@ pipeline {
                             if (branchCreated) {
                                 String prLink = githubscm.createPR(commitMsg, 'Please review and merge', getBuildBranch(), getGitAuthorCredsId())
                                 echo "Created PR ${prLink}"
-                                sendNotification("PR was created to update ${getDependencyName()} version to ${getNewVersion()}.\nPlease review and merge ${prLink}")
+                                setPipelinePropertyIfNeeded('pr.link', prLink)
                             } else {
                                 echo "Branch ${getPRBranch()} was already created so assuming the PR exists alrerady ..."
                             }
@@ -167,25 +168,17 @@ pipeline {
         }
     }
     post {
-        unsuccessful {
+        always {
             script {
-                sendErrorNotification()
+                def propertiesStr = pipelineProperties.collect { entry ->  "${entry.key}=${entry.value}" }.join('\n')
+                writeFile(text: propertiesStr, file: "${PROPERTIES_FILENAME}")
+                archiveArtifacts(artifacts: "${PROPERTIES_FILENAME}")
             }
         }
         cleanup {
             cleanWs()
         }
     }
-}
-
-void sendNotification(String body) {
-    emailext body: "**${getDependencyName()} version update job**\n${body}",
-             subject: "[${getBuildBranch()}] ${getNotificationJobName()}",
-             to: env.KOGITO_CI_EMAIL_TO
-}
-
-void sendErrorNotification() {
-    sendNotification("Job #${BUILD_NUMBER} was: **${currentBuild.currentResult}**\nPlease look here: ${BUILD_URL}")
 }
 
 String getDependencyName() {
@@ -218,10 +211,6 @@ String getNewVersion() {
 
 String getRepoName() {
     return "${REPO_NAME}"
-}
-
-String getNotificationJobName() {
-    return "${NOTIFICATION_JOB_NAME}"
 }
 
 List getMavenModules() {
@@ -263,5 +252,11 @@ boolean getOrCreateGitBranch(String branch, String credentialsId) {
         githubscm.createBranch(branch)
         githubscm.pushObject('origin', branch,  credentialsId)
         return true
+    }
+}
+
+void setPipelinePropertyIfNeeded(String key, def value) {
+    if (value) {
+        pipelineProperties[key] = value
     }
 }

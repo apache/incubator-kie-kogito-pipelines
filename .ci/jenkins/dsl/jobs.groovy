@@ -13,7 +13,10 @@ setupCreateIssueToolsJob()
 setupCleanOldNamespacesToolsJob()
 setupCleanOldNightlyImagesToolsJob()
 setupUpdateQuarkusPlatformJob()
-KogitoJobUtils.createMainQuarkusUpdateToolsJob(this, 'Kogito Pipelines', [ 'drools', 'kogito-runtimes', 'kogito-examples', 'kogito-images', 'kogito-docs' ])
+KogitoJobUtils.createMainQuarkusUpdateToolsJob(this,
+        [ 'drools', 'kogito-runtimes', 'kogito-examples', 'kogito-images', 'kogito-docs' ],
+        [ 'radtriste' ] // TODO to update
+)
 if (Utils.isMainBranch(this)) {
     setupBuildOperatorNode()
 }
