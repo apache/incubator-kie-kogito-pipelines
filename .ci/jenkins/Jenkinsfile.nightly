@@ -83,221 +83,221 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Kogito Runtimes') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
+        // stage('Build & Deploy Kogito Runtimes') {
+        //     when {
+        //         expression { return isArtifactsDeploy() }
+        //     }
+        //     steps {
+        //         script {
+        //             def buildParams = getDefaultBuildParams()
+        //             addSkipTestsParam(buildParams)
 
-                    // images and operator deploy testing will use older working artifacts if that one fails
-                    buildJob(RUNTIMES_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(RUNTIMES_DEPLOY)
-                }
-            }
-        }
+        //             // images and operator deploy testing will use older working artifacts if that one fails
+        //             buildJob(RUNTIMES_DEPLOY, buildParams)
+        //         }
+        //     }
+        //     post {
+        //         failure {
+        //             addFailedStage(RUNTIMES_DEPLOY)
+        //         }
+        //     }
+        // }
 
-        stage('Build & Deploy Kogito Apps') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
+        // stage('Build & Deploy Kogito Apps') {
+        //     when {
+        //         expression { return isArtifactsDeploy() }
+        //     }
+        //     steps {
+        //         script {
+        //             def buildParams = getDefaultBuildParams()
+        //             addSkipTestsParam(buildParams)
 
-                    // images and operator deploy testing will use older working artifacts if that one fails
-                    buildJob(APPS_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(APPS_DEPLOY)
-                }
-            }
-        }
+        //             // images and operator deploy testing will use older working artifacts if that one fails
+        //             buildJob(APPS_DEPLOY, buildParams)
+        //         }
+        //     }
+        //     post {
+        //         failure {
+        //             addFailedStage(APPS_DEPLOY)
+        //         }
+        //     }
+        // }
 
-        stage('Build & Deploy Kogito Examples') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
-                    addBooleanParam(buildParams, 'UPDATE_NIGHTLY_BRANCH', true)
+        // stage('Build & Deploy Kogito Examples') {
+        //     when {
+        //         expression { return isArtifactsDeploy() }
+        //     }
+        //     steps {
+        //         script {
+        //             def buildParams = getDefaultBuildParams()
+        //             addSkipTestsParam(buildParams)
+        //             addBooleanParam(buildParams, 'UPDATE_NIGHTLY_BRANCH', true)
 
-                    // images and operator deploy testing will use older working artifacts if that one fails
-                    buildJob(EXAMPLES_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(EXAMPLES_DEPLOY)
-                }
-            }
-        }
+        //             // images and operator deploy testing will use older working artifacts if that one fails
+        //             buildJob(EXAMPLES_DEPLOY, buildParams)
+        //         }
+        //     }
+        //     post {
+        //         failure {
+        //             addFailedStage(EXAMPLES_DEPLOY)
+        //         }
+        //     }
+        // }
 
-        stage('Build & Deploy Images') {
-            when {
-                expression { return isImagesDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                    addDeployImageWithLatestTagParam(buildParams)
+        // stage('Build & Deploy Images') {
+        //     when {
+        //         expression { return isImagesDeploy() }
+        //     }
+        //     steps {
+        //         script {
+        //             def buildParams = getDefaultBuildParams()
+        //             addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+        //             addDeployImageWithLatestTagParam(buildParams)
 
-                    // For building
-                    addAppsParam(buildParams)
+        //             // For building
+        //             addAppsParam(buildParams)
 
-                    // For testing
-                    addSkipTestsParam(buildParams)
-                    addExamplesParam(buildParams)
+        //             // For testing
+        //             addSkipTestsParam(buildParams)
+        //             addExamplesParam(buildParams)
 
-                    // Ask to create the PR with changes occuring in this
-                    addBooleanParam(buildParams, 'CREATE_PR', true)
+        //             // Ask to create the PR with changes occuring in this
+        //             addBooleanParam(buildParams, 'CREATE_PR', true)
 
-                    buildJob(IMAGES_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(IMAGES_DEPLOY)
-                }
-            }
-        }
+        //             buildJob(IMAGES_DEPLOY, buildParams)
+        //         }
+        //     }
+        //     post {
+        //         failure {
+        //             addFailedStage(IMAGES_DEPLOY)
+        //         }
+        //     }
+        // }
 
-        stage('Build examples images & BDD testing') {
-            parallel {
-                stage('Main Build examples images & BDD testing') {
-                    stages {
-                        stage('Build & Deploy Examples Images') {
-                            when {
-                                expression { return isExamplesImagesDeploy() }
-                            }
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams()
-                                    addSkipTestsParam(buildParams)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                                    addDeployImageWithLatestTagParam(buildParams)
+        // stage('Build examples images & BDD testing') {
+        //     parallel {
+        //         stage('Main Build examples images & BDD testing') {
+        //             stages {
+        //                 stage('Build & Deploy Examples Images') {
+        //                     when {
+        //                         expression { return isExamplesImagesDeploy() }
+        //                     }
+        //                     steps {
+        //                         script {
+        //                             def buildParams = getDefaultBuildParams()
+        //                             addSkipTestsParam(buildParams)
+        //                             addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+        //                             addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+        //                             addDeployImageWithLatestTagParam(buildParams)
 
-                                    // For BDD tests
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                                    addExamplesParam(buildParams)
+        //                             // For BDD tests
+        //                             addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+        //                             addExamplesParam(buildParams)
 
-                                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams)
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage(EXAMPLES_IMAGES_DEPLOY)
-                                }
-                            }
-                        }
-                        stage('Build & Deploy Operator') {
-                            when {
-                                expression { return isOperatorDeploy() }
-                            }
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams()
-                                    addSkipTestsParam(buildParams)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                                    addDeployImageWithLatestTagParam(buildParams)
+        //                             buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams)
+        //                         }
+        //                     }
+        //                     post {
+        //                         failure {
+        //                             addFailedStage(EXAMPLES_IMAGES_DEPLOY)
+        //                         }
+        //                     }
+        //                 }
+        //                 stage('Build & Deploy Operator') {
+        //                     when {
+        //                         expression { return isOperatorDeploy() }
+        //                     }
+        //                     steps {
+        //                         script {
+        //                             def buildParams = getDefaultBuildParams()
+        //                             addSkipTestsParam(buildParams)
+        //                             addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+        //                             addDeployImageWithLatestTagParam(buildParams)
 
-                                    // For BDD tests
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix)
-                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
-                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
-                                    addExamplesParam(buildParams)
+        //                             // For BDD tests
+        //                             addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+        //                             addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix)
+        //                             addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
+        //                             addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
+        //                             addExamplesParam(buildParams)
 
-                                    buildJob(OPERATOR_DEPLOY, buildParams)
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage(OPERATOR_DEPLOY)
-                                }
-                            }
-                        }
-                    }
-                }
-                stage('Mandrel Build examples images & BDD testing') {
-                    when {
-                        expression { return getNativeBuilderImage() }
-                    }
-                    stages {
-                        stage('Build & Deploy Examples Images with Mandrel') {
-                            when {
-                                expression { return isExamplesImagesDeploy() }
-                            }
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams(getBuildBranch(), 'mandrel')
-                                    addSkipTestsParam(buildParams)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, defaultImageParamsPrefix, 'mandrel')
-                                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                                    addDeployImageWithLatestTagParam(buildParams)
+        //                             buildJob(OPERATOR_DEPLOY, buildParams)
+        //                         }
+        //                     }
+        //                     post {
+        //                         failure {
+        //                             addFailedStage(OPERATOR_DEPLOY)
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //         stage('Mandrel Build examples images & BDD testing') {
+        //             when {
+        //                 expression { return getNativeBuilderImage() }
+        //             }
+        //             stages {
+        //                 stage('Build & Deploy Examples Images with Mandrel') {
+        //                     when {
+        //                         expression { return isExamplesImagesDeploy() }
+        //                     }
+        //                     steps {
+        //                         script {
+        //                             def buildParams = getDefaultBuildParams(getBuildBranch(), 'mandrel')
+        //                             addSkipTestsParam(buildParams)
+        //                             addImageBuildParams(buildParams, env.NIGHTLY_TAG, defaultImageParamsPrefix, 'mandrel')
+        //                             addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+        //                             addDeployImageWithLatestTagParam(buildParams)
 
-                                    // For BDD tests
-                                    addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getNativeBuilderImage())
-                                    addStringParam(buildParams, 'BDD_TEST_TAGS', '~@ignorelts')
-                                    addBooleanParam(buildParams, 'SKIP_NON_NATIVE_TESTS', true)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                                    addExamplesParam(buildParams)
+        //                             // For BDD tests
+        //                             addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getNativeBuilderImage())
+        //                             addStringParam(buildParams, 'BDD_TEST_TAGS', '~@ignorelts')
+        //                             addBooleanParam(buildParams, 'SKIP_NON_NATIVE_TESTS', true)
+        //                             addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+        //                             addExamplesParam(buildParams)
 
-                                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams, getMandrelJobKey(EXAMPLES_IMAGES_DEPLOY))
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage(getMandrelJobKey(EXAMPLES_IMAGES_DEPLOY))
-                                }
-                            }
-                        }
-                        stage('Build & Deploy Operator with Mandrel') {
-                            when {
-                                expression { return getNativeBuilderImage() && isOperatorDeploy() }
-                            }
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams(getBuildBranch(), 'mandrel')
-                                    addSkipTestsParam(buildParams)
-                                    addBooleanParam(buildParams, 'SKIP_DEPLOY', true)
+        //                             buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams, getMandrelJobKey(EXAMPLES_IMAGES_DEPLOY))
+        //                         }
+        //                     }
+        //                     post {
+        //                         failure {
+        //                             addFailedStage(getMandrelJobKey(EXAMPLES_IMAGES_DEPLOY))
+        //                         }
+        //                     }
+        //                 }
+        //                 stage('Build & Deploy Operator with Mandrel') {
+        //                     when {
+        //                         expression { return getNativeBuilderImage() && isOperatorDeploy() }
+        //                     }
+        //                     steps {
+        //                         script {
+        //                             def buildParams = getDefaultBuildParams(getBuildBranch(), 'mandrel')
+        //                             addSkipTestsParam(buildParams)
+        //                             addBooleanParam(buildParams, 'SKIP_DEPLOY', true)
 
-                                    // For BDD tests
-                                    addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getNativeBuilderImage())
-                                    addStringParam(buildParams, 'BDD_TEST_TAGS', '~@ignorelts')
-                                    addBooleanParam(buildParams, 'SKIP_NON_NATIVE_TESTS', true)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix, 'mandrel')
-                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
-                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
-                                    addExamplesParam(buildParams)
+        //                             // For BDD tests
+        //                             addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getNativeBuilderImage())
+        //                             addStringParam(buildParams, 'BDD_TEST_TAGS', '~@ignorelts')
+        //                             addBooleanParam(buildParams, 'SKIP_NON_NATIVE_TESTS', true)
+        //                             addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+        //                             addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix, 'mandrel')
+        //                             addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
+        //                             addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
+        //                             addExamplesParam(buildParams)
 
-                                    buildJob(OPERATOR_DEPLOY, buildParams, getMandrelJobKey(OPERATOR_DEPLOY))
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage(getMandrelJobKey(OPERATOR_DEPLOY))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        //                             buildJob(OPERATOR_DEPLOY, buildParams, getMandrelJobKey(OPERATOR_DEPLOY))
+        //                         }
+        //                     }
+        //                     post {
+        //                         failure {
+        //                             addFailedStage(getMandrelJobKey(OPERATOR_DEPLOY))
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
     }
     post {
         unsuccessful {
