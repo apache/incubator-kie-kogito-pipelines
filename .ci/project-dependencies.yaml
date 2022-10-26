@@ -11,70 +11,70 @@ dependencies:
           - source: (\d*)\.(.*)\.(.*)
             targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
 
-  # - project: kiegroup/kogito-runtimes
-  #   dependencies:
-  #     - project: kiegroup/drools
-  #   mapping:
-  #     dependencies:
-  #       default:
-  #         - source: (\d*)\.(.*)\.(.*)
-  #           targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
-  #     dependant:
-  #       default:
-  #         - source: (\d*)\.(.*)\.(.*)
-  #           targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
-  #     exclude:
-  #       - kiegroup/kogito-examples
-  #       - kiegroup/kogito-apps
+  - project: kiegroup/kogito-runtimes
+    dependencies:
+      - project: kiegroup/drools
+    mapping:
+      dependencies:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
+      dependant:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
+      exclude:
+        - kiegroup/kogito-examples
+        - kiegroup/kogito-apps
   
-  # - project: kiegroup/kogito-apps
-  #   dependencies:
-  #     - project: kiegroup/kogito-runtimes
-  #   mapping:
-  #     dependencies:
-  #       default:
-  #         - source: (\d*)\.(.*)\.(.*)
-  #           targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
-  #     dependant:
-  #       default:
-  #         - source: (\d*)\.(.*)\.(.*)
-  #           targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
-  #     exclude:
-  #       - kiegroup/kogito-examples
-  #       - kiegroup/kogito-runtimes
+  - project: kiegroup/kogito-apps
+    dependencies:
+      - project: kiegroup/kogito-runtimes
+    mapping:
+      dependencies:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
+      dependant:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
+      exclude:
+        - kiegroup/kogito-examples
+        - kiegroup/kogito-runtimes
 
-  # - project: kiegroup/kogito-examples
-  #   dependencies:
-  #     - project: kiegroup/kogito-runtimes
-  #     - project: kiegroup/kogito-apps
-  #   mapping:
-  #     dependencies:
-  #       default:
-  #         - source: (\d*)\.(.*)\.(.*)
-  #           targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
-  #     dependant:
-  #       default:
-  #         - source: (\d*)\.(.*)\.(.*)
-  #           targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
-  #     exclude:
-  #       - kiegroup/kogito-apps
-  #       - kiegroup/kogito-runtimes
+  - project: kiegroup/kogito-examples
+    dependencies:
+      - project: kiegroup/kogito-runtimes
+      - project: kiegroup/kogito-apps
+    mapping:
+      dependencies:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)"
+      dependant:
+        default:
+          - source: (\d*)\.(.*)\.(.*)
+            targetExpression: "process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)"
+      exclude:
+        - kiegroup/kogito-apps
+        - kiegroup/kogito-runtimes
 
-  # - project: kiegroup/optaplanner
+  - project: kiegroup/optaplanner
 
-  # - project: kiegroup/optaweb-vehicle-routing
-  #   dependencies:
-  #     - project: kiegroup/optaplanner
+  - project: kiegroup/optaweb-vehicle-routing
+    dependencies:
+      - project: kiegroup/optaplanner
 
-  # - project: kiegroup/optaplanner-quickstarts
-  #   dependencies:
-  #     - project: kiegroup/optaplanner
-  #   mapping:
-  #     dependencies:
-  #       default:
-  #         - source: development
-  #           target: main
-  #     dependant:
-  #       default:
-  #         - source: main
-  #           target: development
+  - project: kiegroup/optaplanner-quickstarts
+    dependencies:
+      - project: kiegroup/optaplanner
+    mapping:
+      dependencies:
+        default:
+          - source: development
+            target: main
+      dependant:
+        default:
+          - source: main
+            target: development
