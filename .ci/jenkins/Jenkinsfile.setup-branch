@@ -167,6 +167,21 @@ pipeline {
                 }
             }
         }
+        stage('Init Serverless Operator') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                    buildJob('kogito-serverless-operator', buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage('kogito-serverless-operator')
+                }
+            }
+        }
         stage('Init Docs') {
             steps {
                 script {

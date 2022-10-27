@@ -9,6 +9,7 @@ EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 EXAMPLES_IMAGES_DEPLOY = 'kogito-examples-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
+SEVERLESS_OPERATOR_DEPLOY = 'kogito-serverless-operator-deploy'
 
 // Map of executed jobs
 // See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
@@ -293,6 +294,26 @@ pipeline {
                                     addFailedStage(getMandrelJobKey(OPERATOR_DEPLOY))
                                 }
                             }
+                        }
+                    }
+                }
+                stage('Build & Deploy Serverless Operator') {
+                    when {
+                        expression { return isOperatorDeploy() }
+                    }
+                    steps {
+                        script {
+                            def buildParams = getDefaultBuildParams()
+                            addSkipTestsParam(buildParams)
+                            addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                            addDeployImageWithLatestTagParam(buildParams)
+
+                            buildJob(SEVERLESS_OPERATOR_DEPLOY, buildParams)
+                        }
+                    }
+                    post {
+                        failure {
+                            addFailedStage(SEVERLESS_OPERATOR_DEPLOY)
                         }
                     }
                 }
