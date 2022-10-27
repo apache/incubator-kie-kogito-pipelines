@@ -312,9 +312,12 @@ seed_ref=${DSL_DEFAULT_SEED_REF}
 seed_local_path=${DSL_DEFAULT_SEED_REPO_LOCAL_PATH}
 
 fallback_seed_repo=${DSL_DEFAULT_FALLBACK_SEED_REPO:-'kiegroup/kogito-pipelines'}
-fallback_seed_ref="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.branch" ${main_config_file_path} 2> /dev/null)"
-if [ $? != 0 ]; then 
-  fallback_seed_ref=${DSL_DEFAULT_FALLBACK_SEED_REF:-'main'}
+fallback_seed_ref=${DSL_DEFAULT_FALLBACK_SEED_REF}
+if [ -z ${fallback_seed_ref} ]; then
+  fallback_seed_ref="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.branch" ${main_config_file_path} 2> /dev/null)"
+  if [ $? != 0 ]; then 
+    fallback_seed_ref='main'
+  fi
 fi
 
 if [ -z "${seed_repo}" ]; then
