@@ -163,6 +163,7 @@ jobs:
       - name: DSL tests
         uses: kiegroup/kogito-pipelines/.ci/actions/dsl-tests@main
         with:
+          project: kogito
           repository: ${{ matrix.repository }}
           main-config-file-repo: kiegroup/kogito-pipelines
           main-config-file-path: dsl/config/main.yaml
@@ -325,6 +326,7 @@ jobs:
       - name: DSL tests
         uses: kiegroup/kogito-pipelines/.ci/actions/dsl-tests@main
         with:
+          project: optaplanner
           repository: ${{ matrix.repository }}
           main-config-file-repo: kiegroup/optaplanner
           main-config-file-path: .ci/jenkins/config/main.yaml
