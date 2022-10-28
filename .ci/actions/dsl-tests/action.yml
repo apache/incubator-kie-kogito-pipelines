@@ -1,6 +1,10 @@
 name: 'DSL tests'
 description: 'Tests DSL generation'
 inputs:
+  project:
+    description: which project is built ?
+    required: true
+    default: kogito
   repository:
     description: author/repository to test
     required: false
@@ -47,11 +51,24 @@ runs:
   - name: Setup default base branch based on input (if any, else fallback)
     shell: bash
     run: |
-      branch=${{ inputs.base-branch }}
-      if [ -z ${branch} ]; then branch=${{ github.base_ref }}; fi
-      echo "Use base branch ${branch}"
-      echo "BASE_BRANCH=${branch}" >> $GITHUB_ENV
+      base_branch=${{ inputs.base-branch }}
+      if [ -z ${base_branch} ]; then base_branch=${{ github.base_ref }}; fi
+      echo "Use base base_branch ${base_branch}"
+      echo "BASE_BRANCH=${base_branch}" >> $GITHUB_ENV
   
+  - name: Setup fallback seed reference
+    shell: bash
+    run: |
+      fallback_seed_ref=${{ env.BASE_BRANCH }}
+      if [[ ${fallback_seed_ref} =~ ^[0-9]+\.[0-9]+\.x$ ]]; then 
+        IFS='.' read -ra ver <<< "${fallback_seed_ref}"
+        release=${ver[2]}
+        minor=${ver[1]}
+        major=${ver[0]}
+        fallback_seed_ref="seed-${{ inputs.project }}-$((major)).$minor.$release"
+      fi
+      echo "FALLBACK_SEED_REF=${fallback_seed_ref}" >> $GITHUB_ENV
+
   - name: Prepare pipelines test dir
     shell: bash
     run: |
@@ -77,7 +94,7 @@ runs:
       DSL_DEFAULT_BRANCH_CONFIG_FILE_PATH: ${{ inputs.branch-config-file-path }}
       DSL_DEFAULT_FALLBACK_BRANCH_CONFIG_FILE_REPO: ${{ inputs.branch-config-file-repo }}
 
-      DSL_DEFAULT_FALLBACK_SEED_REF: ${{ env.BASE_BRANCH }}
+      DSL_DEFAULT_FALLBACK_SEED_REF: ${{ env.FALLBACK_SEED_REF }}
       DSL_DEFAULT_PIPELINES_TEST_DIR: ${{ env.PIPELINES_TEST_DIR }}
 
       DSL_DEFAULT_CURRENT_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
