@@ -46,12 +46,22 @@ class Environment {
     public static final Environment DEFAULT = new Environment(
         name: 'DEFAULT',
         optional: false,
+        getDefaultEnvVarsClosure: { script ->
+            [
+                BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+            ]
+        }
     )
 
     public static final Environment SONARCLOUD = new Environment(
         name: 'SONARCLOUD',
         optional: true,
         isActiveClosure: { script -> Utils.isMainBranch(script) },
+        getDefaultEnvVarsClosure: { script ->
+            [
+                BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+            ]
+        }
     )
 
     public static final Environment NATIVE = new Environment(
@@ -64,6 +74,7 @@ class Environment {
                 ADDITIONAL_TIMEOUT: 720,
                 DISABLE_PERSISTENCE: 'true',
                 DISABLE_EVENTS: 'true',
+                BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
             ]
         }
     )
@@ -79,6 +90,7 @@ class Environment {
                 ADDITIONAL_TIMEOUT: 720,
                 DISABLE_EVENTS: 'true',
                 DISABLE_PERSISTENCE: 'true',
+                BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
             ]
         }
     )
@@ -104,14 +116,20 @@ class Environment {
         name: 'QUARKUS_MAIN',
         optional: true,
         isActiveClosure: { script -> Utils.isEnvironmentQuarkusMainEnabled(script) },
-        getDefaultEnvVarsClosure: { script -> [ QUARKUS_BRANCH: 'main' ] }
+        getDefaultEnvVarsClosure: { script -> [ 
+            QUARKUS_BRANCH: 'main',
+            BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+        ] }
     )
 
     public static final Environment QUARKUS_BRANCH = new Environment(
         name: 'QUARKUS_BRANCH',
         optional: true,
         isActiveClosure: { script -> Utils.isEnvironmentQuarkusBranchEnabled(script) },
-        getDefaultEnvVarsClosure: { script -> [ QUARKUS_BRANCH: Utils.getEnvironmentQuarkusBranchVersion(script) ] }
+        getDefaultEnvVarsClosure: { script -> [ 
+            QUARKUS_BRANCH: Utils.getEnvironmentQuarkusBranchVersion(script),
+            BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+        ] }
     )
 
     public static final Environment QUARKUS_LTS = new Environment(
@@ -129,6 +147,11 @@ class Environment {
         name: 'KOGITO_BDD',
         optional: true,
         isActiveClosure: { script -> Utils.isEnvironmentRuntimesBDDEnabled(script) },
+        getDefaultEnvVarsClosure: { script ->
+            [
+                BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+            ]
+        }
     )
 
     // Ecosystem env should only be executed in main branch
@@ -137,6 +160,11 @@ class Environment {
         name: 'ECOSYSTEM',
         optional: true,
         isActiveClosure: { script -> Utils.isMainBranch(script) },
+        getDefaultEnvVarsClosure: { script ->
+            [
+                BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+            ]
+        }
     )
 
     private static final Set<Environment> ENVIRONMENTS = [
