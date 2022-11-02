@@ -1,0 +1,11 @@
+version: "2.1"
+
+extends: ./project-dependencies.yaml
+
+dependencies:
+  - project: kiegroup/drools
+
+  - project: kiegroup/optaplanner
+    dependencies:
+      - project: kiegroup/drools
+
