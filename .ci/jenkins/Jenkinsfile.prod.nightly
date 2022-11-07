@@ -184,7 +184,7 @@ def getMessageBody(String propertiesFileUrl, Map pmeExecutionResult) {
     return """
 {
 	"propertiesFileUrl": "${propertiesFileUrl}",
-	"builtProjects": ${new groovy.json.JsonBuilder(pmeExecutionResult).toString()}
+	"builtProjects": ${new groovy.json.JsonBuilder(pmeExecutionResult.collect{ it.key }).toString()}
 }"""
 }
 
