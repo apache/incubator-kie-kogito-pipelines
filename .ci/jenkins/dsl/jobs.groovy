@@ -9,6 +9,7 @@ JENKINSFILE_PATH = '.ci/jenkins'
 setupKogitoRuntimesBDDPrJob()
 
 // Tools
+setupUpdateJenkinsDependenciesJob()
 setupCreateIssueToolsJob()
 setupCleanOldNamespacesToolsJob()
 setupCleanOldNightlyImagesToolsJob()
@@ -75,6 +76,20 @@ void setupCreateIssueToolsJob() {
             textParam('ISSUE_BODY', '', 'Body of the issue')
         }
     }
+}
+
+void setupUpdateJenkinsDependenciesJob() {
+    jobParams = KogitoJobUtils.getBasicJobParams(this, 'jenkins-update-framework-deps', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.update-jenkins-dependencies", 'Nightly check of Jenkins dependencies from framework against current version of Jenkins')
+    jobParams.triggers = [cron : '@midnight']
+    jobParams.env.putAll([
+        REPO_NAME: 'kogito-pipelines',
+        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+
+        BUILD_BRANCH_NAME: "${GIT_BRANCH}",
+        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
+        AUTHOR_CREDS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
+    ])
+    KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
 void createSetupBranchJob() {
