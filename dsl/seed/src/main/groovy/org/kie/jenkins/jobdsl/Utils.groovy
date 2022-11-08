@@ -144,6 +144,26 @@ class Utils {
         return getBindingValue(script, 'GIT_AUTHOR_TOKEN_CREDENTIALS_ID')
     }
 
+    static String getGitForkAuthorName(def script) {
+        return getBindingValue(script, 'GIT_FORK_AUTHOR_NAME')
+    }
+
+    static String getGitForkAuthorCredsId(def script) {
+        return getBindingValue(script, 'GIT_FORK_AUTHOR_CREDENTIALS_ID')
+    }
+
+    static String getGitQuarkusBranch(def script) {
+        return getBindingValue(script, 'GIT_QUARKUS_BRANCH')
+    }
+
+    static String getGitQuarkusAuthor(def script) {
+        return getBindingValue(script, 'GIT_QUARKUS_AUTHOR_NAME')
+    }
+
+    static String getGitQuarkusAuthorCredsId(def script) {
+        return getBindingValue(script, 'GIT_QUARKUS_AUTHOR_CREDENTIALS_ID')
+    }
+
     static String getJenkinsConfigPath(def script, String repoName) {
         return getBindingValue(script, "${repoName.toUpperCase()}_JENKINS_CONFIG_PATH")
     }

@@ -13,7 +13,7 @@ setupUpdateJenkinsDependenciesJob()
 setupCreateIssueToolsJob()
 setupCleanOldNamespacesToolsJob()
 setupCleanOldNightlyImagesToolsJob()
-setupUpdateQuarkusPlatformJob()
+KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'kogito')
 KogitoJobUtils.createMainQuarkusUpdateToolsJob(this,
         [ 'drools', 'kogito-runtimes', 'kogito-examples', 'kogito-images', 'kogito-docs' ],
         [ 'radtriste' ] // TODO to update
@@ -197,26 +197,4 @@ void setupReleaseJob() {
 void setupBuildOperatorNode() {
     def jobParams = KogitoJobUtils.getBasicJobParams(this, 'build-operator-node', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.build-operator-node")
     KogitoJobTemplate.createPipelineJob(this, jobParams)
-}
-
-void setupUpdateQuarkusPlatformJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'update-quarkus-platform', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.update-quarkus-platform", 'Update kogito in quarkus-platform')
-    KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(this, jobParams)
-    jobParams.env.putAll([
-            JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
-            BUILD_BRANCH_NAME: "${GIT_BRANCH}",
-            QUARKUS_PLATFORM_BRANCH_NAME: 'main',
-            PROJECT_NAME: 'kogito',
-            FORK_GIT_AUTHOR: "${GIT_FORK_AUTHOR_NAME}",
-            FORK_GIT_AUTHOR_CREDS_ID: "${GIT_FORK_AUTHOR_CREDENTIALS_ID}",
-    ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
-        parameters {
-            stringParam('NEW_VERSION', '', 'Which version to set ?')
-
-            stringParam('PR_BRANCH', '', '(Optional) Which PR branch name to use ? If none given, a name will be generated automatically.')
-
-            choiceParam('COMMAND', ['stage', 'finalize'], 'Choose if you want to use staged artifacts or released artifacts.')
-        }
-    }
 }

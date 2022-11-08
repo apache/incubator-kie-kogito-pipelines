@@ -42,11 +42,11 @@ pipeline {
                     sh 'printenv'
                     
                     dir(kogitoPipelinesRepo){
-                        checkoutRepo(kogitoPipelinesRepo, 'kiegroup', getBuildBranch())
+                        checkoutRepo(kogitoPipelinesRepo, getGitAuthor(), getBuildBranch(), getGitAuthorCredsId())
                     }
 
                     dir(quarkusPlatformRepo){
-                        checkoutRepo(quarkusPlatformRepo, 'quarkusio', getQuarkusPlatformBranch())
+                        checkoutRepo(quarkusPlatformRepo, getQuarkusPlatformAuthor(), getQuarkusPlatformBranch(), getQuarkusPlatformAuthorCredsId())
                         githubscm.forkRepo("${FORK_GIT_AUTHOR_CREDS_ID}")
                     }
 				}
@@ -145,8 +145,8 @@ boolean getOrCreateGitBranch(String branch, String credentialsId) {
     }
 }
 
-void checkoutRepo(String repo, String GIT_AUTHOR, String branch) {
-    checkout(githubscm.resolveRepository(repo, GIT_AUTHOR, branch, false))
+void checkoutRepo(String repo, String author, String branch, String credentialsId) {
+    checkout(githubscm.resolveRepository(repo, author, branch, false, credentialsId))
     // need to manually checkout branch since on a detached branch after checkout command
     sh "git checkout ${branch}"
 }
@@ -185,6 +185,22 @@ String getBuildBranch() {
     return env.BUILD_BRANCH_NAME
 }
 
+String getGitAuthor() {
+    return env.GIT_AUTHOR
+}
+
+String getGitAuthorCredsId() {
+    return env.GIT_AUTHOR_CREDENTIALS_ID
+}
+
 String getQuarkusPlatformBranch() {
-    return env.QUARKUS_PLATFORM_BRANCH_NAME
+    return env.QUARKUS_PLATFORM_BRANCH
+}
+
+String getQuarkusPlatformAuthor() {
+    return env.QUARKUS_PLATFORM_AUTHOR_NAME
+}
+
+String getQuarkusPlatformAuthorCredsId() {
+    return env.QUARKUS_PLATFORM_AUTHOR_CREDENTIALS_ID
 }
