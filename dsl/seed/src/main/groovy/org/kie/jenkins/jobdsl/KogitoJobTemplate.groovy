@@ -37,7 +37,7 @@ class KogitoJobTemplate {
     static def createPipelineJob(def script, Map jobParams = [:]) {
         String jobFolderName = ''
         Map jobFolderEnv = [:]
-        if(jobParams.job.folder) {
+        if (jobParams.job.folder) {
             if (!jobParams.job.folder instanceof Folder) {
                 throw new RuntimeException('Folder is not of type org.kie.jenkins.jobdsl.model.Folder')
             }
@@ -75,13 +75,23 @@ class KogitoJobTemplate {
             properties {
                 githubProjectUrl(jobParams.git.project_url ?: Utils.createProjectUrl(jobParams.git.author, jobParams.git.repository))
 
-                if (!Utils.areTriggersDisabled(script) && jobParams.triggers && jobParams.triggers.cron) {
-                    pipelineTriggers {
-                        triggers {
-                            cron {
-                                spec(jobParams.triggers.cron)
+                if (!Utils.areTriggersDisabled(script) && jobParams.triggers) {
+                    if (jobParams.triggers.cron) {
+                        pipelineTriggers {
+                            triggers {
+                                cron {
+                                    spec(jobParams.triggers.cron)
+                                }
                             }
                         }
+                    } else if (jobParams.triggers.push) {
+                        pipelineTriggers {
+                            triggers {
+                                githubPush()
+                            }
+                        }
+                    } else {
+                        throw new RuntimeException('Unknown `jobParams.triggers`')
                     }
                 }
             }
@@ -117,8 +127,8 @@ class KogitoJobTemplate {
                     }
                 }
             }
-        }
     }
+}
 
     /**
     * Create a PR job
@@ -413,4 +423,5 @@ class KogitoJobTemplate {
         String idStr = id ? id + ' ' : ''
         return "(.*${RegexUtils.getRegexFirstLetterCase('jenkins')},?.*(rerun|run) ${idStr}${testType}.*)"
     }
+
 }
