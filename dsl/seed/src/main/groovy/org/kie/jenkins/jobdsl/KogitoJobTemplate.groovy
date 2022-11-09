@@ -76,18 +76,22 @@ class KogitoJobTemplate {
                 githubProjectUrl(jobParams.git.project_url ?: Utils.createProjectUrl(jobParams.git.author, jobParams.git.repository))
 
                 if (!Utils.areTriggersDisabled(script) && jobParams.triggers) {
-                    pipelineTriggers {
-                        triggers {
-                            if (jobParams.triggers.cron) {
+                    if (jobParams.triggers.cron) {
+                        pipelineTriggers {
+                            triggers {
                                 cron {
                                     spec(jobParams.triggers.cron)
                                 }
-                            } else if (jobParams.triggers.push) {
-                                githubPush()
-                            } else {
-                                throw new RuntimeException('Unknown `jobParams.triggers` defined')
                             }
                         }
+                    } else if (jobParams.triggers.push) {
+                        pipelineTriggers {
+                            triggers {
+                                githubPush()
+                            }
+                        }
+                    } else {
+                        throw new RuntimeException('Unknown `jobParams.triggers`')
                     }
                 }
             }
