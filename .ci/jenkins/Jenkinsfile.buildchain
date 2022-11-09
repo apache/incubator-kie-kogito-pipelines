@@ -3,7 +3,7 @@
 agentLabel = "${env.ADDITIONAL_LABEL?.trim() ? ADDITIONAL_LABEL : 'kie-rhel7 && kie-mem16g'} && !built-in"
 timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: "180"
 jdkTool = env.BUILD_JDK_TOOL?.trim() ?: 'kie-jdk11'
-mavenTool = env.BUILD_MAVEN_TOOL?.trim() ?: 'kie-maven-3.8.1'
+mavenTool = env.BUILD_MAVEN_TOOL?.trim() ?: 'kie-maven-3.8.6'
 
 prType = env.BUILDCHAIN_PR_TYPE?.trim() ?: 'pr'
 settingsXmlId = isPR() || isFDB() ? 'kogito_pr_settings' : 'kogito_release_settings'
