@@ -16,9 +16,6 @@ repositories {
     maven {
         url 'https://repo.jenkins-ci.org/public/'
     }
-    maven {
-        url 'https://repo.spring.io/plugins-release/'
-    }
 }
 
 configurations {
@@ -32,79 +29,79 @@ configurations.all*.exclude group: 'xalan'
 configurations.all*.exclude group: 'org.netbeans.modules', module: 'org-netbeans-insane'
 
 dependencies {
-    implementation 'org.codehaus.groovy:groovy-all:2.5.13'
-    implementation "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}@jar"
+    implementation "org.codehaus.groovy:groovy-all:${version_groovy}"
+    implementation "org.jenkins-ci.plugins:job-dsl:${version_jenkins_plugins_job_dsl}@jar"
 
-    testImplementation 'org.spockframework:spock-core:1.3-groovy-2.5'
-    testImplementation 'cglib:cglib-nodep:3.3.0' // used by Spock
+    testImplementation "org.spockframework:spock-core:${version_spock}"
+    testImplementation "cglib:cglib-nodep:${version_cglib_nodep}" // used by Spock
 
-    testImplementation 'org.yaml:snakeyaml:1.21' // used by TestUtil
+    testImplementation "org.yaml:snakeyaml:${version_snakeyaml}" // used by TestUtil
 
     // Jenkins test harness dependencies
-    testImplementation 'org.jenkins-ci.main:jenkins-test-harness:2.66'
-    testImplementation "org.jenkins-ci.main:jenkins-war:${jenkinsVersion}"
-    //testImplementation "org.jenkins-ci.main:jenkins-war:${jenkinsVersion}:war-for-test@jar"
+    testImplementation "org.jenkins-ci.main:jenkins-war:${version_jenkins}"
+    // testImplementation "org.jenkins-ci.main:jenkins-test-harness:${version_jenkins_test_harness}"
+    testImplementation "org.jenkins-ci.main:jenkins-test-harness:2.66"
 
     // Job DSL plugin including plugin dependencies
-    testImplementation "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}"
-    testImplementation "org.jenkins-ci.plugins:job-dsl:${jobDslVersion}@jar"
-    testImplementation 'org.jenkins-ci.plugins:structs:1.22@jar'
-    testImplementation "org.jenkins-ci.plugins:config-file-provider:3.7.0@jar"
-    testImplementation 'org.jenkins-ci.plugins:credentials:2.3.17@jar'
-    testImplementation 'org.jenkins-ci.plugins:cloudbees-folder:6.15@jar'
-    testImplementation 'org.jenkins-ci.plugins.workflow:workflow-aggregator:2.6@jar'
+    testImplementation "org.jenkins-ci.plugins:job-dsl:${version_jenkins_plugins_job_dsl}"
+    testImplementation "org.jenkins-ci.plugins:job-dsl:${version_jenkins_plugins_job_dsl}@jar"
+    testImplementation "org.jenkins-ci.plugins:branch-api:${version_jenkins_plugins_branch_api}@jar"
+    testImplementation "org.jenkins-ci.plugins:cloudbees-folder:${version_jenkins_plugins_cloudbees_folder}@jar"
+    testImplementation "org.jenkins-ci.plugins:config-file-provider:${version_jenkins_plugins_config_file_provider}@jar"
+    testImplementation "org.jenkins-ci.plugins:credentials:${version_jenkins_plugins_credentials}@jar"
+    testImplementation "org.jenkins-ci.plugins:scm-api:${version_jenkins_plugins_scm_api}@jar"
+    testImplementation "org.jenkins-ci.plugins:structs:${version_jenkins_plugins_structs}@jar"
+    testImplementation "org.jenkins-ci.plugins.workflow:workflow-aggregator:${version_jenkins_plugins_workflow_aggregator}@jar"
 
 // plugins to install in test instance (all plugins used by the DSL scripts needs to be specified)
     // keep the alphabetical order
-    testPlugins 'org.jenkins-ci.plugins.workflow:workflow-aggregator:2.6'
-    testPlugins 'org.jenkins-ci.plugins.workflow:workflow-step-api:2.22'
-    testPlugins 'org.jenkins-ci.plugins:cloudbees-folder:6.15'
-    testPlugins 'com.cloudbees.plugins:build-flow-plugin:0.20'
-    testPlugins 'com.coravy.hudson.plugins.github:github:1.33.1'
-    testPlugins 'com.sonyericsson.hudson.plugins.rebuild:rebuild:1.32'
-    testPlugins 'com.synopsys.jenkinsci:ownership:0.13.0'
-    testPlugins 'org.jenkins-ci.main:maven-plugin:3.10'
-    testPlugins 'org.jenkins-ci.plugins:ansicolor:0.7.0'
-    testPlugins 'org.jenkins-ci.plugins:build-timeout:1.20'
-    testPlugins 'org.jenkins-ci.plugins:config-file-provider:3.7.0'
-    testPlugins 'org.jenkins-ci.plugins:credentials:2.1.17'
-    testPlugins 'org.jenkins-ci.plugins:description-setter:1.10'
-    testPlugins 'org.jenkins-ci.plugins:email-ext:2.60'
-    testPlugins 'org.jenkins-ci.plugins:envinject:2.4.0'
-    testPlugins 'org.jenkins-ci.plugins:git:4.7.1'
-    testPlugins 'org.jenkins-ci.plugins:ghprb:1.42.2'
-    testPlugins 'org.jenkins-ci.plugins:jms-messaging:1.1.19'
-    testPlugins 'org.jenkins-ci.plugins:junit:1.49'
-    testPlugins 'org.jenkins-ci.plugins:mask-passwords:3.0'
-    testPlugins 'org.jenkins-ci.plugins:matrix-project:1.18'
-    testPlugins 'org.jenkins-ci.plugins:multiple-scms:0.6'
-    testPlugins 'org.jenkins-ci.plugins:nested-view:1.14'
-    testPlugins 'org.jenkins-ci.plugins:parameterized-trigger:2.40'
-    testPlugins 'org.jenkins-ci.plugins:pipeline-build-step:2.13'
-    testPlugins 'org.jenkinsci.plugins:pipeline-model-declarative-agent:1.1.1'
-    testPlugins 'org.jenkins-ci.plugins:pipeline-input-step:2.12'
-    testPlugins 'org.jenkins-ci.plugins:pipeline-maven:3.10.0'
-    testPlugins 'org.jenkins-ci.plugins.pipeline-stage-view:pipeline-rest-api:2.19'
-    testPlugins 'org.jenkins-ci.plugins:pipeline-stage-step:2.5'
-    testPlugins 'org.jenkins-ci.plugins:pipeline-utility-steps:2.7.1'
-    testPlugins 'org.jenkins-ci.plugins:pipeline-graph-analysis:1.10'
-    testPlugins 'org.jenkins-ci.plugins:pipeline-milestone-step:1.3.2'
-    testPlugins 'org.jenkinsci.plugins:pipeline-model-api:1.8.4'
-    testPlugins 'org.jenkinsci.plugins:pipeline-model-definition:1.8.4'
-    testPlugins 'org.jenkinsci.plugins:pipeline-model-extensions:1.8.4'
-    testPlugins 'org.jenkins-ci.plugins.pipeline-stage-view:pipeline-rest-api:2.11'
-    testPlugins 'org.jenkins-ci.plugins:script-security:1.76'
-    testPlugins 'org.jenkins-ci.plugins:throttle-concurrents:2.2'
-    testPlugins 'org.jenkins-ci.plugins:timestamper:1.12'
-    testPlugins 'org.jenkins-ci.plugins:token-macro:2.15'
-    testPlugins 'org.jenkins-ci.plugins:toolenv:1.2'
-    testPlugins 'org.jenkins-ci.plugins:ws-cleanup:0.39'
-    testPlugins 'org.jenkins-ci.plugins:xvnc:1.25'
-    testPlugins 'org.jenkins-ci.plugins:hidden-parameter:0.0.4'
-    testPlugins 'org.jvnet.hudson.plugins:ircbot:2.27'
-    // // should be 1.5.11 but 1.5.11 is missing pom in local repo
-    // testPlugins 'com.redhat.jenkins.plugins:redhat-ci-plugin:1.5.10'
-    testPlugins 'io.jenkins.plugins:warnings-ng:9.0.1'
+    testPlugins "org.jenkins-ci.plugins.workflow:workflow-aggregator:${version_jenkins_plugins_workflow_aggregator}"
+    testPlugins "org.jenkins-ci.plugins.workflow:workflow-step-api:${version_jenkins_plugins_workflow_step_api}"
+    testPlugins "org.jenkins-ci.plugins:cloudbees-folder:${version_jenkins_plugins_cloudbees_folder}"
+    testPlugins "com.coravy.hudson.plugins.github:github:${version_jenkins_plugins_github}"
+    testPlugins "com.sonyericsson.hudson.plugins.rebuild:rebuild:${version_jenkins_plugins_rebuild}"
+    testPlugins "com.synopsys.jenkinsci:ownership:${version_jenkins_plugins_ownership}"
+    testPlugins "org.jenkins-ci.main:maven-plugin:${version_jenkins_plugins_maven_plugin}"
+    testPlugins "org.jenkins-ci.plugins:ansicolor:${version_jenkins_plugins_ansicolor}"
+    testPlugins "org.jenkins-ci.plugins:build-timeout:${version_jenkins_plugins_build_timeout}"
+    testPlugins "org.jenkins-ci.plugins:config-file-provider:${version_jenkins_plugins_config_file_provider}"
+    testPlugins "org.jenkins-ci.plugins:credentials:${version_jenkins_plugins_credentials}"
+    testPlugins "org.jenkins-ci.plugins:description-setter:${version_jenkins_plugins_description_setter}"
+    testPlugins "org.jenkins-ci.plugins:email-ext:${version_jenkins_plugins_email_ext}"
+    testPlugins "org.jenkins-ci.plugins:envinject:${version_jenkins_plugins_envinject}"
+    testPlugins "org.jenkins-ci.plugins:git:${version_jenkins_plugins_git}"
+    testPlugins "org.jenkins-ci.plugins:ghprb:${version_jenkins_plugins_ghprb}"
+    testPlugins "org.jenkins-ci.plugins:jms-messaging:${version_jenkins_plugins_jms_messaging}"
+    testPlugins "org.jenkins-ci.plugins:junit:${version_jenkins_plugins_junit}"
+    testPlugins "org.jenkins-ci.plugins:mask-passwords:${version_jenkins_plugins_mask_passwords}"
+    testPlugins "org.jenkins-ci.plugins:matrix-project:${version_jenkins_plugins_matrix_project}"
+    testPlugins "org.jenkins-ci.plugins:multiple-scms:${version_jenkins_plugins_multiple_scms}"
+    testPlugins "org.jenkins-ci.plugins:parameterized-trigger:${version_jenkins_plugins_parameterized_trigger}"
+    testPlugins "org.jenkins-ci.plugins:pipeline-build-step:${version_jenkins_plugins_pipeline_build_step}"
+    testPlugins "org.jenkinsci.plugins:pipeline-model-declarative-agent:${version_jenkins_plugins_pipeline_model_declarative_agent}"
+    testPlugins "org.jenkins-ci.plugins:pipeline-input-step:${version_jenkins_plugins_pipeline_input_step}"
+    testPlugins "org.jenkins-ci.plugins:pipeline-maven:${version_jenkins_plugins_pipeline_maven}"
+    testPlugins "org.jenkins-ci.plugins.pipeline-stage-view:pipeline-rest-api:${version_jenkins_plugins_pipeline_rest_api}"
+    testPlugins "org.jenkins-ci.plugins:pipeline-stage-step:${version_jenkins_plugins_pipeline_stage_step}"
+    testPlugins "org.jenkins-ci.plugins:pipeline-utility-steps:${version_jenkins_plugins_pipeline_utility_steps}"
+    testPlugins "org.jenkins-ci.plugins:pipeline-graph-analysis:${version_jenkins_plugins_pipeline_graph_analysis}"
+    testPlugins "org.jenkins-ci.plugins:pipeline-milestone-step:${version_jenkins_plugins_pipeline_milestone_step}"
+    testPlugins "org.jenkinsci.plugins:pipeline-model-api:${version_jenkins_plugins_pipeline_model_api}"
+    testPlugins "org.jenkinsci.plugins:pipeline-model-definition:${version_jenkins_plugins_pipeline_model_definition}"
+    testPlugins "org.jenkinsci.plugins:pipeline-model-extensions:${version_jenkins_plugins_pipeline_model_extensions}"
+    testPlugins "org.jenkins-ci.plugins:script-security:${version_jenkins_plugins_script_security}"
+    testPlugins "org.jenkins-ci.plugins:throttle-concurrents:${version_jenkins_plugins_throttle_concurrents}"
+    testPlugins "org.jenkins-ci.plugins:timestamper:${version_jenkins_plugins_timestamper}"
+    testPlugins "org.jenkins-ci.plugins:token-macro:${version_jenkins_plugins_token_macro}"
+    testPlugins "org.jenkins-ci.plugins:toolenv:${version_jenkins_plugins_toolenv}"
+    testPlugins "org.jenkins-ci.plugins:ws-cleanup:${version_jenkins_plugins_ws_cleanup}"
+    testPlugins "org.jenkins-ci.plugins:xvnc:${version_jenkins_plugins_xvnc}"
+    testPlugins "org.jenkins-ci.plugins:hidden-parameter:${version_jenkins_plugins_hidden_parameter}"
+    testPlugins "io.jenkins.plugins:warnings-ng:${version_jenkins_plugins_warnings_ng}"
+
+    // testPlugins "org.jvnet.hudson.plugins:ircbot:2.44"
+    testPlugins "com.cloudbees.plugins:build-flow-plugin:0.20"
+    testPlugins "org.jenkins-ci.plugins:nested-view:1.26"
 }
 
 task resolveTestPlugins(type: Copy) {
