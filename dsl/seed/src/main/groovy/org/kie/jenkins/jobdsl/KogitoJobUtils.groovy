@@ -189,6 +189,42 @@ class KogitoJobUtils {
         return job
     }
 
+    /**
+    * Create a quarkus platform update tools job
+    *
+    * @param project Project to update on the platform
+    *
+    */
+    static def createQuarkusPlatformUpdateToolsJob(def script, String project) {
+        def jobParams = getSeedJobParams(script, 'update-quarkus-platform', Folder.TOOLS, 'Jenkinsfile.update-quarkus-platform', "Update Quarkus platform with new version of ${project}")
+        KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
+        jobParams.env.putAll([
+                JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
+                BUILD_BRANCH_NAME: Utils.getGitBranch(script),
+                GIT_AUTHOR: Utils.getGitAuthor(script),
+                GIT_AUTHOR_CREDENTIALS_ID: Utils.getGitAuthorCredsId(script),
+
+                QUARKUS_PLATFORM_BRANCH: Utils.getGitQuarkusBranch(script),
+                QUARKUS_PLATFORM_AUTHOR_NAME: Utils.getGitQuarkusAuthor(script),
+                QUARKUS_PLATFORM_AUTHOR_CREDENTIALS_ID: Utils.getGitQuarkusAuthorCredsId(script),
+                PROJECT_NAME: project,
+
+                FORK_GIT_AUTHOR: Utils.getGitForkAuthorName(script),
+                FORK_GIT_AUTHOR_CREDS_ID: Utils.getGitForkAuthorCredsId(script),
+        ])
+        def job = KogitoJobTemplate.createPipelineJob(script, jobParams)
+        job?.with {
+            parameters {
+                stringParam('NEW_VERSION', '', 'Which version to set ?')
+
+                stringParam('PR_BRANCH', '', '(Optional) Which PR branch name to use ? If none given, a name will be generated automatically.')
+
+                choiceParam('COMMAND', ['stage', 'finalize'], 'Choose if you want to use staged artifacts or released artifacts.')
+            }
+        }
+        return job
+    }
+
     static List createAllEnvsPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
         return createPerEnvPerRepoPRJobs(script, Environment.getActiveEnvironments(script), jobsRepoConfigGetter, defaultParamsGetter)
     }
