@@ -97,7 +97,7 @@ pipeline {
                         def messageBody = getMessageBody(
                             mavenRepositoryFileUrl, 
                             env.ALREADY_BUILT_PROJECTS,
-                            ['serverlesslogic': PME_BUILD_VARIABLES['kogitoProductVersion'], 'serverlesslogic-rhba': PME_BUILD_VARIABLES['kogitoProductVersion'], 'drools': PME_BUILD_VARIABLES['droolsProductVersion']], 
+                            ['serverlesslogic': PME_BUILD_VARIABLES['kogitoProductVersion'], 'serverlesslogic-rhba': PME_BUILD_VARIABLES['kogitoProductVersion'], 'drools': PME_BUILD_VARIABLES['droolsProductVersion'], 'platform.quarkus.bom': PME_BUILD_VARIABLES['quarkusVersion'].replaceAll("\\{\\{.*\\}\\}", PME_BUILD_VARIABLES['quarkusVersionCommunity'])],
                             gitHashesToCollection(env.GIT_INFORMATION_HASHES)
                         )
                         echo "[INFO] Message Body: ${messageBody}"
