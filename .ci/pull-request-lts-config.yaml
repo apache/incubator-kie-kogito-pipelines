@@ -29,7 +29,7 @@ build:
 
   - project: kiegroup/optaplanner
     build-command: 
-      current: mvn -f optaplanner/pom.xml clean install -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAPLANNER_BUILD_MVN_OPTS }}
+      current: mvn -f optaplanner/pom.xml clean install  ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAPLANNER_BUILD_MVN_OPTS }}
       upstream: mvn clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.OPTAPLANNER_BUILD_MVN_OPTS_UPSTREAM }}
     clone:
       - optaplanner
@@ -70,7 +70,7 @@ build:
 
   - project: kiegroup/optaplanner-quickstarts
     build-command: 
-      current: mvn clean install -f optaplanner-quickstarts/pom.xml -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAPLANNER_QUICKSTARTS_BUILD_MVN_OPTS }}
+      current: mvn clean install -f optaplanner-quickstarts/pom.xml  ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.OPTAPLANNER_QUICKSTARTS_BUILD_MVN_OPTS }}
       upstream: mvn clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env..OPTAPLANNER_QUICKSTARTS_BUILD_MVN_OPTS_UPSTREAM }}
     clone:
       - optaplanner-quickstarts

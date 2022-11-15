@@ -331,6 +331,7 @@ class KogitoJobTemplate {
         multijobConfig.jobs.each { jobCfg ->
             def jobParams = defaultParamsGetter()
             jobParams.env = jobParams.env ?: [:]
+            jobParams.env.put('BUILD_MVN_OPTS', '-Dproductized')
             jobParams.pr = jobParams.pr ?: [:]
 
             jobParams.job.name += testTypeId ? ".${testTypeId}" : ''
