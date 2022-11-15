@@ -309,8 +309,8 @@ class KogitoJobUtils {
     *
     * See also createBuildChainBuildAndTestJob(script, jobFolder, repository, ...)
     */
-    static def createBuildChainBuildAndTestJobForCurrentRepo(def script, Folder jobFolder, boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
-        return createBuildChainBuildAndTestJob(script, jobFolder, Utils.getRepoName(script), enableNotification, notificationJobName, defaultJobParamsGetter)
+    static def createNightlyBuildChainBuildAndTestJobForCurrentRepo(def script, Folder jobFolder, boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+        return createNightlyBuildChainBuildAndTestJob(script, jobFolder, Utils.getRepoName(script), enableNotification, notificationJobName, defaultJobParamsGetter)
     }
 
     /**
@@ -324,9 +324,10 @@ class KogitoJobUtils {
     *   - repoName: Will be taken from environment if not given
     *   - defaultJobParamsGetter: (optional) Closure to get the job default params
     */
-    static def createBuildChainBuildAndTestJob(def script, Folder jobFolder, String repository, boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+    static def createNightlyBuildChainBuildAndTestJob(def script, Folder jobFolder, String repository, boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
         def jobParams = getSeedJobParams(script, "${repository}.build-and-test", jobFolder, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
         KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
+        jobParams.triggers = [ cron : '@midnight' ]
 
         jobParams.parametersClosures.add({
             stringParam('DISPLAY_NAME', '', 'Setup a specific build display name')
