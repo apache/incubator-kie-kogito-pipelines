@@ -14,20 +14,26 @@ import org.kie.jenkins.jobdsl.Utils
 **/
 class KogitoJobUtils {
 
-    static def getDefaultJobParams(def script, String repoName = '') {
-        String repository = repoName ?: Utils.getRepoName(script)
+    static final Closure DEFAULT_PARAMS_GETTER = { script ->
+        return getDefaultJobParams(script)
+    }
+
+    static def getDefaultJobParams(def script) {
         def jobParams = [
             job: [
-                name: repository
+                name: Utils.getRepoName(script)
             ],
             git: [
                 author: Utils.getGitAuthor(script),
                 branch: Utils.getGitBranch(script),
-                repository: repository,
+                repository: Utils.getRepoName(script),
                 credentials: Utils.getGitAuthorCredsId(script),
                 token_credentials: Utils.getGitAuthorTokenCredsId(script)
             ],
-            env: [:],
+            parametersClosures: [],
+            env: [
+                REPO_NAME: Utils.getRepoName(script)
+            ],
             pr: [
                 excluded_regions: [
                     'LICENSE',
@@ -48,13 +54,33 @@ class KogitoJobUtils {
         return jobParams
     }
 
-    static def getBasicJobParams(def script, String jobName, Folder jobFolder, String jenkinsfilePath, String jobDescription = '', Closure defaultJobParamsGetter = null) {
-        def jobParams = defaultJobParamsGetter ? defaultJobParamsGetter() : getDefaultJobParams(script)
+    /**
+    * Agrement default job params with some more information given as parameters of the method
+    *
+    * parameters:
+    *   - jobName: Name of the job
+    *   - jobFolder: Folder for the job to be created in
+    *   - jenkinsfilePath: Path to the jenkinsfile on defined repository
+    *   - jobDescription: (optional) Update the job description, if given
+    *   - defaultJobParamsGetter: (optional) Closure to get the job default params
+    */
+    static def getBasicJobParams(def script, String jobName, Folder jobFolder, String jenkinsfilePath, String jobDescription = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+        def jobParams = defaultJobParamsGetter(script)
         jobParams.job.name = jobName
         jobParams.job.folder = jobFolder
         jobParams.jenkinsfile = jenkinsfilePath
         jobParams.job.description = jobDescription ?: jobParams.job.description
         return jobParams
+    }
+
+    static def setupJobParamsSeedRepoEnv(def script, def jobParams) {
+        jobParams.env = jobParams.env ?: [:]
+        jobParams.env.putAll([
+            SEED_REPO: Utils.getSeedRepo(script),
+            SEED_AUTHOR: Utils.getSeedAuthor(script),
+            SEED_BRANCH: Utils.getSeedBranch(script),
+            SEED_AUTHOR_CREDS_ID: Utils.getSeedAuthorCredsId(script)
+        ])
     }
 
     static def setupJobParamsDefaultJDKConfiguration(def script, def jobParams) {
@@ -75,13 +101,20 @@ class KogitoJobUtils {
     /**
     * Seed job params are used for `common` jenkinsfiles which are taken from the seed
     **/
-    static def getSeedJobParams(def script, String jobName, Folder jobFolder, String jenkinsfileName, String jobDescription = '') {
-        def jobParams = getBasicJobParams(script, jobName, jobFolder, Utils.getSeedJenkinsfilePath(script, jenkinsfileName), jobDescription) {
-            return getDefaultJobParams(script, Utils.getSeedRepo(script))
-        }
+    static def getSeedJobParams(def script, String jobName, Folder jobFolder, String jenkinsfileName, String jobDescription = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+        def jobParams = getBasicJobParams(script, jobName, jobFolder, Utils.getSeedJenkinsfilePath(script, jenkinsfileName), jobDescription, defaultJobParamsGetter)
+        jobParams.git.repository = Utils.getSeedRepo(script)
         jobParams.git.author = Utils.getSeedAuthor(script)
         jobParams.git.branch = Utils.getSeedBranch(script)
         return jobParams
+    }
+
+    /**
+    *   See createVersionUpdateToolsJob(script, repository, dependencyName ...)
+    *
+    */
+    static def createVersionUpdateToolsJobForCurrentRepo(def script, String dependencyName, def mavenUpdate = [:], def gradleUpdate = [:], def filepathReplaceRegex = [], def scriptCalls = []) {
+        return createVersionUpdateToolsJob(script, Utils.getRepoName(script), dependencyName, mavenUpdate, gradleUpdate, filepathReplaceRegex, scriptCalls)
     }
 
     /**
@@ -107,7 +140,6 @@ class KogitoJobUtils {
         KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
         // Setup correct checkout branch for pipelines
         jobParams.env.putAll([
-            REPO_NAME: "${repository}",
             JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
 
             DEPENDENCY_NAME: "${dependencyName}",
@@ -144,6 +176,13 @@ class KogitoJobUtils {
     }
 
     /**
+    * Create a Quarkus update job which allow to update the quarkus version into current repository, via Maven or Gradle
+    */
+    static def createQuarkusVersionUpdateToolsJobForCurrentRepo(def script, def mavenUpdate = [:], def gradleUpdate = [:], def filepathReplaceRegex = [:]) {
+        return createQuarkusUpdateToolsJob(script, Utils.getRepoName(script), 'Quarkus', mavenUpdate, gradleUpdate, filepathReplaceRegex)
+    }
+
+    /**
     * Create a Quarkus update job which allow to update the quarkus version into a repository, via Maven or Gradle
     */
     static def createQuarkusUpdateToolsJob(def script, String repository, def mavenUpdate = [:], def gradleUpdate = [:], def filepathReplaceRegex = [], def scriptCalls = []) {
@@ -173,12 +212,8 @@ class KogitoJobUtils {
             SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID'),
             SEED_BRANCH_CONFIG_FILE_GIT_BRANCH: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_BRANCH'),
             SEED_BRANCH_CONFIG_FILE_PATH: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_PATH'),
-
-            SEED_REPO: Utils.getSeedRepo(script),
-            SEED_AUTHOR_NAME: Utils.getSeedAuthor(script),
-            SEED_BRANCH: Utils.getSeedBranch(script),
-            SEED_AUTHOR_CREDS_ID: Utils.getSeedAuthorCredsId(script)
         ])
+        setupJobParamsSeedRepoEnv(script, jobParams)
         def job = KogitoJobTemplate.createPipelineJob(script, jobParams)
         job?.with {
             parameters {
@@ -199,18 +234,18 @@ class KogitoJobUtils {
         def jobParams = getSeedJobParams(script, 'update-quarkus-platform', Folder.TOOLS, 'Jenkinsfile.update-quarkus-platform', "Update Quarkus platform with new version of ${project}")
         KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
         jobParams.env.putAll([
-                JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
-                BUILD_BRANCH_NAME: Utils.getGitBranch(script),
-                GIT_AUTHOR: Utils.getGitAuthor(script),
-                GIT_AUTHOR_CREDENTIALS_ID: Utils.getGitAuthorCredsId(script),
+            JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
+            BUILD_BRANCH_NAME: Utils.getGitBranch(script),
+            GIT_AUTHOR: Utils.getGitAuthor(script),
+            GIT_AUTHOR_CREDENTIALS_ID: Utils.getGitAuthorCredsId(script),
 
-                QUARKUS_PLATFORM_BRANCH: Utils.getGitQuarkusBranch(script),
-                QUARKUS_PLATFORM_AUTHOR_NAME: Utils.getGitQuarkusAuthor(script),
-                QUARKUS_PLATFORM_AUTHOR_CREDENTIALS_ID: Utils.getGitQuarkusAuthorCredsId(script),
-                PROJECT_NAME: project,
+            QUARKUS_PLATFORM_BRANCH: Utils.getGitQuarkusBranch(script),
+            QUARKUS_PLATFORM_AUTHOR_NAME: Utils.getGitQuarkusAuthor(script),
+            QUARKUS_PLATFORM_AUTHOR_CREDENTIALS_ID: Utils.getGitQuarkusAuthorCredsId(script),
+            PROJECT_NAME: project,
 
-                FORK_GIT_AUTHOR: Utils.getGitForkAuthorName(script),
-                FORK_GIT_AUTHOR_CREDS_ID: Utils.getGitForkAuthorCredsId(script),
+            FORK_GIT_AUTHOR: Utils.getGitForkAuthorName(script),
+            FORK_GIT_AUTHOR_CREDS_ID: Utils.getGitForkAuthorCredsId(script),
         ])
         def job = KogitoJobTemplate.createPipelineJob(script, jobParams)
         job?.with {
@@ -225,11 +260,11 @@ class KogitoJobUtils {
         return job
     }
 
-    static List createAllEnvsPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
+    static List createAllEnvsPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
         return createPerEnvPerRepoPRJobs(script, Environment.getActiveEnvironments(script), jobsRepoConfigGetter, defaultParamsGetter)
     }
 
-    static List createPerEnvPerRepoPRJobs(def script, List<Environment> environments, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
+    static List createPerEnvPerRepoPRJobs(def script, List<Environment> environments, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
         List allJobs = []
 
         Folder.getAllFoldersByJobTypeAndEnvironments(script, JobType.PULLREQUEST, environments)
@@ -245,28 +280,80 @@ class KogitoJobUtils {
         return allJobs
     }
 
-    static List createDefaultPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
+    static List createDefaultPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
         return createPerEnvPerRepoPRJobs(script, [ Environment.DEFAULT ], jobsRepoConfigGetter, defaultParamsGetter)
     }
 
-    static def createNativePerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
+    static def createNativePerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
         return createPerEnvPerRepoPRJobs(script, [ Environment.NATIVE ], jobsRepoConfigGetter, defaultParamsGetter)
     }
 
-    static def createMandrelPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
+    static def createMandrelPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
         return createPerEnvPerRepoPRJobs(script, [ Environment.MANDREL ], jobsRepoConfigGetter, defaultParamsGetter)
     }
 
-    static def createMandrelLTSPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
+    static def createMandrelLTSPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
         return createPerEnvPerRepoPRJobs(script, [ Environment.MANDREL_LTS ], jobsRepoConfigGetter, defaultParamsGetter)
     }
 
-    static def createQuarkusMainPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
+    static def createQuarkusMainPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
         return createPerEnvPerRepoPRJobs(script, [ Environment.QUARKUS_MAIN ], jobsRepoConfigGetter, defaultParamsGetter)
     }
 
-    static def createQuarkusBranchPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = null) {
+    static def createQuarkusBranchPerRepoPRJobs(def script, Closure jobsRepoConfigGetter, Closure defaultParamsGetter = DEFAULT_PARAMS_GETTER) {
         return createPerEnvPerRepoPRJobs(script, [ Environment.QUARKUS_BRANCH ], jobsRepoConfigGetter, defaultParamsGetter)
+    }
+
+    /**
+    * Create a Build-Chain Build&Test job in the current folder.
+    *
+    * See also createBuildChainBuildAndTestJob(script, jobFolder, repository, ...)
+    */
+    static def createNightlyBuildChainBuildAndTestJobForCurrentRepo(def script, Folder jobFolder, boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+        return createNightlyBuildChainBuildAndTestJob(script, jobFolder, Utils.getRepoName(script), enableNotification, notificationJobName, defaultJobParamsGetter)
+    }
+
+    /**
+    * Create a Build-Chain Build&Test job in the given folder.
+    *
+    * parameters:
+    *   - jobFolder: Folder for the job to be created in
+    *   - repoName: Will be taken from environment if not given
+    *   - enableNotification: Whether notification should be sent in case of unsuccessful pipeline
+    *   - notificationJobName: Identifier for the notification stream
+    *   - repoName: Will be taken from environment if not given
+    *   - defaultJobParamsGetter: (optional) Closure to get the job default params
+    */
+    static def createNightlyBuildChainBuildAndTestJob(def script, Folder jobFolder, String repository, boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+        def jobParams = getSeedJobParams(script, "${repository}.build-and-test", jobFolder, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
+        KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
+        jobParams.triggers = [ cron : '@midnight' ]
+
+        jobParams.parametersClosures.add({
+            stringParam('DISPLAY_NAME', '', 'Setup a specific build display name')
+
+            stringParam('GIT_BRANCH_NAME', Utils.getGitBranch(script), 'Set the Git branch to test')
+
+            booleanParam('SKIP_TESTS', false, 'Skip tests')
+            booleanParam('SKIP_INTEGRATION_TESTS', false, 'Skip IT tests')
+        })
+        jobParams.env.putAll([
+            JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
+            ENABLE_NOTIFICATION: enableNotification,
+            NOTIFICATION_JOB_NAME: notificationJobName,
+
+            GIT_AUTHOR: Utils.getGitAuthor(script),
+
+            BUILDCHAIN_PROJECT: "kiegroup/${repository}",
+            BUILDCHAIN_TYPE: 'branch',
+            BUILDCHAIN_CONFIG_REPO: Utils.getSeedRepo(script),
+            BUILDCHAIN_CONFIG_AUTHOR: Utils.getSeedAuthor(script),
+            BUILDCHAIN_CONFIG_BRANCH: jobParams.git.branch,
+
+            MAVEN_SETTINGS_CONFIG_FILE_ID: Utils.getBindingValue(script, 'MAVEN_SETTINGS_FILE_ID'),
+        ])
+
+        return KogitoJobTemplate.createPipelineJob(script, jobParams)
     }
 
     // Add optional information to per repo config

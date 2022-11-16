@@ -1,13 +1,16 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
+import org.kie.jenkins.MavenSettingsUtils
+
 agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'kie-rhel7 && kie-mem16g'} && !built-in"
 timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: '180'
 jdkTool = env.BUILD_JDK_TOOL
 mavenTool = env.BUILD_MAVEN_TOOL
 
-prType = env.BUILDCHAIN_PR_TYPE?.trim() ?: 'pr'
+buildChainType = env.BUILDCHAIN_TYPE?.trim() ?: 'pr'
 buildChainProject = env.BUILDCHAIN_PROJECT?.trim()
-settingsXmlId = isPR() || isFDB() ? 'kogito_pr_settings' : 'kogito_release_settings'
+defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kogito_pr_settings' : 'kogito_release_settings'
+settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
 
 disableSonarCloudAnalysis = env.DISABLE_SONARCLOUD ? env.DISABLE_SONARCLOUD.toBoolean() : false
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
@@ -18,10 +21,19 @@ buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
 buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:kiegroup}'
 buildChainDefinitionFile = env.QUARKUS_BRANCH ? 'pull-request-config-quarkus.yaml' : 'pull-request-config.yaml'
-buildChainAction = isFDB() ? 'fd' : prType
-buildChainAdditionalArguments = buildChainProject ? "-sp=${buildChainProject}" : ''
+buildChainAction = isFDBBuildChainType() ? 'fd' : buildChainType
+buildChainAdditionalArguments = buildChainProject ? [ "-sp=${buildChainProject}" ] : []
+if (isBranchBuildChainType()) {
+    buildChainAdditionalArguments.add("-b=${env.GIT_BRANCH_NAME.trim()}")
+    buildChainAdditionalArguments.add("-g=${env.GIT_AUTHOR.trim()}")
+} else {
+    buildChainAdditionalArguments.add("-url=${env.ghprbPullLink}")
+}
 
-notificationJobName = env.NOTIFICATION_JOB_NAME ?: 'PR'
+skipTests = params.SKIP_TESTS ?: false
+skipIntegrationTests = params.SKIP_INTEGRATION_TESTS ?: false
+
+notificationJobName = "${env.REPO_NAME} - ${env.JOB_ENVIRONMENT}"
 
 pipeline {
     agent {
@@ -31,7 +43,7 @@ pipeline {
         nodejs 'nodejs-16.2.0'
     }
     options {
-        timestamps ()
+        timestamps()
         timeout(time: timeoutValue, unit: 'MINUTES')
     }
     environment {
@@ -84,15 +96,15 @@ pipeline {
                             env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS} -s ${MAVEN_SETTINGS_FILE}"
                             echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
                             echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
-                            
-                            sh "build-chain-action -token=${GITHUB_TOKEN} -df='https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/.ci/${buildChainDefinitionFile}' -folder='bc' build ${buildChainAction} -url=${env.ghprbPullLink} ${buildChainAdditionalArguments} --skipParallelCheckout"
+
+                            sh "${getBuildChainCommandline(true)}"
                         }
                     }
                 }
             }
             post {
                 always {
-                    junit '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml, **/target/invoker-reports/**/*.xml'
+                    junit(testResults: '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml, **/target/invoker-reports/**/*.xml', allowEmptyResults: skipTests || skipIntegrationTests)
                     archiveArtifacts(artifacts: '**/cypress/screenshots/**,**/cypress/videos/**', fingerprint: false, allowEmptyArchive: true)
                 }
                 unsuccessful {
@@ -112,7 +124,7 @@ pipeline {
             }
             steps {
                 script {
-                    def project = (env.BUILDCHAIN_PROJECT ? util.getProjectGroupName(env.BUILDCHAIN_PROJECT) : util.getProjectTriggeringJob())[1]
+                    def project = (buildChainProject ? util.getProjectGroupName(buildChainProject) : util.getProjectTriggeringJob())[1]
                     // Project should define a `clone` for the current command so that the pom can be found for sonarcloud analysis
                     // Else this next step will fail
                     dir("bc/kiegroup_${project.replaceAll('-', '_')}/${project}") {
@@ -132,8 +144,12 @@ pipeline {
     post {
         unsuccessful {
             script {
-                if (isPR()) {
+                if (isPRBuildChainType()) {
                     pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, '', "${BUILD_URL}", 'GITHUB'), 'kie-ci3-token')
+                } else if (shouldNotify()) {
+                    withCredentials([string(credentialsId: "${JENKINS_EMAIL_CREDS_ID}", variable: 'KOGITO_CI_EMAIL_TO')]) {
+                        mailer.sendMarkdownTestSummaryNotification(env.NOTIFICATION_JOB_NAME ?: '', "[${env.GIT_BRANCH_NAME}] ${getRepoNameCamelCase(env.REPO_NAME)}", [env.KOGITO_CI_EMAIL_TO], getReproducer())
+                    }
                 }
             }
         }
@@ -146,32 +162,59 @@ pipeline {
     }
 }
 
-boolean isPR() {
-    return prType == 'pr'
+boolean isPRBuildChainType() {
+    return buildChainType == 'pr'
 }
 
-boolean isFDB() {
-    return prType == 'fdb'
+boolean isFDBBuildChainType() {
+    return buildChainType == 'fdb'
 }
 
-boolean isSingle() {
-    return prType == 'single'
+boolean isSingleBuildChainType() {
+    return buildChainType == 'single'
+}
+
+boolean isBranchBuildChainType() {
+    return buildChainType == 'branch'
 }
 
 boolean isSonarCloudAnalysis() {
     if (disableSonarCloudAnalysis) {
         return false
     }
-    if (isPR()) {
+    if (isPRBuildChainType()) {
         return !downstreamBuild
     }
     return false
 }
 
 String getBuildMavenOptsCurrent() {
-    List opts_current = env.BUILD_MVN_OPTS_CURRENT ? [ env.BUILD_MVN_OPTS_CURRENT ] : []
+    List opts_current = []
     isSonarCloudAnalysis() ? opts_current.add('-Prun-code-coverage') : null
     native_build ? opts_current.add('-Dquarkus.native.container-build=true -Dnative -Pnative') : null
     native_builder_image ? opts_current.add("-Dquarkus.native.builder-image=${native_builder_image}") : null
+    skipTests ? opts_current.add('-DskipTests') : null
+    skipIntegrationTests ? opts_current.add('-DskipITs') : null
     return opts_current.join(' ')
+}
+
+boolean shouldNotify() {
+    return env.ENABLE_NOTIFICATION
+}
+
+String getBuildChainCommandline(boolean includeToken=false) {
+    return "build-chain-action ${includeToken ? "-token=${GITHUB_TOKEN} " : ''}-df='https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/.ci/${buildChainDefinitionFile}' -folder='bc' build ${buildChainAction} ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout"
+}
+
+String getReproducer() {
+    return """
+# To install the build-chain tool, please refer to https://github.com/kiegroup/github-action-build-chain#local-execution
+export BUILD_MVN_OPTS_CURRENT=${BUILD_MVN_OPTS_CURRENT}
+${getBuildChainCommandline()}
+"""
+}
+
+String getRepoNameCamelCase(String repo) {
+    List words = repo.split('-') as List
+    return words.collect { it.isEmpty() ? it : it.substring(0, 1).toUpperCase() + it.substring(1).toLowerCase() }.join(' ')
 }
