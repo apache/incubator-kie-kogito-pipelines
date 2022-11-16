@@ -33,7 +33,7 @@ if (isBranchBuildChainType()) {
 skipTests = params.SKIP_TESTS ?: false
 skipIntegrationTests = params.SKIP_INTEGRATION_TESTS ?: false
 
-notificationJobName = "${env.REPO_NAME} - ${env.JOB_ENVIRONMENT}"
+notificationJobName = env.NOTIFICATION_JOB_NAME ?: 'PR'
 
 pipeline {
     agent {
