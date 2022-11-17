@@ -63,45 +63,6 @@ pipeline {
             }
         }
 
-        stage('Update quarkus version in seed repo') {
-            steps {
-                script {
-                    String prBranch = getSeedPRBranch("${SEED_BRANCH}")
-                    dir("${SEED_REPO}") {
-                        deleteDir()
-                        checkout(githubscm.resolveRepository("${SEED_REPO}", "${SEED_AUTHOR}", "${SEED_BRANCH}", false, "${SEED_AUTHOR_CREDS_ID}"))
-
-                        getOrCreateGitBranch(prBranch, "${SEED_AUTHOR_CREDS_ID}")
-
-                        // Perform updates
-                        // Not using `readYaml` here to avoid a full reformat of the config
-                        sh """
-                            sed -i -E "s|(.*targetExpression:).*(# <quarkus-branch>.*)|\\1 \\"process.env.QUARKUS_BRANCH ? process.env.QUARKUS_BRANCH : '${getNewVersionBranch()}'\\" \\2|g" '.ci/project-dependencies-quarkus.yaml'
-                        """
-
-                        if (githubscm.isThereAnyChanges()) {
-                            String commitMsg = "[${SEED_BRANCH}] Bump quarkus version to ${getNewVersion()}"
-                            githubscm.commitChanges(commitMsg)
-                            githubscm.pushObject('origin', prBranch, "${SEED_AUTHOR_CREDS_ID}")
-
-                            // Create PR only if repo/author/branch is different from previous changes
-                            if ("${SEED_REPO}" != "${SEED_BRANCH_CONFIG_FILE_GIT_REPOSITORY}" ||
-                                    "${SEED_AUTHOR}" != "${SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_NAME}" ||
-                                    "${SEED_BRANCH}" != "${SEED_BRANCH_CONFIG_FILE_GIT_BRANCH}") {
-                                String prLink = githubscm.createPR(commitMsg, 'Please review and merge', "${SEED_BRANCH}", "${SEED_AUTHOR_CREDS_ID}")
-                                echo "Created PR ${prLink}"
-                                prLinks.add(prLink)
-                            } else {
-                                echo 'PR was already created. Will not try to create a new one ...'
-                            }
-                        } else {
-                            echo 'No changes to commit. No PR is created !'
-                        }
-                    }
-                }
-            }
-        }
-
         stage('Call update quarkus jobs') {
             steps {
                 script {

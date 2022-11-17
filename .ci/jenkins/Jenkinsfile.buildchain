@@ -1,5 +1,6 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
+import org.kie.jenkins.MavenCommand
 import org.kie.jenkins.MavenSettingsUtils
 
 agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'kie-rhel7 && kie-mem16g'} && !built-in"
@@ -16,11 +17,12 @@ disableSonarCloudAnalysis = env.DISABLE_SONARCLOUD ? env.DISABLE_SONARCLOUD.toBo
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
 native_build = env.NATIVE ? env.NATIVE.toBoolean() : false
 native_builder_image = env.NATIVE_BUILDER_IMAGE ?: ''
+quarkusBranch = env.QUARKUS_BRANCH ?: ''
 
 buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
 buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:kiegroup}'
-buildChainDefinitionFile = env.QUARKUS_BRANCH ? 'pull-request-config-quarkus.yaml' : 'pull-request-config.yaml'
+buildChainDefinitionFile = 'pull-request-config.yaml'
 buildChainAction = isFDBBuildChainType() ? 'fd' : buildChainType
 buildChainAdditionalArguments = buildChainProject ? [ "-sp=${buildChainProject}" ] : []
 if (isBranchBuildChainType()) {
@@ -78,6 +80,27 @@ pipeline {
                     }
                     println "[INFO] build-chain version recovered '${buildChainVersion}'"
                     sh "npm install -g @kie/build-chain-action@${buildChainVersion}${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
+                }
+            }
+        }
+        stage('Build quarkus') {
+            when {
+                expression { quarkusBranch }
+            }
+            steps {
+                script {
+                    dir('quarkus') {
+                        deleteDir()
+                        checkout(githubscm.resolveRepository('quarkus', 'quarkusio', quarkusBranch, false))
+
+                        new MavenCommand(this, ['-fae', '-ntp'])
+                            .withSettingsXmlId(settingsXmlId)
+                            .withProperty('quickly')
+                            .run('clean install')
+
+                        // Setup the quarkus version for the build-chain config
+                        env.QUARKUS_VERSION = '999-SNAPSHOT'
+                    }
                 }
             }
         }
