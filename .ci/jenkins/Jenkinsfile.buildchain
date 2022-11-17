@@ -208,9 +208,13 @@ String getBuildChainCommandline(boolean includeToken=false) {
 
 String getReproducer() {
     return """
-# To install the build-chain tool, please refer to https://github.com/kiegroup/github-action-build-chain#local-execution
-export BUILD_MVN_OPTS_CURRENT=${BUILD_MVN_OPTS_CURRENT}
+```spoiler Reproducer
+${BUILD_MVN_OPTS_CURRENT ? "export BUILD_MVN_OPTS_CURRENT=${BUILD_MVN_OPTS_CURRENT}" : '\n'}
 ${getBuildChainCommandline()}
+
+
+NOTE: To install the build-chain tool, please refer to https://github.com/kiegroup/github-action-build-chain#local-execution
+```
 """
 }
 
