@@ -170,6 +170,7 @@ void setupReleaseJob() {
             stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
             stringParam('KOGITO_IMAGES_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
             stringParam('KOGITO_OPERATOR_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
+            stringParam('KOGITO_SERVERLESS_OPERATOR_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
             booleanParam('DEPLOY_AS_LATEST', false, 'Given project version is considered the latest version')
 
             stringParam('APPS_URI', '', 'Override default. Git uri to the kogito-apps repository to use for building images.')
@@ -188,6 +189,8 @@ void setupReleaseJob() {
             booleanParam('SKIP_EXAMPLES_IMAGES_PROMOTE', false, 'To skip Examples Images Promote. Automatically skipped if SKIP_EXAMPLES_IMAGES_DEPLOY is true.')
             booleanParam('SKIP_OPERATOR_DEPLOY', false, 'To skip Operator Test & Deployment.')
             booleanParam('SKIP_OPERATOR_PROMOTE', false, 'To skip Operator Promote only. Automatically skipped if SKIP_OPERATOR_DEPLOY is true.')
+            booleanParam('SKIP_SERVERLESS_OPERATOR_DEPLOY', false, 'To skip Serverless Operator Test & Deployment.')
+            booleanParam('SKIP_SERVERLESS_OPERATOR_PROMOTE', false, 'To skip Serverless Operator Promote only. Automatically skipped if SKIP_OPERATOR_DEPLOY is true.')
 
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
         }
