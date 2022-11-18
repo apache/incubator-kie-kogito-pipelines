@@ -9,6 +9,7 @@ EXAMPLES_DEPLOY = 'kogito-examples-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 EXAMPLES_IMAGES_DEPLOY = 'kogito-examples-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
+SERVERLESS_OPERATOR_DEPLOY = 'kogito-serverless-operator-deploy'
 
 DROOLS_PROMOTE = 'drools-promote'
 RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
@@ -17,6 +18,7 @@ EXAMPLES_PROMOTE = 'kogito-examples-promote'
 IMAGES_PROMOTE = 'kogito-images-promote'
 EXAMPLES_IMAGES_PROMOTE = 'kogito-examples-images-promote'
 OPERATOR_PROMOTE = 'kogito-operator-promote'
+SERVERLESS_OPERATOR_PROMOTE = 'kogito-serverless-operator-promote'
 
 ARTIFACTS_STAGING_STAGE = 'stage.artifacts.staging'
 ARTIFACTS_RELEASE_STAGE = 'stage.artifacts.release'
@@ -85,6 +87,7 @@ pipeline {
                     setReleasePropertyIfneeded('kogito.version', getKogitoArtifactsVersion())
                     setReleasePropertyIfneeded('kogito.images.version', getKogitoImagesVersion())
                     setReleasePropertyIfneeded('kogito.operator.version', getKogitoOperatorVersion())
+                    setReleasePropertyIfneeded('kogito.serverless.operator.version', getKogitoServerlessOperatorVersion())
                     setReleasePropertyIfneeded('deploy.latest', isDeployAsLatest())
                 }
             }
@@ -255,6 +258,21 @@ pipeline {
             }
         }
 
+        stage('Build & Deploy Kogito Serverless Operator') {
+            when {
+                expression { return isServerlessOperatorDeploy() }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams(getKogitoServerlessOperatorVersion())
+                    addSkipTestsParam(buildParams)
+                    addImageBuildParams(buildParams, getKogitoServerlessOperatorTempTag())
+
+                    buildJob(SERVERLESS_OPERATOR_DEPLOY, buildParams)
+                }
+            }
+        }
+
         stage('Are staged artifacts released?') {
             when {
                 // Execute only if artifacts repository was not given, which means the staging repository has been created
@@ -388,6 +406,26 @@ pipeline {
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
 
                     buildJob(OPERATOR_PROMOTE, buildParams)
+                }
+            }
+        }
+
+        stage('Promote Kogito Serverless Operator') {
+            when {
+                expression { return isServerlessOperatorPromote() && isJobConsideredOk(SERVERLESS_OPERATOR_DEPLOY) }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams(getKogitoServerlessOperatorVersion())
+                    addDeployBuildUrlParamOrClosure(buildParams, SERVERLESS_OPERATOR_DEPLOY)  {
+                        addImageBuildParams(buildParams, getKogitoServerlessOperatorTempTag(), false, baseImageParamsPrefix)
+                    }
+
+                    // Base image information is given by the deploy URL
+                    addImageBuildParams(buildParams, getKogitoServerlessOperatorFinalTag(), true, promoteImageParamsPrefix)
+                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
+
+                    buildJob(SERVERLESS_OPERATOR_PROMOTE, buildParams)
                 }
             }
         }
@@ -630,6 +668,10 @@ String getKogitoOperatorVersion() {
     return params.KOGITO_OPERATOR_VERSION ?: (getReleaseProperty('kogito.operator.version') ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion()))
 }
 
+String getKogitoServerlessOperatorVersion() {
+    return params.KOGITO_SERVERLESS_OPERATOR_VERSION ?: (getReleaseProperty('kogito.serverless.operator.version') ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion()))
+}
+
 String getDroolsVersion() {
     return params.DROOLS_VERSION ?: getReleaseProperty('drools.version')
 }
@@ -670,6 +712,10 @@ boolean isOperatorDeploy() {
     return !params.SKIP_OPERATOR_DEPLOY
 }
 
+boolean isServerlessOperatorDeploy() {
+    return !params.SKIP_SERVERLESS_OPERATOR_DEPLOY
+}
+
 boolean isArtifactsPromote() {
     return isArtifactsDeploy() && !params.SKIP_ARTIFACTS_PROMOTE
 }
@@ -684,6 +730,10 @@ boolean isExamplesImagesPromote() {
 
 boolean isOperatorPromote() {
     return isOperatorDeploy() && !params.SKIP_OPERATOR_PROMOTE
+}
+
+boolean isServerlessOperatorPromote() {
+    return isServerlessOperatorDeploy() && !params.SKIP_SERVERLESS_OPERATOR_PROMOTE
 }
 
 String getKogitoImagesTempTag() {
@@ -708,6 +758,14 @@ String getKogitoOperatorTempTag() {
 
 String getKogitoOperatorFinalTag() {
     return "${getKogitoOperatorVersion()}".toLowerCase()
+}
+
+String getKogitoServerlessOperatorTempTag() {
+    return "${getKogitoServerlessOperatorVersion()}-temp".toLowerCase()
+}
+
+String getKogitoServerlessOperatorFinalTag() {
+    return "${getKogitoServerlessOperatorVersion()}".toLowerCase()
 }
 
 String removeVersionSuffixIfExist(String version) {
