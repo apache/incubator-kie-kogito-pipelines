@@ -118,7 +118,7 @@ pipeline {
 
                         new MavenCommand(this, ['-fae', '-ntp'])
                             .withSettingsXmlId(settingsXmlId)
-                            .withProperty('-DskipTests')
+                            .withProperty('skipTests')
                             .run('clean install')
                     }
                 }
