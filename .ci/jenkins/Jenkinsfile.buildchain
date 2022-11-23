@@ -104,6 +104,26 @@ pipeline {
                 }
             }
         }
+        stage('Build quarkus platform') {
+            when {
+                expression { quarkusBranch }
+            }
+            steps {
+                script {
+                    dir('quarkus-platform') {
+                        deleteDir()
+                        checkout(githubscm.resolveRepository('quarkus-platform', 'quarkusio', quarkusBranch, false))
+
+                        maven.mvnSetVersionProperty(new MavenCommand(this), 'quarkus.version', env.QUARKUS_VERSION)
+
+                        new MavenCommand(this, ['-fae', '-ntp'])
+                            .withSettingsXmlId(settingsXmlId)
+                            .withProperty('-DskipTests')
+                            .run('clean install')
+                    }
+                }
+            }
+        }
         stage('Build projects') {
             tools {
                 jdk jdkTool
