@@ -346,9 +346,10 @@ class KogitoJobUtils {
 
             BUILDCHAIN_PROJECT: "kiegroup/${repository}",
             BUILDCHAIN_TYPE: 'branch',
-            BUILDCHAIN_CONFIG_REPO: Utils.getSeedRepo(script),
-            BUILDCHAIN_CONFIG_AUTHOR: Utils.getSeedAuthor(script),
-            BUILDCHAIN_CONFIG_BRANCH: jobParams.git.branch,
+            BUILDCHAIN_CONFIG_REPO: Utils.getBuildChainConfigRepo(script) ?: Utils.getSeedRepo(script),
+            BUILDCHAIN_CONFIG_AUTHOR: Utils.getBuildChainConfigAuthor(script) ?: Utils.getSeedAuthor(script),
+            BUILDCHAIN_CONFIG_BRANCH: Utils.getBuildChainConfigBranch(script) ?: Utils.getSeedBranch(script),
+            BUILDCHAIN_CONFIG_FILE_PATH: Utils.getBuildChainConfigFilePath(script),
 
             MAVEN_SETTINGS_CONFIG_FILE_ID: Utils.getBindingValue(script, 'MAVEN_SETTINGS_FILE_ID'),
         ])

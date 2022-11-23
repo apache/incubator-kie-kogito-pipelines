@@ -164,7 +164,19 @@ class Utils {
         return getBindingValue(script, 'GIT_QUARKUS_AUTHOR_CREDENTIALS_ID')
     }
 
-    static String getJenkinsConfigPath(def script, String repoName) {
+    static String getRepositoryGitBranch(def script, String repoName) {
+        return getBindingValue(script, "${repoName.toUpperCase()}_GIT_BRANCH")
+    }
+
+    static String getRepositoryGitAuthor(def script, String repoName) {
+        return getBindingValue(script, "${repoName.toUpperCase()}_GIT_AUTHOR")
+    }
+
+    static String getRepositoryGitAuthorCredentialsId(def script, String repoName) {
+        return getBindingValue(script, "${repoName.toUpperCase()}_GIT_AUTHOR_CREDENTIALS_ID")
+    }
+
+    static String getRepositoryJenkinsConfigPath(def script, String repoName) {
         return getBindingValue(script, "${repoName.toUpperCase()}_JENKINS_CONFIG_PATH")
     }
 
@@ -198,6 +210,22 @@ class Utils {
 
     static String getSeedBranch(def script) {
         return getBindingValue(script, 'SEED_BRANCH')
+    }
+
+    static String getBuildChainConfigRepo(def script) {
+        return getBindingValue(script, 'BUILDCHAIN_CONFIG_GIT_REPOSITORY')
+    }
+
+    static String getBuildChainConfigAuthor(def script) {
+        return getBindingValue(script, 'BUILDCHAIN_CONFIG_GIT_AUTHOR_NAME')
+    }
+
+    static String getBuildChainConfigBranch(def script) {
+        return getBindingValue(script, 'BUILDCHAIN_CONFIG_GIT_BRANCH')
+    }
+
+    static String getBuildChainConfigFilePath(def script) {
+        return getBindingValue(script, 'BUILDCHAIN_CONFIG_GIT_FILE_PATH')
     }
 
     static String getSeedJenkinsfilePath(def script, String jenkinsfileName) {
