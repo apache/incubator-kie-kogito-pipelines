@@ -336,7 +336,7 @@ def buildJob(String jobName, List buildParams, String jobKey = jobName) {
     // Set Unstable if job did not succeed
     if (!isJobSucceeded(jobKey)) {
         addUnstableStage(jobKey)
-        unstable("Job ${jobName} finished with result ${job.getResult()}")
+        unstable("Job ${jobName} finished with result ${job.result}")
     }
     return job
 }
@@ -347,11 +347,11 @@ def getJob(String jobKey) {
 
 String getJobUrl(String jobKey) {
     echo "getJobUrl for ${jobKey}"
-    return getJob(jobKey)?.getAbsoluteUrl() ?: ''
+    return getJob(jobKey)?.absoluteUrl ?: ''
 }
 
 boolean isJobSucceeded(String jobKey) {
-    return getJob(jobKey)?.getResult() == 'SUCCESS'
+    return getJob(jobKey)?.result == 'SUCCESS'
 }
 
 String getMandrelJobKey(String jobName) {
@@ -359,14 +359,14 @@ String getMandrelJobKey(String jobName) {
 }
 
 void addFailedStage(String jobKey = '') {
-    FAILED_STAGES.put("${STAGE_NAME}", jobKey)
+    FAILED_STAGES.put("${env.STAGE_NAME}", jobKey)
 }
 void addUnstableStage(String jobKey = '') {
-    UNSTABLE_STAGES.put("${STAGE_NAME}", jobKey)
+    UNSTABLE_STAGES.put("${env.STAGE_NAME}", jobKey)
 }
 
 void sendPipelineErrorNotification() {
-    String bodyMsg = "Kogito nightly job #${BUILD_NUMBER} was: ${currentBuild.currentResult}"
+    String bodyMsg = "Kogito nightly job #${env.BUILD_NUMBER} was: ${currentBuild.currentResult}"
 
     paramsStr = ''
     if (params.SKIP_TESTS) {
@@ -393,7 +393,7 @@ void sendPipelineErrorNotification() {
         bodyMsg += UNSTABLE_STAGES.collect { "${it.key} => ${getJobUrl(it.value)}" }.join('\n- ')
     }
     bodyMsg += '\n'
-    bodyMsg += "\nPlease look here: ${BUILD_URL}"
+    bodyMsg += "\nPlease look here: ${env.BUILD_URL}"
     emailext body: bodyMsg, subject: "[${getBuildBranch()}][d] Full Pipeline",
                 to: env.KOGITO_CI_EMAIL_TO
 }
