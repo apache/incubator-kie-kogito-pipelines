@@ -161,7 +161,7 @@ def buildJob(String jobName, List buildParams, boolean propagate = true) {
     // Set Unstable if we don't propagate and job failed
     if (!propagate && !isJobSucceeded(jobName)) {
         addUnstableStage()
-        unstable("Job ${jobName} finished with result ${job.getResult()}")
+        unstable("Job ${jobName} finished with result ${job.result}")
     }
     return job
 }
@@ -172,7 +172,7 @@ def getJob(String jobName) {
 
 boolean isJobSucceeded(String jobName) {
     def job = getJob(jobName)
-    return job ? job.getResult() == 'SUCCESS' : false
+    return job ? job.result == 'SUCCESS' : false
 }
 
 void addFailedStage(String jobName = '') {

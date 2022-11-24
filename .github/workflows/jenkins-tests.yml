@@ -33,10 +33,7 @@ jobs:
     - name: Set up JDK 1.8
       uses: actions/setup-java@v1
       with:
-        java-version: 8
-
-    - name: Setup pipeline env
-      run: cd $GITHUB_WORKSPACE/main/.ci/jenkins/tests && ./setup_pipeline_env.sh
+        java-version: 11
 
     - name: Test pipelines
       run: cd $GITHUB_WORKSPACE/main/.ci/jenkins/tests && mvn -B clean test
