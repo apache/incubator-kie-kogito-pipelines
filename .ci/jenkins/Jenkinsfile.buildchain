@@ -114,11 +114,11 @@ pipeline {
                         deleteDir()
                         checkout(githubscm.resolveRepository('quarkus-platform', 'quarkusio', quarkusBranch, false))
 
-                        maven.mvnSetVersionProperty(new MavenCommand(this), 'quarkus.version', env.QUARKUS_VERSION)
+                        maven.mvnSetVersionProperty('quarkus.version', env.QUARKUS_VERSION)
 
                         new MavenCommand(this, ['-fae', '-ntp'])
-                            .withSettingsXmlId(settingsXmlId)
-                            .withProperty('skipTests')
+                            .withSettingsXmlFile('.github/mvn-settings.xml')
+                            .skipTests(true)
                             .run('clean install')
                     }
                 }
