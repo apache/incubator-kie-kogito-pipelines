@@ -4,7 +4,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 import org.kie.jenkins.MavenCommand
 
 AGENT_LABEL="kie-rhel7 && kie-mem8g && !built-in"
-kogitoPipelinesRepo="kogito-pipelines"
 quarkusPlatformRepo="quarkus-platform"
 branchCreated = false
 
@@ -41,9 +40,7 @@ pipeline {
 				script{
                     sh 'printenv'
                     
-                    dir(kogitoPipelinesRepo){
-                        checkoutRepo(kogitoPipelinesRepo, getGitAuthor(), getBuildBranch(), getGitAuthorCredsId())
-                    }
+                    checkout scm
 
                     dir(quarkusPlatformRepo){
                         checkoutRepo(quarkusPlatformRepo, getQuarkusPlatformAuthor(), getQuarkusPlatformBranch(), getQuarkusPlatformAuthorCredsId())
@@ -65,7 +62,7 @@ pipeline {
                         branchCreated = getOrCreateGitBranch(localBranch, "${FORK_GIT_AUTHOR_CREDS_ID}")
                         
                         // run update-quarkus-platform.sh with 'stage'
-                        sh "${WORKSPACE}/${kogitoPipelinesRepo}/tools/update-quarkus-platform.sh -p ${getProjectName()} -s -v ${getNewVersion()} -f ${FORK_GIT_AUTHOR} -h ${localBranch} -n -r ${getCommand()}"
+                        sh "${WORKSPACE}/tools/update-quarkus-platform.sh -p ${getProjectName()} -s -v ${getNewVersion()} -f ${FORK_GIT_AUTHOR} -h ${localBranch} -n -r ${getCommand()}"
                         
                         sh "git status"
 
@@ -102,7 +99,7 @@ pipeline {
                         sh "git checkout ${localBranch}"
                         
                         // run update-quarkus-platform.sh with 'finalize'
-                        sh "${WORKSPACE}/${kogitoPipelinesRepo}/tools/update-quarkus-platform.sh -p ${getProjectName()} -s -d -v ${getNewVersion()} -f ${FORK_GIT_AUTHOR} -h ${localBranch} -n -r ${getCommand()}"
+                        sh "${WORKSPACE}/tools/update-quarkus-platform.sh -p ${getProjectName()} -s -d -v ${getNewVersion()} -f ${FORK_GIT_AUTHOR} -h ${localBranch} -n -r ${getCommand()}"
                         
                         githubscm.squashCommits(getQuarkusPlatformBranch(), commitMsg)
 
