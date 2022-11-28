@@ -21,6 +21,7 @@ settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
 disableSonarCloudAnalysis = env.DISABLE_SONARCLOUD ? env.DISABLE_SONARCLOUD.toBoolean() : false
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
 quarkusBranch = env.QUARKUS_BRANCH ?: ''
+integrationBranchPrefix = env.INTEGRATION_BRANCH_PREFIX ?: ''
 
 buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
@@ -80,7 +81,7 @@ pipeline {
                 }
             }
         }
-        stage('Install build-chain tool') {
+        stage('Install build-chain tools') {
             steps {
                 script {
                     println '[INFO] Getting build-chain version from composite action file'
@@ -92,6 +93,7 @@ pipeline {
                     }
                     println "[INFO] build-chain version recovered '${buildChainVersion}'"
                     sh "npm install -g @kie/build-chain-action@${buildChainVersion}${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
+                    sh "npm install -g @kie/build-chain-files-generator${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
                 }
             }
         }
