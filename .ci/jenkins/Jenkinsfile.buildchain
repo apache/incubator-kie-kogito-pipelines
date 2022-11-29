@@ -22,7 +22,7 @@ quarkusBranch = env.QUARKUS_BRANCH ?: ''
 buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
 buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:kiegroup}'
-buildChainDefinitionFile = 'pull-request-config.yaml'
+buildChainConfigDefinitionFilePath = env.BUILDCHAIN_CONFIG_FILE_PATH ?: '.ci/pull-request-config.yaml'
 buildChainAction = isFDBBuildChainType() ? 'fd' : buildChainType
 buildChainAdditionalArguments = buildChainProject ? [ "-sp=${buildChainProject}" ] : []
 if (isBranchBuildChainType()) {
@@ -147,7 +147,7 @@ pipeline {
             }
             post {
                 always {
-                    junit(testResults: '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml, **/target/invoker-reports/**/*.xml', allowEmptyResults: skipTests || skipIntegrationTests)
+                    junit(testResults: '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml, **/target/invoker-reports/**/*.xml', allowEmptyResults: true)
                     archiveArtifacts(artifacts: '**/cypress/screenshots/**,**/cypress/videos/**', fingerprint: false, allowEmptyArchive: true)
                 }
                 unsuccessful {
@@ -246,7 +246,7 @@ boolean shouldNotify() {
 }
 
 String getBuildChainCommandline(boolean includeToken=false) {
-    return "build-chain-action ${includeToken ? "-token=${GITHUB_TOKEN} " : ''}-df='https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/.ci/${buildChainDefinitionFile}' -folder='bc' build ${buildChainAction} ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout"
+    return "build-chain-action ${includeToken ? "-token=${GITHUB_TOKEN} " : ''}-df='https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -folder='bc' build ${buildChainAction} ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout"
 }
 
 String getReproducer() {
