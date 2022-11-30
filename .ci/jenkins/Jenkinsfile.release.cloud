@@ -2,23 +2,10 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 @Library('jenkins-pipeline-shared-libraries')_
 
-DROOLS_DEPLOY = 'drools-deploy'
-RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
-APPS_DEPLOY = 'kogito-apps-deploy'
-EXAMPLES_DEPLOY = 'kogito-examples-deploy'
-IMAGES_DEPLOY = 'kogito-images-deploy'
-EXAMPLES_IMAGES_DEPLOY = 'kogito-examples-images-deploy'
-OPERATOR_DEPLOY = 'kogito-operator-deploy'
-SERVERLESS_OPERATOR_DEPLOY = 'kogito-serverless-operator-deploy'
-
-DROOLS_PROMOTE = 'drools-promote'
-RUNTIMES_PROMOTE = 'kogito-runtimes-promote'
-APPS_PROMOTE = 'kogito-apps-promote'
-EXAMPLES_PROMOTE = 'kogito-examples-promote'
-IMAGES_PROMOTE = 'kogito-images-promote'
-EXAMPLES_IMAGES_PROMOTE = 'kogito-examples-images-promote'
-OPERATOR_PROMOTE = 'kogito-operator-promote'
-SERVERLESS_OPERATOR_PROMOTE = 'kogito-serverless-operator-promote'
+kogitoImagesRepo = 'kogito-images'
+kogitoExamplesImagesRepo = 'kogito-examples-images'
+kogitoOperatorRepo = 'kogito-operator'
+kogitoServerlessOperatorRepo = 'kogito-serverless-operator'
 
 ARTIFACTS_STAGING_STAGE = 'stage.artifacts.staging'
 ARTIFACTS_RELEASE_STAGE = 'stage.artifacts.release'
@@ -39,7 +26,7 @@ promoteImageParamsPrefix = 'PROMOTE_IMAGE'
 
 pipeline {
     agent {
-        label 'kie-rhel7 && !built-in'
+        label 'kie-rhel8 && !built-in'
     }
 
     // parameters {
@@ -60,31 +47,20 @@ pipeline {
                 script {
                     // Restore config from previous run
                     if (params.RESTORE_FROM_PREVIOUS_JOB) {
-                        releaseProperties = readPropertiesFromUrl(params.RESTORE_FROM_PREVIOUS_JOB, 'release.properties')
+                        releaseProperties.putAll(readPropertiesFromUrl(params.RESTORE_FROM_PREVIOUS_JOB, 'release.properties'))
                         echo "Release properties imported from previous job: ${releaseProperties}"
                     }
 
-                    assert getKogitoArtifactsVersion()
-                    if (isArtifactsDeploy() || isArtifactsPromote()) {
-                        assert getDroolsVersion()
-                    }
+                    assert getKogitoVersion()
 
                     currentBuild.displayName = getDisplayName()
 
-                    sendNotification("Release Pipeline has started...\nDrools version = ${getDroolsVersion()}\nKogito artifacts version = ${getKogitoArtifactsVersion()}\n=> ${env.BUILD_URL}")
-
-                    // Safety measure to not publish to main JBoss
-                    if (getGitAuthor() != 'kiegroup' && !getArtifactsRepositoryParam()) {
-                        sendNotification("Git Author is different from `kiegroup` and no `ARTIFACTS_REPOSITORY` parameter has been provided. Are you sure you want to continue ? => ${env.BUILD_URL}input")
-                        input message: 'Should the pipeline continue with no `ARTIFACTS_REPOSITORY` defined ?', ok: 'Yes'
-                    }
+                    sendNotification("Release Pipeline has started...\nDrools version = ${getDroolsVersion()}\nKogito artifacts version = ${getKogitoVersion()}\n=> ${env.BUILD_URL}")
                 }
             }
             post {
                 always {
-                    setReleasePropertyIfneeded('drools.version', getDroolsVersion())
-                    setReleasePropertyIfneeded('drools.branch', getDroolsReleaseBranch())
-                    setReleasePropertyIfneeded('kogito.version', getKogitoArtifactsVersion())
+                    setReleasePropertyIfneeded('kogito.version', getKogitoVersion())
                     setReleasePropertyIfneeded('kogito.images.version', getKogitoImagesVersion())
                     setReleasePropertyIfneeded('kogito.operator.version', getKogitoOperatorVersion())
                     setReleasePropertyIfneeded('kogito.serverless.operator.version', getKogitoServerlessOperatorVersion())
@@ -93,84 +69,13 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Drools') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
+        stage('Setup configuration for testing') {
             steps {
                 script {
-                    def buildParams = getDefaultBuildParams(getDroolsVersion())
-                    addSkipTestsParam(buildParams)
-
-                    buildJob(DROOLS_DEPLOY, buildParams)
-                }
-            }
-        }
-
-        stage('Build & Deploy Kogito Runtimes') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
-                    addSkipTestsParam(buildParams)
-                    addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
-
-                    buildJob(RUNTIMES_DEPLOY, buildParams)
-                }
-            }
-        }
-
-        stage('Build & Deploy Kogito Apps') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
-                    addSkipTestsParam(buildParams)
-
-                    buildJob(APPS_DEPLOY, buildParams)
-                }
-            }
-        }
-
-        stage('Build & Deploy Kogito Examples') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
-                    addSkipTestsParam(buildParams)
-                    addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
-
-                    buildJob(EXAMPLES_DEPLOY, buildParams)
-                }
-            }
-        }
-
-        stage('Artifacts\' staging finalization') {
-            steps {
-                script {
-                    if (isArtifactsDeploy() && !areArtifactsStaged()) {
-                        sendNotification("All artifacts have been staged. You can find them here: ${getStagingRepository()}")
-                    }
-                    setArtifactsStaged()
-
-                    def deployProps = [:]
-                    if(getJobUrl(EXAMPLES_DEPLOY)) {
-                        deployProps.putAll(readPropertiesFromUrl(getJobUrl(EXAMPLES_DEPLOY), 'deployment.properties'))
-                    }
-                    if(getJobUrl(APPS_DEPLOY)) {
-                        deployProps.putAll(readPropertiesFromUrl(getJobUrl(APPS_DEPLOY), 'deployment.properties'))
-                    }
-
-                    env.EXAMPLES_URI = params.EXAMPLES_URI ?: (getReleaseProperty('examples.uri') ?: (deployProps['kogito-examples.pr.source.uri'] ?: "https://github.com/${getGitAuthor()}/kogito-examples"))
-                    env.EXAMPLES_REF = params.EXAMPLES_REF ?: (getReleaseProperty('examples.ref') ?: (deployProps['kogito-examples.pr.source.ref'] ?: util.getReleaseBranchFromVersion(getKogitoArtifactsVersion())))
-                    env.APPS_URI = params.APPS_URI ?: (getReleaseProperty('apps.uri') ?: (deployProps['kogito-apps.pr.source.uri'] ?: "https://github.com/${getGitAuthor()}/kogito-apps"))
-                    env.APPS_REF = params.APPS_REF ?: (getReleaseProperty('apps.ref') ?: (deployProps['kogito-apps.pr.source.ref'] ?: util.getReleaseBranchFromVersion(getKogitoArtifactsVersion())))
+                    env.EXAMPLES_URI = params.EXAMPLES_URI ?: (getReleaseProperty('examples.uri') ?: "https://github.com/${getGitAuthor()}/kogito-examples")
+                    env.EXAMPLES_REF = params.EXAMPLES_REF ?: (getReleaseProperty('examples.ref') ?: getKogitoVersion())
+                    env.APPS_URI = params.APPS_URI ?: (getReleaseProperty('apps.uri') ?: "https://github.com/${getGitAuthor()}/kogito-apps")
+                    env.APPS_REF = params.APPS_REF ?: (getReleaseProperty('apps.ref') ?: getKogitoVersion())
 
                     echo "Got examples uri ${env.EXAMPLES_URI}"
                     echo "Got examples ref ${env.EXAMPLES_REF}"
@@ -187,29 +92,29 @@ pipeline {
 
         stage('Build & Deploy Kogito Images') {
             when {
-                expression { return isImagesDeploy() }
+                expression { return isImagesRelease() }
             }
             steps {
                 script {
                     def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
-                    addStringParam(buildParams, 'KOGITO_ARTIFACTS_VERSION', getKogitoArtifactsVersion())
+                    addStringParam(buildParams, 'KOGITO_ARTIFACTS_VERSION', getKogitoVersion())
                     addImageBuildParams(buildParams, getKogitoImagesTempTag())
                     addAppsParam(buildParams)
                     addSkipTestsParam(buildParams)
                     addExamplesParam(buildParams)
 
-                    buildJob(IMAGES_DEPLOY, buildParams)
+                    buildJob(getDeployJobName(kogitoImagesRepo), buildParams)
                 }
             }
         }
 
         stage('Build & Deploy Examples Images') {
             when {
-                expression { return isExamplesImagesDeploy() }
+                expression { return isExamplesImagesRelease() }
             }
             steps {
                 script {
-                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
+                    def buildParams = getDefaultBuildParams(getKogitoVersion())
                     addSkipTestsParam(buildParams)
                     addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag())
                     addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
@@ -218,14 +123,14 @@ pipeline {
                     addImageBuildParams(buildParams, getKogitoImagesTempTag(), false, kogitoImagesParamsPrefix)
                     addExamplesParam(buildParams)
 
-                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams)
+                    buildJob(getDeployJobName(kogitoExamplesImagesRepo), buildParams)
                 }
             }
         }
 
         stage('Build & Deploy Kogito Operator') {
             when {
-                expression { return isOperatorDeploy() }
+                expression { return isOperatorRelease() }
             }
             steps {
                 script {
@@ -235,14 +140,14 @@ pipeline {
 
                     // For BDD tests
                     // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
-                    if (isImagesDeploy()) {
+                    if (isImagesRelease()) {
                         addImageBuildParams(buildParams, getKogitoImagesTempTag(), false, kogitoImagesParamsPrefix)
                     } else {
                         // If we are in that case, we suppose images have been released ...
                         addImageBuildParams(buildParams, getKogitoImagesFinalTag(), true, kogitoImagesParamsPrefix)
                     }
 
-                    if (isExamplesImagesDeploy()) {
+                    if (isExamplesImagesRelease()) {
                         addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag(), false, examplesImagesParamsPrefix)
                     } else {
                         // If we are in that case, we suppose images have been released ...
@@ -253,14 +158,14 @@ pipeline {
 
                     addExamplesParam(buildParams)
 
-                    buildJob(OPERATOR_DEPLOY, buildParams)
+                    buildJob(getDeployJobName(kogitoOperatorRepo), buildParams)
                 }
             }
         }
 
         stage('Build & Deploy Kogito Serverless Operator') {
             when {
-                expression { return isServerlessOperatorDeploy() }
+                expression { return isServerlessOperatorRelease() }
             }
             steps {
                 script {
@@ -268,115 +173,38 @@ pipeline {
                     addSkipTestsParam(buildParams)
                     addImageBuildParams(buildParams, getKogitoServerlessOperatorTempTag())
 
-                    buildJob(SERVERLESS_OPERATOR_DEPLOY, buildParams)
-                }
-            }
-        }
-
-        stage('Are staged artifacts released?') {
-            when {
-                // Execute only if artifacts repository was not given, which means the staging repository has been created
-                expression { return isArtifactsDeploy() && !getArtifactsRepositoryParam() && !areArtifactsReleased() }
-            }
-            steps {
-                script {
-                    String body = "${getKogitoArtifactsVersion()} artifacts are ready for release.\n" +
-                                 "Please release the staging repositories and then confirm here: ${env.BUILD_URL}input"
-                    sendNotification(body)
-                    input message: 'Has the staging repository been released ?', ok: 'Yes'
-
-                    sendNotification('Artifacts have been released. Finalizing now the release ...')
-                    setArtifactsReleased()
-                }
-            }
-        }
-
-        stage('Promote Drools') {
-            when {
-                expression { return isArtifactsPromote() && isJobConsideredOk(DROOLS_DEPLOY) }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getDroolsVersion())
-                    addDeployBuildUrlParam(buildParams, DROOLS_DEPLOY)
-
-                    buildJob(DROOLS_PROMOTE, buildParams)
-                }
-            }
-        }
-
-        stage('Promote Kogito Runtimes') {
-            when {
-                expression { return isArtifactsPromote() && isJobConsideredOk(RUNTIMES_DEPLOY) }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
-                    addDeployBuildUrlParam(buildParams, RUNTIMES_DEPLOY)
-                    addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
-
-                    buildJob(RUNTIMES_PROMOTE, buildParams)
-                }
-            }
-        }
-
-        stage('Promote Kogito Apps') {
-            when {
-                expression { return isArtifactsPromote() && isJobConsideredOk(APPS_DEPLOY) }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
-                    addDeployBuildUrlParam(buildParams, APPS_DEPLOY)
-
-                    buildJob(APPS_PROMOTE, buildParams)
-                }
-            }
-        }
-
-        stage('Promote Kogito Examples') {
-            when {
-                expression { return isArtifactsPromote() && isJobConsideredOk(EXAMPLES_DEPLOY) }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
-                    addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
-                    addDeployBuildUrlParam(buildParams, EXAMPLES_DEPLOY)
-                    addBooleanParam(buildParams, 'UPDATE_STABLE_BRANCH', isDeployAsLatest())
-
-                    buildJob(EXAMPLES_PROMOTE, buildParams)
+                    buildJob(getDeployJobName(kogitoServerlessOperatorRepo), buildParams)
                 }
             }
         }
 
         stage('Promote Kogito Images') {
             when {
-                expression { return isImagesPromote() && isJobConsideredOk(IMAGES_DEPLOY) }
+                expression { return isImagesRelease() && isJobConsideredOk(getDeployJobName(kogitoImagesRepo)) }
             }
             steps {
                 script {
                     def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
-                    addDeployBuildUrlParamOrClosure(buildParams, IMAGES_DEPLOY) {
+                    addDeployBuildUrlParamOrClosure(buildParams, getDeployJobName(kogitoImagesRepo)) {
                         addImageBuildParams(buildParams, getKogitoImagesTempTag(), false, baseImageParamsPrefix)
                     }
                     addImageBuildParams(buildParams, getKogitoImagesFinalTag(), true, promoteImageParamsPrefix)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
 
-                    buildJob(IMAGES_PROMOTE, buildParams)
+                    buildJob(getPromoteJobName(kogitoImagesRepo), buildParams)
                 }
             }
         }
 
         stage('Promote Examples Images') {
             when {
-                expression { return isExamplesImagesPromote() && isJobConsideredOk(EXAMPLES_IMAGES_DEPLOY) }
+                expression { return isExamplesImagesRelease() && isJobConsideredOk(getDeployJobName(kogitoExamplesImagesRepo)) }
             }
             steps {
                 script {
-                    def buildParams = getDefaultBuildParams(getKogitoArtifactsVersion())
+                    def buildParams = getDefaultBuildParams(getKogitoVersion())
 
-                    addDeployBuildUrlParamOrClosure(buildParams, EXAMPLES_IMAGES_DEPLOY)  {
+                    addDeployBuildUrlParamOrClosure(buildParams, getDeployJobName(kogitoExamplesImagesRepo))  {
                         addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag(), false, baseImageParamsPrefix)
                         addStringParam(buildParams, constructKey(baseImageParamsPrefix, 'NAME_PREFIX'), 'examples')
                     }
@@ -385,19 +213,19 @@ pipeline {
                     addStringParam(buildParams, constructKey(promoteImageParamsPrefix, 'NAME_PREFIX'), 'examples')
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
 
-                    buildJob(EXAMPLES_IMAGES_PROMOTE, buildParams)
+                    buildJob(getPromoteJobName(kogitoExamplesImagesRepo), buildParams)
                 }
             }
         }
 
         stage('Promote Kogito Operator') {
             when {
-                expression { return isOperatorPromote() && isJobConsideredOk(OPERATOR_DEPLOY) }
+                expression { return isOperatorRelease() && isJobConsideredOk(getDeployJobName(kogitoOperatorRepo)) }
             }
             steps {
                 script {
                     def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
-                    addDeployBuildUrlParamOrClosure(buildParams, OPERATOR_DEPLOY)  {
+                    addDeployBuildUrlParamOrClosure(buildParams, getDeployJobName(kogitoOperatorRepo))  {
                         addImageBuildParams(buildParams, getKogitoOperatorTempTag(), false, baseImageParamsPrefix)
                     }
 
@@ -405,19 +233,19 @@ pipeline {
                     addImageBuildParams(buildParams, getKogitoOperatorFinalTag(), true, promoteImageParamsPrefix)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
 
-                    buildJob(OPERATOR_PROMOTE, buildParams)
+                    buildJob(getPromoteJobName(kogitoOperatorRepo), buildParams)
                 }
             }
         }
 
         stage('Promote Kogito Serverless Operator') {
             when {
-                expression { return isServerlessOperatorPromote() && isJobConsideredOk(SERVERLESS_OPERATOR_DEPLOY) }
+                expression { return isServerlessOperatorRelease() && isJobConsideredOk(getDeployJobName(kogitoServerlessOperatorRepo)) }
             }
             steps {
                 script {
                     def buildParams = getDefaultBuildParams(getKogitoServerlessOperatorVersion())
-                    addDeployBuildUrlParamOrClosure(buildParams, SERVERLESS_OPERATOR_DEPLOY)  {
+                    addDeployBuildUrlParamOrClosure(buildParams, getDeployJobName(kogitoServerlessOperatorRepo))  {
                         addImageBuildParams(buildParams, getKogitoServerlessOperatorTempTag(), false, baseImageParamsPrefix)
                     }
 
@@ -425,7 +253,7 @@ pipeline {
                     addImageBuildParams(buildParams, getKogitoServerlessOperatorFinalTag(), true, promoteImageParamsPrefix)
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
 
-                    buildJob(SERVERLESS_OPERATOR_PROMOTE, buildParams)
+                    buildJob(getPromoteJobName(kogitoServerlessOperatorRepo), buildParams)
                 }
             }
         }
@@ -493,6 +321,14 @@ def buildJob(String jobName, List buildParams) {
     }
 }
 
+String getDeployJobName(String repository) {
+    return "${repository}-deploy"
+}
+
+String getPromoteJobName(String repository) {
+    return "${repository}-promote"
+}
+
 String getJobPropertySuffix(String jobName) {
     return "${JOB_PROPERTY_PREFIX}.${jobName}"
 }
@@ -517,7 +353,7 @@ def removeJobDecision(String jobName) {
 }
 
 List getAllJobNames() {
-    return releaseProperties.findAll { it.key.startsWith(JOB_PROPERTY_PREFIX) }.collect { it.key.split('\\.')[1] }
+    return releaseProperties.findAll { it.key.startsWith(JOB_PROPERTY_PREFIX) }.collect { it.key.split('\\.')[1] }.unique()
 }
 
 boolean hasJob(String jobName) {
@@ -552,7 +388,7 @@ void saveReleaseProperties() {
 }
 
 void sendSuccessfulReleaseNotification() {
-    String bodyMsg = 'Release is successful with those jobs:\n'
+    String bodyMsg = 'Cloud release is successful with those jobs:\n'
     getAllJobNames().findAll { isJobConsideredOk(it) }.each {
         bodyMsg += "- ${it}\n"
     }
@@ -561,7 +397,7 @@ void sendSuccessfulReleaseNotification() {
 }
 
 void sendErrorNotification() {
-    sendNotification("Kogito release job #${BUILD_NUMBER} was: ${currentBuild.currentResult}\nPlease look here: ${BUILD_URL}")
+    sendNotification("Cloud release job #${BUILD_NUMBER} was: ${currentBuild.currentResult}\nPlease look here: ${BUILD_URL}")
 }
 
 void sendStageNotification() {
@@ -614,10 +450,6 @@ void addSkipTestsParam(buildParams) {
     addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
 }
 
-void addSkipIntegrationTestsParam(buildParams) {
-    addBooleanParam(buildParams, 'SKIP_INTEGRATION_TESTS', true)
-}
-
 void addAppsParam(buildParams) {
     addStringParam(buildParams, 'APPS_URI', env.APPS_URI)
     addStringParam(buildParams, 'APPS_REF', env.APPS_REF)
@@ -639,12 +471,12 @@ void addImageBuildParams(List buildParams, String tag, boolean isFinalImage = fa
     addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)
 }
 
-void addStringParam(List params, String key, String value) {
-    params.add(string(name: key, value: value))
+void addStringParam(List buildParams, String key, String value) {
+    buildParams.add(string(name: key, value: value))
 }
 
-void addBooleanParam(List params, String key, boolean value) {
-    params.add(booleanParam(name: key, value: value))
+void addBooleanParam(List buildParams, String key, boolean value) {
+    buildParams.add(booleanParam(name: key, value: value))
 }
 
 String constructKey(String prefix, String paramId) {
@@ -652,24 +484,24 @@ String constructKey(String prefix, String paramId) {
 }
 
 String getDisplayName(version = '') {
-    version = version ?: getKogitoArtifactsVersion()
+    version = version ?: getKogitoVersion()
     return "Release ${version}"
 }
 
-String getKogitoArtifactsVersion() {
+String getKogitoVersion() {
     return params.KOGITO_VERSION ?: getReleaseProperty('kogito.version')
 }
 
 String getKogitoImagesVersion() {
-    return params.KOGITO_IMAGES_VERSION ?: (getReleaseProperty('kogito.images.version') ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion()))
+    return params.KOGITO_IMAGES_VERSION ?: (getReleaseProperty('kogito.images.version') ?: removeVersionSuffixIfExist(getKogitoVersion()))
 }
 
 String getKogitoOperatorVersion() {
-    return params.KOGITO_OPERATOR_VERSION ?: (getReleaseProperty('kogito.operator.version') ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion()))
+    return params.KOGITO_OPERATOR_VERSION ?: (getReleaseProperty('kogito.operator.version') ?: removeVersionSuffixIfExist(getKogitoVersion()))
 }
 
 String getKogitoServerlessOperatorVersion() {
-    return params.KOGITO_SERVERLESS_OPERATOR_VERSION ?: (getReleaseProperty('kogito.serverless.operator.version') ?: removeVersionSuffixIfExist(getKogitoArtifactsVersion()))
+    return params.KOGITO_SERVERLESS_OPERATOR_VERSION ?: (getReleaseProperty('kogito.serverless.operator.version') ?: removeVersionSuffixIfExist(getKogitoVersion()))
 }
 
 String getDroolsVersion() {
@@ -680,60 +512,24 @@ String getGitAuthor() {
     return env.GIT_AUTHOR
 }
 
-String getArtifactsRepositoryParam() {
-    return env['ARTIFACTS_REPOSITORY'] ?: ''
-}
-
-String getDroolsReleaseBranch() {
-    return params.DROOLS_RELEASE_BRANCH ?: (getReleaseProperty('drools.branch') ?: util.getReleaseBranchFromVersion(getDroolsVersion()))
-}
-
-String getStagingRepository() {
-    return getArtifactsRepositoryParam() ?: env.DEFAULT_STAGING_REPOSITORY
-}
-
 boolean isDeployAsLatest() {
     return params.DEPLOY_AS_LATEST || getReleaseProperty('deploy.latest')?.toBoolean()
 }
 
-boolean isArtifactsDeploy() {
-    return !params.SKIP_ARTIFACTS_DEPLOY
+boolean isImagesRelease() {
+    return !params.SKIP_IMAGES_RELEASE
 }
 
-boolean isImagesDeploy() {
-    return !params.SKIP_IMAGES_DEPLOY
+boolean isExamplesImagesRelease() {
+    return !params.SKIP_EXAMPLES_IMAGES_RELEASE
 }
 
-boolean isExamplesImagesDeploy() {
-    return !params.SKIP_EXAMPLES_IMAGES_DEPLOY
+boolean isOperatorRelease() {
+    return !params.SKIP_OPERATOR_RELEASE
 }
 
-boolean isOperatorDeploy() {
-    return !params.SKIP_OPERATOR_DEPLOY
-}
-
-boolean isServerlessOperatorDeploy() {
-    return !params.SKIP_SERVERLESS_OPERATOR_DEPLOY
-}
-
-boolean isArtifactsPromote() {
-    return isArtifactsDeploy() && !params.SKIP_ARTIFACTS_PROMOTE
-}
-
-boolean isImagesPromote() {
-    return isImagesDeploy() && !params.SKIP_IMAGES_PROMOTE
-}
-
-boolean isExamplesImagesPromote() {
-    return isExamplesImagesDeploy() && !params.SKIP_EXAMPLES_IMAGES_PROMOTE
-}
-
-boolean isOperatorPromote() {
-    return isOperatorDeploy() && !params.SKIP_OPERATOR_PROMOTE
-}
-
-boolean isServerlessOperatorPromote() {
-    return isServerlessOperatorDeploy() && !params.SKIP_SERVERLESS_OPERATOR_PROMOTE
+boolean isServerlessOperatorRelease() {
+    return !params.SKIP_SERVERLESS_OPERATOR_RELEASE
 }
 
 String getKogitoImagesTempTag() {
@@ -745,11 +541,11 @@ String getKogitoImagesFinalTag() {
 }
 
 String getKogitoExamplesImagesTempTag() {
-    return "${getKogitoArtifactsVersion()}-temp".toLowerCase()
+    return "${getKogitoVersion()}-temp".toLowerCase()
 }
 
 String getKogitoExamplesImagesFinalTag() {
-    return "${getKogitoArtifactsVersion()}".toLowerCase()
+    return "${getKogitoVersion()}".toLowerCase()
 }
 
 String getKogitoOperatorTempTag() {
@@ -791,20 +587,4 @@ boolean hasReleaseProperty(String key) {
 
 def getReleaseProperty(String key) {
     return hasReleaseProperty(key) ? releaseProperties[key] : ''
-}
-
-boolean areArtifactsStaged() {
-    return hasReleaseProperty(ARTIFACTS_STAGING_STAGE)
-}
-
-void setArtifactsStaged() {
-    setReleasePropertyIfneeded(ARTIFACTS_STAGING_STAGE, true)
-}
-
-boolean areArtifactsReleased() {
-    return hasReleaseProperty(ARTIFACTS_RELEASE_STAGE)
-}
-
-void setArtifactsReleased() {
-    setReleasePropertyIfneeded(ARTIFACTS_RELEASE_STAGE, true)
 }
