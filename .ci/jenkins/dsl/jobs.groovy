@@ -29,7 +29,8 @@ createSetupBranchJob()
 setupNightlyJob()
 
 // Release
-setupReleaseJob()
+setupReleaseArtifactsJob()
+setupReleaseCloudJob()
 
 /////////////////////////////////////////////////////////////////
 // Methods
@@ -145,8 +146,36 @@ void setupNightlyJob() {
     }
 }
 
-void setupReleaseJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-release', Folder.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release", 'Kogito Release')
+void setupReleaseArtifactsJob() {
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, '0-kogito-release', Folder.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release.artifacts", 'Drools/Kogito Artifacts Release')
+    jobParams.env.putAll([
+        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+
+        GIT_BRANCH_NAME: "${GIT_BRANCH}",
+        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
+
+        DEFAULT_STAGING_REPOSITORY: "${MAVEN_NEXUS_STAGING_PROFILE_URL}",
+        ARTIFACTS_REPOSITORY: "${MAVEN_ARTIFACTS_REPOSITORY}",
+    ])
+    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
+        parameters {
+            stringParam('RESTORE_FROM_PREVIOUS_JOB', '', 'URL to a previous stopped release job which needs to be continued')
+
+            stringParam('DROOLS_VERSION', '', 'Drools version to release as Major.minor.micro')
+            stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
+            booleanParam('DEPLOY_AS_LATEST', false, 'Given project version is considered the latest version')
+
+            booleanParam('SKIP_TESTS', false, 'Skip all tests')
+
+            booleanParam('SKIP_DROOLS_RELEASE', false, 'To skip Drools release. If skipped, please provide `ARTIFACTS_REPOSITORY`')
+            booleanParam('SKIP_KOGITO_RELEASE', false, 'To skip Kogito release. If skipped, please provide `ARTIFACTS_REPOSITORY`')
+            booleanParam('SKIP_CLOUD_RELEASE', false, 'To skip Cloud release. To use whenever you have specific parameters to set for the Cloud release')
+        }
+    }
+}
+
+void setupReleaseCloudJob() {
+    def jobParams = KogitoJobUtils.getBasicJobParams(this, '0-kogito-release-cloud', Folder.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release.cloud", 'Kogito Cloud Release')
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
@@ -157,16 +186,11 @@ void setupReleaseJob() {
         IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
         IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
         BRANCH_FOR_LATEST: "${CLOUD_IMAGE_LATEST_GIT_BRANCH}",
-
-        DEFAULT_STAGING_REPOSITORY: "${MAVEN_NEXUS_STAGING_PROFILE_URL}",
-        ARTIFACTS_REPOSITORY: "${MAVEN_ARTIFACTS_REPOSITORY}",
     ])
     KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         parameters {
             stringParam('RESTORE_FROM_PREVIOUS_JOB', '', 'URL to a previous stopped release job which needs to be continued')
 
-            stringParam('DROOLS_VERSION', '', 'Drools version to release as Major.minor.micro')
-            stringParam('DROOLS_RELEASE_BRANCH', '', '(optional) Use to override the release branch name deduced from the DROOLS_VERSION')
             stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
             stringParam('KOGITO_IMAGES_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
             stringParam('KOGITO_OPERATOR_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
@@ -181,16 +205,10 @@ void setupReleaseJob() {
             stringParam('EXAMPLES_URI', '', 'Override default. Git uri to the kogito-examples repository to use for tests.')
             stringParam('EXAMPLES_REF', '', 'Override default. Git reference (branch/tag) to the kogito-examples repository to use for tests.')
 
-            booleanParam('SKIP_ARTIFACTS_DEPLOY', false, 'To skip all artifacts (drools, runtimes, apps, examples) Test & Deployment. If skipped, please provide `ARTIFACTS_REPOSITORY`')
-            booleanParam('SKIP_ARTIFACTS_PROMOTE', false, 'To skip Runtimes Promote only. Automatically skipped if SKIP_ARTIFACTS_DEPLOY is true.')
-            booleanParam('SKIP_IMAGES_DEPLOY', false, 'To skip Images Test & Deployment.')
-            booleanParam('SKIP_IMAGES_PROMOTE', false, 'To skip Images Promote only. Automatically skipped if SKIP_IMAGES_DEPLOY is true')
-            booleanParam('SKIP_EXAMPLES_IMAGES_DEPLOY', false, 'To skip Examples Images Deployment')
-            booleanParam('SKIP_EXAMPLES_IMAGES_PROMOTE', false, 'To skip Examples Images Promote. Automatically skipped if SKIP_EXAMPLES_IMAGES_DEPLOY is true.')
-            booleanParam('SKIP_OPERATOR_DEPLOY', false, 'To skip Operator Test & Deployment.')
-            booleanParam('SKIP_OPERATOR_PROMOTE', false, 'To skip Operator Promote only. Automatically skipped if SKIP_OPERATOR_DEPLOY is true.')
-            booleanParam('SKIP_SERVERLESS_OPERATOR_DEPLOY', false, 'To skip Serverless Operator Test & Deployment.')
-            booleanParam('SKIP_SERVERLESS_OPERATOR_PROMOTE', false, 'To skip Serverless Operator Promote only. Automatically skipped if SKIP_OPERATOR_DEPLOY is true.')
+            booleanParam('SKIP_IMAGES_RELEASE', false, 'To skip Images Test & Deployment.')
+            booleanParam('SKIP_EXAMPLES_IMAGES_RELEASE', false, 'To skip Examples Images Deployment')
+            booleanParam('SKIP_OPERATOR_RELEASE', false, 'To skip Operator Test & Deployment.')
+            booleanParam('SKIP_SERVERLESS_OPERATOR_RELEASE', false, 'To skip Serverless Operator Test & Deployment.')
 
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
         }
