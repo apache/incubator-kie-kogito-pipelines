@@ -39,7 +39,7 @@ pipeline {
                 script {
                     // Restore config from previous run
                     if (params.RESTORE_FROM_PREVIOUS_JOB) {
-                        releaseProperties.putAll(readPropertiesFromUrl(params.RESTORE_FROM_PREVIOUS_JOB, 'release.properties'))
+                        releaseProperties = readPropertiesFromUrl(params.RESTORE_FROM_PREVIOUS_JOB, 'release.properties')
                         echo "Release properties imported from previous job: ${releaseProperties}"
                     }
 

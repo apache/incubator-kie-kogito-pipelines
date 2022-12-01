@@ -47,7 +47,7 @@ pipeline {
                 script {
                     // Restore config from previous run
                     if (params.RESTORE_FROM_PREVIOUS_JOB) {
-                        releaseProperties.putAll(readPropertiesFromUrl(params.RESTORE_FROM_PREVIOUS_JOB, 'release.properties'))
+                        releaseProperties = readPropertiesFromUrl(params.RESTORE_FROM_PREVIOUS_JOB, 'release.properties')
                         echo "Release properties imported from previous job: ${releaseProperties}"
                     }
 
@@ -55,7 +55,7 @@ pipeline {
 
                     currentBuild.displayName = getDisplayName()
 
-                    sendNotification("Release Pipeline has started...\nDrools version = ${getDroolsVersion()}\nKogito artifacts version = ${getKogitoVersion()}\n=> ${env.BUILD_URL}")
+                    sendNotification("Cloud Release Pipeline has started...\nKogito version = ${getKogitoVersion()}\n=> ${env.BUILD_URL}")
                 }
             }
             post {
