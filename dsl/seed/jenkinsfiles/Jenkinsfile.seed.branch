@@ -249,7 +249,7 @@ def getRepoConfig(String repository, String generationBranch = "${GENERATION_BRA
     cfg.git.author.credentials_id = repoConfig.author?.credentials_id ?: cfg.git.author.credentials_id
     cfg.git.author.token_credentials_id = repoConfig.author?.credentials_id ?: cfg.git.author.token_credentials_id
 
-    cfg.git.bot_author = cfg.git.author ?: [:]
+    cfg.git.bot_author = cfg.git.bot_author ?: [:]
     cfg.git.bot_author.name = repoConfig.bot_author?.name ?: cfg.git.bot_author.name
     cfg.git.bot_author.credentials_id = repoConfig.bot_author?.credentials_id ?: cfg.git.bot_author.credentials_id
 
