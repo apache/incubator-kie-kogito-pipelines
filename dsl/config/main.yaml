@@ -12,6 +12,10 @@ ecosystem:
     ignore_release: true
     regexs:
     - kie-tools.*
+  - name: kie-docs
+    ignore_release: true
+    regexs:
+    - kie-docs.*
 git:
   branches:
   - name: main
@@ -43,6 +47,7 @@ git:
       branch: seed-kogito-1.32.x
   main_branch:
     default: main
+    kie-docs: main-kogito
 seed:
   config_file:
     git:
