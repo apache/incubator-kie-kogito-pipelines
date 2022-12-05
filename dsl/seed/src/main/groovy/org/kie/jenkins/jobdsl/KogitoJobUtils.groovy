@@ -305,27 +305,78 @@ class KogitoJobUtils {
     }
 
     /**
-    * Create a Build-Chain Build&Test job in the current folder.
+    * Create a Build-Chain Build&Test job in the current folder for the current repo.
     *
-    * See also createBuildChainBuildAndTestJob(script, jobFolder, repository, ...)
+    * See also createBranchBuildChainJob(script, jobFolder, repository, ...)
     */
     static def createNightlyBuildChainBuildAndTestJobForCurrentRepo(def script, Folder jobFolder, boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
-        return createNightlyBuildChainBuildAndTestJob(script, jobFolder, Utils.getRepoName(script), enableNotification, notificationJobName, defaultJobParamsGetter)
+        return createNightlyBuildChainBuildAndTestJobForCurrentRepoWithEnv(script, jobFolder, [:], enableNotification, notificationJobName, defaultJobParamsGetter)
     }
 
     /**
-    * Create a Build-Chain Build&Test job in the given folder.
+    * Create a Build-Chain Build&Test job in the current folder with an extra env for the current repo.
+    *
+    * See also createBranchBuildChainJob(script, jobFolder, repository, ...)
+    */
+    static def createNightlyBuildChainBuildAndTestJobForCurrentRepoWithEnv(def script, Folder jobFolder, Map extraEnv = [:], boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+        return createNightlyBuildChainBuildAndTestJobWithEnv(script, jobFolder, Utils.getRepoName(script), extraEnv, enableNotification, notificationJobName, defaultJobParamsGetter)
+    }
+
+        /**
+    * Create a Build-Chain Build&Test job in the current folder with an extra env.
+    *
+    * See also createBranchBuildChainJob(script, jobFolder, repository, ...)
+    */
+    static def createNightlyBuildChainBuildAndTestJobWithEnv(def script, Folder jobFolder, String repository, Map extraEnv = [:], boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+        return createBranchBuildChainJob(script, jobFolder, repository, extraEnv, 'build-and-test', enableNotification, notificationJobName, defaultJobParamsGetter)
+    }
+
+    /**
+    * Create a Build-Chain Build&Deploy job in the current folder for current repo.
+    *
+    * See also createBranchBuildChainJob(script, jobFolder, repository, ...)
+    */
+    static def createNightlyBuildChainBuildAndDeployJobForCurrentRepo(def script, Folder jobFolder, boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+        return createNightlyBuildChainBuildAndDeployJobForCurrentRepoWithEnv(script, jobFolder, [:], enableNotification, notificationJobName, defaultJobParamsGetter)
+    }
+
+    /**
+    * Create a Build-Chain Build&Deploy job in the current folder with an extra env for current repo.
+    *
+    * See also createBranchBuildChainJob(script, jobFolder, repository, ...)
+    */
+    static def createNightlyBuildChainBuildAndDeployJobForCurrentRepoWithEnv(def script, Folder jobFolder, Map extraEnv = [:], boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+        return createNightlyBuildChainBuildAndDeployJobWithEnv(script, jobFolder, Utils.getRepoName(script), extraEnv, enableNotification, notificationJobName, defaultJobParamsGetter)
+    }
+
+    /**
+    * Create a Build-Chain Build&Deploy job in the current folder with an extra env.
+    *
+    * See also createBranchBuildChainJob(script, jobFolder, repository, ...)
+    */
+    static def createNightlyBuildChainBuildAndDeployJobWithEnv(def script, Folder jobFolder, String repository, Map extraEnv = [:], boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+        extraEnv.putAll([
+            ENABLE_DEPLOY: true,
+            MAVEN_DEPLOY_REPOSITORY: Utils.getMavenArtifactsUploadRepositoryUrl(script),
+            MAVEN_DEPLOY_REPOSITORY_CREDS_ID: Utils.getMavenArtifactsUploadRepositoryCredentialsId(script),
+        ])
+        return createBranchBuildChainJob(script, jobFolder, repository, extraEnv, 'build-and-deploy', enableNotification, notificationJobName, defaultJobParamsGetter)
+    }
+
+    /**
+    * Create a Build-Chain branch job in the given folder.
     *
     * parameters:
     *   - jobFolder: Folder for the job to be created in
     *   - repoName: Will be taken from environment if not given
+    *   - enableDeploy: Whether deploy should be done after the build
     *   - enableNotification: Whether notification should be sent in case of unsuccessful pipeline
     *   - notificationJobName: Identifier for the notification stream
     *   - repoName: Will be taken from environment if not given
     *   - defaultJobParamsGetter: (optional) Closure to get the job default params
     */
-    static def createNightlyBuildChainBuildAndTestJob(def script, Folder jobFolder, String repository, boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
-        def jobParams = getSeedJobParams(script, "${repository}.build-and-test", jobFolder, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
+    static def createBranchBuildChainJob(def script, Folder jobFolder, String repository, Map extraEnv = [:], String jobNameSuffix = '', boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
+        def jobParams = getSeedJobParams(script, "${repository}${jobNameSuffix ? ".${jobNameSuffix}" : ''}", jobFolder, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "${jobNameSuffix} for ${repository} using the build-chain", defaultJobParamsGetter)
         KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
         jobParams.triggers = [ cron : '@midnight' ]
 
@@ -353,6 +404,9 @@ class KogitoJobUtils {
 
             MAVEN_SETTINGS_CONFIG_FILE_ID: Utils.getBindingValue(script, 'MAVEN_SETTINGS_FILE_ID'),
         ])
+
+        // Extra overrides default
+        jobParams.env.putAll(extraEnv)
 
         return KogitoJobTemplate.createPipelineJob(script, jobParams)
     }

@@ -1,11 +1,12 @@
 import org.jenkinsci.plugins.workflow.libs.Library
+
 @Library('jenkins-pipeline-shared-libraries')_
 
 // Deploy jobs
-DROOLS_DEPLOY = 'drools-deploy'
-RUNTIMES_DEPLOY = 'kogito-runtimes-deploy'
-APPS_DEPLOY = 'kogito-apps-deploy'
-EXAMPLES_DEPLOY = 'kogito-examples-deploy'
+DROOLS_DEPLOY = 'drools.build-and-deploy'
+RUNTIMES_DEPLOY = 'kogito-runtimes.build-and-deploy'
+APPS_DEPLOY = 'kogito-apps.build-and-deploy'
+EXAMPLES_DEPLOY = 'kogito-examples.build-and-deploy'
 IMAGES_DEPLOY = 'kogito-images-deploy'
 EXAMPLES_IMAGES_DEPLOY = 'kogito-examples-images-deploy'
 OPERATOR_DEPLOY = 'kogito-operator-deploy'
@@ -28,7 +29,7 @@ promoteImageParamsPrefix = 'PROMOTE_IMAGE'
 // Should be multibranch pipeline
 pipeline {
     agent {
-        label 'kie-rhel7 && !built-in'
+        label 'kie-rhel8 && !built-in'
     }
 
     options {
@@ -51,7 +52,7 @@ pipeline {
                 returnStdout: true,
                 script: 'date -u "+%Y-%m-%d"'
             ).trim()}"""
-    }
+}
 
     stages {
         stage('Initialize') {
@@ -64,83 +65,92 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Drools') {
+        stage('Build & Deploy artifacts') {
             when {
                 expression { return isArtifactsDeploy() }
             }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
+            parallel {
+                stage('Build & Deploy Drools') {
+                    steps {
+                        script {
+                            def buildParams = getDefaultBuildParams()
+                            addSkipTestsParam(buildParams)
+                            addSkipIntegrationTestsParam(buildParams)
 
-                    // images and operator deploy testing will use older working artifacts if that one fails
-                    buildJob(DROOLS_DEPLOY, buildParams)
+                            // images and operator deploy testing will use older working artifacts if that one fails
+                            buildJob(DROOLS_DEPLOY, buildParams)
+                        }
+                    }
+                    post {
+                        failure {
+                            addFailedStage(DROOLS_DEPLOY)
+                        }
+                    }
                 }
-            }
-            post {
-                failure {
-                    addFailedStage(DROOLS_DEPLOY)
-                }
-            }
-        }
 
-        stage('Build & Deploy Kogito Runtimes') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
+                stage('Build & Deploy Kogito Runtimes') {
+                    steps {
+                        script {
+                            def buildParams = getDefaultBuildParams()
+                            addSkipTestsParam(buildParams)
+                            addSkipIntegrationTestsParam(buildParams)
 
-                    // images and operator deploy testing will use older working artifacts if that one fails
-                    buildJob(RUNTIMES_DEPLOY, buildParams)
+                            // images and operator deploy testing will use older working artifacts if that one fails
+                            buildJob(RUNTIMES_DEPLOY, buildParams)
+                        }
+                    }
+                    post {
+                        failure {
+                            addFailedStage(RUNTIMES_DEPLOY)
+                        }
+                    }
                 }
-            }
-            post {
-                failure {
-                    addFailedStage(RUNTIMES_DEPLOY)
-                }
-            }
-        }
 
-        stage('Build & Deploy Kogito Apps') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
+                stage('Build & Deploy Kogito Apps') {
+                    steps {
+                        script {
+                            def buildParams = getDefaultBuildParams()
+                            addSkipTestsParam(buildParams)
+                            addSkipIntegrationTestsParam(buildParams)
 
-                    // images and operator deploy testing will use older working artifacts if that one fails
-                    buildJob(APPS_DEPLOY, buildParams)
+                            // images and operator deploy testing will use older working artifacts if that one fails
+                            buildJob(APPS_DEPLOY, buildParams)
+                        }
+                    }
+                    post {
+                        failure {
+                            addFailedStage(APPS_DEPLOY)
+                        }
+                    }
                 }
-            }
-            post {
-                failure {
-                    addFailedStage(APPS_DEPLOY)
-                }
-            }
-        }
 
-        stage('Build & Deploy Kogito Examples') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
-                    addBooleanParam(buildParams, 'UPDATE_NIGHTLY_BRANCH', true)
+                stage('Build & Deploy Kogito Examples') {
+                    steps {
+                        script {
+                            def buildParams = getDefaultBuildParams()
+                            addSkipTestsParam(buildParams)
+                            addSkipIntegrationTestsParam(buildParams)
 
-                    // images and operator deploy testing will use older working artifacts if that one fails
-                    buildJob(EXAMPLES_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(EXAMPLES_DEPLOY)
+                            // images and operator deploy testing will use older working artifacts if that one fails
+                            buildJob(EXAMPLES_DEPLOY, buildParams)
+
+                            if (isJobSucceeded(EXAMPLES_DEPLOY) || isJobUnstable(EXAMPLES_DEPLOY)) {
+                                // Update examples nightly branch
+                                dir('kogito-examples') {
+                                    deleteDir()
+                                    checkout(githubscm.resolveRepository('kogito-examples', getGitAuthor(), getBuildBranch(), false))
+                                    String nightlyBranch = "nightly-${getBuildBranch()}"
+                                    githubscm.createBranch(nightlyBranch)
+                                    githubscm.pushObject('origin', nightlyBranch, getGitAuthorCredsID())
+                                }
+                            }
+                        }
+                    }
+                    post {
+                        failure {
+                            addFailedStage(EXAMPLES_DEPLOY)
+                        }
+                    }
                 }
             }
         }
@@ -354,6 +364,10 @@ boolean isJobSucceeded(String jobKey) {
     return getJob(jobKey)?.result == 'SUCCESS'
 }
 
+boolean isJobUnstable(String jobKey) {
+    return getJob(jobKey)?.result == 'UNSTABLE'
+}
+
 String getMandrelJobKey(String jobName) {
     return "${jobName}-mandrel"
 }
@@ -455,6 +469,10 @@ String getBuildBranch() {
 
 String getGitAuthor() {
     return env.GIT_AUTHOR
+}
+
+String getGitAuthorCredsID() {
+    return env.GIT_AUTHOR_CREDS_ID
 }
 
 boolean isDeployImagesLatestTag() {
