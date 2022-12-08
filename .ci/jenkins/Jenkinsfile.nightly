@@ -138,7 +138,7 @@ pipeline {
                                 // Update examples nightly branch
                                 dir('kogito-examples') {
                                     deleteDir()
-                                    checkout(githubscm.resolveRepository('kogito-examples', getGitAuthor(), getBuildBranch(), false))
+                                    checkout(githubscm.resolveRepository('kogito-examples', getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsID()))
                                     String nightlyBranch = "nightly-${getBuildBranch()}"
                                     githubscm.createBranch(nightlyBranch)
                                     githubscm.pushObject('origin', nightlyBranch, getGitAuthorCredsID())
