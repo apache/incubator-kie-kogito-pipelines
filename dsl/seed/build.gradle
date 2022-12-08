@@ -39,8 +39,7 @@ dependencies {
 
     // Jenkins test harness dependencies
     testImplementation "org.jenkins-ci.main:jenkins-war:${version_jenkins}"
-    // testImplementation "org.jenkins-ci.main:jenkins-test-harness:${version_jenkins_test_harness}"
-    testImplementation "org.jenkins-ci.main:jenkins-test-harness:2.66"
+    testImplementation "org.jenkins-ci.main:jenkins-test-harness:${version_jenkins_test_harness}"
 
     // Job DSL plugin including plugin dependencies
     testImplementation "org.jenkins-ci.plugins:job-dsl:${version_jenkins_plugins_job_dsl}"
