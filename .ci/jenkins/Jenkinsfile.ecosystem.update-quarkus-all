@@ -118,7 +118,7 @@ void sendPRLinksNotification() {
     String body = ''
     if (prLinks) {
         body = """
-Those PRs have been created with version:
+Those PRs have been created:
 ${prLinks.collect { "- ${it}" }.join('\n')}
 """
     } else {
