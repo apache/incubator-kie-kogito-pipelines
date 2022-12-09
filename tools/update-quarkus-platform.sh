@@ -228,27 +228,36 @@ finalize() {
     fi
 }
 
+JBOSS_NEXUS_REPOSITORY='https://repository.jboss.org/nexus/content/groups/public/'
 KOGITO_STAGING_REPOSITORY='https://repository.jboss.org/nexus/content/groups/kogito-public/'
 MAVEN_SETTINGS_FILE='.github/mvn-settings.xml'
-DIFF_FILE="diff --git a/${MAVEN_SETTINGS_FILE} b/${MAVEN_SETTINGS_FILE}
-index d5e4664b..b03cc023 100644
---- a/${MAVEN_SETTINGS_FILE}
-+++ b/${MAVEN_SETTINGS_FILE}
-@@ -14,6 +14,14 @@
-             <enabled>false</enabled>
-           </snapshots>
-         </repository>
+DIFF_FILE="diff --git a/.github/mvn-settings.xml b/.github/mvn-settings.xml
+index d5e4664b4..f3a1f9154 100644
+--- a/.github/mvn-settings.xml
++++ b/.github/mvn-settings.xml
+@@ -3,6 +3,22 @@
+     <profile>
+       <id>google-mirror</id>
+       <repositories>
 +        <repository>
 +          <snapshots>
-+              <enabled>false</enabled>
++            <enabled>false</enabled>
 +          </snapshots>
 +          <id>kogito</id>
 +          <name>kogito</name>
-+          <url>${KOGITO_STAGING_REPOSITORY}</url>
++          <url>https://repository.jboss.org/nexus/content/groups/kogito-public/</url>
 +        </repository>
-       </repositories>
-       <pluginRepositories>
-         <pluginRepository>
++        <repository>
++          <snapshots>
++            <enabled>false</enabled>
++          </snapshots>
++          <id>jboss-nexus</id>
++          <name>JBoss Nexus</name>
++          <url>https://repository.jboss.org/nexus/content/groups/public/</url>
++        </repository>
+         <repository>
+           <id>google-maven-central</id>
+           <name>GCS Maven Central mirror</name>
 "
 # execute
 $COMMAND
