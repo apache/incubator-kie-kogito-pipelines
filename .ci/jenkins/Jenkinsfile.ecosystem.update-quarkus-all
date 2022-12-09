@@ -115,13 +115,16 @@ void sendNotification(String body) {
 }
 
 void sendPRLinksNotification() {
+    String body = ''
     if (prLinks) {
-        String body = """
-Those PRs have been created:
+        body = """
+Those PRs have been created with version:
 ${prLinks.collect { "- ${it}" }.join('\n')}
 """
-        sendNotification(body)
+    } else {
+        body = "Existing PRs have been updated !"
     }
+    sendNotification(body)
 }
 
 void sendErrorNotification() {
