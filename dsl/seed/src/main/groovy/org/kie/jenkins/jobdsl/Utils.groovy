@@ -228,6 +228,14 @@ class Utils {
         return getBindingValue(script, 'BUILDCHAIN_CONFIG_GIT_FILE_PATH')
     }
 
+    static String getMavenArtifactsUploadRepositoryUrl(def script) {
+        return getBindingValue(script, 'MAVEN_ARTIFACTS_UPLOAD_REPOSITORY_URL')
+    }
+
+    static String getMavenArtifactsUploadRepositoryCredentialsId(def script) {
+        return getBindingValue(script, 'MAVEN_ARTIFACTS_UPLOAD_REPOSITORY_CREDS_ID')
+    }
+
     static String getSeedJenkinsfilePath(def script, String jenkinsfileName) {
         return "${KogitoConstants.SEED_JENKINSFILES_PATH}/${jenkinsfileName}"
     }

@@ -8,6 +8,11 @@ timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: '180'
 jdkTool = env.BUILD_JDK_TOOL
 mavenTool = env.BUILD_MAVEN_TOOL
 
+mavenDeployArtifacts = env.ENABLE_DEPLOY
+mavenDeployRepository = env.MAVEN_DEPLOY_REPOSITORY ?: ''
+mavenDeployRepositoryCredsId = env.MAVEN_DEPLOY_REPOSITORY_CREDS_ID ?: ''
+mavenDeployLocalDir = env.MAVEN_DEPLOY_LOCAL_DIR ?: ''
+
 buildChainType = env.BUILDCHAIN_TYPE?.trim() ?: 'pr'
 buildChainProject = env.BUILDCHAIN_PROJECT?.trim()
 defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kogito_pr_settings' : 'kogito_release_settings'
@@ -58,13 +63,22 @@ pipeline {
                 script {
                     sh 'printenv > env_props'
                     archiveArtifacts artifacts: 'env_props'
+
+                    if (mavenDeployArtifacts) {
+                        assert mavenDeployRepository : 'Please provide the maven deploy repository'
+                        assert mavenDeployRepositoryCredsId : 'Please provide the maven deploy repository credentials'
+                    }
                 }
             }
         }
         stage('check space before build') {
             steps {
                 script {
-                    util.spaceLeft()
+                    try {
+                        util.spaceLeft()
+                    } catch (err) {
+                        echo "Error when checking the space on node ... ${err}"
+                    }
                 }
             }
         }
@@ -131,14 +145,17 @@ pipeline {
             }
             steps {
                 script {
-                    env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
                     env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
+                    echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
+                    if (mavenDeployArtifacts) {
+                        env.DEPLOY_MVN_OPTS = "${env.DEPLOY_MVN_OPTS ?: ''} -DaltDeploymentRepository=local::default::file://${getMavenDeployLocalDir()}"
+                        echo "DEPLOY_MVN_OPTS = ${DEPLOY_MVN_OPTS}"
+                    }
 
                     configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
                         withCredentials([string(credentialsId: 'kie-ci3-token', variable: 'GITHUB_TOKEN')]) {
-                            env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS} -s ${MAVEN_SETTINGS_FILE}"
+                            env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
                             echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
-                            echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
 
                             sh "${getBuildChainCommandline(true)}"
                         }
@@ -173,6 +190,22 @@ pipeline {
                     dir("bc/kiegroup_${project.replaceAll('-', '_')}/${project}") {
                         maven.runMavenWithSettingsSonar(settingsXmlId, "-e -nsu validate -Psonarcloud-analysis -Denforcer.skip=true ${env.SONARCLOUD_ANALYSIS_MVN_OPTS ?: ''}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
                     }
+                }
+            }
+        }
+        stage('Upload artifacts to repository') {
+            when {
+                expression { return mavenDeployArtifacts }
+            }
+            tools {
+                jdk jdkTool
+                maven mavenTool
+            }
+            steps {
+                script {
+                    // Upload to specific repository with credentials
+                    String mavenDeployRepositoryZipUrl = "${mavenDeployRepository.replaceAll('/content/', '/service/local/').replaceFirst('/*$', '')}/content-compressed"
+                    maven.uploadLocalArtifacts(mavenDeployRepositoryCredsId, getMavenDeployLocalDir(), mavenDeployRepositoryZipUrl)
                 }
             }
         }
@@ -255,7 +288,6 @@ String getReproducer() {
 ${BUILD_MVN_OPTS_CURRENT ? "export BUILD_MVN_OPTS_CURRENT=${BUILD_MVN_OPTS_CURRENT}" : '\n'}
 ${getBuildChainCommandline()}
 
-
 NOTE: To install the build-chain tool, please refer to https://github.com/kiegroup/github-action-build-chain#local-execution
 ```
 """
@@ -264,4 +296,8 @@ NOTE: To install the build-chain tool, please refer to https://github.com/kiegro
 String getRepoNameCamelCase(String repo) {
     List words = repo.split('-') as List
     return words.collect { it.isEmpty() ? it : it.substring(0, 1).toUpperCase() + it.substring(1).toLowerCase() }.join(' ')
+}
+
+String getMavenDeployLocalDir() {
+    return mavenDeployLocalDir ?: "${WORKSPACE}/maven_deploy_dir"
 }

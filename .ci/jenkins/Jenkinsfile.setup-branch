@@ -106,6 +106,17 @@ pipeline {
                     addDroolsVersionParam(buildParams)
                     addKogitoVersionParam(buildParams)
                     buildJob('kogito-examples', buildParams)
+
+                    if (isJobSucceeded('kogito-examples') || isJobUnstable('kogito-examples')) {
+                        // Update examples nightly branch
+                        dir('kogito-examples') {
+                            deleteDir()
+                            checkout(githubscm.resolveRepository('kogito-examples', getGitAuthor(), getBuildBranch(), false))
+                            String nightlyBranch = "nightly-${getBuildBranch()}"
+                            githubscm.createBranch(nightlyBranch)
+                            githubscm.pushObject('origin', nightlyBranch, getGitAuthorCredsID())
+                        }
+                    }
                 }
             }
             post {
@@ -301,6 +312,10 @@ String getBuildBranch() {
 
 String getGitAuthor() {
     return env.GIT_AUTHOR
+}
+
+String getGitAuthorCredsID() {
+    return env.GIT_AUTHOR_CREDS_ID
 }
 
 String getDroolsVersion() {
