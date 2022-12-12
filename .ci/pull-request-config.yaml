@@ -83,14 +83,6 @@ build:
           bash -c "if [ ! -z '${{ env.QUARKUS_VERSION }}' ]; then mvn -f kogito-examples/pom.xml versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=${{ env.QUARKUS_VERSION }} -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}; fi"
           bash -c "if [ ! -z '${{ env.QUARKUS_VERSION }}' ]; then mvn -f kogito-examples/pom.xml versions:set-property -Dproperty=quarkus-plugin.version -DnewVersion=${{ env.QUARKUS_VERSION }} -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}; fi"
           bash -c "cd kogito-examples && if which git; then git diff; fi"
-
-          bash -c "if [ ! -z '${{ env.QUARKUS_VERSION }}' ]; then mvn -f kogito-examples-persistence/pom.xml versions:set-property -Dproperty=version.io.quarkus -DnewVersion=${{ env.QUARKUS_VERSION }} -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}; fi"
-          bash -c "if [ ! -z '${{ env.QUARKUS_VERSION }}' ]; then mvn -f kogito-examples-persistence/pom.xml versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=${{ env.QUARKUS_VERSION }} -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}; fi"
-          bash -c "cd kogito-examples-persistence && if which git; then git diff; fi"
-
-          bash -c "if [ ! -z '${{ env.QUARKUS_VERSION }}' ]; then mvn -f kogito-examples-events/pom.xml versions:set-property -Dproperty=version.io.quarkus -DnewVersion=${{ env.QUARKUS_VERSION }} -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}; fi"
-          bash -c "if [ ! -z '${{ env.QUARKUS_VERSION }}' ]; then mvn -f kogito-examples-events/pom.xml versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=${{ env.QUARKUS_VERSION }} -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_QUARKUS_UPDATE }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_QUARKUS_UPDATE }}; fi"
-          bash -c "cd kogito-examples-events && if which git; then git diff; fi"
         upstream: |
           bash -c "if [ ! -z '${{ env.QUARKUS_VERSION }}' ]; then mvn versions:set-property -Dproperty=quarkus.platform.version -DnewVersion=${{ env.QUARKUS_VERSION }} -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}; fi"
           bash -c "if [ ! -z '${{ env.QUARKUS_VERSION }}' ]; then mvn versions:set-property -Dproperty=quarkus-plugin.version -DnewVersion=${{ env.QUARKUS_VERSION }} -DgenerateBackupPoms=false ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}; fi"
@@ -103,11 +95,7 @@ build:
         mvn -f kogito-examples/pom.xml -pl :kogito-examples clean ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
         
         mvn -f kogito-examples/${{ env.KOGITO_EXAMPLES_SUBFOLDER_POM }}pom.xml clean ${{ env.MVN_CMD }} -Dvalidate-formatting ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
-        bash -c "if [ '${{ env.DISABLE_PERSISTENCE }}' != 'true' ]; then mvn -f kogito-examples-persistence/${{ env.KOGITO_EXAMPLES_SUBFOLDER_POM }}pom.xml clean install -Ppersistence ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}; fi"
-        bash -c "if [ '${{ env.DISABLE_EVENTS }}' != 'true' ]; then mvn -f kogito-examples-events/${{ env.KOGITO_EXAMPLES_SUBFOLDER_POM }}pom.xml clean install -Pevents ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}; fi"
       upstream: |
         mvn clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_UPSTREAM }}
     clone:
       - kogito-examples
-      - kogito-examples-persistence
-      - kogito-examples-events
