@@ -62,8 +62,6 @@ class Environment {
             [
                 NATIVE: 'true',
                 ADDITIONAL_TIMEOUT: 720,
-                DISABLE_PERSISTENCE: 'true',
-                DISABLE_EVENTS: 'true',
             ]
         }
     )
@@ -77,8 +75,6 @@ class Environment {
                 NATIVE: 'true',
                 NATIVE_BUILDER_IMAGE: Utils.getEnvironmentMandrelBuilderImage(script),
                 ADDITIONAL_TIMEOUT: 720,
-                DISABLE_EVENTS: 'true',
-                DISABLE_PERSISTENCE: 'true',
             ]
         }
     )
@@ -94,8 +90,6 @@ class Environment {
                 ADDITIONAL_TIMEOUT: 720,
                 QUARKUS_BRANCH: Utils.getEnvironmentMandrelLTSQuarkusVersion(script),
                 BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
-                DISABLE_PERSISTENCE: 'true',
-                DISABLE_EVENTS: 'true',
             ]
         }
     )
@@ -121,7 +115,6 @@ class Environment {
         getDefaultEnvVarsClosure: { script -> [ 
             QUARKUS_BRANCH: Utils.getEnvironmentQuarkusLTSVersion(script),
             BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
-            DISABLE_PERSISTENCE: 'true',
         ] }
     )
 
