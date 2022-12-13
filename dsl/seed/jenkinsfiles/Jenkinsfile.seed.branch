@@ -107,6 +107,8 @@ pipeline {
                     all_repos.each { repository ->
                         def envProps = getRepoConfigAsEnvProperties(repository)
                         envProps += [
+                            GENERATION_BRANCH: "${GENERATION_BRANCH}",
+                            
                             GIT_MAIN_BRANCH: getMainBranch(repository),
                             REPO_NAME: "${repository}",
 
@@ -157,6 +159,7 @@ pipeline {
                     repos.eachWithIndex { repository, index ->
                         def repoConfig = getRepoConfig(repository)
                         def envProps = [
+                            GENERATION_BRANCH: "${GENERATION_BRANCH}",
                             REPO_NAME: repository,
                             GIT_BRANCH: repoConfig.git.branch,
                             GIT_AUTHOR_NAME: repoConfig.git.author.name,
