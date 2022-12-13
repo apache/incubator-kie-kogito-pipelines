@@ -353,7 +353,7 @@ class KogitoJobUtils {
             MAVEN_DEPLOY_REPOSITORY_CREDS_ID: Utils.getMavenArtifactsUploadRepositoryCredentialsId(script),
         ])
         jobParams.env.putAll(extraEnv)
-        return createBranchBuildChainJob(script, jobFolder, repository, extraEnv, 'build-and-deploy', enableNotification, notificationJobName)
+        return createBranchBuildChainJob(script, jobParams, repository, enableNotification, notificationJobName)
     }
 
     /**

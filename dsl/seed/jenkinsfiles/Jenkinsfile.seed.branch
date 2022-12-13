@@ -109,7 +109,7 @@ pipeline {
                         envProps += [
                             DEBUG: scriptUtils.isDebug(),
 
-                            ENVIRONMENTS: getRepoConfig(repository).environments ? getRepoConfig(repository).environments.keySet().join(',') : '',
+                            ENVIRONMENTS: getRepoConfig(repository).environments?.keySet()?.join(',') ?: '',
 
                             GENERATION_BRANCH: "${GENERATION_BRANCH}",
                             GIT_MAIN_BRANCH: getMainBranch(repository),
@@ -301,7 +301,7 @@ void fillEnvProperties(Map envProperties, String envKeyPrefix, Map propsMap) {
         }
         if (value instanceof Map) {
             fillEnvProperties(envProperties, newKey, value as Map)
-        } else if (value instanceof List || value instanceof net.sf.json.JSONArray) {
+        } else if ([List, net.sf.json.JSONArray].any { it.isAssignableFrom(value.getClass()) }) {
             envProperties.put(newKey, (value as List).collect { it }.join(','))
         } else {
             envProperties.put(newKey, value)

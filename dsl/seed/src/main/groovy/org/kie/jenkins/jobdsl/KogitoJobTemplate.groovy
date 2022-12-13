@@ -44,7 +44,7 @@ class KogitoJobTemplate {
         String jobFolderName = ''
         Map jobFolderEnv = [:]
         if (jobParams.job.folder) {
-            if (!jobParams.job.folder instanceof Folder && !jobParams.job.folder instanceof JenkinsFolder) {
+            if (![Folder, JenkinsFolder].any { it.isAssignableFrom(jobParams.job.folder.getClass()) }) {
                 throw new RuntimeException('Folder is not of type org.kie.jenkins.jobdsl.model.JenkinsFolder')
             }
             // Expect org.kie.jenkins.jobdsl.model.Folder structure
@@ -328,8 +328,8 @@ class KogitoJobTemplate {
             testTypeName = prFolder.getConfigValues()?.typeName ?: prFolder.environment.toId()
         } else if (prFolder instanceof JenkinsFolder) {
             String envName
-            testTypeId = envName ? envName : 'tests' // Define harcoded value for no env
-            testTypeName = envName ? envName : 'build' // Define harcoded value for no env
+            testTypeId = envName ?: 'tests' // Define harcoded value for no env
+            testTypeName = envName ?: 'build' // Define harcoded value for no env
         } else {
             throw new RuntimeException('Folder is not of type org.kie.jenkins.jobdsl.model.JenkinsFolder')
         }

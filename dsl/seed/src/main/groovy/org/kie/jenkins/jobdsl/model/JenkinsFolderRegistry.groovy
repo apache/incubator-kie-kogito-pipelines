@@ -34,17 +34,14 @@ class JenkinsFolderRegistry {
 
         if (hasFolder(folder.getName())) {
             return getFolder(folder.getName())
+        } else {
+            register(folder)
+            return folder
         }
-
-        register(folder)
-        return folder
     }
 
     static JenkinsFolder getFolder(String folderName) {
-        if (hasFolder(folderName)) {
-            return FOLDER_REGISTRY.get(folderName)
-        }
-        return null
+        return hasFolder(folderName) ? FOLDER_REGISTRY.get(folderName) : null
     }
 
     static getPullRequestFolder(def script, String envName = '') {

@@ -22,26 +22,14 @@ class EnvUtils {
     }
 
     static List<String> getAllEnabledEnvironments(def script) {
-        List<String> environments = getAllEnvironments(script)
-        List<String> enabledEnvironments = []
-        for (String envName : environments) {
-            if (isEnvironmentEnabled(script, envName)) {
-                enabledEnvironments += envName
-            }
-        }
+        List<String> enabledEnvironments = getAllEnvironments(script).findAll { isEnvironmentEnabled(script, it) }
         PrintUtils.debug(script, "getAllEnabledEnvironments => ${enabledEnvironments}")
         return enabledEnvironments
     }
 
     static List<String> getAllEnabledEnvironmentsForIds(def script, List<String> includeEnvironmentIds, List<String> excludeEnvironmentIds) {
-        List<String> environments = getAllEnabledEnvironments(script)
-        List<String> filteredEnvironments = []
-        for (String envName : environments) {
-            if (hasEnvironmentIds(script, envName, includeEnvironmentIds) &&
-                !hasEnvironmentIds(script, envName, excludeEnvironmentIds)) {
-                filteredEnvironments += envName
-            }
-        }
+        List<String> filteredEnvironments = getAllEnabledEnvironments(script).findAll { hasEnvironmentIds(script, it, includeEnvironmentIds) &&
+                !hasEnvironmentIds(script, it, excludeEnvironmentIds) }
         PrintUtils.debug(script, "getAllEnabledEnvironmentsForIds, include='${includeEnvironmentIds}', exclude='${excludeEnvironmentIds}' => ${filteredEnvironments}")
         return filteredEnvironments
     }
@@ -55,14 +43,13 @@ class EnvUtils {
     static Map getEnvironmentEnvVars(def script, String envName) {
         String keyPrefix = "${createEnvironmentsKeyPrefix(envName)}ENV_VARS_"
         PrintUtils.debug(script, "Looking for env vars for env ${envName}. Key prefix is ${keyPrefix}")
-        Map envVars = [:]
-        for (String key : script.getBinding().getVariables().keySet()) {
-            if (key.startsWith(keyPrefix)) {
-                String envKey = key.replace(keyPrefix, '')
-                String envValue = Utils.getBindingValue(script, key)
-                envVars.put(envKey, envValue)
-            }
-        }
+        Map envVars = script.getBinding()
+                                .getVariables()
+                                .keySet()
+                                .findAll { it.startsWith(keyPrefix) }
+                                .collectEntries {
+                                    ["${it.replace(keyPrefix, '')}", Utils.getBindingValue(script, it)]
+                                }
         PrintUtils.debug(script, "Got env vars = ${envVars}")
         return envVars
     }
@@ -76,14 +63,8 @@ class EnvUtils {
     }
 
     static boolean hasEnvironmentIds(def script, String envName, List<String> ids) {
-        for (String id : ids) {
-            if (!hasEnvironmentId(script, envName, id)) {
-                return false
-            }
-        }
-        return true
+        return ids.every { hasEnvironmentId(script, envName, it) }
     }
-
 
     private static def getEnvironmentValue(def script, String envName, String envKey) {
         String key = "${createEnvironmentsKeyPrefix(envName)}${envKey}"
