@@ -3,8 +3,6 @@ environments:
     env_vars:
       NATIVE: 'true'
       ADDITIONAL_TIMEOUT: 720
-      DISABLE_PERSISTENCE: 'true'
-      DISABLE_EVENTS: 'true'
     ids:
     - native
   
@@ -13,8 +11,6 @@ environments:
       NATIVE: 'true'
       NATIVE_BUILDER_IMAGE: quay.io/quarkus/ubi-quarkus-mandrel:22.3-java17
       ADDITIONAL_TIMEOUT: 720
-      DISABLE_PERSISTENCE: 'true'
-      DISABLE_EVENTS: 'true'
     ids:
     - native
     - prod
@@ -36,7 +32,6 @@ environments:
     env_vars:
       QUARKUS_BRANCH: '2.13'
       BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral'
-      DISABLE_PERSISTENCE: 'true'
     ids:
     - quarkus
     - lts
@@ -48,8 +43,6 @@ environments:
       ADDITIONAL_TIMEOUT: 720
       QUARKUS_BRANCH: '2.13'
       BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral'
-      DISABLE_PERSISTENCE: 'true'
-      DISABLE_EVENTS: 'true'
     ids:
     - native
     - prod
