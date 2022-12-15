@@ -23,9 +23,9 @@ pipeline {
         jdk 'kie-jdk11'
     }
 
-    // parameters {
-    // See ./seed_job_main.groovy
-    // }
+    environment {
+        KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+    }
 
     stages {
         stage('Initialize') {
@@ -45,7 +45,7 @@ pipeline {
                     def releaseProjects = readSeedConfig().ecosystem.projects.findAll { ! (it.ignore_release ? it.ignore_release.toBoolean() : false)  }
                     def envProperties = [
                         JENKINS_EMAIL_CREDS_ID: readSeedConfig().jenkins.email_creds_id,
-                        RELEASE_PROJECTS: releaseProjects.collect{ it.name }.join(','),
+                        RELEASE_PROJECTS: releaseProjects.collect { it.name }.join(','),
                         SEED_REPO: "${SEED_REPO}",
                         SEED_AUTHOR: "${SEED_AUTHOR}",
                         SEED_AUTHOR_CREDS_ID: "${SEED_AUTHOR_CREDS_ID}",
@@ -83,6 +83,7 @@ pipeline {
                         String branchConfigBranch = branchInfo.seed?.config_file?.git?.branch ?: branchInfo.name
                         def envProperties = [
                             JOB_NAME: getBranchSeedJobName(),
+                            JENKINS_EMAIL_CREDS_ID: readSeedConfig().jenkins.email_creds_id,
                             GENERATION_BRANCH: branchInfo.name,
                             MAIN_BRANCHES: writeJSON(json: readSeedConfig().git.main_branch, returnText: true),
                             OLD_FOLDER_STRUCTURE: branchInfo.old_folder_structure,
@@ -129,6 +130,7 @@ pipeline {
                         SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}",
                         SEED_CONFIG_FILE_GIT_BRANCH: "${SEED_CONFIG_FILE_GIT_BRANCH}",
                         SEED_CONFIG_FILE_PATH: "${SEED_CONFIG_FILE_PATH}",
+                        JENKINS_EMAIL_CREDS_ID: readSeedConfig().jenkins.email_creds_id,
                     ]
                     dir(scriptUtils.getDslSeedFolderAbsolutePath()) {
                         println "[INFO] Generate main seed job with properties ${envProperties}"
@@ -154,16 +156,23 @@ pipeline {
                     Map parallelJobs = [:]
                     readSeedConfig().git.branches.collect { it.name }.each { branch ->
                         parallelJobs.put(branch, { launchBranchSeedJob(branch) })
-                    }
+                }
 
                     parallel parallelJobs
-                }
             }
         }
     }
+}
     post {
         always {
             cleanWs()
+        }
+        unsuccessful {
+            script {
+                emailext body: "**Main seed job #${BUILD_NUMBER} was: ${currentBuild.currentResult}\nPlease look here: ${BUILD_URL}",
+                    subject: "[${SEED_CONFIG_FILE_GIT_BRANCH}] Main Seed",
+                    to: env.KOGITO_CI_EMAIL_TO
+            }
         }
     }
 }
