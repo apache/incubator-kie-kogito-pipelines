@@ -73,7 +73,7 @@ checkout_repository() {
   set -e
 
   if [ "${clone_status}" != '0' ]; then
-    echo "[WARN] Error cloning ${git_server_url}${repository} on branch ${target_branch}"
+    echo "[WARN] Error cloning ${git_server_url}${repository} on branch ${branch}"
     if [ -z ${target_repository} ]; then
       echo 'No target repository given. Cannot retrieve repository ...'
       exit 1
@@ -325,7 +325,9 @@ if [ -z "${seed_repo}" ]; then
   seed_repo_name="$(echo "${fallback_seed_repo}" | awk -F/ '{print $2}')"
   seed_repo="${seed_owner}/${seed_repo_name}"
 fi
-seed_ref="${DSL_DEFAULT_TEST_REF:-${current_ref}}"
+if [ -z "${seed_ref}" ]; then
+  seed_ref="${DSL_DEFAULT_TEST_REF:-${current_ref}}"
+fi
 
 echo "-----------------------------------------------------------------"
 echo "-- SEED CONFIGURATION"
@@ -352,11 +354,11 @@ else
   echo "Seed repository local path has been set.\n\n Copying to final folder..."
   seed_repo_path="${seed_local_path}"
 fi
-echo 'Copying seed repo to pipelines final directory'
+echo "Copying seed repo to pipelines final directory ${pipelines_final_dir}"
 mkdir -p ${pipelines_final_dir}/dsl
 cp -r ${seed_repo_path}/dsl/seed ${pipelines_final_dir}/dsl
 
-echo "Copy branch config file ${branch_config_file_path} to pipelines final directory"
+echo "Copy branch config file ${branch_config_file_path} to pipelines final directory ${pipelines_final_dir}"
 cp "${branch_config_file_path}" ${pipelines_final_dir}/dsl/seed/branch_config.yaml
 
 ##############################################################################################################

@@ -2,6 +2,12 @@ package org.kie.jenkins.jobdsl.model
 
 import org.kie.jenkins.jobdsl.Utils
 
+/**
+* *DEPRECATED*
+* Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
+* Should be replaced by `org.kie.jenkins.jobdsl.model.JenkinsFolder`
+*/
+@Deprecated
 class Folder {
 
     String name
@@ -14,7 +20,11 @@ class Folder {
     Map defaultEnv
 
     String getFolderName(String separator = '.') {
-        String folderName = this.jobType.toName()
+        return getName(separator)
+    }
+
+    String getName(String separator = '.') {
+        String folderName = this.jobType.getName()
         if (this.environment != Environment.DEFAULT) {
             folderName += "${separator}${environment.toId()}"
         }

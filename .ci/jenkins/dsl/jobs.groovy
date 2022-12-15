@@ -1,5 +1,6 @@
 import org.kie.jenkins.jobdsl.KogitoJobTemplate
-import org.kie.jenkins.jobdsl.model.Folder
+import org.kie.jenkins.jobdsl.model.JobType
+import org.kie.jenkins.jobdsl.utils.JobParamsUtils
 import org.kie.jenkins.jobdsl.KogitoJobUtils
 import org.kie.jenkins.jobdsl.Utils
 
@@ -37,7 +38,7 @@ setupReleaseCloudJob()
 /////////////////////////////////////////////////////////////////
 
 void setupKogitoRuntimesBDDPrJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, '0-runtimes-bdd-testing', Folder.PULLREQUEST_RUNTIMES_BDD, "${JENKINSFILE_PATH}/Jenkinsfile.pr.bdd-tests", 'Run on demand BDD tests from runtimes repository')
+    def jobParams = JobParamsUtils.getBasicJobParamsWithEnv(this, '0-runtimes-bdd-testing', JobType.PULL_REQUEST, 'kogito-bdd', "${JENKINSFILE_PATH}/Jenkinsfile.pr.bdd-tests", 'Run on demand BDD tests from runtimes repository')
     jobParams.git.project_url = "https://github.com/${GIT_AUTHOR_NAME}/kogito-runtimes/"
     jobParams.git.repo_url = "https://github.com/${GIT_AUTHOR_NAME}/${jobParams.git.repository}/"
     jobParams.pr = [
@@ -52,19 +53,19 @@ void setupKogitoRuntimesBDDPrJob() {
 }
 
 void setupCleanOldNamespacesToolsJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-clean-old-namespaces', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.clean-old-namespaces")
+    def jobParams = JobParamsUtils.getBasicJobParams(this, 'kogito-clean-old-namespaces', JobType.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.clean-old-namespaces")
     jobParams.triggers = [ cron : '@midnight' ]
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
 void setupCleanOldNightlyImagesToolsJob() {
-    jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-clean-old-nightly-images', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.clean-nightly-images")
+    jobParams = JobParamsUtils.getBasicJobParams(this, 'kogito-clean-old-nightly-images', JobType.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.clean-nightly-images")
     jobParams.triggers = [ cron : 'H 8 * * *' ]
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
 void setupCreateIssueToolsJob() {
-    jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-create-issue', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.create-issue")
+    jobParams = JobParamsUtils.getBasicJobParams(this, 'kogito-create-issue', JobType.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.create-issue")
     jobParams.env.putAll([
         GITHUB_CLI_PATH: '/opt/tools/gh-cli/bin/gh',
     ])
@@ -80,7 +81,7 @@ void setupCreateIssueToolsJob() {
 }
 
 void setupUpdateJenkinsDependenciesJob() {
-    jobParams = KogitoJobUtils.getBasicJobParams(this, 'jenkins-update-framework-deps', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.update-jenkins-dependencies", 'Nightly check of Jenkins dependencies from framework against current version of Jenkins')
+    jobParams = JobParamsUtils.getBasicJobParams(this, 'jenkins-update-framework-deps', JobType.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.update-jenkins-dependencies", 'Nightly check of Jenkins dependencies from framework against current version of Jenkins')
     jobParams.triggers = [cron : '@midnight']
     jobParams.env.putAll([
         REPO_NAME: 'kogito-pipelines',
@@ -94,7 +95,7 @@ void setupUpdateJenkinsDependenciesJob() {
 }
 
 void createSetupBranchJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, '0-setup-branch', Folder.SETUP_BRANCH, "${JENKINSFILE_PATH}/Jenkinsfile.setup-branch", 'Kogito Setup Branch')
+    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-setup-branch', JobType.SETUP_BRANCH, "${JENKINSFILE_PATH}/Jenkinsfile.setup-branch", 'Kogito Setup Branch')
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
@@ -117,7 +118,7 @@ void createSetupBranchJob() {
 }
 
 void setupNightlyJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'kogito-nightly', Folder.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly", 'Kogito Nightly')
+    def jobParams = JobParamsUtils.getBasicJobParams(this, 'kogito-nightly', JobType.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly", 'Kogito Nightly')
     jobParams.triggers = [cron : '@midnight']
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
@@ -149,7 +150,7 @@ void setupNightlyJob() {
 }
 
 void setupReleaseArtifactsJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, '0-kogito-release', Folder.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release.artifacts", 'Drools/Kogito Artifacts Release')
+    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-release', JobType.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release.artifacts", 'Drools/Kogito Artifacts Release')
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
@@ -177,7 +178,7 @@ void setupReleaseArtifactsJob() {
 }
 
 void setupReleaseCloudJob() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, '0-kogito-release-cloud', Folder.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release.cloud", 'Kogito Cloud Release')
+    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-release-cloud', JobType.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release.cloud", 'Kogito Cloud Release')
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
@@ -218,6 +219,6 @@ void setupReleaseCloudJob() {
 }
 
 void setupBuildOperatorNode() {
-    def jobParams = KogitoJobUtils.getBasicJobParams(this, 'build-operator-node', Folder.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.build-operator-node")
+    def jobParams = JobParamsUtils.getBasicJobParams(this, 'build-operator-node', JobType.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.build-operator-node")
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }

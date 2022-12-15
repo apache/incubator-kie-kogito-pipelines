@@ -1,22 +1,20 @@
 # Jenkins Jobs
 
-* [Jenkins Jobs](#jenkins-jobs)
-  * [Structure](#structure)
-    * [Seed structure](#seed-structure)
-    * [Jobs Structure](#jobs-structure)
-      * [Seed file entry point](#seed-file-entry-point)
-    * [Generated jobs structure](#generated-jobs-structure)
-  * [Testing](#testing)
-    * [Local testing](#local-testing)
-      * [Seed job local testing](#seed-job-local-testing)
-      * [Repository jobs local testing](#repository-jobs-local-testing)
-    * [Test on Jenkins](#test-on-jenkins)
-      * [Test specific repository jobs](#test-specific-repository-jobs)
-      * [Test the whole Kogito jobs](#test-the-whole-kogito-jobs)
-      * [Generate only specific repositories](#generate-only-specific-repositories)
-      * [Generate all](#generate-all)
-  * [Annex](#annex)
-    * [Create specific Maven repository for testing](#create-specific-maven-repository-for-testing)
+- [Jenkins Jobs](#jenkins-jobs)
+  - [Jenkins jobs generation structure](#jenkins-jobs-generation-structure)
+    - [Seed library](#seed-library)
+    - [Seed config files](#seed-config-files)
+      - [Seed main config file](#seed-main-config-file)
+      - [Seed branch config file](#seed-branch-config-file)
+    - [Repository jobs definition](#repository-jobs-definition)
+    - [Generated jobs structure](#generated-jobs-structure)
+  - [Testing](#testing)
+    - [Local testing](#local-testing)
+      - [Seed job local testing](#seed-job-local-testing)
+      - [Repository jobs local testing](#repository-jobs-local-testing)
+    - [Test on Jenkins](#test-on-jenkins)
+      - [Test steps](#test-steps)
+      - [Create specific Maven repository for testing](#create-specific-maven-repository-for-testing)
 
 We use [Jenkins Job DSL](https://github.com/jenkinsci/job-dsl-plugin) to create the different Kogito jobs
 
@@ -119,7 +117,7 @@ All values from this config file will be available to job generation as env vari
 # This is useful in testing to avoid to generate all jobs
 # Current jobtype can be found in ../dsl/seed/src/main/groovy/org/kie/jenkins/jobdsl/model/JobType.groovy
 # job_types:
-  # init-branch:
+  # setup-branch:
   #   disabled: true
   # nightly:
   #   disabled: true
@@ -132,25 +130,15 @@ All values from this config file will be available to job generation as env vari
   # tools:
   #   disabled: true
 # Define the different environments
-environment:
-  quarkus:
-    main:
-      enabled: true
-    branch:
-      enabled: true
-      version: '2.9'
-    lts:
-      enabled: true
-      version: '2.7'
-  native:
-    enabled: true
-  mandrel:
-    enabled: true
-    builder_image: quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11
-  mandrel_lts:
-    enabled: true
-  runtimes_bdd:
-    enabled: true
+environments:
+  <envName>:
+    enabled: # true if not specified
+    auto_generation: # if the environment should be auto generated for PR and Nightly jobs. true if not specified.
+    env_vars:
+      envKey: envValue
+      ...
+    ids:
+    - List of ids identifying the environment
 
 productized_branch: true
 

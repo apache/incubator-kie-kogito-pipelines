@@ -1,8 +1,8 @@
 // +++++++++++++++++++++++++++++++++++++++++++ create a seed job ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-import org.kie.jenkins.jobdsl.FolderUtils
+import org.kie.jenkins.jobdsl.utils.FolderUtils
 import org.kie.jenkins.jobdsl.KogitoConstants
-import org.kie.jenkins.jobdsl.SeedJobUtils
+import org.kie.jenkins.jobdsl.utils.SeedJobUtils
 import org.kie.jenkins.jobdsl.Utils
 
 // Create all folders

@@ -3,6 +3,10 @@ package org.kie.jenkins.jobdsl.model
 import org.kie.jenkins.jobdsl.Utils
 
 /*
+* *DEPRECATED*  
+* Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
+* Environment class. Environments are now configurable via branch config file and referenced as strings.
+*
 * Environment represents the environment is which a job should run
 *
 * Each environment can contain default env variables which will be added automatically to the job.
@@ -13,6 +17,7 @@ import org.kie.jenkins.jobdsl.Utils
 *
 *
 */
+@Deprecated
 class Environment {
 
     String name

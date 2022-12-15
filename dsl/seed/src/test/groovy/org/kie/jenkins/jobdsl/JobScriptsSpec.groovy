@@ -39,7 +39,7 @@ class JobScriptsSpec extends Specification {
     void 'test script #file.absolutePath'(File file) {
         given:
         Map<String, ?> envVars = TestUtil.readBranchConfig()
-        envVars.put('DEBUG', false)
+        envVars.put('DEBUG', true)
         envVars.put('JOB_NAME', 'JOB_NAME')
         envVars.put('GENERATION_BRANCH', 'GENERATION_BRANCH')
 
