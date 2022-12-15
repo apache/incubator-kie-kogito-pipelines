@@ -3,7 +3,7 @@ package org.kie.jenkins.jobdsl.model
 import org.kie.jenkins.jobdsl.Utils
 
 /*
-* *DEPRECATED*  
+* *DEPRECATED*
 * Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
 * Environment class. Environments are now configurable via branch config file and referenced as strings.
 *
@@ -65,7 +65,7 @@ class Environment {
         isActiveClosure: { script -> Utils.isEnvironmentNativeEnabled(script) },
         getDefaultEnvVarsClosure: { script ->
             [
-                NATIVE: 'true',
+                BUILD_MVN_OPTS_CURRENT: '-Dnative -Dquarkus.native.container-build=true',
                 ADDITIONAL_TIMEOUT: 720,
             ]
         }
@@ -77,7 +77,7 @@ class Environment {
         isActiveClosure: { script -> Utils.isEnvironmentMandrelEnabled(script) },
         getDefaultEnvVarsClosure: { script ->
             [
-                NATIVE: 'true',
+                BUILD_MVN_OPTS_CURRENT: '-Dnative -Dquarkus.native.container-build=true',
                 QUARKUS_NATIVE_BUILDER_IMAGE: 'mandrel',
                 ADDITIONAL_TIMEOUT: 720,
             ]
@@ -90,11 +90,12 @@ class Environment {
         isActiveClosure: { script -> Utils.isEnvironmentMandrelLTSEnabled(script) },
         getDefaultEnvVarsClosure: { script ->
             [
-                NATIVE: 'true',
+                BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+                BUILD_MVN_OPTS_CURRENT: '-Dnative -Dquarkus.native.container-build=true',
+                QUARKUS_BRANCH: Utils.getEnvironmentMandrelLTSQuarkusVersion(script),
                 QUARKUS_NATIVE_BUILDER_IMAGE: 'mandrel',
                 ADDITIONAL_TIMEOUT: 720,
-                QUARKUS_BRANCH: Utils.getEnvironmentMandrelLTSQuarkusVersion(script),
-                BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+
             ]
         }
     )
@@ -117,9 +118,9 @@ class Environment {
         name: 'QUARKUS_LTS',
         optional: true,
         isActiveClosure: { script -> Utils.isEnvironmentQuarkusLTSEnabled(script) },
-        getDefaultEnvVarsClosure: { script -> [ 
-            QUARKUS_BRANCH: Utils.getEnvironmentQuarkusLTSVersion(script),
+        getDefaultEnvVarsClosure: { script -> [
             BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral',
+            QUARKUS_BRANCH: Utils.getEnvironmentQuarkusLTSVersion(script),
         ] }
     )
 
