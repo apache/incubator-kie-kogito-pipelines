@@ -77,6 +77,7 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
         env('SEED_BRANCH', Utils.getSeedBranch(this))
 
         env('AGENT_LABEL', Utils.isProdEnvironment(this) ? 'kie-rhel8 && !built-in' : 'kie-rhel8-priority')
+        env('JENKINS_EMAIL_CREDS_ID', Utils.getJenkinsEmailCredsId(this))
     }
 
     definition {
