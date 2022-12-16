@@ -1,15 +1,15 @@
 environments:
   native:
     env_vars:
-      NATIVE: 'true'
+      BUILD_MVN_OPTS_CURRENT: '-Dnative -Dquarkus.native.container-build=true'
       ADDITIONAL_TIMEOUT: 720
     ids:
     - native
   
   mandrel:
     env_vars:
-      NATIVE: 'true'
-      NATIVE_BUILDER_IMAGE: quay.io/quarkus/ubi-quarkus-mandrel:22.3-java17
+      BUILD_MVN_OPTS_CURRENT: '-Dnative -Dquarkus.native.container-build=true'
+      QUARKUS_NATIVE_BUILDER_IMAGE: mandrel
       ADDITIONAL_TIMEOUT: 720
     ids:
     - native
@@ -30,19 +30,19 @@ environments:
   # LTS part
   quarkus-lts:
     env_vars:
-      QUARKUS_BRANCH: '2.13'
       BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral'
+      QUARKUS_BRANCH: '2.13'
     ids:
     - quarkus
     - lts
 
   mandrel-lts:
     env_vars:
-      NATIVE: 'true'
-      NATIVE_BUILDER_IMAGE: quay.io/quarkus/ubi-quarkus-mandrel:22.3-java17
-      ADDITIONAL_TIMEOUT: 720
-      QUARKUS_BRANCH: '2.13'
       BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral'
+      BUILD_MVN_OPTS_CURRENT: '-Dnative -Dquarkus.native.container-build=true'
+      QUARKUS_BRANCH: '2.13'
+      QUARKUS_NATIVE_BUILDER_IMAGE: mandrel
+      ADDITIONAL_TIMEOUT: 720
     ids:
     - native
     - prod

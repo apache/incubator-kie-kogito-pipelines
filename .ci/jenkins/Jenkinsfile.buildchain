@@ -20,8 +20,6 @@ settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
 
 disableSonarCloudAnalysis = env.DISABLE_SONARCLOUD ? env.DISABLE_SONARCLOUD.toBoolean() : false
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
-native_build = env.NATIVE ? env.NATIVE.toBoolean() : false
-native_builder_image = env.NATIVE_BUILDER_IMAGE ?: ''
 quarkusBranch = env.QUARKUS_BRANCH ?: ''
 
 buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
@@ -267,8 +265,6 @@ boolean isSonarCloudAnalysis() {
 String getBuildMavenOptsCurrent() {
     List opts_current = []
     isSonarCloudAnalysis() ? opts_current.add('-Prun-code-coverage') : null
-    native_build ? opts_current.add('-Dquarkus.native.container-build=true -Dnative -Pnative') : null
-    native_builder_image ? opts_current.add("-Dquarkus.native.builder-image=${native_builder_image}") : null
     skipTests ? opts_current.add('-DskipTests') : null
     skipIntegrationTests ? opts_current.add('-DskipITs') : null
     return opts_current.join(' ')
