@@ -231,7 +231,7 @@ class KogitoJobUtils {
     *
     */
     static def createQuarkusPlatformUpdateToolsJob(def script, String project) {
-        def jobParams = getSeedJobParams(script, 'update-quarkus-platform', Folder.TOOLS, 'Jenkinsfile.update-quarkus-platform', "Update Quarkus platform with new version of ${project}")
+        def jobParams = getSeedJobParams(script, "update-quarkus-platform-${project}", Folder.TOOLS, 'Jenkinsfile.update-quarkus-platform', "Update Quarkus platform with new version of ${project}")
         KogitoJobUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
         jobParams.env.putAll([
             JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
