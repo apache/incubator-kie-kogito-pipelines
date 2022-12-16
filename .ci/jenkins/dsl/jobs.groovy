@@ -13,6 +13,7 @@ setupUpdateJenkinsDependenciesJob()
 setupCreateIssueToolsJob()
 setupCleanOldNamespacesToolsJob()
 setupCleanOldNightlyImagesToolsJob()
+KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'drools')
 KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'kogito')
 KogitoJobUtils.createMainQuarkusUpdateToolsJob(this,
         [ 'drools', 'kogito-runtimes', 'kogito-examples', 'kogito-images', 'kogito-docs' ],
