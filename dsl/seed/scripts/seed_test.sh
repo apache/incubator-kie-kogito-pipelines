@@ -159,7 +159,6 @@ checkout_map["${current_repository}/${current_ref}"]="$(pwd)"
 
 installYqIfNeeded
 yq --version
-exit 1
 
 ##############################################################################################################
 ##  Main / Branch config files
