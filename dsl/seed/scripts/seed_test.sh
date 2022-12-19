@@ -94,9 +94,12 @@ installYqIfNeeded() {
   yq_path="$(command -v yq)"
   if [[ ! $(command -v yq) ]]; then
     echo 'yq command cannot be found ... Installing it locally'
-    yq_path="$(mktemp -d)/yq"
-    wget https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_amd64.tar.gz -O - |  tar xz && ls -al && mv yq_linux_amd64 "${yq_path}"
-    yq --version
+    yq_path="$(mktemp -d)"
+    wget https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_amd64.tar.gz -P "${yq_path}" 
+
+    local old_folder="$(pwd)"
+    cd "${yq_path}" && tar xzf yq_linux_amd64.tar.gz && ls -al && mv yq_linux_amd64 yq
+    cd "${old_folder}"
 
     export PATH="${PATH}:${yq_path}"
   fi
@@ -155,6 +158,8 @@ echo "Register current repository into the checkout map"
 checkout_map["${current_repository}/${current_ref}"]="$(pwd)"
 
 installYqIfNeeded
+yq --version
+exit 1
 
 ##############################################################################################################
 ##  Main / Branch config files
