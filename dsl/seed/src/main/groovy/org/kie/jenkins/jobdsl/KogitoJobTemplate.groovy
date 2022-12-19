@@ -327,7 +327,7 @@ class KogitoJobTemplate {
             testTypeId = prFolder.getConfigValues()?.typeId ?: prFolder.environment.toId()
             testTypeName = prFolder.getConfigValues()?.typeName ?: prFolder.environment.toId()
         } else if (prFolder instanceof JenkinsFolder) {
-            String envName
+            String envName = prFolder.getEnvironmentName()
             testTypeId = envName ?: 'tests' // Define harcoded value for no env
             testTypeName = envName ?: 'build' // Define harcoded value for no env
         } else {
