@@ -300,6 +300,7 @@ class KogitoJobUtils {
     @Deprecated
     static def createNightlyBuildChainBuildAndTestJob(def script, Folder jobFolder, String repository, Map extraEnv = [:], boolean enableNotification = false, String notificationJobName = '', Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
         def jobParams = getSeedJobParams(script, "${repository}.build-and-test", jobFolder, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
+        jobParams.triggers = [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
         return createBranchBuildChainJob(script, jobParams, repository, enableNotification, notificationJobName)
     }
 
@@ -311,6 +312,7 @@ class KogitoJobUtils {
     static def createNightlyBuildChainBuildAndTestJob(def script, String envName = '', String repository, Map extraEnv = [:], boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
         def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${repository}.build-and-test", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
         jobParams.env.putAll(extraEnv)
+        jobParams.triggers = [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
         return createBranchBuildChainJob(script, jobParams, repository, enableNotification, envName)
     }
 
@@ -383,7 +385,6 @@ class KogitoJobUtils {
     */
     static def createBranchBuildChainJob(def script, def jobParams, String repository, boolean enableNotification = false, String notificationJobName = '') {
         JobParamsUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
-        jobParams.triggers = [ cron : '@midnight' ]
 
         jobParams.parametersClosures.add({
             stringParam('DISPLAY_NAME', '', 'Setup a specific build display name')
