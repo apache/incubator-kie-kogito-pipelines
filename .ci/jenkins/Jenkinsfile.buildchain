@@ -267,7 +267,7 @@ boolean isSonarCloudAnalysis() {
 String getBuildMavenOptsCurrent() {
     List opts_current = []
     isSonarCloudAnalysis() ? opts_current.add('-Prun-code-coverage') : null
-    native_build ? opts_current.add('-Dquarkus.native.container-build=true -Dnative -Pnative') : null
+    native_build ? opts_current.add('-Dquarkus.native.container-build=true -Dnative') : null
     native_builder_image ? opts_current.add("-Dquarkus.native.builder-image=${native_builder_image}") : null
     skipTests ? opts_current.add('-DskipTests') : null
     skipIntegrationTests ? opts_current.add('-DskipITs') : null
