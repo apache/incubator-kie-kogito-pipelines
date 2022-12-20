@@ -333,6 +333,7 @@ class KogitoJobTemplate {
         } else {
             throw new RuntimeException('Folder is not of type org.kie.jenkins.jobdsl.model.JenkinsFolder')
         }
+        PrintUtils.debug(script, "createPerRepoPRJobsWithFolder with testTypeId=${testTypeId} and  testTypeName=${testTypeName}")
         String triggerPhraseTestType = RegexUtils.getRegexMultipleCase(testTypeId)
 
         Map jobsRepoConfig = jobsRepoConfigGetter(prFolder)
