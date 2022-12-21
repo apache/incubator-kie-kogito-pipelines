@@ -52,7 +52,8 @@ class JenkinsFolder {
 
     // A JenkinsFolder is active if jobType AND environment are active
     boolean isActive(def script) {
-        return this.jobType.isActive(script)
+        return this.jobType.isActive(script) &&
+            (this.environmentName ? EnvUtils.isEnvironmentEnabled(script, this.environmentName) : true)
     }
 
 }
