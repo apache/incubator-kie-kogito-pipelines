@@ -122,4 +122,16 @@ class JobParamsUtils {
             BUILD_MAVEN_TOOL: Utils.getJenkinsDefaultMavenTools(script),
         ])
     }
+
+    static def setupJobParamsBuildChainConfiguration(def script, def jobParams, String repository, String buildChainType = 'pr') {
+        jobParams.env = jobParams.env ?: [:]
+        jobParams.env.putAll([
+            BUILDCHAIN_PROJECT: "kiegroup/${repository}",
+            BUILDCHAIN_TYPE: buildChainType,
+            BUILDCHAIN_CONFIG_REPO: Utils.getBuildChainConfigRepo(script) ?: Utils.getSeedRepo(script),
+            BUILDCHAIN_CONFIG_AUTHOR: Utils.getBuildChainConfigAuthor(script) ?: Utils.getSeedAuthor(script),
+            BUILDCHAIN_CONFIG_BRANCH: Utils.getBuildChainConfigBranch(script) ?: Utils.getSeedBranch(script),
+            BUILDCHAIN_CONFIG_FILE_PATH: Utils.getBuildChainConfigFilePath(script),
+        ])
+    }
 }

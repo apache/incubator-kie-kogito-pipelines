@@ -25,7 +25,7 @@ class JobType {
     public static final JobType PULLREQUEST = new JobType(
         name: 'pullrequest',
     )
-    
+
     public static final JobType PULL_REQUEST = new JobType(
         name: 'pullrequest',
         environmentDependent: true

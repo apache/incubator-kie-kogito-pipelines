@@ -44,7 +44,10 @@ class JenkinsFolder {
         return getDefaultEnvVars()
     }
     Map getDefaultEnvVars() {
-        Map env = [:]
+        Map env = [
+            JOB_TYPE: this.jobType.getName(),
+            JOB_ENVIRONMENT: this.environmentName,
+        ]
         env.putAll(this.jobType.getDefaultEnvVars() ?: [:])
         env.putAll(this.defaultEnv ?: [:])
         return new HashMap(env)

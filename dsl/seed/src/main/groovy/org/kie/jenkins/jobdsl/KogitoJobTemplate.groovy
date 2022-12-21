@@ -401,12 +401,7 @@ class KogitoJobTemplate {
                 String buildChainCheckoutBranch = Utils.getSeedBranch(script)
                 jobParams.pr.checkout_branch = buildChainCheckoutBranch
                 jobParams.git.author = Utils.getSeedAuthor(script)
-                jobParams.env.put('BUILDCHAIN_PROJECT', "kiegroup/${jobCfg.repository ?: jobParams.git.repository}")
-                jobParams.env.put('BUILDCHAIN_TYPE', 'pr')
-                jobParams.env.put('BUILDCHAIN_CONFIG_REPO', Utils.getBuildChainConfigRepo(script) ?: Utils.getSeedRepo(script))
-                jobParams.env.put('BUILDCHAIN_CONFIG_AUTHOR', Utils.getBuildChainConfigAuthor(script) ?: Utils.getSeedAuthor(script))
-                jobParams.env.put('BUILDCHAIN_CONFIG_BRANCH', Utils.getBuildChainConfigBranch(script) ?: buildChainCheckoutBranch)
-                jobParams.env.put('BUILDCHAIN_CONFIG_FILE_PATH', Utils.getBuildChainConfigFilePath(script))
+                JobParamsUtils.setupJobParamsBuildChainConfiguration(script, jobParams, "${jobCfg.repository ?: jobParams.git.repository}", 'pr')
                 jobParams.env.put('NOTIFICATION_JOB_NAME', "(${testTypeId}) - ${jobCfg.id}")
                 jobParams.git.repository = Utils.getSeedRepo(script)
                 jobParams.jenkinsfile = Utils.getSeedJenkinsfilePath(script, KogitoConstants.BUILD_CHAIN_JENKINSFILE)

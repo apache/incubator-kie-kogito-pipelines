@@ -93,7 +93,6 @@ pipeline {
                     }
                     println "[INFO] build-chain version recovered '${buildChainVersion}'"
                     sh "npm install -g @kie/build-chain-action@${buildChainVersion}${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
-                    sh "npm install -g @kie/build-chain-files-generator${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
                 }
             }
         }
