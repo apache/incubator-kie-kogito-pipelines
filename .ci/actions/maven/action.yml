@@ -35,9 +35,16 @@ runs:
       with:
         maven-version: ${{ inputs.maven-version }}
     - name: Cache Maven packages
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
-        path:  ~/.m2
+        # Cannot use SNAPSHOT pattern matchin due to https://github.com/actions/cache/issues/364
+        # path: ~/.m2/repository/*,~/.m2/repository/**/*[!(-SNAPSHOT*)]
+        # Workaround taken from https://github.com/actions/toolkit/issues/713#issuecomment-850321461
+        path: |
+          ~/.m2/repository/*/*
+          !~/.m2/repository/org/kie
+          !~/.m2/repository/org/drools
+          !~/.m2/repository/org/optaplanner
         key: ${{ inputs.cache-key-prefix }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys:  ${{ inputs.cache-key-prefix }}-m2
     - name: Setup Maven Settings
