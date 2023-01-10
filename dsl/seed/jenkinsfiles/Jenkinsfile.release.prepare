@@ -62,10 +62,17 @@ pipeline {
                         branchConfig.productized_branch = params.PRODUCTIZED_BRANCH
 
                         // Disable some environments when branching as they make no sense by default
-                        branchConfig.environment.quarkus.main.enabled = false
-                        branchConfig.environment.quarkus.lts.enabled = params.PRODUCTIZED_BRANCH
-                        branchConfig.environment.mandrel_lts.enabled = params.PRODUCTIZED_BRANCH
-                        branchConfig.environment.mandrel.enabled = params.PRODUCTIZED_BRANCH
+                        if (branchConfig.environment) { // @DEPRECATED
+                            branchConfig.environment.quarkus.main.enabled = false
+                            branchConfig.environment.quarkus.lts.enabled = params.PRODUCTIZED_BRANCH
+                            branchConfig.environment.mandrel_lts.enabled = params.PRODUCTIZED_BRANCH
+                            branchConfig.environment.mandrel.enabled = params.PRODUCTIZED_BRANCH
+                        } else if (branchConfig.environments) {
+                            branchConfig.environments."quarkus-main" ? branchConfig.environments."quarkus-main".enabled = false : null
+                            branchConfig.environments."quarkus-lts" ? branchConfig.environments."quarkus-lts".enabled = params.PRODUCTIZED_BRANCH : null
+                            branchConfig.environments."mandrel-lts" ? branchConfig.environments."mandrel-lts".enabled = params.PRODUCTIZED_BRANCH : null
+                            branchConfig.environments.mandrel ? branchConfig.environments.mandrel.enabled = params.PRODUCTIZED_BRANCH : null
+                        }
 
                         echo "Write dsl branch_config => ${branchConfig}"
                         sh "rm -f ${branchConfigFile}"
@@ -225,9 +232,16 @@ pipeline {
 List getRepositoriesToBranch() {
     if (!repositoriesToBranch) {
         repositoriesToBranch = readMainBranchConfig().repositories.findAll { getProjectFromRepository(it.name) }
-        def mainBranches = readSeedConfig().git.main_branch
+        def branches = readSeedConfig().git.branches
+        if (!branches) {
+            error "No branches are defined in main configuration..."
+        }
+        def mainBranch = branches.find { it.main_branch }?.name ?: ''
+        if (!mainBranch) {
+            error "No main branch defined into the main configuration..."
+        }
         repositoriesToBranch.each { repoConfig ->
-            repoConfig.branch = repoConfig.branch ?: mainBranches.get(mainBranches.containsKey(repoConfig.name) ? repoConfig.name : 'default')
+            repoConfig.branch = repoConfig.branch ?: mainBranch
 
             if (repoConfig.name == getMainBranchConfigFileGitRepository()) {
                 String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
