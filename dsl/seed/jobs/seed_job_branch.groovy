@@ -64,6 +64,7 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
     environmentVariables {
         env('GENERATION_BRANCH', "${GENERATION_BRANCH}")
         env('MAIN_BRANCH', "${MAIN_BRANCH}")
+        env('MAIN_BRANCHES', "${MAIN_BRANCHES}") // Kept for backward compatibility with branches <= 1.32.x
 
         env('SEED_CONFIG_FILE_GIT_REPOSITORY', "${SEED_CONFIG_FILE_GIT_REPOSITORY}")
         env('SEED_CONFIG_FILE_GIT_AUTHOR_NAME', "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}")
