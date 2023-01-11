@@ -95,6 +95,7 @@ pipeline {
                             JENKINS_EMAIL_CREDS_ID: readSeedConfig().jenkins.email_creds_id,
                             GENERATION_BRANCH: branchInfo.name,
                             MAIN_BRANCH: mainBranch,
+                            MAIN_BRANCHES: writeJSON(json: [ 'default': "${mainBranch}" ], returnText: true),  // Kept for backward compatibility with branches <= 1.32.x
                             OLD_FOLDER_STRUCTURE: branchInfo.old_folder_structure,
                             SEED_REPO: "${SEED_REPO}",
                             SEED_AUTHOR: "${SEED_AUTHOR}",
