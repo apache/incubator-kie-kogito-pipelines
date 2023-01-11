@@ -79,13 +79,22 @@ pipeline {
         stage('Generate branch seed jobs') {
             steps {
                 script {
+                    def branches = readSeedConfig().git.branches
+                    if (!branches) {
+                        error 'No branches are defined in main configuration...'
+                    }
+                    def mainBranch = branches.find { it.main_branch }?.name ?: ''
+                    if (!mainBranch) {
+                        echo '[WARN] No main branch defined ...'
+                    }
+
                     readSeedConfig().git.branches.each { branchInfo ->
                         String branchConfigBranch = branchInfo.seed?.config_file?.git?.branch ?: branchInfo.name
                         def envProperties = [
                             JOB_NAME: getBranchSeedJobName(),
                             JENKINS_EMAIL_CREDS_ID: readSeedConfig().jenkins.email_creds_id,
                             GENERATION_BRANCH: branchInfo.name,
-                            MAIN_BRANCHES: writeJSON(json: readSeedConfig().git.main_branch, returnText: true),
+                            MAIN_BRANCH: mainBranch,
                             OLD_FOLDER_STRUCTURE: branchInfo.old_folder_structure,
                             SEED_REPO: "${SEED_REPO}",
                             SEED_AUTHOR: "${SEED_AUTHOR}",

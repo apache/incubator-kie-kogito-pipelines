@@ -86,8 +86,8 @@ git:
   # For each branch, you can also define specific `seed_config_file` information
   # which will override the default defined below
   - name: improve_dsl_generation_test
-  main_branch:
-    default: main
+  - name: main
+    main_branch: true
 
 # This can be overriden for each defined git branches
 # This gives the branch config information (see below for branch configuration)
