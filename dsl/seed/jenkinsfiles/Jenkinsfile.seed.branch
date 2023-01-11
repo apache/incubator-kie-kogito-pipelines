@@ -107,7 +107,12 @@ pipeline {
                     all_repos.each { repository ->
                         def envProps = getRepoConfigAsEnvProperties(repository)
                         envProps += [
-                            GIT_MAIN_BRANCH: getMainBranch(repository),
+                            DEBUG: scriptUtils.isDebug(),
+
+                            ENVIRONMENTS: getRepoConfig(repository).environments?.keySet()?.join(',') ?: '',
+
+                            GENERATION_BRANCH: "${GENERATION_BRANCH}",
+                            GIT_MAIN_BRANCH: "${MAIN_BRANCH}",
                             REPO_NAME: "${repository}",
 
                             SEED_CONFIG_FILE_GIT_REPOSITORY: "${SEED_CONFIG_FILE_GIT_REPOSITORY}",
@@ -197,10 +202,6 @@ pipeline {
 
 String normalizeRepositoryJobsFile(String repository) {
     return "${repository.replaceAll('-', '')}_jobs.groovy"
-}
-
-boolean getMainBranch(String repository) {
-    return scriptUtils.getMainBranch(readJSON(text: "${MAIN_BRANCHES}"), repository)
 }
 
 def readBranchConfig() {
