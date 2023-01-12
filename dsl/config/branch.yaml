@@ -2,47 +2,41 @@ environments:
   native:
     env_vars:
       NATIVE: true
-      BUILD_MVN_OPTS_CURRENT: '-Dnative -Dquarkus.native.container-build=true'
+      BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
       ADDITIONAL_TIMEOUT: 720
     ids:
     - native
-  
   mandrel:
     env_vars:
       NATIVE: true
-      BUILD_MVN_OPTS_CURRENT: '-Dnative -Dquarkus.native.container-build=true'
+      BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
       QUARKUS_NATIVE_BUILDER_IMAGE: mandrel
       ADDITIONAL_TIMEOUT: 720
     ids:
     - native
     - prod
-  
   quarkus-main:
     env_vars:
       QUARKUS_BRANCH: main
     ids:
     - quarkus
-  
   quarkus-branch:
     env_vars:
-      QUARKUS_BRANCH: '2.15'
+      QUARKUS_BRANCH: '2.16'
     ids:
     - quarkus
-
-  # LTS part
   quarkus-lts:
     env_vars:
-      BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral'
+      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
       QUARKUS_BRANCH: '2.13'
     ids:
     - quarkus
     - lts
-
   mandrel-lts:
     env_vars:
       NATIVE: true
-      BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral'
-      BUILD_MVN_OPTS_CURRENT: '-Dnative -Dquarkus.native.container-build=true'
+      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
+      BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
       QUARKUS_BRANCH: '2.13'
       QUARKUS_NATIVE_BUILDER_IMAGE: mandrel
       ADDITIONAL_TIMEOUT: 720
@@ -50,24 +44,19 @@ environments:
     - native
     - prod
     - lts
-
-  # Others
   runtimes-bdd:
     auto_generation: false
     ids:
     - cloud
-
   sonarcloud:
     auto_generation: false
     ids:
     - sonarcloud
     - coverage
-
   ecosystem:
     auto_generation: false
     ids:
     - ecosystem
-
 productized_branch: true
 disable:
   triggers: false
