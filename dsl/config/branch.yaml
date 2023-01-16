@@ -2,47 +2,44 @@ environments:
   native:
     env_vars:
       NATIVE: true
-      BUILD_MVN_OPTS_CURRENT: '-Dnative -Dquarkus.native.container-build=true'
+      BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
       ADDITIONAL_TIMEOUT: 720
     ids:
     - native
-  
   mandrel:
     env_vars:
       NATIVE: true
-      BUILD_MVN_OPTS_CURRENT: '-Dnative -Dquarkus.native.container-build=true'
+      BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
       QUARKUS_NATIVE_BUILDER_IMAGE: mandrel
       ADDITIONAL_TIMEOUT: 720
     ids:
     - native
     - prod
-  
+    enabled: false
   quarkus-main:
     env_vars:
       QUARKUS_BRANCH: main
     ids:
     - quarkus
-  
+    enabled: false
   quarkus-branch:
     env_vars:
       QUARKUS_BRANCH: '2.15'
     ids:
     - quarkus
-
-  # LTS part
   quarkus-lts:
     env_vars:
-      BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral'
+      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
       QUARKUS_BRANCH: '2.13'
     ids:
     - quarkus
     - lts
-
+    enabled: false
   mandrel-lts:
     env_vars:
       NATIVE: true
-      BUILD_MVN_OPTS: '-Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral'
-      BUILD_MVN_OPTS_CURRENT: '-Dnative -Dquarkus.native.container-build=true'
+      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
+      BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
       QUARKUS_BRANCH: '2.13'
       QUARKUS_NATIVE_BUILDER_IMAGE: mandrel
       ADDITIONAL_TIMEOUT: 720
@@ -50,41 +47,45 @@ environments:
     - native
     - prod
     - lts
-
-  # Others
+    enabled: false
   runtimes-bdd:
     auto_generation: false
     ids:
     - cloud
-
   sonarcloud:
     auto_generation: false
     ids:
     - sonarcloud
     - coverage
-
   ecosystem:
     auto_generation: false
     ids:
     - ecosystem
-
-productized_branch: true
+productized_branch: false
 disable:
   triggers: false
 repositories:
 - name: kogito-pipelines
+  branch: 1.33.x
+  is_branch_config_repo: true
 - name: drools
+  branch: 8.33.x
 - name: drools-website
+  branch: 8.33.x
 - name: kogito-runtimes
+  branch: 1.33.x
 - name: kogito-apps
+  branch: 1.33.x
 - name: kogito-examples
+  branch: 1.33.x
 - name: kogito-images
+  branch: 1.33.x
 - name: kogito-operator
+  branch: 1.33.x
 - name: kogito-serverless-operator
-- name: kie-tools
+  branch: 1.33.x
 - name: kogito-docs
-- name: kie-docs
-  branch: main-kogito
+  branch: 1.33.x
 git:
   author:
     name: kiegroup
