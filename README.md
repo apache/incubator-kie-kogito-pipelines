@@ -101,7 +101,7 @@ There is one check per downstream repository. This allows parallelization and mo
 The jobs can be found into the `{branch}/pullrequest` folder in Jenkins.  
 
 Each repository contains the needed DSL configuration (can be found in `.ci/jenkins/dsl`) and will most of the time use the [KogitoTemplate](./dsl/seed/src/main/java/../groovy/org/kie/jenkins/jobdsl/templates/KogitoJobTemplate.groovy) method `createMultijobPRJobs`.  
-This will generate all the needed PR checks and make use of the [Jenkinsfile.buildchain](./.ci/jenkins/Jenkinsfile.buildchain) file.
+This will generate all the needed PR checks and make use of the [Jenkinsfile.buildchain](./dsl/seed/jenkinsfiles/Jenkinsfile.buildchain) file.
 
 Jenkins PR checks are of 3 different types:
 
