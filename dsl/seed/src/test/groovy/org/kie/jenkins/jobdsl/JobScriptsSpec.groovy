@@ -49,7 +49,6 @@ class JobScriptsSpec extends Specification {
         envVars.put('GIT_BRANCH', 'GIT_BRANCH')
         envVars.put('GIT_AUTHOR_NAME', 'GIT_AUTHOR')
         envVars.put('GIT_AUTHOR', 'GIT_AUTHOR')
-        envVars.put('MAIN_BRANCH', 'MAIN_BRANCH')
         envVars.put('MAIN_BRANCHES', 'MAIN_BRANCHES')
 
         envVars.put('SEED_AUTHOR', 'SEED_AUTHOR')

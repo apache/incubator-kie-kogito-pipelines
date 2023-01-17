@@ -79,34 +79,24 @@ pipeline {
         stage('Generate branch seed jobs') {
             steps {
                 script {
-                    def branches = readSeedConfig().git.branches
-                    if (!branches) {
-                        error 'No branches are defined in main configuration...'
-                    }
-                    def mainBranch = branches.find { it.main_branch }?.name ?: ''
-                    if (!mainBranch) {
-                        echo '[WARN] No main branch defined ...'
-                    }
-
                     readSeedConfig().git.branches.each { branchInfo ->
-                        String branchConfigBranch = branchInfo.seed?.config_file?.git?.branch ?: branchInfo.name
+                        def branchConfigFileInfo = getBranchConfigFileInfo(branchInfo)
                         def envProperties = [
                             JOB_NAME: getBranchSeedJobName(),
                             JENKINS_EMAIL_CREDS_ID: readSeedConfig().jenkins.email_creds_id,
                             GENERATION_BRANCH: branchInfo.name,
-                            MAIN_BRANCH: mainBranch,
-                            MAIN_BRANCHES: writeJSON(json: [ 'default': "${mainBranch}" ], returnText: true),  // Kept for backward compatibility with branches <= 1.32.x
+                            MAIN_BRANCHES: writeJSON(json: getMainBranches(), returnText: true),
                             OLD_FOLDER_STRUCTURE: branchInfo.old_folder_structure,
                             SEED_REPO: "${SEED_REPO}",
                             SEED_AUTHOR: "${SEED_AUTHOR}",
                             SEED_AUTHOR_CREDS_ID: "${SEED_AUTHOR_CREDS_ID}",
                             SEED_BRANCH: branchInfo.seed?.branch ?: "${SEED_BRANCH}",
-                            SEED_JENKINSFILE: branchInfo.seed?.jenkinsfile ?: (readSeedConfig().seed.jenkinsfile ?: 'dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch'),
-                            SEED_CONFIG_FILE_GIT_REPOSITORY: branchInfo.seed?.config_file?.git?.repository ?: readSeedConfig().seed.config_file.git.repository,
-                            SEED_CONFIG_FILE_GIT_AUTHOR_NAME: branchInfo.seed?.config_file?.git?.author?.name ?: readSeedConfig().seed.config_file.git.author.name,
-                            SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: branchInfo.seed?.config_file?.git?.author?.credentials_id ?: readSeedConfig().seed.config_file.git.author.credentials_id,
-                            SEED_CONFIG_FILE_GIT_BRANCH: branchConfigBranch,
-                            SEED_CONFIG_FILE_PATH: branchInfo.seed?.config_file?.path ?: readSeedConfig().seed.config_file.path,
+                            SEED_JENKINSFILE: branchConfigFileInfo.jenkinsfile
+                            SEED_CONFIG_FILE_GIT_REPOSITORY: branchConfigFileInfo.repository,
+                            SEED_CONFIG_FILE_GIT_AUTHOR_NAME: branchConfigFileInfo.author,
+                            SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: branchConfigFileInfo.credentials,
+                            SEED_CONFIG_FILE_GIT_BRANCH: branchConfigFileInfo.branch,
+                            SEED_CONFIG_FILE_PATH: branchConfigFileInfo.filepath,
                         ]
                         echo 'Got envProperties for generation'
                         echo "${envProperties}"
@@ -203,26 +193,48 @@ void launchBranchSeedJob(String branch) {
 }
 
 def readSeedConfig() {
-    assert params.SEED_CONFIG_FILE_GIT_REPOSITORY : 'Missing main seed config file Git Repository into the parameters. Please check the job configuration.'
-    assert params.SEED_CONFIG_FILE_GIT_AUTHOR_NAME : 'Missing main seed config file Git Author Name into the parameters. Please check the job configuration.'
-    assert params.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID : 'Missing main seed config file Git Author Credentials ID into the parameters. Please check the job configuration.'
-    assert params.SEED_CONFIG_FILE_GIT_BRANCH : 'Missing main seed config file Git Branch into the parameters. Please check the job configuration.'
-    assert params.SEED_CONFIG_FILE_PATH : 'Missing main seed config file Path into the parameters. Please check the job configuration.'
-
     if (!seedConfig) {
-        dir("seed-${params.SEED_CONFIG_FILE_GIT_REPOSITORY}") {
-            deleteDir()
-            checkout(githubscm.resolveRepository(params.SEED_CONFIG_FILE_GIT_REPOSITORY, params.SEED_CONFIG_FILE_GIT_AUTHOR_NAME, params.SEED_CONFIG_FILE_GIT_BRANCH, false, params.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID))
-            seedConfig = readYaml(file: "${params.SEED_CONFIG_FILE_PATH}")
-            if (scriptUtils.isDebug()) {
-                println '[DEBUG] Seed config:'
-                println "[DEBUG] ${seedConfig}"
-            }
-        }
+        seedConfig = scriptUtils.readSeedConfigFile([
+            repository: params.SEED_CONFIG_FILE_GIT_REPOSITORY,
+            author: params.SEED_CONFIG_FILE_GIT_AUTHOR_NAME,
+            credentials: params.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID,
+            branch: params.SEED_CONFIG_FILE_GIT_BRANCH,
+            filepath: params.SEED_CONFIG_FILE_PATH,
+        ])
     }
     return seedConfig
 }
 
 String getEcosystemMainProject() {
     return readSeedConfig().ecosystem.main_project
+}
+
+def getBranchConfigFileInfo(branchInfo) {
+    return [
+        repository: branchInfo.seed?.config_file?.git?.repository ?: readSeedConfig().seed.config_file.git.repository,
+        author: branchInfo.seed?.config_file?.git?.author?.name ?: readSeedConfig().seed.config_file.git.author.name,
+        credentials: branchInfo.seed?.config_file?.git?.author?.credentials_id ?: readSeedConfig().seed.config_file.git.author.credentials_id,
+        branch: branchInfo.seed?.config_file?.git?.branch ?: branchInfo.name,
+        filepath: branchInfo.seed?.config_file?.path ?: readSeedConfig().seed.config_file.path,
+        jenkinsfile: branchInfo.seed?.jenkinsfile ?: (readSeedConfig().seed.jenkinsfile ?: 'dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch'),
+    ]
+}
+
+def getMainBranches() {
+    def mainBranches = [:]
+    def branches = readSeedConfig().git.branches
+    if (!branches) {
+        error 'No branches are defined in main configuration...'
+    }
+
+    def mainBranchInfo = branches.find { it.main_branch }
+    if (!mainBranchInfo) {
+        echo '[WARN] No main branch defined ...'
+    } else {
+        String mainBranchName = mainBranchInfo.name
+        mainBranchSeedConfig = scriptUtils.readSeedConfigFile(getBranchConfigFileInfo(mainBranchInfo))
+        mainBranches = mainBranchSeedConfig.repositories.collectEntries{ [ it.name, it.branch ?: mainBranchName] }
+        mainBranches.default = mainBranchName // Kept for backward compatibility with branches <= 1.32.x
+    }
+    return mainBranches
 }
