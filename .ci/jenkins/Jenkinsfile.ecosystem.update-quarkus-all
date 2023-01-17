@@ -42,13 +42,13 @@ pipeline {
                         getOrCreateGitBranch(prBranch, "${SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
 
                         updateYaml("${SEED_BRANCH_CONFIG_FILE_PATH}") { branchConfig ->
-                            if (branchConfig.environments?."quarkus-branch"?.env_vars?.QUARKUS_BRANCH) {
-                                branchConfig.environments."quarkus-branch".env_vars.QUARKUS_BRANCH = getNewVersionBranch() 
+                            if (branchConfig.environments?.'quarkus-branch'?.env_vars?.QUARKUS_BRANCH) {
+                                branchConfig.environments.'quarkus-branch'.env_vars.QUARKUS_BRANCH = getNewVersionBranch()
                             }
                         }
 
                         if (githubscm.isThereAnyChanges()) {
-                            String commitMsg = "[${SEED_BRANCH_CONFIG_FILE_GIT_BRANCH}] Bump quarkus version to ${getNewVersion()}"
+                            String commitMsg = "[${SEED_BRANCH_CONFIG_FILE_GIT_BRANCH}] ${getJiraNumber() ? "[${getJiraNumber()}] " : ''}Bump quarkus version to ${getNewVersion()}"
                             githubscm.commitChanges(commitMsg)
                             githubscm.pushObject('origin', prBranch, "${SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
 
@@ -122,7 +122,7 @@ Those PRs have been created:
 ${prLinks.collect { "- ${it}" }.join('\n')}
 """
     } else {
-        body = "Existing PRs have been updated !"
+        body = 'Existing PRs have been updated !'
     }
     sendNotification(body)
 }
@@ -149,6 +149,7 @@ void launchUpdateQuarkusJob(String repo) {
     List jobParams = []
     jobParams.add(stringParam(name: 'NEW_VERSION', value: getNewVersion()))
     jobParams.add(stringParam(name: 'PR_BRANCH', value: params.PR_BRANCH))
+    jobParams.add(stringParam(name: 'JIRA_NUMBER', value: params.JIRA_NUMBER))
 
     echo "Build ./${jobName} with parameters ${jobParams}"
     def job = build(job: "./${jobName}", parameters: jobParams, wait: true, propagate: false)
@@ -194,6 +195,10 @@ String getSeedPRBranch(String branch) {
     return params.PR_BRANCH ? "${params.PR_BRANCH}-seed" : "bump-seed-${branch}-quarkus-${getNewVersion()}"
 }
 
+String getJiraNumber() {
+    return params.JIRA_NUMBER
+}
+
 void updateYaml(String filePath, Closure updateClosure) {
     def yamlData = readYaml(file: filePath)
     updateClosure(yamlData)
@@ -219,8 +224,16 @@ void finalizePR(String prLink) {
         echo "currentBodyjson = ${currentBodyJson}"
         String newBody = """
 ${readJSON(text: currentBodyJson).body}
+
 ${getPRLinksSummary()}
-""" 
+"""
+        if (getJiraNumber()) {
+            newBody = """
+https://issues.redhat.com/browse/${getJiraNumber()}
+
+${newBody}
+"""
+        }
         echo "new body = ${newBody}"
         writeFile(file: 'prBody', text: newBody)
         sh "gh pr edit ${prLink} --body-file prBody ${getReviewers().collect { "--add-reviewer ${it}" }.join(' ')}"

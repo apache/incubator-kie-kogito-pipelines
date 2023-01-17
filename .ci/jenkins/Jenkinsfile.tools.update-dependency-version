@@ -9,7 +9,7 @@ pipeline {
     agent {
         label 'rhel8 && !built-in'
     }
-    
+
     tools {
         maven env.BUILD_MAVEN_TOOL
         jdk env.BUILD_JDK_TOOL
@@ -148,7 +148,7 @@ pipeline {
                 script {
                     dir(getRepoName()) {
                         if (githubscm.isThereAnyChanges()) {
-                            String commitMsg = "[${getBuildBranch()}] Bump ${getDependencyName()} version to ${getNewVersion()}"
+                            String commitMsg = "[${getBuildBranch()}] ${getJiraNumber() ? "[${getJiraNumber()}] " : ''}Bump ${getDependencyName()} version to ${getNewVersion()}"
                             githubscm.commitChanges(commitMsg)
                             githubscm.pushObject('origin', getPRBranch(), getGitAuthorCredsId())
 
@@ -214,23 +214,23 @@ String getRepoName() {
 }
 
 List getMavenModules() {
-  return env.MAVEN_MODULES ? readJSON(text: env.MAVEN_MODULES) : []
+    return env.MAVEN_MODULES ? readJSON(text: env.MAVEN_MODULES) : []
 }
 
 List getMavenCompareDepsRemotePoms() {
-  return env.MAVEN_COMPARE_DEPS_REMOTE_POMS ? readJSON(text: env.MAVEN_COMPARE_DEPS_REMOTE_POMS) : []
+    return env.MAVEN_COMPARE_DEPS_REMOTE_POMS ? readJSON(text: env.MAVEN_COMPARE_DEPS_REMOTE_POMS) : []
 }
 
 List getMavenProperties() {
-  return env.MAVEN_PROPERTIES ? readJSON(text: env.MAVEN_PROPERTIES) : []
+    return env.MAVEN_PROPERTIES ? readJSON(text: env.MAVEN_PROPERTIES) : []
 }
 
 List getGradleRegex() {
-  return env.GRADLE_REGEX ? readJSON(text: env.GRADLE_REGEX) : []
+    return env.GRADLE_REGEX ? readJSON(text: env.GRADLE_REGEX) : []
 }
 
 List getFilepathReplaceRegex() {
-  return env.FILEPATH_REPLACE_REGEX ? readJSON(text: env.FILEPATH_REPLACE_REGEX) : [:]
+    return env.FILEPATH_REPLACE_REGEX ? readJSON(text: env.FILEPATH_REPLACE_REGEX) : [:]
 }
 
 List getScriptCalls() {
