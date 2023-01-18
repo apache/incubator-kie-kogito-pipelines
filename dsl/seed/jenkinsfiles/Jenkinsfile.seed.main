@@ -91,7 +91,7 @@ pipeline {
                             SEED_AUTHOR: "${SEED_AUTHOR}",
                             SEED_AUTHOR_CREDS_ID: "${SEED_AUTHOR_CREDS_ID}",
                             SEED_BRANCH: branchInfo.seed?.branch ?: "${SEED_BRANCH}",
-                            SEED_JENKINSFILE: branchConfigFileInfo.jenkinsfile
+                            SEED_JENKINSFILE: branchConfigFileInfo.jenkinsfile,
                             SEED_CONFIG_FILE_GIT_REPOSITORY: branchConfigFileInfo.repository,
                             SEED_CONFIG_FILE_GIT_AUTHOR_NAME: branchConfigFileInfo.author,
                             SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: branchConfigFileInfo.credentials,
