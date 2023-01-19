@@ -43,3 +43,33 @@ KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         env('SEED_CREDENTIALS_ID', Utils.getSeedAuthorCredsId(this))
     }
 }
+
+def jobParamsRemove = [
+    job: [
+        name: '0-remove-branch',
+        description: 'Remove branches',
+    ],
+    git: [
+        repository: Utils.getSeedRepo(this),
+        author: Utils.getSeedAuthor(this),
+        credentials: Utils.getSeedAuthorCredsId(this),
+        branch: Utils.getSeedBranch(this),
+    ],
+    env: [:],
+    jenkinsfile: 'dsl/seed/jenkinsfiles/Jenkinsfile.remove.branches',
+]
+
+KogitoJobTemplate.createPipelineJob(this, jobParamsRemove)?.with {
+    parameters {
+        stringParam('BRANCH_TO_REMOVE', '' , 'Branch to remove')
+    }
+
+    environmentVariables {
+        env('JENKINS_EMAIL_CREDS_ID', Utils.getJenkinsEmailCredsId(this))
+
+        env('GIT_REPOSITORY', "${SEED_CONFIG_FILE_GIT_REPOSITORY}")
+        env('GIT_AUTHOR', "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}")
+        env('GIT_AUTHOR_CREDENTIALS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
+        env('GIT_BRANCH_TO_BUILD', "${SEED_CONFIG_FILE_GIT_BRANCH}")
+    }
+}
