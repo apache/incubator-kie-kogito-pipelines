@@ -54,6 +54,12 @@ class EnvUtils {
         return envVars
     }
 
+    static String getEnvironmentEnvVar(def script, String envName, String envKey) {
+        // Using find method as the keys are stored as gstring
+        // and it creates problem when searching for a gstring/string key with `map.get(key)` ...
+        return getEnvironmentEnvVars(script, envName).find { it.key == envKey }?.value 
+    }
+
     static List<String> getEnvironmentIds(def script, String envName) {
         return Utils.getBindingValue(script, "${createEnvironmentsKeyPrefix(envName)}IDS").split(',')
     }

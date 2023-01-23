@@ -116,26 +116,6 @@ pipeline {
                 }
             }
         }
-        stage('Build quarkus platform') {
-            when {
-                expression { quarkusBranch }
-            }
-            steps {
-                script {
-                    dir('quarkus-platform') {
-                        deleteDir()
-                        checkout(githubscm.resolveRepository('quarkus-platform', 'quarkusio', quarkusBranch, false))
-
-                        maven.mvnSetVersionProperty('quarkus.version', env.QUARKUS_VERSION)
-
-                        new MavenCommand(this, ['-fae', '-ntp'])
-                            .withSettingsXmlFile('.github/mvn-settings.xml')
-                            .skipTests(true)
-                            .run('clean install')
-                    }
-                }
-            }
-        }
         stage('Build projects') {
             tools {
                 jdk jdkTool
@@ -151,7 +131,7 @@ pipeline {
                     }
 
                     configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
-                        withCredentials([string(credentialsId: 'kie-ci3-token', variable: 'GITHUB_TOKEN')]) {
+                        withCredentials([string(credentialsId: "${GIT_AUTHOR_TOKEN_CREDENTIALS_ID}", variable: 'GITHUB_TOKEN')]) {
                             env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
                             echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
 
@@ -183,9 +163,14 @@ pipeline {
             steps {
                 script {
                     def project = (buildChainProject ? util.getProjectGroupName(buildChainProject) : util.getProjectTriggeringJob())[1]
-                    // Project should define a `clone` for the current command so that the pom can be found for sonarcloud analysis
-                    // Else this next step will fail
-                    dir("bc/kiegroup_${project.replaceAll('-', '_')}/${project}") {
+                    
+                    // First guessing whether there is a clone defined into the buildchain config
+                    // If not, fallback to simple folder structure
+                    String projectFolder = "bc/kiegroup_${project.replaceAll('-', '_')}/${project}"
+                    if (!fileExists(projectFolder)) {
+                        projectFolder = "bc/kiegroup_${project.replaceAll('-', '_')}"
+                    }
+                    dir(projectFolder) {
                         maven.runMavenWithSettingsSonar(settingsXmlId, "-e -nsu validate -Psonarcloud-analysis -Denforcer.skip=true ${env.SONARCLOUD_ANALYSIS_MVN_OPTS ?: ''}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
                     }
                 }

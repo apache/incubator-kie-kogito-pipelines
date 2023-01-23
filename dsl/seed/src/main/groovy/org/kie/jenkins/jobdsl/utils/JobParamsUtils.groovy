@@ -6,6 +6,7 @@ import org.kie.jenkins.jobdsl.KogitoConstants
 import org.kie.jenkins.jobdsl.Utils
 
 class JobParamsUtils {
+
     static final Closure DEFAULT_PARAMS_GETTER = { script ->
         return getDefaultJobParams(script)
     }
@@ -89,9 +90,7 @@ class JobParamsUtils {
 
     static def getSeedJobParamsWithEnv(def script, String jobName, JobType jobType, String envName, String jenkinsfileName, String jobDescription = '', Closure defaultJobParamsGetter = DEFAULT_PARAMS_GETTER) {
         def jobParams = getBasicJobParamsWithEnv(script, jobName, jobType, envName, Utils.getSeedJenkinsfilePath(script, jenkinsfileName), jobDescription, defaultJobParamsGetter)
-        jobParams.git.repository = Utils.getSeedRepo(script)
-        jobParams.git.author = Utils.getSeedAuthor(script)
-        jobParams.git.branch = Utils.getSeedBranch(script)
+        setupJobParamsSeedPipelineConfiguration(script, jobParams, jenkinsfileName)
         return jobParams
     }
 
@@ -122,4 +121,29 @@ class JobParamsUtils {
             BUILD_MAVEN_TOOL: Utils.getJenkinsDefaultMavenTools(script),
         ])
     }
+
+    static def setupJobParamsBuildChainConfiguration(def script, def jobParams, String repository, String buildchainType, String notificationJobName) {
+        setupJobParamsSeedPipelineConfiguration(script, jobParams, KogitoConstants.BUILD_CHAIN_JENKINSFILE)
+        jobParams.env = jobParams.env ?: [:]
+        jobParams.env.putAll([
+            BUILD_ENVIRONMENT: jobParams.job.folder.getEnvironmentName(),
+            BUILDCHAIN_PROJECT: "kiegroup/${repository}",
+            BUILDCHAIN_TYPE: buildchainType,
+            BUILDCHAIN_CONFIG_REPO: Utils.getBuildChainConfigRepo(script) ?: Utils.getSeedRepo(script),
+            BUILDCHAIN_CONFIG_AUTHOR: Utils.getBuildChainConfigAuthor(script) ?: Utils.getSeedAuthor(script),
+            BUILDCHAIN_CONFIG_BRANCH: Utils.getBuildChainConfigBranch(script) ?: Utils.getSeedBranch(script),
+            BUILDCHAIN_CONFIG_FILE_PATH: Utils.getBuildChainConfigFilePath(script),
+            NOTIFICATION_JOB_NAME: notificationJobName,
+            GIT_AUTHOR_TOKEN_CREDENTIALS_ID: Utils.getGitAuthorTokenCredsId(script),
+        ])
+    }
+
+    static def setupJobParamsSeedPipelineConfiguration(def script, def jobParams, String jenkinsfile) {
+        jobParams.git.repository = Utils.getSeedRepo(script)
+        jobParams.git.author = Utils.getSeedAuthor(script)
+        jobParams.git.branch = Utils.getSeedBranch(script)
+        jobParams.pr.checkout_branch = Utils.getSeedBranch(script)
+        jobParams.jenkinsfile = Utils.getSeedJenkinsfilePath(script, jenkinsfile)
+    }
+
 }
