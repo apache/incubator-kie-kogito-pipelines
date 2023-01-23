@@ -11,9 +11,9 @@ pipeline {
     parameters {
         booleanParam(description: 'Skip Tests? True as default', name: 'SKIP_TESTS', defaultValue: true)
         string(description: 'The UMB message version', name: 'UMB_VERSION', defaultValue: 'main')
-        string(description: 'The product version', name: 'PRODUCT_VERSION')
-        string(description: 'The drools product version', name: 'DROOLS_PRODUCT_VERSION')
-        string(description: 'The config repository branch', name: 'CONFIG_BRANCH', defaultValue: 'main')
+        string(description: 'The product version, if not provided the kogito-runtimes main branch one will be use', name: 'PRODUCT_VERSION')
+        string(description: 'The drools product version, if not provided the drools main branch one will be used', name: 'DROOLS_PRODUCT_VERSION')
+        string(description: 'The config repository branch', name: 'CONFIG_BRANCH', defaultValue: 'master')
     }
     options {
         buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '10')
@@ -24,6 +24,11 @@ pipeline {
     stages {
         stage('Initialize') {
             steps {
+                script {
+                    // Fetch versions from pom if not provided
+                    env.PRODUCT_VERSION = "${PRODUCT_VERSION ?: parseVersionFromPom('kiegroup/kogito-runtimes', getCurrentBranch())}"
+                    env.DROOLS_PRODUCT_VERSION = "${DROOLS_PRODUCT_VERSION ?: parseVersionFromPom('kiegroup/drools', getDroolsBranch())}"
+                }
                 sh 'printenv'
             }
         }
@@ -181,4 +186,19 @@ String calculateKieRepoBranch(String branch) {
     } else {
        return branch
     }
+}
+
+String getCurrentBranch() {
+    return env.CHANGE_BRANCH ?: env.BRANCH_NAME
+}
+
+// Parse version from main branch of the given project
+//      * project: in the form of owner/repository
+def parseVersionFromPom(String project, String branch) {
+    def pomFilename = "${project.replaceAll("/", "_")}_pom.xml"
+    def pomPath = "${env.WORKSPACE}/${pomFilename}"
+
+    sh "curl https://raw.githubusercontent.com/${project}/${branch}/pom.xml -o ${pomPath}"
+    def pom = readMavenPom file: pomPath
+    return pom.getVersion().replaceAll('-SNAPSHOT', '')
 }
