@@ -17,7 +17,7 @@ setupCleanOldNightlyImagesToolsJob()
 KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'drools')
 KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'kogito')
 KogitoJobUtils.createMainQuarkusUpdateToolsJob(this,
-        [ 'drools', 'kogito-runtimes', 'kogito-examples', 'kogito-images', 'kogito-docs' ],
+        [ 'drools' ],
         [ 'radtriste' ] // TODO to update
 )
 if (Utils.isMainBranch(this)) {
@@ -31,7 +31,7 @@ createSetupBranchJob()
 setupNightlyJob()
 
 // Release
-setupReleaseArtifactsJob()
+// setupReleaseArtifactsJob()
 setupReleaseCloudJob()
 
 /////////////////////////////////////////////////////////////////
