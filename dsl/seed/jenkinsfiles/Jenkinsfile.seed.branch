@@ -113,7 +113,7 @@ pipeline {
                             ENVIRONMENTS: getRepoConfig(repository).environments?.keySet()?.join(',') ?: '',
 
                             GENERATION_BRANCH: "${GENERATION_BRANCH}",
-                            GIT_MAIN_BRANCH: "${MAIN_BRANCH}",
+                            GIT_MAIN_BRANCH: getMainBranch(repository),
                             REPO_NAME: "${repository}",
 
                             SEED_CONFIG_FILE_GIT_REPOSITORY: "${SEED_CONFIG_FILE_GIT_REPOSITORY}",
@@ -213,32 +213,31 @@ String normalizeRepositoryJobsFile(String repository) {
     return "${repository.replaceAll('-', '')}_jobs.groovy"
 }
 
+boolean getMainBranch(String repository) {
+    return scriptUtils.getMainBranch(readJSON(text: "${MAIN_BRANCHES}"), repository)
+}
+
 def readBranchConfig() {
-    assert env.SEED_CONFIG_FILE_PATH : 'Missing main seed config file Path into the environment. Please check the job configuration.'
     if (!branchConfig) {
-        dir(checkoutBranchConfig()) {
-            branchConfig = readYaml(file: "${env.SEED_CONFIG_FILE_PATH}")
-            if (scriptUtils.isDebug()) {
-                println '[DEBUG] Branch config:'
-                println "[DEBUG] ${branchConfig}"
-            }
-        }
+        branchConfig = scriptUtils.readSeedConfigFile([
+            repository: env.SEED_CONFIG_FILE_GIT_REPOSITORY,
+            author: env.SEED_CONFIG_FILE_GIT_AUTHOR_NAME,
+            credentials: env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID,
+            branch: env.SEED_CONFIG_FILE_GIT_BRANCH,
+            filepath: env.SEED_CONFIG_FILE_PATH,
+        ])
     }
     return branchConfig
 }
 
 String checkoutBranchConfig() {
-    assert env.SEED_CONFIG_FILE_GIT_REPOSITORY : 'Missing main seed config file Git Repository into the environment. Please check the job configuration.'
-    assert env.SEED_CONFIG_FILE_GIT_AUTHOR_NAME : 'Missing main seed config file Git Author Name into the environment. Please check the job configuration.'
-    assert env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID : 'Missing main seed config file Git Author Credentials ID into the environment. Please check the job configuration.'
-    assert env.SEED_CONFIG_FILE_GIT_BRANCH : 'Missing main seed config file Git Branch into the environment. Please check the job configuration.'
-
-    String dirName = "seed-${env.SEED_CONFIG_FILE_GIT_REPOSITORY}"
-    dir(dirName) {
-        deleteDir()
-        checkout(githubscm.resolveRepository(env.SEED_CONFIG_FILE_GIT_REPOSITORY, env.SEED_CONFIG_FILE_GIT_AUTHOR_NAME, env.SEED_CONFIG_FILE_GIT_BRANCH, false, env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID))
-    }
-    return dirName
+    return scriptUtils.checkoutSeedConfigFile([
+        repository: env.SEED_CONFIG_FILE_GIT_REPOSITORY,
+        author: env.SEED_CONFIG_FILE_GIT_AUTHOR_NAME,
+        credentials: env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID,
+        branch: env.SEED_CONFIG_FILE_GIT_BRANCH,
+        filepath: env.SEED_CONFIG_FILE_PATH,
+    ])
 }
 
 def getRepoConfig(String repository, String generationBranch = "${GENERATION_BRANCH}") {
