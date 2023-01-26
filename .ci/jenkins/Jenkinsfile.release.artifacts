@@ -2,7 +2,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 @Library('jenkins-pipeline-shared-libraries')_
 
-droolsRepo = 'drools'
 kogitoRuntimesRepo = 'kogito-runtimes'
 kogitoAppsRepo = 'kogito-apps'
 kogitoExamplesRepo = 'kogito-examples'
@@ -43,12 +42,11 @@ pipeline {
                         echo "Release properties imported from previous job: ${releaseProperties}"
                     }
 
-                    assert getDroolsVersion()
                     assert getKogitoVersion()
 
                     currentBuild.displayName = getDisplayName()
 
-                    sendNotification("Release Pipeline has started...\nDrools version = ${getDroolsVersion()}\nKogito artifacts version = ${getKogitoVersion()}\n=> ${env.BUILD_URL}")
+                    sendNotification("Release Pipeline has started...\nKogito version = ${getKogitoVersion()}\n=> ${env.BUILD_URL}")
 
                     // Safety measure to not publish to main JBoss
                     if (getGitAuthor() != 'kiegroup' && !getArtifactsRepositoryParam()) {
@@ -59,30 +57,12 @@ pipeline {
             }
             post {
                 always {
-                    setReleasePropertyIfneeded('drools.version', getDroolsVersion())
                     setReleasePropertyIfneeded('kogito.version', getKogitoVersion())
                 }
             }
         }
 
-        stage('Build & Deploy Drools') {
-            when {
-                expression { return isDroolsRelease() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getDroolsVersion())
-                    addSkipTestsParam(buildParams)
-
-                    buildJob(getDeployJobName(droolsRepo), buildParams)
-                }
-            }
-        }
-
         stage('Build & Deploy Kogito Runtimes') {
-            when {
-                expression { return isKogitoRelease() }
-            }
             steps {
                 script {
                     def buildParams = getDefaultBuildParams(getKogitoVersion())
@@ -95,9 +75,6 @@ pipeline {
         }
 
         stage('Build & Deploy Kogito Apps') {
-            when {
-                expression { return isKogitoRelease() }
-            }
             steps {
                 script {
                     def buildParams = getDefaultBuildParams(getKogitoVersion())
@@ -109,9 +86,6 @@ pipeline {
         }
 
         stage('Build & Deploy Kogito Examples') {
-            when {
-                expression { return isKogitoRelease() }
-            }
             steps {
                 script {
                     def buildParams = getDefaultBuildParams(getKogitoVersion())
@@ -152,23 +126,9 @@ pipeline {
             }
         }
 
-        stage('Promote Drools') {
-            when {
-                expression { return isDroolsRelease() && isJobConsideredOk(getDeployJobName(droolsRepo)) }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getDroolsVersion())
-                    addDeployBuildUrlParam(buildParams, getDeployJobName(droolsRepo))
-
-                    buildJob(getPromoteJobName(droolsRepo), buildParams)
-                }
-            }
-        }
-
         stage('Promote Kogito Runtimes') {
             when {
-                expression { return isKogitoRelease() && isJobConsideredOk(getDeployJobName(kogitoRuntimesRepo)) }
+                expression { return isJobConsideredOk(getDeployJobName(kogitoRuntimesRepo)) }
             }
             steps {
                 script {
@@ -183,7 +143,7 @@ pipeline {
 
         stage('Promote Kogito Apps') {
             when {
-                expression { return isKogitoRelease() && isJobConsideredOk(getDeployJobName(kogitoAppsRepo)) }
+                expression { return isJobConsideredOk(getDeployJobName(kogitoAppsRepo)) }
             }
             steps {
                 script {
@@ -197,7 +157,7 @@ pipeline {
 
         stage('Promote Kogito Examples') {
             when {
-                expression { return isKogitoRelease() && isJobConsideredOk(getDeployJobName(kogitoExamplesRepo)) }
+                expression { return isJobConsideredOk(getDeployJobName(kogitoExamplesRepo)) }
             }
             steps {
                 script {
@@ -458,14 +418,6 @@ String getStagingRepository() {
 
 boolean isDeployAsLatest() {
     return params.DEPLOY_AS_LATEST || getReleaseProperty('deploy.latest')?.toBoolean()
-}
-
-boolean isDroolsRelease() {
-    return !params.SKIP_DROOLS_RELEASE
-}
-
-boolean isKogitoRelease() {
-    return !params.SKIP_KOGITO_RELEASE
 }
 
 boolean isCloudRelease() {

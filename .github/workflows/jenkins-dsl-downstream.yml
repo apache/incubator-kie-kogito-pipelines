@@ -151,15 +151,6 @@ jobs:
         run: |
           echo 'BASE_BRANCH=${{ github.base_ref }}' >> $GITHUB_ENV
 
-      - name: Setup correct base branch for drools repositories
-        if: ${{ startsWith(matrix.repository, 'drools') && github.base_ref != 'main' }}
-        run: |
-          IFS='.' read -ra ver <<< "${{ github.base_ref }}"
-          release=${ver[2]}
-          minor=${ver[1]}
-          major=${ver[0]}
-          echo "BASE_BRANCH=$((major+7)).$minor.$release" >> $GITHUB_ENV
-
       - name: DSL tests
         uses: kiegroup/kogito-pipelines/.ci/actions/dsl-tests@main
         with:
@@ -173,6 +164,7 @@ jobs:
   #############################################################################
   # Optaplanner
   #############################################################################
+  
   getOptaPlannerDslDownstreamMatrix:
     concurrency:
       group: ${{ github.repository.name }}-dsl_optaplanner_downstream_matrix-${{ github.head_ref }}
@@ -331,4 +323,163 @@ jobs:
           main-config-file-repo: kiegroup/optaplanner
           main-config-file-path: .ci/jenkins/config/main.yaml
           branch-config-file-repo: kiegroup/optaplanner
+          base-branch: ${{ env.BASE_BRANCH }}
+
+  #############################################################################
+  # Drools
+  #############################################################################
+  
+  getDroolsDslDownstreamMatrix:
+    concurrency:
+      group: ${{ github.repository.name }}-dsl_drools_downstream_matrix-${{ github.head_ref }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    name: Get Drools DSL downstream projects
+    outputs:
+      matrix: ${{ steps.setmatrix.outputs.repositories }}
+      branch_config_git_repository: ${{ steps.setbranchconfig.outputs.branch_config_git_repository }}
+      branch_config_git_author: ${{ steps.setbranchconfig.outputs.branch_config_git_author }}
+      branch_config_git_branch: ${{ steps.setbranchconfig.outputs.branch_config_git_branch }}
+      branch_config_path: ${{ steps.setbranchconfig.outputs.branch_config_path }}
+    steps:
+      - name: Setup env
+        run: |
+          mkdir -p "${HOME}/.local/bin"
+          echo "${HOME}/.local/bin" >> $GITHUB_PATH
+          
+          mkdir -p branch_config_repo
+
+      - name: Install yq
+        run: |
+          wget https://github.com/mikefarah/yq/releases/download/v4.25.1/yq_linux_amd64.tar.gz -O - |  tar xz && ls -al && mv yq_linux_amd64 "${HOME}/.local/bin/yq"
+          yq --version
+
+      - name: Checkout Main Config repo from main branch
+        uses: actions/checkout@v3
+        with:
+          repository: kiegroup/drools
+          ref: main
+          path: main_config_repo
+
+      - name: Retrieve branch config file information
+        working-directory: main_config_repo
+        run: |
+          main_config_path='.ci/jenkins/config/main.yaml'
+          branch_config_name=${{ github.base_ref }}
+
+          set +e
+
+          branch_config="$(yq ".git.branches[] | select(.name == \"${branch_config_name}\")" ${main_config_path})"
+          echo "Found branch config ${branch_config}"
+
+          if [ -z "${branch_config}" ]; then
+            echo "Unknown branch config name ${branch_config_name}"
+            echo "BRANCH_CONFIG_UNKNOWN=true" >> $GITHUB_ENV
+          else
+            branch_config_file_ref="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.git.branch" ${main_config_path})"
+            if [ $? != 0 ]; then 
+              branch_config_file_ref="${branch_config_name}"
+            fi
+
+            branch_config_file_git_repository="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.git.repository" ${main_config_path})"
+            if [ $? != 0 ]; then 
+              branch_config_file_git_repository=$(yq '.seed.config_file.git.repository' ${main_config_path}); 
+            fi
+
+            branch_config_file_git_author="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.git.author.name" ${main_config_path})"
+            if [ $? != 0 ]; then 
+              branch_config_file_git_author=$(yq '.seed.config_file.git.author.name' ${main_config_path}); 
+            fi
+
+            branch_config_file_path="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.config_file.path" ${main_config_path})"
+            if [ $? != 0 ]; then 
+              branch_config_file_path=$(yq '.seed.config_file.path' ${main_config_path}); 
+            fi
+
+            echo "Use branch config branch ${branch_config_file_ref}"
+            echo "Use branch config file repo ${branch_config_file_git_repository}"
+            echo "Use branch config file author ${branch_config_file_git_author}"
+            echo "Use branch config file path ${branch_config_file_path}"
+
+            echo "BRANCH_CONFIG_GIT_REPOSITORY=${branch_config_file_git_repository}" >> $GITHUB_ENV
+            echo "BRANCH_CONFIG_GIT_AUTHOR=${branch_config_file_git_author}" >> $GITHUB_ENV
+            echo "BRANCH_CONFIG_GIT_BRANCH=${branch_config_file_ref}" >> $GITHUB_ENV
+            echo "BRANCH_CONFIG_PATH=${branch_config_file_path}" >> $GITHUB_ENV
+          fi
+
+      - name: Verify branch config
+        run: |
+          if [ "${{ env.BRANCH_CONFIG_UNKNOWN }}" = "true" ]; then
+            if [ "${{ github.base_ref }}" = "main" ]; then
+              echo "main branch is not existing as config branch... Please verify your main config for Kogito"
+              exit 1
+            else
+              echo "${{ github.base_ref }} branch is not existing as config branch... Ignoring"
+            fi
+          fi
+
+      - name: Checkout branch config repo
+        if: ${{ env.BRANCH_CONFIG_UNKNOWN != 'true' }}
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ env.BRANCH_CONFIG_GIT_AUTHOR }}/${{ env.BRANCH_CONFIG_GIT_REPOSITORY }}
+          ref: ${{ env.BRANCH_CONFIG_GIT_BRANCH }}
+          path: branch_config_repo
+
+      - name: Set Downstream projects matrix
+        id: setmatrix
+        working-directory: branch_config_repo
+        run: |
+          matrixArray=''
+          defaultAuthor=${{ github.event.pull_request.head.user.login }}
+          if [ "${{ env.BRANCH_CONFIG_UNKNOWN }}" != "true" ]; then
+            matrixArray=$(yq '.repositories[].name' ${{ env.BRANCH_CONFIG_PATH }}) # Creates array of all repositories
+          fi
+
+          fullArray=()
+          for repo in ${matrixArray}; 
+            do 
+              echo $repo
+              author="$(yq '.repositories[] | select(.name == "${repo}") | .author.name' ${{ env.BRANCH_CONFIG_PATH }})"
+              if [ -z $author ]; then
+                author=${defaultAuthor}
+              fi
+            fullArray+=("${author}/${repo}")
+          done
+          fullArray+=("") # Trick so that the latest repository is also taken
+          echo "${fullArray[@]}"
+          # Start Generate Json String
+          echo "${fullArray[@]}" | \
+          jq --slurp --raw-input 'split(" ")[:-1]' | \
+          jq  "{\"repository\": .[] }" | \
+          jq -sc "{ \"include\": . }" > tmp
+          cat ./tmp
+
+          # End Generate Json String
+          echo "repositories=$(cat ./tmp)" >> $GITHUB_OUTPUT # Use this as jq @sh wasn't cooperating
+
+
+  runDroolsDownstreamDslTests:
+    runs-on: ubuntu-latest
+    needs: getDroolsDslDownstreamMatrix
+    strategy:
+      matrix: ${{fromJson(needs.getDroolsDslDownstreamMatrix.outputs.matrix)}}
+      fail-fast: false
+    concurrency:
+      group: ${{ github.repository.name }}-dsl_drools_downstream_${{ matrix.repository }}_tests-${{ github.head_ref }}
+      cancel-in-progress: true
+    name: Drools DSL Downstream tests - ${{ matrix.repository }}
+    steps:
+      - name: Setup default base branch
+        run: |
+          echo 'BASE_BRANCH=${{ github.base_ref }}' >> $GITHUB_ENV
+      
+      - name: DSL tests
+        uses: kiegroup/kogito-pipelines/.ci/actions/dsl-tests@main
+        with:
+          project: drools
+          repository: ${{ matrix.repository }}
+          main-config-file-repo: kiegroup/drools
+          main-config-file-path: .ci/jenkins/config/main.yaml
+          branch-config-file-repo: kiegroup/drools
           base-branch: ${{ env.BASE_BRANCH }}

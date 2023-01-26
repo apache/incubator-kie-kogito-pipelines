@@ -73,9 +73,6 @@ The seed main config file will be given to the `0-seed-job` as a parameter.
 ecosystem: 
   main_project: kogito
   projects:
-  - name: drools
-    regexs:
-    - drools.*
   - name: kogito
     regexs:
     - kogito.*
@@ -150,7 +147,7 @@ disable:
 repositories:
   - name: kogito-pipelines
     branch: any_branch
-  - name: drools
+  - name: kogito-apps
     branch: any_branch
 
 # Main Git configuration

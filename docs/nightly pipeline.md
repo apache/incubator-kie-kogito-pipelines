@@ -1,26 +1,26 @@
 # Nightly Pipeline
 
-* [Nightly Pipeline](#nightly-pipeline)
-  * [Nightly pipeline Architecture](#nightly-pipeline-architecture)
-  * [Activate/Deactivate globally release branch jobs](#activatedeactivate-globally-release-branch-jobs)
-  * [Nightly pipeline Parameters](#nightly-pipeline-parameters)
-    * [Launch a nightly with minimal parameters for nightly testing](#launch-a-nightly-with-minimal-parameters-for-nightly-testing)
-  * [Nightly pipeline Troubleshooting](#nightly-pipeline-troubleshooting)
-    * [Nightly pipeline is failing](#nightly-pipeline-is-failing)
-    * [Nightly pipeline is unstable](#nightly-pipeline-is-unstable)
-    * [Build & Deploy job is failing](#build--deploy-job-is-failing)
-    * [Promote job is failing](#promote-job-is-failing)
-  * [Testing the Nightly Pipeline](#testing-the-nightly-pipeline)
+- [Nightly Pipeline](#nightly-pipeline)
+  - [Nightly pipeline Architecture](#nightly-pipeline-architecture)
+  - [Activate/Deactivate globally release branch jobs](#activatedeactivate-globally-release-branch-jobs)
+  - [Nightly pipeline Parameters](#nightly-pipeline-parameters)
+    - [Launch a nightly with minimal parameters for nightly testing](#launch-a-nightly-with-minimal-parameters-for-nightly-testing)
+  - [Nightly pipeline Troubleshooting](#nightly-pipeline-troubleshooting)
+    - [Nightly pipeline is failing](#nightly-pipeline-is-failing)
+    - [Nightly pipeline is unstable](#nightly-pipeline-is-unstable)
+    - [Build \& Deploy job is failing](#build--deploy-job-is-failing)
+    - [Promote job is failing](#promote-job-is-failing)
+  - [Testing the Nightly Pipeline](#testing-the-nightly-pipeline)
 
 In order to perform, Nightly and Release pipelines need to call some deploy and promote jobs for runtimes, examples, images and operator.  
 Those jobs should be present at the same level as the nightly and/or release job, so they can be found when called.
 
 Here is the list of jobs and link to Jenkinsfiles:
 
-* [drools-deploy](https://github.com/kiegroup/drools/blob/main/Jenkinsfile.deploy)
-* [drools-promote](https://github.com/kiegroup/drools/blob/main/Jenkinsfile.promote)
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.promote)
+* [kogito-apps-deploy](https://github.com/kiegroup/kogito-apps/blob/main/Jenkinsfile.deploy)
+* [kogito-apps-promote](https://github.com/kiegroup/kogito-apps/blob/main/Jenkinsfile.promote)
 * [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.deploy)
 * [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/main/Jenkinsfile.deploy)

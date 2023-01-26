@@ -2,30 +2,28 @@
 
 This repository contains some of the pipelines of Kogito project.
 
-* [Kogito Pipelines](#kogito-pipelines)
-* [Kogito Repositories](#kogito-repositories)
-* [The different Kogito pipelines](#the-different-kogito-pipelines)
-  * [Nightly & Release pipelines](#nightly--release-pipelines)
-  * [Tools pipelines](#tools-pipelines)
-  * [Repositories' specific pipelines](#repositories-specific-pipelines)
-    * [Native checks](#native-checks)
-    * [Quarkus check](#quarkus-check)
-    * [Mandrel check](#mandrel-check)
-    * [PR checks](#pr-checks)
-      * [Jenkins artifacts PR checks](#jenkins-artifacts-pr-checks)
-      * [GitHub Action checks](#github-action-checks)
-    * [Sonar cloud](#sonar-cloud)
-* [Configuration of pipelines](#configuration-of-pipelines)
-  * [Jenkins](#jenkins)
-    * [Jenkins jobs generation](#jenkins-jobs-generation)
-  * [Zulip notifications](#zulip-notifications)
-    * [Format](#format)
+- [Kogito Pipelines](#kogito-pipelines)
+- [Kogito Repositories](#kogito-repositories)
+- [The different Kogito pipelines](#the-different-kogito-pipelines)
+  - [Nightly \& Release pipelines](#nightly--release-pipelines)
+  - [Tools pipelines](#tools-pipelines)
+  - [Repositories' specific nightlies (environments)](#repositories-specific-nightlies-environments)
+      - [Run against integration branch (POC)](#run-against-integration-branch-poc)
+    - [PR checks](#pr-checks)
+      - [Jenkins artifacts PR checks](#jenkins-artifacts-pr-checks)
+      - [GitHub Action checks](#github-action-checks)
+    - [Sonar cloud](#sonar-cloud)
+- [Configuration of pipelines](#configuration-of-pipelines)
+  - [Jenkins](#jenkins)
+    - [Jenkins jobs generation](#jenkins-jobs-generation)
+  - [Zulip notifications](#zulip-notifications)
+    - [Format](#format)
+- [Contributing / Opening issues](#contributing--opening-issues)
 
 # Kogito Repositories
 
 Apart from this repository, pipelines are also concerning those repositories:
 
-* [drools](https://github.com/kiegroup/drools)
 * [kogito-runtimes](https://github.com/kiegroup/kogito-runtimes)
 * [kogito-apps](https://github.com/kiegroup/kogito-apps)
 * [kogito-examples](https://github.com/kiegroup/kogito-examples)
