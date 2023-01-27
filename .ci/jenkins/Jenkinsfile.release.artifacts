@@ -42,6 +42,7 @@ pipeline {
                         echo "Release properties imported from previous job: ${releaseProperties}"
                     }
 
+                    assert getDroolsVersion()
                     assert getKogitoVersion()
 
                     currentBuild.displayName = getDisplayName()
