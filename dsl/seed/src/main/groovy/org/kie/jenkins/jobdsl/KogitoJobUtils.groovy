@@ -387,7 +387,7 @@ class KogitoJobUtils {
             throw new RuntimeException("`QUARKUS_BRANCH` is expected into the quarkus environment ${envName} in order to setup this job correctly ...")
         }
         jobParams.env.putAll([
-            INTEGRATION_BRANCH: "${Utils.getGenerationBranch(script)}-integration-quarkus-${quarkusBranch}", // TODO expecting the QUARKUS_BRANCH in the environment of the job
+            INTEGRATION_BRANCH_CURRENT: "${Utils.getGenerationBranch(script)}-integration-quarkus-${quarkusBranch}",
             COMMIT_MESSAGE: "Bump up Quarkus version ${quarkusBranch}",
             GITHUB_USER: 'kie-ci',
         ])
