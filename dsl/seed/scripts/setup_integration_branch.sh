@@ -15,13 +15,10 @@ echo "Setup integration branch ${integration_branch}"
 
 set -x
 
-echo $(git ls-remote ${git_remote} ${integration_branch} | wc -l)
-
 git fetch "${git_remote}"
 
-if git rev-parse ${integration_branch}; then
-    git branch -D ${integration_branch}
-fi
+# Remove if exists locally and then create
+git branch -D ${integration_branch} || echo "No branch ${integration_branch} to remove locally"
 git checkout -b ${integration_branch}
 
 if [ "$(git status --porcelain)" != '' ]; then
@@ -35,13 +32,8 @@ fi
 
 git config user.email ${GITHUB_USER}@jenkins.redhat
 git config user.name ${GITHUB_USER}
-
-# set +x
 git config --local credential.helper "!f() { echo username=\\$GITHUB_USER; echo password=\\$GITHUB_TOKEN; }; f"
-# set -x
 
-if (( $(git ls-remote ${git_remote} ${integration_branch} | wc -l) > 0 )); then
-    git push -d ${git_remote} ${integration_branch}
-fi
-
+# Remove if exists remotely and then push
+git push -d ${git_remote} ${integration_branch} || echo "No branch ${integration_branch} to remove remotely"
 git push ${git_remote} ${integration_branch}
