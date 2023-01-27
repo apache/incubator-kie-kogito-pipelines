@@ -1,16 +1,16 @@
 name: org.kie.kogito.maven
-version: "3.8.6"
-description: "Module used to install maven 3.8.6"
+version: "3.8.7"
+description: "Module used to install maven 3.8.7"
 envs:
   - name: "MAVEN_VERSION"
-    value: "3.8.6"
+    value: "3.8.7"
   - name: "MAVEN_HOME"
-    value: "/usr/local/apache-maven-3.8.6/"
+    value: "/usr/local/apache-maven-3.8.7/"
   - name: PATH
-    value: /usr/local/apache-maven-3.8.6/bin/:$PATH
+    value: /usr/local/apache-maven-3.8.7/bin/:$PATH
 artifacts:
-  - name: apache-maven-3.8.6-bin.tar.gz
-    url: https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
+  - name: apache-maven-3.8.7-bin.tar.gz
+    url: https://dlcdn.apache.org/maven/maven-3/3.8.7/binaries/apache-maven-3.8.7-bin.tar.gz
     md5: 0e07de4a7b5c84ebed737a2002f52019
 execute:
   - script: install.sh
