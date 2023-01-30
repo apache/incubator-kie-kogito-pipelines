@@ -5,6 +5,10 @@ inputs:
     description: "Glob expression to surefire or failsafe report paths."
     required: false
     default: "**/surefire-reports/TEST-*.xml"
+  skip_publishing:
+    description: "Whether to publish test results as annotation or not"
+    required: false
+    default: "true"
 
 runs:
   using: "composite"
@@ -14,7 +18,7 @@ runs:
       with:
         fail_on_test_failures: true
         fail_if_no_tests: false
-        skip_publishing: true
+        skip_publishing: ${{ inputs.skip_publishing }}
         report_paths: ${{ inputs.report_paths }}
       env:
         # https://github.com/ScaCap/action-surefire-report/issues/17

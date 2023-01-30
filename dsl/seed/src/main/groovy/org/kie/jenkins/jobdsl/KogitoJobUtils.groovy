@@ -375,20 +375,19 @@ class KogitoJobUtils {
     }
 
     /**
-    * Create Nightly job for Quarkus integration
+    * Create a Nightly job creating an integration branch when performing the build
     *
     * This job will call the build-chain with extra environment variables to allow for the creation of an integration branch
     *
     */
-    static def createQuarkusNightlyBuildChainIntegrationJob(def script, String envName, String repository, boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+    static def createNightlyBuildChainIntegrationJob(def script, String envName, String repository, boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
         def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${repository}.integration", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Integration with Quarkus for ${repository} using the build-chain", defaultJobParamsGetter)
-        String quarkusBranch = EnvUtils.getEnvironmentEnvVar(script, envName, 'QUARKUS_BRANCH')
-        if (!quarkusBranch) {
-            throw new RuntimeException("`QUARKUS_BRANCH` is expected into the quarkus environment ${envName} in order to setup this job correctly ...")
+        if (!envName) {
+            throw new RuntimeException("Please provide a non-empty environment to generate an integration branch job...")
         }
         jobParams.env.putAll([
-            INTEGRATION_BRANCH: "${Utils.getGenerationBranch(script)}-integration-quarkus-${quarkusBranch}", // TODO expecting the QUARKUS_BRANCH in the environment of the job
-            COMMIT_MESSAGE: "Bump up Quarkus version ${quarkusBranch}",
+            INTEGRATION_BRANCH_CURRENT: "${Utils.getGenerationBranch(script)}-integration-${envName}",
+            COMMIT_MESSAGE: "Update for ${envName} environment",
             GITHUB_USER: 'kie-ci',
         ])
         return createBranchBuildChainJob(script, jobParams, repository, enableNotification, envName)

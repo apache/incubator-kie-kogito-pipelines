@@ -111,8 +111,8 @@ class Utils {
     }
 
     static boolean isMainBranch(def script) {
-        boolean result = getGenerationBranch(script) == getGitMainBranch(script)
-        PrintUtils.debug(script, "Branch=${getGenerationBranch(script)}. Main Branch=${getGitMainBranch(script)}. Is main branch ? => ${result}")
+        boolean result = getGitBranch(script) == getGitMainBranch(script)
+        PrintUtils.debug(script, "Branch=${getGitBranch(script)}. Main Branch=${getGitMainBranch(script)}. Is main branch ? => ${result}")
         return result
     }
 
