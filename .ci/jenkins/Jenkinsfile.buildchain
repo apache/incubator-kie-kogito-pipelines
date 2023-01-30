@@ -27,12 +27,12 @@ buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
 buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:kiegroup}'
 buildChainConfigDefinitionFilePath = env.BUILDCHAIN_CONFIG_FILE_PATH ?: '.ci/pull-request-config.yaml'
 buildChainAction = isFDBBuildChainType() ? 'fd' : buildChainType
-buildChainAdditionalArguments = buildChainProject ? [ "-sp=${buildChainProject}" ] : []
+buildChainAdditionalArguments = buildChainProject ? [ "-p ${buildChainProject}" ] : []
 if (isBranchBuildChainType()) {
-    buildChainAdditionalArguments.add("-b=${env.GIT_BRANCH_NAME.trim()}")
-    buildChainAdditionalArguments.add("-g=${env.GIT_AUTHOR.trim()}")
+    buildChainAdditionalArguments.add("-b ${env.GIT_BRANCH_NAME.trim()}")
+    buildChainAdditionalArguments.add("-g ${env.GIT_AUTHOR.trim()}")
 } else {
-    buildChainAdditionalArguments.add("-url=${env.ghprbPullLink}")
+    buildChainAdditionalArguments.add("-u ${env.ghprbPullLink}")
 }
 
 skipTests = params.SKIP_TESTS ?: false
@@ -260,7 +260,7 @@ boolean shouldNotify() {
 }
 
 String getBuildChainCommandline(boolean includeToken=false) {
-    return "build-chain-action ${includeToken ? "-token=${GITHUB_TOKEN} " : ''}-df='https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -folder='bc' build ${buildChainAction} ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout"
+    return "build-chain build ${buildChainAction} ${includeToken ? "--token ${GITHUB_TOKEN} " : ''}-f='https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -o 'bc' ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout"
 }
 
 String getReproducer() {
