@@ -13,7 +13,7 @@ mavenDeployRepository = env.MAVEN_DEPLOY_REPOSITORY ?: ''
 mavenDeployRepositoryCredsId = env.MAVEN_DEPLOY_REPOSITORY_CREDS_ID ?: ''
 mavenDeployLocalDir = env.MAVEN_DEPLOY_LOCAL_DIR ?: ''
 
-buildChainType = env.BUILDCHAIN_TYPE?.trim() ?: 'pr'
+buildChainType = env.BUILDCHAIN_TYPE?.trim() ?: 'cross_pr'
 buildChainProject = env.BUILDCHAIN_PROJECT?.trim()
 defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kogito_pr_settings' : 'kogito_release_settings'
 settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
@@ -26,7 +26,7 @@ buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
 buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:kiegroup}'
 buildChainConfigDefinitionFilePath = env.BUILDCHAIN_CONFIG_FILE_PATH ?: '.ci/pull-request-config.yaml'
-buildChainAction = isFDBBuildChainType() ? 'fd' : buildChainType
+buildChainAction = isFDBBuildChainType() ? 'full_downstream' : buildChainType
 buildChainAdditionalArguments = buildChainProject ? [ "-p ${buildChainProject}" ] : []
 if (isBranchBuildChainType()) {
     buildChainAdditionalArguments.add("-b ${env.GIT_BRANCH_NAME.trim()}")
@@ -222,11 +222,11 @@ pipeline {
 }
 
 boolean isPRBuildChainType() {
-    return buildChainType == 'pr'
+    return buildChainType == 'cross_pr'
 }
 
 boolean isFDBBuildChainType() {
-    return buildChainType == 'fdb'
+    return buildChainType == 'full_downstream'
 }
 
 boolean isSingleBuildChainType() {

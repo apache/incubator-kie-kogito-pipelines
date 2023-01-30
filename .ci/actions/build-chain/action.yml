@@ -9,7 +9,7 @@ inputs:
     required: false
     default: 'https://raw.githubusercontent.com/${GROUP:kiegroup}/kogito-pipelines/${BRANCH:main}/.ci/pull-request-config.yaml'
   flow-type:
-    description: "the flow to execute, it can be 'cross_pr', 'full_downstream', 'single_pr' or 'branch'"
+    description: "the flow to execute, it can be 'cross_pr' (or 'pull-request' which is deprecated), 'full_downstream' (or 'full-downstream' which is deprecated), 'single_pr' (or 'single' which is deprecated) or 'branch'"
     default: "cross_pr"
     required: false
   starting-project:
