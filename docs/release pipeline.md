@@ -1,47 +1,47 @@
 # Release Pipeline
 
-* [Release Pipeline](#release-pipeline)
-  * [Release process](#release-process)
-    * [Create a release branch](#create-a-release-branch)
-      * [How to create a new release branch ?](#how-to-create-a-new-release-branch-)
-      * [Remove release branch jobs](#remove-release-branch-jobs)
-    * [Performing a release](#performing-a-release)
-      * [Before the Release Pipeline is started](#before-the-release-pipeline-is-started)
-        * [JIRA issues creation](#jira-issues-creation)
-      * [Where is the main release pipeline job](#where-is-the-main-release-pipeline-job)
-      * [Release pipeline parameters](#release-pipeline-parameters)
-        * [Minimal parameters for the release](#minimal-parameters-for-the-release)
-        * [Start Release Pipeline with specific parameters](#start-release-pipeline-with-specific-parameters)
-      * [Release pipeline Manual interventions](#release-pipeline-manual-interventions)
-        * [Default manual interventions](#default-manual-interventions)
-        * [Retry/Continue/Skip/Abort manual intervention](#retrycontinueskipabort-manual-intervention)
-      * [After the Release Pipeline is finished](#after-the-release-pipeline-is-finished)
-        * [Operator Crd/Csv files](#operator-crdcsv-files)
-        * [Docs release](#docs-release)
-        * [Update the JIRAs](#update-the-jiras)
-  * [Use cases](#use-cases)
-    * [Deploy on artifacts](#deploy-on-artifacts)
-    * [Deploy only Cloud images / Operator](#deploy-only-cloud-images--operator)
-    * [Artifacts version is different from Cloud version](#artifacts-version-is-different-from-cloud-version)
-  * [Architecture of the Release pipeline](#architecture-of-the-release-pipeline)
-  * [Release pipeline Troubleshooting](#release-pipeline-troubleshooting)
-    * [Release pipeline is failing](#release-pipeline-is-failing)
-    * [Release pipeline is reporting a called *-deploy job is failing](#release-pipeline-is-reporting-a-called--deploy-job-is-failing)
-    * [Release pipeline is reporting a called *-promote job is failing](#release-pipeline-is-reporting-a-called--promote-job-is-failing)
-  * [Testing the Release Pipeline](#testing-the-release-pipeline)
-    * [Create specific Maven repository for release testing](#create-specific-maven-repository-for-release-testing)
-    * [Create the different Jenkins jobs for release testing](#create-the-different-jenkins-jobs-for-release-testing)
-    * [Launch a release with minimal parameters for testing](#launch-a-release-with-minimal-parameters-for-testing)
+- [Release Pipeline](#release-pipeline)
+  - [Release process](#release-process)
+    - [Create a release branch](#create-a-release-branch)
+      - [How to create a new release branch ?](#how-to-create-a-new-release-branch-)
+      - [Remove release branch jobs](#remove-release-branch-jobs)
+    - [Performing a release](#performing-a-release)
+      - [Before the Release Pipeline is started](#before-the-release-pipeline-is-started)
+        - [JIRA issues creation](#jira-issues-creation)
+      - [Where is the main release pipeline job](#where-is-the-main-release-pipeline-job)
+      - [Release pipeline parameters](#release-pipeline-parameters)
+        - [Minimal parameters for the release](#minimal-parameters-for-the-release)
+        - [Start Release Pipeline with specific parameters](#start-release-pipeline-with-specific-parameters)
+      - [Release pipeline Manual interventions](#release-pipeline-manual-interventions)
+        - [Default manual interventions](#default-manual-interventions)
+        - [Retry/Continue/Skip/Abort manual intervention](#retrycontinueskipabort-manual-intervention)
+      - [After the Release Pipeline is finished](#after-the-release-pipeline-is-finished)
+        - [Operator Crd/Csv files](#operator-crdcsv-files)
+        - [Docs release](#docs-release)
+        - [Update the JIRAs](#update-the-jiras)
+  - [Use cases](#use-cases)
+    - [Deploy on artifacts](#deploy-on-artifacts)
+    - [Deploy only Cloud images / Operator](#deploy-only-cloud-images--operator)
+    - [Artifacts version is different from Cloud version](#artifacts-version-is-different-from-cloud-version)
+  - [Architecture of the Release pipeline](#architecture-of-the-release-pipeline)
+  - [Release pipeline Troubleshooting](#release-pipeline-troubleshooting)
+    - [Release pipeline is failing](#release-pipeline-is-failing)
+    - [Release pipeline is reporting a called \*-deploy job is failing](#release-pipeline-is-reporting-a-called--deploy-job-is-failing)
+    - [Release pipeline is reporting a called \*-promote job is failing](#release-pipeline-is-reporting-a-called--promote-job-is-failing)
+  - [Testing the Release Pipeline](#testing-the-release-pipeline)
+    - [Create specific Maven repository for release testing](#create-specific-maven-repository-for-release-testing)
+    - [Create the different Jenkins jobs for release testing](#create-the-different-jenkins-jobs-for-release-testing)
+    - [Launch a release with minimal parameters for testing](#launch-a-release-with-minimal-parameters-for-testing)
 
 In order to perform, Nightly and Release pipelines need to call some deploy and promote jobs for runtimes, examples, images and operator.  
 Those jobs should be present at the same level as the nightly and/or release job, so they can be found when called.
 
 Here is the list of jobs and link to Jenkinsfiles:
 
-* [drools-deploy](https://github.com/kiegroup/drools/blob/main/Jenkinsfile.deploy)
-* [drools-promote](https://github.com/kiegroup/drools/blob/main/Jenkinsfile.promote)
 * [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.deploy)
 * [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.promote)
+* [kogito-apps-deploy](https://github.com/kiegroup/kogito-apps/blob/main/Jenkinsfile.deploy)
+* [kogito-apps-promote](https://github.com/kiegroup/kogito-apps/blob/main/Jenkinsfile.promote)
 * [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.deploy)
 * [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/main/Jenkinsfile.deploy)
@@ -288,7 +288,7 @@ See [Jenkins documentation](./jenkins.md) to create the different jobs for the t
 **IMPORTANT:**
 
 * When using `Optaplanner Promote` job, please also create a specific branch to be executed and comment the content of the `uploadDistribution` method.
-* When deploying artifacts for drools/runtimes/apps/examples, make sure the branch you deploy is up to date to avoid any conflict with current deployed artifacts !
+* When deploying artifacts for runtimes/apps/examples, make sure the branch you deploy is up to date to avoid any conflict with current deployed artifacts !
 
 ### Launch a release with minimal parameters for testing
 

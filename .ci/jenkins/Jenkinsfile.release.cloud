@@ -504,10 +504,6 @@ String getKogitoServerlessOperatorVersion() {
     return params.KOGITO_SERVERLESS_OPERATOR_VERSION ?: (getReleaseProperty('kogito.serverless.operator.version') ?: removeVersionSuffixIfExist(getKogitoVersion()))
 }
 
-String getDroolsVersion() {
-    return params.DROOLS_VERSION ?: getReleaseProperty('drools.version')
-}
-
 String getGitAuthor() {
     return env.GIT_AUTHOR
 }

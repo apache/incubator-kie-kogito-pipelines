@@ -3,7 +3,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 @Library('jenkins-pipeline-shared-libraries')_
 
 // Deploy jobs
-DROOLS_DEPLOY = 'drools.build-and-deploy'
 RUNTIMES_DEPLOY = 'kogito-runtimes.build-and-deploy'
 APPS_DEPLOY = 'kogito-apps.build-and-deploy'
 EXAMPLES_DEPLOY = 'kogito-examples.build-and-deploy'
@@ -70,24 +69,6 @@ pipeline {
                 expression { return isArtifactsDeploy() }
             }
             parallel {
-                stage('Build & Deploy Drools') {
-                    steps {
-                        script {
-                            def buildParams = getDefaultBuildParams()
-                            addSkipTestsParam(buildParams)
-                            addSkipIntegrationTestsParam(buildParams)
-
-                            // images and operator deploy testing will use older working artifacts if that one fails
-                            buildJob(DROOLS_DEPLOY, buildParams)
-                        }
-                    }
-                    post {
-                        failure {
-                            addFailedStage(DROOLS_DEPLOY)
-                        }
-                    }
-                }
-
                 stage('Build & Deploy Kogito Runtimes') {
                     steps {
                         script {

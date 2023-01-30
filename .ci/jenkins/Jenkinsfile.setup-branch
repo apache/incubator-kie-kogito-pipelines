@@ -53,21 +53,6 @@ pipeline {
             }
         }
 
-        stage('Init Drools') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addDroolsVersionParam(buildParams)
-                    buildJob('drools', buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage('drools')
-                }
-            }
-        }
-
         stage('Init Kogito Runtimes') {
             steps {
                 script {

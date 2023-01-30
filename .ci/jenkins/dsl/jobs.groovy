@@ -15,11 +15,10 @@ setupCreateIssueToolsJob()
 setupCleanOldNamespacesToolsJob()
 setupCleanOldNightlyImagesToolsJob()
 setupToggleTriggersJob()
-KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'drools')
 KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'kogito')
 KogitoJobUtils.createMainQuarkusUpdateToolsJob(this,
-        [ 'drools', 'kogito-runtimes', 'kogito-examples', 'kogito-images', 'kogito-docs' ],
-        [ 'radtriste' ] // TODO to update
+        [ 'kogito-runtimes', 'kogito-examples', 'kogito-images', 'kogito-docs' ],
+        [ 'radtriste', 'cristianonicolai' ]
 )
 if (Utils.isMainBranch(this)) {
     setupBuildOperatorNode()
@@ -113,8 +112,8 @@ void createSetupBranchJob() {
     ])
     KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         parameters {
-            stringParam('DROOLS_VERSION', '', 'Drools version')
             stringParam('KOGITO_VERSION', '', 'Kogito version')
+            stringParam('DROOLS_VERSION', '', 'Drools version')
         }
     }
 }
@@ -141,7 +140,7 @@ void setupNightlyJob() {
         parameters {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
-            booleanParam('SKIP_ARTIFACTS', false, 'To skip Artifacts (drools, runtimes, apps, examples) Deployment')
+            booleanParam('SKIP_ARTIFACTS', false, 'To skip Artifacts (runtimes, apps, examples) Deployment')
             booleanParam('SKIP_IMAGES', false, 'To skip Images Deployment')
             booleanParam('SKIP_EXAMPLES_IMAGES', false, 'To skip Examples Images Deployment')
             booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
@@ -152,7 +151,7 @@ void setupNightlyJob() {
 }
 
 void setupReleaseArtifactsJob() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-release', JobType.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release.artifacts", 'Drools/Kogito Artifacts Release')
+    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-release', JobType.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release.artifacts", 'Kogito Artifacts Release')
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
@@ -166,14 +165,12 @@ void setupReleaseArtifactsJob() {
         parameters {
             stringParam('RESTORE_FROM_PREVIOUS_JOB', '', 'URL to a previous stopped release job which needs to be continued')
 
-            stringParam('DROOLS_VERSION', '', 'Drools version to release as Major.minor.micro')
             stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
+            stringParam('DROOLS_VERSION', '', 'Drools version to set for the release')
             booleanParam('DEPLOY_AS_LATEST', false, 'Given project version is considered the latest version')
 
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
-            booleanParam('SKIP_DROOLS_RELEASE', false, 'To skip Drools release. If skipped, please provide `ARTIFACTS_REPOSITORY`')
-            booleanParam('SKIP_KOGITO_RELEASE', false, 'To skip Kogito release. If skipped, please provide `ARTIFACTS_REPOSITORY`')
             booleanParam('SKIP_CLOUD_RELEASE', false, 'To skip Cloud release. To use whenever you have specific parameters to set for the Cloud release')
         }
     }

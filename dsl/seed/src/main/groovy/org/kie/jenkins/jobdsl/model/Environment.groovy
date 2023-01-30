@@ -131,7 +131,7 @@ class Environment {
     )
 
     // Ecosystem env should only be executed in main branch
-    // This makes sure all projects of Kogito ecosystem (aka Drools, Kogito, Optaplanner) are in sync
+    // This makes sure all projects of Kogito ecosystem (aka Kogito, Optaplanner) are in sync
     public static final Environment ECOSYSTEM = new Environment(
         name: 'ECOSYSTEM',
         optional: true,
