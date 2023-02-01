@@ -21,6 +21,15 @@ class EnvUtils {
         return value != '' ? value.toBoolean() : true
     }
 
+    static boolean isEnvironmentDefined(def script, String envName) {
+        if (!envName) {
+            return true
+        }
+        boolean value = Utils.hasBindingValuesStartingWith(script, createEnvironmentsKeyPrefix(envName))
+        PrintUtils.debug(script, "isEnvironmentDefined ${envName} => ${value}")
+        return value
+    }
+
     static List<String> getAllEnabledEnvironments(def script) {
         List<String> enabledEnvironments = getAllEnvironments(script).findAll { isEnvironmentEnabled(script, it) }
         PrintUtils.debug(script, "getAllEnabledEnvironments => ${enabledEnvironments}")
@@ -43,10 +52,7 @@ class EnvUtils {
     static Map getEnvironmentEnvVars(def script, String envName) {
         String keyPrefix = "${createEnvironmentsKeyPrefix(envName)}ENV_VARS_"
         PrintUtils.debug(script, "Looking for env vars for env ${envName}. Key prefix is ${keyPrefix}")
-        Map envVars = script.getBinding()
-                                .getVariables()
-                                .keySet()
-                                .findAll { it.startsWith(keyPrefix) }
+        Map envVars = Utils.getBindingValuesStartingWith(script, keyPrefix)
                                 .collectEntries {
                                     ["${it.replace(keyPrefix, '')}", Utils.getBindingValue(script, it)]
                                 }
@@ -57,7 +63,7 @@ class EnvUtils {
     static String getEnvironmentEnvVar(def script, String envName, String envKey) {
         // Using find method as the keys are stored as gstring
         // and it creates problem when searching for a gstring/string key with `map.get(key)` ...
-        return getEnvironmentEnvVars(script, envName).find { it.key == envKey }?.value 
+        return getEnvironmentEnvVars(script, envName).find { it.key == envKey }?.value
     }
 
     static List<String> getEnvironmentIds(def script, String envName) {

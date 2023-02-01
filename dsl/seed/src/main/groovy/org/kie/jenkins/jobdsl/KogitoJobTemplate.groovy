@@ -4,6 +4,7 @@ import org.kie.jenkins.jobdsl.model.Folder
 import org.kie.jenkins.jobdsl.model.JenkinsFolder
 import org.kie.jenkins.jobdsl.model.JenkinsFolderRegistry
 import org.kie.jenkins.jobdsl.model.JobType
+import org.kie.jenkins.jobdsl.utils.EnvUtils
 import org.kie.jenkins.jobdsl.utils.JobParamsUtils
 import org.kie.jenkins.jobdsl.utils.PrintUtils
 import org.kie.jenkins.jobdsl.utils.RegexUtils
@@ -43,14 +44,26 @@ class KogitoJobTemplate {
     static def createPipelineJob(def script, Map jobParams = [:]) {
         String jobFolderName = ''
         Map jobFolderEnv = [:]
-        if (jobParams.job.folder) {
-            if (![Folder, JenkinsFolder].any { it.isAssignableFrom(jobParams.job.folder.getClass()) }) {
+        def jobFolder = jobParams.job.folder
+        if (jobFolder) {
+            if (![Folder, JenkinsFolder].any { it.isAssignableFrom(jobFolder.getClass()) }) {
                 throw new RuntimeException('Folder is not of type org.kie.jenkins.jobdsl.model.JenkinsFolder')
             }
+
             // Expect org.kie.jenkins.jobdsl.model.Folder structure
-            jobFolderName = jobParams.job.folder.getName()
-            jobFolderEnv = jobParams.job.folder.getDefaultEnvVars(script)
-            if (!jobParams.job.folder.isActive(script)) {
+            jobFolderName = jobFolder.getName()
+            jobFolderEnv = jobFolder.getDefaultEnvVars(script)
+
+            if (!EnvUtils.isEnvironmentDefined(script, jobFolder.getEnvironmentName())) {
+                String output = "Cannot create job name ${jobParams.job.name} in jobFolder ${jobFolderName} as environment ${jobFolder.getEnvironmentName()} is NOT configured"
+                if (Utils.isGenerationFailOnMissingEnvironment(script)) {
+                    throw new RuntimeException(output)
+                } else if (Utils.isGenerationIgnoreOnMissingEnvironment(script)) {
+                    // Do no create the job if the folder is not active
+                    PrintUtils.warn(script, output)
+                    return
+                }
+            } else if (!jobFolder.isActive(script)) {
                 // Do no create the job if the folder is not active
                 PrintUtils.warn(script, "Cannot create job name ${jobParams.job.name} in jobFolder ${jobFolderName} as folder is NOT active")
                 return
@@ -137,7 +150,7 @@ class KogitoJobTemplate {
                     }
                 }
             }
-    }
+}
 }
 
     /**

@@ -110,6 +110,10 @@ The branch config file is given to the seed job via the configuration into the m
 All values from this config file will be available to job generation as env variables.
 
 ```yaml
+# Specific generation config behaviors
+generation_config:
+  missing_environment: fail # Accept `fail` (will fail on any environment missing) or `ignore` (will not generate the job on missing environment). Other values will be considered as "continue"
+
 # Allow to disable job types
 # This is useful in testing to avoid to generate all jobs
 # Current jobtype can be found in ../dsl/seed/src/main/groovy/org/kie/jenkins/jobdsl/model/JobType.groovy
@@ -199,6 +203,9 @@ cloud:
     latest_git_branch: main
 jenkins:
   email_creds_id: KOGITO_CI_EMAIL_TO_PERSO
+  default_tools:
+    jdk: kie-jdk11
+    maven: kie-maven-3.8.7
 
 ```
 
