@@ -1,6 +1,5 @@
 package org.kie.jenkins.jobdsl
 
-import org.kie.jenkins.jobdsl.model.Folder
 import org.kie.jenkins.jobdsl.model.JenkinsFolder
 import org.kie.jenkins.jobdsl.model.JenkinsFolderRegistry
 import org.kie.jenkins.jobdsl.model.JobType
@@ -46,13 +45,13 @@ class KogitoJobTemplate {
         Map jobFolderEnv = [:]
         def jobFolder = jobParams.job.folder
         if (jobFolder) {
-            if (![Folder, JenkinsFolder].any { it.isAssignableFrom(jobFolder.getClass()) }) {
+            if (![JenkinsFolder].any { it.isAssignableFrom(jobFolder.getClass()) }) {
                 throw new RuntimeException('Folder is not of type org.kie.jenkins.jobdsl.model.JenkinsFolder')
             }
 
             // Expect org.kie.jenkins.jobdsl.model.Folder structure
             jobFolderName = jobFolder.getName()
-            jobFolderEnv = jobFolder.getDefaultEnvVars(script)
+            jobFolderEnv = jobFolder.getDefaultEnvVars()
 
             if (!EnvUtils.isEnvironmentDefined(script, jobFolder.getEnvironmentName())) {
                 String output = "Cannot create job name ${jobParams.job.name} in jobFolder ${jobFolderName} as environment ${jobFolder.getEnvironmentName()} is NOT configured"
@@ -291,16 +290,6 @@ class KogitoJobTemplate {
     }
 
     /**
-    * *DEPRECATED*
-    * Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
-    */
-    @Deprecated
-    static def createPerRepoPRJobs(def script, Folder prFolder, Closure jobsRepoConfigGetter, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
-        PrintUtils.deprecated(script, 'createPerRepoPRJobs', 'createPerRepoPRJobs(script, envName...)')
-        return createPerRepoPRJobsWithFolder(script, prFolder, jobsRepoConfigGetter, defaultJobParamsGetter)
-    }
-
-    /**
     * Should be merged with `createPerRepoPRJobs(def script, def prFolder, Closure jobsRepoConfigGetter, Closure defaultParamsGetter)`
     * once https://issues.redhat.com/browse/PLANNER-2870 is implemented
     */
@@ -334,12 +323,7 @@ class KogitoJobTemplate {
         PrintUtils.info(script, "createPerRepoPRJobsWithFolder in folder ${prFolder.getName()}")
         String testTypeId
         String testTypeName
-        if (prFolder instanceof Folder) {
-            // DEPRECATED
-            // Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
-            testTypeId = prFolder.getConfigValues()?.typeId ?: prFolder.environment.toId()
-            testTypeName = prFolder.getConfigValues()?.typeName ?: prFolder.environment.toId()
-        } else if (prFolder instanceof JenkinsFolder) {
+        if (prFolder instanceof JenkinsFolder) {
             String envName = prFolder.getEnvironmentName()
             testTypeId = envName ?: 'tests' // Define harcoded value for no env
             testTypeName = envName ?: 'build' // Define harcoded value for no env

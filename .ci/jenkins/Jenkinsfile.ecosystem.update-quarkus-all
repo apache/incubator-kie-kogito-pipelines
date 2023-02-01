@@ -42,9 +42,7 @@ pipeline {
                         getOrCreateGitBranch(prBranch, "${SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
 
                         updateYaml("${SEED_BRANCH_CONFIG_FILE_PATH}") { branchConfig ->
-                            if (branchConfig.environment?.quarkus?.branch?.version) { // @DEPRECATED
-                                branchConfig.environment.quarkus.branch.version = getNewVersionBranch()
-                            } else if (branchConfig.environments?."quarkus-branch"?.env_vars?.QUARKUS_BRANCH) {
+                            if (branchConfig.environments?."quarkus-branch"?.env_vars?.QUARKUS_BRANCH) {
                                 branchConfig.environments."quarkus-branch".env_vars.QUARKUS_BRANCH = getNewVersionBranch() 
                             }
                         }

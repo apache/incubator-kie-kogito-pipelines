@@ -17,15 +17,6 @@ class JobType {
         name: 'other'
     )
 
-    /**
-    * *DEPRECATED* section
-    * Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
-    **/
-    @Deprecated
-    public static final JobType PULLREQUEST = new JobType(
-        name: 'pullrequest',
-    )
-    
     public static final JobType PULL_REQUEST = new JobType(
         name: 'pullrequest',
         environmentDependent: true
