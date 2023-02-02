@@ -9,7 +9,14 @@ inputs:
     description: "Whether to publish test results as annotation or not"
     required: false
     default: "true"
-
+  check_name:
+    description: "Check name to use when creating a check run"
+    required: false
+    default: "Test Report"
+  commit:
+    description: "The commit sha to update the status"
+    required: false
+    
 runs:
   using: "composite"
   steps: 
@@ -20,6 +27,8 @@ runs:
         fail_if_no_tests: false
         skip_publishing: ${{ inputs.skip_publishing }}
         report_paths: ${{ inputs.report_paths }}
+        commit: ${{ inputs.commit }}
+        check_name: ${{ inputs.check_name }}
       env:
         # https://github.com/ScaCap/action-surefire-report/issues/17
         NODE_OPTIONS: '--max_old_space_size=4096'
