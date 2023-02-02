@@ -37,6 +37,18 @@ class Utils {
         return getBindingValue(script, envVar).toBoolean()
     }
 
+    static List getBindingValuesStartingWith(def script, String keyPrefix) {
+        return script.getBinding()
+                    .getVariables()
+                    .keySet()
+                    .findAll { key -> key.startsWith(keyPrefix) }
+                    .collect { it } // Transform to list
+    }
+
+    static boolean hasBindingValuesStartingWith(def script, String keyPrefix) {
+        return getBindingValuesStartingWith(script, keyPrefix).size() > 0
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////
     // *DEPRECATED* section
     // Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
@@ -261,6 +273,18 @@ class Utils {
 
     static boolean isOldFolderStructure(def script) {
         return getBindingValue(script, 'OLD_FOLDER_STRUCTURE')?.toBoolean()
+    }
+
+    static String getGenerationMissingEnvironment(def script) {
+        return getBindingValue(script, 'GENERATION_CONFIG_MISSING_ENVIRONMENT')
+    }
+
+    static boolean isGenerationIgnoreOnMissingEnvironment(def script) {
+        return getGenerationMissingEnvironment(script) == 'ignore'
+    }
+
+    static boolean isGenerationFailOnMissingEnvironment(def script) {
+        return getGenerationMissingEnvironment(script) == 'fail'
     }
 
     /**
