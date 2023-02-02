@@ -260,7 +260,7 @@ boolean shouldNotify() {
 }
 
 String getBuildChainCommandline(boolean includeToken=false) {
-    return "build-chain build ${buildChainAction} ${includeToken ? "--token ${GITHUB_TOKEN} " : ''}-f='https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -o 'bc' ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout"
+    return "build-chain build ${buildChainAction} ${includeToken ? "--token ${GITHUB_TOKEN} " : ''}-f 'https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -o 'bc' ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout"
 }
 
 String getReproducer() {
