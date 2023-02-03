@@ -48,72 +48,7 @@ class Utils {
     static boolean hasBindingValuesStartingWith(def script, String keyPrefix) {
         return getBindingValuesStartingWith(script, keyPrefix).size() > 0
     }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////
-    // *DEPRECATED* section
-    // Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
-    ////////////////////////////////////////////////////////////////////////////////////////////
-    @Deprecated
-    static boolean isEnvironmentQuarkusMainEnabled(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_MAIN_ENABLED').toBoolean()
-    }
-
-    @Deprecated
-    static boolean isEnvironmentQuarkusBranchEnabled(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_BRANCH_ENABLED').toBoolean()
-    }
-
-    @Deprecated
-    static String getEnvironmentQuarkusBranchVersion(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_BRANCH_VERSION')
-    }
-
-    @Deprecated
-    static boolean isEnvironmentQuarkusLTSEnabled(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_LTS_ENABLED').toBoolean()
-    }
-
-    @Deprecated
-    static String getEnvironmentQuarkusLTSVersion(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_QUARKUS_LTS_VERSION')
-    }
-
-    @Deprecated
-    static boolean isEnvironmentNativeEnabled(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_NATIVE_ENABLED').toBoolean()
-    }
-
-    @Deprecated
-    static boolean isEnvironmentMandrelEnabled(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_MANDREL_ENABLED').toBoolean()
-    }
-
-    @Deprecated
-    static boolean isEnvironmentMandrelLTSEnabled(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_MANDREL_LTS_ENABLED').toBoolean()
-    }
-
-    @Deprecated
-    static String getEnvironmentMandrelBuilderImage(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_MANDREL_BUILDER_IMAGE')
-    }
-
-    @Deprecated
-    static String getEnvironmentMandrelLTSBuilderImage(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_MANDREL_LTS_BUILDER_IMAGE')
-    }
-
-    @Deprecated
-    static String getEnvironmentMandrelLTSQuarkusVersion(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_MANDREL_LTS_QUARKUS_VERSION')
-    }
-
-    @Deprecated
-    static boolean isEnvironmentRuntimesBDDEnabled(def script) {
-        return getBindingValue(script, 'ENVIRONMENT_RUNTIMES_BDD_ENABLED').toBoolean()
-    }
-    ////////////////////////////////////////////////////////////////////////////////////////////
-
+    
     static boolean isProductizedBranch(def script) {
         return getBindingValue(script, 'PRODUCTIZED_BRANCH').toBoolean()
     }

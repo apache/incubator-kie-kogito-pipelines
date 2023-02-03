@@ -62,12 +62,7 @@ pipeline {
                         branchConfig.productized_branch = params.PRODUCTIZED_BRANCH
 
                         // Disable some environments when branching as they make no sense by default
-                        if (branchConfig.environment) { // @DEPRECATED
-                            branchConfig.environment.quarkus.main.enabled = false
-                            branchConfig.environment.quarkus.lts.enabled = params.PRODUCTIZED_BRANCH
-                            branchConfig.environment.mandrel_lts.enabled = params.PRODUCTIZED_BRANCH
-                            branchConfig.environment.mandrel.enabled = params.PRODUCTIZED_BRANCH
-                        } else if (branchConfig.environments) {
+                        if (branchConfig.environments) {
                             branchConfig.environments."quarkus-main" ? branchConfig.environments."quarkus-main".enabled = false : null
                             branchConfig.environments."quarkus-lts" ? branchConfig.environments."quarkus-lts".enabled = params.PRODUCTIZED_BRANCH : null
                             branchConfig.environments."mandrel-lts" ? branchConfig.environments."mandrel-lts".enabled = params.PRODUCTIZED_BRANCH : null

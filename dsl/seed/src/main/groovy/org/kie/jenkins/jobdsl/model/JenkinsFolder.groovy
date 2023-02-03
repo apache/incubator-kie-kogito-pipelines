@@ -34,15 +34,6 @@ class JenkinsFolder {
         return this.environmentName
     }
 
-    /**
-    * *DEPRECATED*
-    * Should be deleted once https://issues.redhat.com/browse/PLANNER-2870 is implemented
-    *
-    * Compatibility method
-    */
-    Map getDefaultEnvVars(def script) {
-        return getDefaultEnvVars()
-    }
     Map getDefaultEnvVars() {
         Map env = [
             JOB_TYPE: this.jobType.getName(),
