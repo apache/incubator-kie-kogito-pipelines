@@ -92,6 +92,8 @@ pipeline {
                     }
                     println "[INFO] build-chain version recovered '${buildChainVersion}'"
                     sh "npm install -g @kie/build-chain-action@${buildChainVersion}${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
+
+                    sh "npm list -g | grep build-chain"
                 }
             }
         }
@@ -166,9 +168,9 @@ pipeline {
                     
                     // First guessing whether there is a clone defined into the buildchain config
                     // If not, fallback to simple folder structure
-                    String projectFolder = "bc/kiegroup_${project.replaceAll('-', '_')}/${project}"
+                    String projectFolder = "bc/kiegroup_${project}/${project}"
                     if (!fileExists(projectFolder)) {
-                        projectFolder = "bc/kiegroup_${project.replaceAll('-', '_')}"
+                        projectFolder = "bc/kiegroup_${project}"
                     }
                     dir(projectFolder) {
                         maven.runMavenWithSettingsSonar(settingsXmlId, "-e -nsu validate -Psonarcloud-analysis -Denforcer.skip=true ${env.SONARCLOUD_ANALYSIS_MVN_OPTS ?: ''}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
