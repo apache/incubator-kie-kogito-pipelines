@@ -13,7 +13,7 @@ mavenDeployRepository = env.MAVEN_DEPLOY_REPOSITORY ?: ''
 mavenDeployRepositoryCredsId = env.MAVEN_DEPLOY_REPOSITORY_CREDS_ID ?: ''
 mavenDeployLocalDir = env.MAVEN_DEPLOY_LOCAL_DIR ?: ''
 
-buildChainType = env.BUILDCHAIN_TYPE?.trim() ?: 'pr'
+buildChainType = env.BUILDCHAIN_TYPE?.trim() ?: 'cross_pr'
 buildChainProject = env.BUILDCHAIN_PROJECT?.trim()
 defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kogito_pr_settings' : 'kogito_release_settings'
 settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
@@ -26,13 +26,13 @@ buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
 buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:kiegroup}'
 buildChainConfigDefinitionFilePath = env.BUILDCHAIN_CONFIG_FILE_PATH ?: '.ci/pull-request-config.yaml'
-buildChainAction = isFDBBuildChainType() ? 'fd' : buildChainType
-buildChainAdditionalArguments = buildChainProject ? [ "-sp=${buildChainProject}" ] : []
+buildChainAction = isFDBBuildChainType() ? 'full_downstream' : buildChainType
+buildChainAdditionalArguments = buildChainProject ? [ "-p ${buildChainProject}" ] : []
 if (isBranchBuildChainType()) {
-    buildChainAdditionalArguments.add("-b=${env.GIT_BRANCH_NAME.trim()}")
-    buildChainAdditionalArguments.add("-g=${env.GIT_AUTHOR.trim()}")
+    buildChainAdditionalArguments.add("-b ${env.GIT_BRANCH_NAME.trim()}")
+    buildChainAdditionalArguments.add("-g ${env.GIT_AUTHOR.trim()}")
 } else {
-    buildChainAdditionalArguments.add("-url=${env.ghprbPullLink}")
+    buildChainAdditionalArguments.add("-u ${env.ghprbPullLink}")
 }
 
 skipTests = params.SKIP_TESTS ?: false
@@ -92,6 +92,8 @@ pipeline {
                     }
                     println "[INFO] build-chain version recovered '${buildChainVersion}'"
                     sh "npm install -g @kie/build-chain-action@${buildChainVersion}${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
+
+                    sh "npm list -g | grep build-chain"
                 }
             }
         }
@@ -183,9 +185,14 @@ pipeline {
             steps {
                 script {
                     def project = (buildChainProject ? util.getProjectGroupName(buildChainProject) : util.getProjectTriggeringJob())[1]
-                    // Project should define a `clone` for the current command so that the pom can be found for sonarcloud analysis
-                    // Else this next step will fail
-                    dir("bc/kiegroup_${project.replaceAll('-', '_')}/${project}") {
+                    
+                    // First guessing whether there is a clone defined into the buildchain config
+                    // If not, fallback to simple folder structure
+                    String projectFolder = "bc/kiegroup_${project}/${project}"
+                    if (!fileExists(projectFolder)) {
+                        projectFolder = "bc/kiegroup_${project}"
+                    }
+                    dir(projectFolder) {
                         maven.runMavenWithSettingsSonar(settingsXmlId, "-e -nsu validate -Psonarcloud-analysis -Denforcer.skip=true ${env.SONARCLOUD_ANALYSIS_MVN_OPTS ?: ''}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
                     }
                 }
@@ -237,11 +244,11 @@ pipeline {
 }
 
 boolean isPRBuildChainType() {
-    return buildChainType == 'pr'
+    return buildChainType == 'cross_pr'
 }
 
 boolean isFDBBuildChainType() {
-    return buildChainType == 'fdb'
+    return buildChainType == 'full_downstream'
 }
 
 boolean isSingleBuildChainType() {
@@ -275,7 +282,7 @@ boolean shouldNotify() {
 }
 
 String getBuildChainCommandline(boolean includeToken=false) {
-    return "build-chain-action ${includeToken ? "-token=${GITHUB_TOKEN} " : ''}-df='https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -folder='bc' build ${buildChainAction} ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout"
+    return "build-chain build ${buildChainAction} ${includeToken ? "--token ${GITHUB_TOKEN} " : ''}-f 'https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -o 'bc' ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout"
 }
 
 String getReproducer() {
