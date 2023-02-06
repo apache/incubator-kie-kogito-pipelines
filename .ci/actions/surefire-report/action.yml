@@ -25,6 +25,7 @@ runs:
       with:
         fail_on_test_failures: true
         fail_if_no_tests: false
+        create_check: false
         skip_publishing: ${{ inputs.skip_publishing }}
         report_paths: ${{ inputs.report_paths }}
         commit: ${{ inputs.commit }}
