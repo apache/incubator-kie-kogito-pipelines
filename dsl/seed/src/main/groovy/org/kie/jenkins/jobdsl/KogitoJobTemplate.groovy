@@ -402,7 +402,7 @@ class KogitoJobTemplate {
                 jobParams.pr.checkout_branch = buildChainCheckoutBranch
                 jobParams.git.author = Utils.getSeedAuthor(script)
                 jobParams.env.put('BUILDCHAIN_PROJECT', "kiegroup/${jobCfg.repository ?: jobParams.git.repository}")
-                jobParams.env.put('BUILDCHAIN_TYPE', 'pr')
+                jobParams.env.put('BUILDCHAIN_TYPE', 'cross_pr')
                 jobParams.env.put('BUILDCHAIN_CONFIG_REPO', Utils.getBuildChainConfigRepo(script) ?: Utils.getSeedRepo(script))
                 jobParams.env.put('BUILDCHAIN_CONFIG_AUTHOR', Utils.getBuildChainConfigAuthor(script) ?: Utils.getSeedAuthor(script))
                 jobParams.env.put('BUILDCHAIN_CONFIG_BRANCH', Utils.getBuildChainConfigBranch(script) ?: buildChainCheckoutBranch)
