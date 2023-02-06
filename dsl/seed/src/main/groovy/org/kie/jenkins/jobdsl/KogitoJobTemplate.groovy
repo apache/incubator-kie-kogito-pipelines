@@ -398,7 +398,7 @@ class KogitoJobTemplate {
             if (useBuildChain) {
                 // Buildchain uses centralized configuration for Jenkinsfile.buildchain to checkout
                 // Overrides configuration already done
-                JobParamsUtils.setupJobParamsBuildChainConfiguration(script, jobParams, jobCfg.repository ?: jobParams.git.repository, 'pr', "(${testTypeId}) - ${jobCfg.id}")
+                JobParamsUtils.setupJobParamsBuildChainConfiguration(script, jobParams, jobCfg.repository ?: jobParams.git.repository, 'cross_pr', "(${testTypeId}) - ${jobCfg.id}")
 
                 // Status messages are sent directly by the pipeline as comments
                 jobParams.pr.putAll([
