@@ -5,15 +5,39 @@ timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: "180"
 jdkTool = env.BUILD_JDK_TOOL?.trim() ?: 'kie-jdk11'
 mavenTool = env.BUILD_MAVEN_TOOL?.trim() ?: 'kie-maven-3.8.1'
 
-prType = env.BUILDCHAIN_PR_TYPE?.trim() ?: 'pr'
-settingsXmlId = isPR() || isFDB() ? 'kogito_pr_settings' : 'kogito_release_settings'
+agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'kie-rhel7 && kie-mem16g'} && !built-in"
+timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: '180'
+jdkTool = env.BUILD_JDK_TOOL
+mavenTool = env.BUILD_MAVEN_TOOL
+
+mavenDeployArtifacts = env.ENABLE_DEPLOY
+mavenDeployRepository = env.MAVEN_DEPLOY_REPOSITORY ?: ''
+mavenDeployRepositoryCredsId = env.MAVEN_DEPLOY_REPOSITORY_CREDS_ID ?: ''
+mavenDeployLocalDir = env.MAVEN_DEPLOY_LOCAL_DIR ?: ''
+
+buildChainType = env.BUILDCHAIN_TYPE?.trim() ?: 'cross_pr'
+buildChainProject = env.BUILDCHAIN_PROJECT?.trim()
+defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kogito_pr_settings' : 'kogito_release_settings'
+settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
 
 disableSonarCloudAnalysis = env.DISABLE_SONARCLOUD ? env.DISABLE_SONARCLOUD.toBoolean() : false
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
 lts = env.LTS ? env.LTS.toBoolean() : false
 
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
-buildChainAdditionalArguments = env.BUILDCHAIN_PROJECT ? "-sp=${env.BUILDCHAIN_PROJECT.trim()}" : ''
+buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:kiegroup}'
+buildChainConfigDefinitionFilePath = env.BUILDCHAIN_CONFIG_FILE_PATH ?: '.ci/pull-request-config.yaml'
+buildChainAction = isFDBBuildChainType() ? 'full_downstream' : buildChainType
+buildChainAdditionalArguments = buildChainProject ? [ "-p ${buildChainProject}" ] : []
+if (isBranchBuildChainType()) {
+    buildChainAdditionalArguments.add("-b ${env.GIT_BRANCH_NAME.trim()}")
+    buildChainAdditionalArguments.add("-g ${env.GIT_AUTHOR.trim()}")
+} else {
+    buildChainAdditionalArguments.add("-u ${env.ghprbPullLink}")
+}
+
+skipTests = params.SKIP_TESTS ?: false
+skipIntegrationTests = params.SKIP_INTEGRATION_TESTS ?: false
 
 notificationJobName = env.NOTIFICATION_JOB_NAME ?: 'PR'
 
@@ -58,7 +82,30 @@ pipeline {
                         error(errorMessage)
                     }
                     println "[INFO] build-chain version recovered '${buildChainVersion}'"
-                    sh "npm install -g @kie/build-chain-action@${buildChainVersion} -registry=${NPM_REGISTRY_URL}"
+                    sh "npm install -g @kie/build-chain-action@${buildChainVersion}${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
+
+                    sh "npm list -g | grep build-chain"
+                }
+            }
+        }
+        stage('Build quarkus') {
+            when {
+                expression { quarkusBranch }
+            }
+            steps {
+                script {
+                    dir('quarkus') {
+                        deleteDir()
+                        checkout(githubscm.resolveRepository('quarkus', 'quarkusio', quarkusBranch, false))
+
+                        new MavenCommand(this, ['-fae', '-ntp'])
+                            .withSettingsXmlId(settingsXmlId)
+                            .withProperty('quickly')
+                            .run('clean install')
+
+                        // Setup the quarkus version for the build-chain config
+                        env.QUARKUS_VERSION = '999-SNAPSHOT'
+                    }
                 }
             }
         }
@@ -100,15 +147,16 @@ pipeline {
             }
             steps {
                 script {
-                    if (isSonarCloudAnalysis()) {
-                        def project = (env.BUILDCHAIN_PROJECT ? util.getProjectGroupName(env.BUILDCHAIN_PROJECT) : util.getProjectTriggeringJob())[1]
-                        // Project should define a `clone` for the current command so that the pom can be found for sonarcloud analysis
-                        // Else this next step will fail
-                        dir("bc/kiegroup_${project.replaceAll('-', '_')}/${project}") {
-                            maven.runMavenWithSettingsSonar(settingsXmlId, "-e -nsu validate -Psonarcloud-analysis -Denforcer.skip=true ${env.SONARCLOUD_ANALYSIS_MVN_OPTS ?: ''}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
-                        }
-                    } else {
-                        println '[INFO] No sonar analysis execution.'
+                    def project = (buildChainProject ? util.getProjectGroupName(buildChainProject) : util.getProjectTriggeringJob())[1]
+                    
+                    // First guessing whether there is a clone defined into the buildchain config
+                    // If not, fallback to simple folder structure
+                    String projectFolder = "bc/kiegroup_${project}/${project}"
+                    if (!fileExists(projectFolder)) {
+                        projectFolder = "bc/kiegroup_${project}"
+                    }
+                    dir(projectFolder) {
+                        maven.runMavenWithSettingsSonar(settingsXmlId, "-e -nsu validate -Psonarcloud-analysis -Denforcer.skip=true ${env.SONARCLOUD_ANALYSIS_MVN_OPTS ?: ''}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
                     }
                 }
             }
@@ -138,12 +186,12 @@ pipeline {
     }
 }
 
-boolean isPR() {
-    return prType == 'pr'
+boolean isPRBuildChainType() {
+    return buildChainType == 'cross_pr'
 }
 
-boolean isFDB() {
-    return prType == 'fdb'
+boolean isFDBBuildChainType() {
+    return buildChainType == 'full_downstream'
 }
 
 boolean isSingle() {
@@ -165,4 +213,40 @@ boolean isSonarCloudAnalysis() {
         return !downstreamBuild
     }
     return false
+}
+
+String getBuildMavenOptsCurrent() {
+    List opts_current = []
+    isSonarCloudAnalysis() ? opts_current.add('-Prun-code-coverage') : null
+    skipTests ? opts_current.add('-DskipTests') : null
+    skipIntegrationTests ? opts_current.add('-DskipITs') : null
+    return opts_current.join(' ')
+}
+
+boolean shouldNotify() {
+    return env.ENABLE_NOTIFICATION
+}
+
+String getBuildChainCommandline(boolean includeToken=false) {
+    return "build-chain build ${buildChainAction} ${includeToken ? "--token ${GITHUB_TOKEN} " : ''}-f 'https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -o 'bc' ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout"
+}
+
+String getReproducer() {
+    return """
+```spoiler Reproducer
+${BUILD_MVN_OPTS_CURRENT ? "export BUILD_MVN_OPTS_CURRENT=${BUILD_MVN_OPTS_CURRENT}" : '\n'}
+${getBuildChainCommandline()}
+
+NOTE: To install the build-chain tool, please refer to https://github.com/kiegroup/github-action-build-chain#local-execution
+```
+"""
+}
+
+String getRepoNameCamelCase(String repo) {
+    List words = repo.split('-') as List
+    return words.collect { it.isEmpty() ? it : it.substring(0, 1).toUpperCase() + it.substring(1).toLowerCase() }.join(' ')
+}
+
+String getMavenDeployLocalDir() {
+    return mavenDeployLocalDir ?: "${WORKSPACE}/maven_deploy_dir"
 }
