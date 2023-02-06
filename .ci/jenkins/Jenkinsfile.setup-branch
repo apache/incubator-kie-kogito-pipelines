@@ -226,6 +226,10 @@ boolean isJobSucceeded(String jobKey) {
     return getJob(jobKey)?.result == 'SUCCESS'
 }
 
+boolean isJobUnstable(String jobKey) {
+    return getJob(jobKey)?.result == 'UNSTABLE'
+}
+
 void addFailedStage(String jobKey = '') {
     FAILED_STAGES.put("${STAGE_NAME}", jobKey)
 }
