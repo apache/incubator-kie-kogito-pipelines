@@ -15,6 +15,7 @@ environments:
     ids:
     - native
     - prod
+    enabled: false
   quarkus-main:
     enabled: false
     env_vars:
@@ -34,6 +35,7 @@ environments:
     - quarkus
     - lts
     - prod
+    enabled: false
   mandrel-lts:
     env_vars:
       NATIVE: true
@@ -46,6 +48,7 @@ environments:
     - native
     - prod
     - lts
+    enabled: false
   kogito-bdd:
     auto_generation: false
     ids:
@@ -59,21 +62,27 @@ environments:
     auto_generation: false
     ids:
     - ecosystem
-productized_branch: true
+productized_branch: false
 disable:
   triggers: false
 repositories:
 - name: kogito-pipelines
+  branch: 1.34.x
+  is_branch_config_repo: true
 - name: kogito-runtimes
+  branch: 1.34.x
 - name: kogito-apps
+  branch: 1.34.x
 - name: kogito-examples
+  branch: 1.34.x
 - name: kogito-images
+  branch: 1.34.x
 - name: kogito-operator
+  branch: 1.34.x
 - name: kogito-serverless-operator
-- name: kie-tools
+  branch: 1.34.x
 - name: kogito-docs
-- name: kie-docs
-  branch: main-kogito
+  branch: 1.34.x
 git:
   author:
     name: kiegroup
