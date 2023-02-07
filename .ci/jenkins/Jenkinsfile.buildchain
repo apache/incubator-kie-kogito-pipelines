@@ -113,7 +113,9 @@ pipeline {
                             .run('clean install')
 
                         // Setup the quarkus version for the build-chain config
-                        env.QUARKUS_VERSION = '999-SNAPSHOT'
+                        if (!env.QUARKUS_VERSION) {
+                            env.QUARKUS_VERSION = '999-SNAPSHOT'
+                        }
                     }
                 }
             }
