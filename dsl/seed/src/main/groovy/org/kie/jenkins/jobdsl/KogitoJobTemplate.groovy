@@ -397,6 +397,11 @@ class KogitoJobTemplate {
                 // Overrides configuration already done
                 JobParamsUtils.setupJobParamsBuildChainConfiguration(script, jobParams, jobCfg.repository ?: jobParams.git.repository, 'cross_pr', "(${testTypeId}) - ${jobCfg.id}")
 
+                // Should target the GIT_BRANCH, if not defined
+                if (!jobParams.pr.run_only_for_branches) {
+                    jobParams.pr.run_only_for_branches = [ Utils.getGitBranch(script) ]
+                }
+
                 // Status messages are sent directly by the pipeline as comments
                 jobParams.pr.putAll([
                     disable_status_message_error: true,
