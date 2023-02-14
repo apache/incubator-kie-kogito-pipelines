@@ -180,7 +180,7 @@ class KogitoJobUtils {
 
         // Generate environments one
         environments.each { envName ->
-            Closure envJobsRepoConfigGetter = EnvUtils.isEnvironmentPullRequestDefaultCheck(script) ? jobsRepoConfigGetter : getOptionalJobsRepoConfigClosure(jobsRepoConfigGetter)
+            Closure envJobsRepoConfigGetter = EnvUtils.isEnvironmentPullRequestDefaultCheck(script, envName) ? jobsRepoConfigGetter : getOptionalJobsRepoConfigClosure(jobsRepoConfigGetter)
             allJobs.addAll(KogitoJobTemplate.createPerRepoPRJobs(script, envName, envJobsRepoConfigGetter, defaultParamsGetter))
         }
 
