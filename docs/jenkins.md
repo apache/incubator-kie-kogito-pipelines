@@ -135,6 +135,7 @@ environments:
   <envName>:
     enabled: # true if not specified
     auto_generation: # if the environment should be auto generated for PR and Nightly jobs. true if not specified.
+    pull_request_default_check: # if the environment PR check should be launched by default. false if not specified.
     env_vars:
       envKey: envValue
       ...
