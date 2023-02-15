@@ -53,7 +53,7 @@ pipeline {
     }
     environment {
         FIREFOX_FOLDER = '/opt/tools/firefox-60esr'
-        MAVEN_OPTS = '-Xms1024m -Xmx6g'
+        MAVEN_OPTS = '-Xms1024m -Xmx12g'
     }
     stages {
         stage('Initialize') {
@@ -65,6 +65,10 @@ pipeline {
                     if (mavenDeployArtifacts) {
                         assert mavenDeployRepository : 'Please provide the maven deploy repository'
                         assert mavenDeployRepositoryCredsId : 'Please provide the maven deploy repository credentials'
+                    }
+
+                    if (env.GIT_BRANCH_NAME) {
+                        currentBuild.displayName = env.GIT_BRANCH_NAME
                     }
                 }
             }
