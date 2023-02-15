@@ -145,7 +145,6 @@ class KogitoJobUtils {
             GIT_AUTHOR: Utils.getGitAuthor(script),
             GIT_AUTHOR_CREDENTIALS_ID: Utils.getGitAuthorCredsId(script),
 
-            QUARKUS_PLATFORM_BRANCH: Utils.getGitQuarkusBranch(script),
             QUARKUS_PLATFORM_AUTHOR_NAME: Utils.getGitQuarkusAuthor(script),
             QUARKUS_PLATFORM_AUTHOR_CREDENTIALS_ID: Utils.getGitQuarkusAuthorCredsId(script),
             PROJECT_NAME: project,
@@ -161,6 +160,8 @@ class KogitoJobUtils {
                 stringParam('PR_BRANCH', '', '(Optional) Which PR branch name to use ? If none given, a name will be generated automatically.')
 
                 choiceParam('COMMAND', ['stage', 'finalize'], 'Choose if you want to use staged artifacts or released artifacts.')
+
+                stringParam('QUARKUS_PLATFORM_BRANCH', Utils.getGitQuarkusBranch(script), 'Which branch to target on Quarkus platform ?')
             }
         }
         return job
