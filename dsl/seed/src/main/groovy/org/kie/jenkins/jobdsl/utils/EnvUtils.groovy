@@ -21,6 +21,12 @@ class EnvUtils {
         return value != '' ? value.toBoolean() : true
     }
 
+    static boolean isEnvironmentPullRequestDefaultCheck(def script, String envName) {
+        def value = getEnvironmentValue(script, envName, 'PULL_REQUEST_DEFAULT_CHECK')
+        PrintUtils.debug(script, "isEnvironmentPullRequestDefaultCheck ${envName} => ${value != '' ? value.toBoolean() : true}")
+        return value != '' ? value.toBoolean() : false
+    }
+
     static boolean isEnvironmentDefined(def script, String envName) {
         if (!envName) {
             return true

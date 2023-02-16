@@ -181,7 +181,8 @@ class KogitoJobUtils {
 
         // Generate environments one
         environments.each { envName ->
-            allJobs.addAll(KogitoJobTemplate.createPerRepoPRJobs(script, envName, getOptionalJobsRepoConfigClosure(jobsRepoConfigGetter), defaultParamsGetter))
+            Closure envJobsRepoConfigGetter = EnvUtils.isEnvironmentPullRequestDefaultCheck(script, envName) ? jobsRepoConfigGetter : getOptionalJobsRepoConfigClosure(jobsRepoConfigGetter)
+            allJobs.addAll(KogitoJobTemplate.createPerRepoPRJobs(script, envName, envJobsRepoConfigGetter, defaultParamsGetter))
         }
 
         return allJobs
@@ -243,7 +244,7 @@ class KogitoJobUtils {
         def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${repository}.integration", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Integration with Quarkus for ${repository} using the build-chain", defaultJobParamsGetter)
         jobParams.triggers = [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
         if (!envName) {
-            throw new RuntimeException("Please provide a non-empty environment to generate an integration branch job...")
+            throw new RuntimeException('Please provide a non-empty environment to generate an integration branch job...')
         }
         jobParams.env.putAll([
             INTEGRATION_BRANCH_CURRENT: "${Utils.getGenerationBranch(script)}-integration-${envName}",
