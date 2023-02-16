@@ -181,7 +181,10 @@ class KogitoJobUtils {
 
         // Generate environments one
         environments.each { envName ->
-            Closure envJobsRepoConfigGetter = EnvUtils.isEnvironmentPullRequestDefaultCheck(script, envName) ? jobsRepoConfigGetter : getOptionalJobsRepoConfigClosure(jobsRepoConfigGetter)
+            Closure envJobsRepoConfigGetter = getSonarCloudDisabledJobsRepoConfigClosure(jobsRepoConfigGetter)
+            if (!EnvUtils.isEnvironmentPullRequestDefaultCheck(script, envName)) {
+                envJobsRepoConfigGetter = getOptionalJobsRepoConfigClosure(envJobsRepoConfigGetter)
+            }
             allJobs.addAll(KogitoJobTemplate.createPerRepoPRJobs(script, envName, envJobsRepoConfigGetter, defaultParamsGetter))
         }
 
@@ -292,6 +295,14 @@ class KogitoJobUtils {
         return { jobFolder ->
             Map jobsRepoConfig = jobsRepoConfigGetter(jobFolder)
             jobsRepoConfig.optional = true
+            return jobsRepoConfig
+        }
+    }
+
+    // Add disable sonarcloud information to per repo config
+    private static Closure getSonarCloudDisabledJobsRepoConfigClosure(Closure jobsRepoConfigGetter) {
+        return { jobFolder ->
+            Map jobsRepoConfig = jobsRepoConfigGetter(jobFolder)
             jobsRepoConfig.jobs.each { job ->
                 job.env = job.env ?: [:]
                 job.env.DISABLE_SONARCLOUD = true
