@@ -198,7 +198,10 @@ boolean getOrCreateGitBranch(String branch, String credentialsId) {
     String branchRemoteResult = sh(script: "git ls-remote origin ${branch} | wc -l", returnStdout: true).trim()
     if (Integer.parseInt(branchRemoteResult) > 0) {
         echo "Branch ${branch} already exist ... will not create it. Checking out !"
-        sh "git checkout origin/${branch} -b ${branch}"
+        sh """
+            git checkout origin/${branch} -b ${branch}
+            git merge origin/${getBuildBranch()}
+        """
         return false
     } else {
         echo "Branch ${branch} does not exist ... gonna create it"
