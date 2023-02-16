@@ -200,7 +200,7 @@ boolean getOrCreateGitBranch(String branch, String credentialsId) {
         echo "Branch ${branch} already exist ... will not create it. Checking out !"
         sh """
             git checkout origin/${branch} -b ${branch}
-            git merge ${getBuildBranch()}
+            git merge origin/${getBuildBranch()}
         """
         return false
     } else {
