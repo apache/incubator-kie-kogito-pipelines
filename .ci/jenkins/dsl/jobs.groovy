@@ -25,9 +25,11 @@ if (Utils.isMainBranch(this)) {
 
 // Setup branch branch
 createSetupBranchJob()
+setupQuarkusPlatformJob(JobType.SETUP_BRANCH)
 
 // Nightly
 setupNightlyJob()
+setupQuarkusPlatformJob(JobType.NIGHTLY)
 
 // Release
 setupReleaseArtifactsJob()
@@ -149,6 +151,18 @@ void setupNightlyJob() {
     }
 }
 
+void setupQuarkusPlatformJob(JobType jobType) {
+    def jobParams = JobParamsUtils.getBasicJobParams(this, 'quarkus-platform.deploy', jobType, "${JENKINSFILE_PATH}/Jenkinsfile.nightly.quarkus-platform", 'Kogito Quarkus platform job')
+    JobParamsUtils.setupJobParamsDefaultMavenConfiguration(this, jobParams)
+    jobParams.env.putAll([
+        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+
+        GIT_BRANCH_NAME: "${GIT_BRANCH}",
+        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
+    ])
+    KogitoJobTemplate.createPipelineJob(this, jobParams)
+}
+
 void setupReleaseArtifactsJob() {
     def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-release', JobType.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release.artifacts", 'Kogito Artifacts Release')
     jobParams.env.putAll([
@@ -220,3 +234,4 @@ void setupBuildOperatorNode() {
     def jobParams = JobParamsUtils.getBasicJobParams(this, 'build-operator-node', JobType.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.build-operator-node")
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
+

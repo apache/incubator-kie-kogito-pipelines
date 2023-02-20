@@ -67,9 +67,7 @@ pipeline {
                         assert mavenDeployRepositoryCredsId : 'Please provide the maven deploy repository credentials'
                     }
 
-                    if (env.GIT_BRANCH_NAME) {
-                        currentBuild.displayName = env.GIT_BRANCH_NAME
-                    }
+                    currentBuild.displayName = params.DISPLAY_NAME ?: env.GIT_BRANCH_NAME ?: currentBuild.displayName
                 }
             }
         }
