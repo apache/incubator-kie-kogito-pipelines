@@ -14,7 +14,6 @@ setupUpdateJenkinsDependenciesJob()
 setupCreateIssueToolsJob()
 setupCleanOldNamespacesToolsJob()
 setupCleanOldNightlyImagesToolsJob()
-setupToggleTriggersJob()
 KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'kogito')
 KogitoJobUtils.createMainQuarkusUpdateToolsJob(this,
         [ 'kogito-runtimes', 'kogito-examples', 'kogito-images', 'kogito-docs' ],
@@ -220,19 +219,4 @@ void setupReleaseCloudJob() {
 void setupBuildOperatorNode() {
     def jobParams = JobParamsUtils.getBasicJobParams(this, 'build-operator-node', JobType.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.build-operator-node")
     KogitoJobTemplate.createPipelineJob(this, jobParams)
-}
-
-void setupToggleTriggersJob() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, 'toggle-triggers', JobType.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.toggle-triggers", "Toggle DSL triggers")
-    jobParams.env.putAll([
-        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
-        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
-        GIT_AUTHOR_CREDENTIALS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
-        BUILD_BRANCH_NAME: "${GIT_BRANCH}",
-    ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
-        parameters {
-            booleanParam('DISABLE_TRIGGERS', false, 'If selected the triggers will be disabled.')
-        }
-    }
 }
