@@ -144,7 +144,7 @@ pipelineJob("${GENERATION_BRANCH}/tools/toggle-dsl-triggers") {
                     }
                 }
             }
-            scriptPath(".ci/jenkins/Jenkinsfile.tools.toggle-triggers")
+            scriptPath("dsl/seed/jenkinsfiles/Jenkinsfile.tools.toggle-triggers")
         }
     }
 

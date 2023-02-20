@@ -13,11 +13,6 @@ pipeline {
         timeout(time: 60, unit: 'MINUTES')
     }
 
-    tools {
-        maven "${BUILD_MAVEN_TOOL}"
-        jdk "${BUILD_JDK_TOOL}"
-    }
-
     environment {
         // Static env is defined into .jenkins/dsl/jobs.groovy file
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
@@ -35,7 +30,7 @@ pipeline {
                 script {
                     sh 'printenv'
                     dir("${getSeedConfigRepository()}") {
-                        checkoutRepo(getSeedConfigRepository(), getSeedAuthor(), getSeedConfigBranch(), getSeedConfigAuthorCredsId())
+                        checkoutRepo(getSeedConfigRepository(), getSeedConfigAuthor(), getSeedConfigBranch(), getSeedConfigAuthorCredsId())
                     }
                 }
             }
