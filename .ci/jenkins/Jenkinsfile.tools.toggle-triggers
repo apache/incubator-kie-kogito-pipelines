@@ -79,6 +79,11 @@ pipeline {
                 }
             }
         }
+    }
+    post {
+        always {
+            cleanWs()
+        }
         unsuccessful {
             sendErrorNotification()
         }
