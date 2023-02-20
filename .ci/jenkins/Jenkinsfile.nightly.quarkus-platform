@@ -102,10 +102,11 @@ pipeline {
                 script {
                     dir('quarkus-platform') {
                         String settingsFile = '.github/mvn-settings.xml'
-                        
+
                         // Sync Platform boms
                         new MavenCommand(this, ['-fae', '-ntp'])
                             .withSettingsXmlFile(settingsFile)
+                            .skipTests()
                             .withProperty('sync')
                             .run('')
 
@@ -122,22 +123,7 @@ pipeline {
             }
         }
 
-        stage('Test quarkus-platform') {
-            when {
-                expression { !skipTests() }
-            }
-            steps {
-                script {
-                    dir('quarkus-platform') {
-                        new MavenCommand(this, ['-fae', '-ntp'])
-                            .withSettingsXmlFile(settingsFile)
-                            .run('verify')
-
-                        // Could also do native
-                    }
-                }
-            }
-        }
+        // Tests of platform should be done in a separate job
     }
     post {
         always {
@@ -171,8 +157,4 @@ void sendNotification(String body) {
 
 void sendErrorNotification() {
     sendNotification("Job #${BUILD_NUMBER} was: **${currentBuild.currentResult}**\nPlease look here: ${BUILD_URL}")
-}
-
-boolean skipTests() {
-    return params.SKIP_TESTS
 }

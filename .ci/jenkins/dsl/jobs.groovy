@@ -151,7 +151,7 @@ void setupNightlyJob() {
 }
 
 void setupNightlyQuarkusPlatformJob() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, 'quarkus-platform', JobType.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly.quarkus-platform", 'Kogito Quarkus platform job')
+    def jobParams = JobParamsUtils.getBasicJobParams(this, 'quarkus-platform.deploy', JobType.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly.quarkus-platform", 'Kogito Quarkus platform job')
     JobParamsUtils.setupJobParamsDefaultMavenConfiguration(this, jobParams)
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
@@ -159,11 +159,7 @@ void setupNightlyQuarkusPlatformJob() {
         GIT_BRANCH_NAME: "${GIT_BRANCH}",
         GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
     ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
-        parameters {
-            booleanParam('SKIP_TESTS', false, 'Skip all tests')
-        }
-    }
+    KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
 void setupReleaseArtifactsJob() {

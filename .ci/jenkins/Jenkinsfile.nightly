@@ -69,20 +69,38 @@ pipeline {
                 expression { return isArtifactsDeploy() }
             }
             parallel {
-                stage('Build & Deploy Kogito Runtimes') {
-                    steps {
-                        script {
-                            def buildParams = getDefaultBuildParams()
-                            addSkipTestsParam(buildParams)
-                            addSkipIntegrationTestsParam(buildParams)
+                stage('Build & Deploy Kogito Runtimes & Quarkus platform') {
+                    stages {
+                        stage('Build & Deploy Kogito Runtimes') {
+                            steps {
+                                script {
+                                    def buildParams = getDefaultBuildParams()
+                                    addSkipTestsParam(buildParams)
+                                    addSkipIntegrationTestsParam(buildParams)
 
-                            // images and operator deploy testing will use older working artifacts if that one fails
-                            buildJob(RUNTIMES_DEPLOY, buildParams)
+                                    // images and operator deploy testing will use older working artifacts if that one fails
+                                    buildJob(RUNTIMES_DEPLOY, buildParams)
+                                }
+                            }
+                            post {
+                                failure {
+                                    addFailedStage(RUNTIMES_DEPLOY)
+                                }
+                            }
                         }
-                    }
-                    post {
-                        failure {
-                            addFailedStage(RUNTIMES_DEPLOY)
+
+                        stage('Deploy Quarkus platform') {
+                            steps {
+                                script {
+                                    def buildParams = getDefaultBuildParams()
+                                    buildJob('quarkus-platform.deploy', buildParams)
+                                }
+                            }
+                            post {
+                                failure {
+                                    addFailedStage(RUNTIMES_DEPLOY)
+                                }
+                            }
                         }
                     }
                 }
@@ -402,8 +420,8 @@ List getDefaultBuildParams(String buildBranchName = '', String key = '') {
     return params
 }
 
-void addSkipTestsParam(buildParams) {
-    addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
+void addSkipTestsParam(buildParams, boolean value = params.SKIP_TESTS) {
+    addBooleanParam(buildParams, 'SKIP_TESTS', value)
 }
 
 void addSkipIntegrationTestsParam(buildParams) {
