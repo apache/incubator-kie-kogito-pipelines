@@ -4,9 +4,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 import org.kie.jenkins.MavenCommand
 import org.kie.jenkins.MavenSettingsUtils
 
-AGENT_LABEL =
-kogitoPipelinesRepo = 'kogito-pipelines'
-
 pipeline {
     agent {
         label 'kie-rhel8 && !built-in'
@@ -68,7 +65,7 @@ pipeline {
                     dir('quarkus-platform') {
                         deleteDir()
 
-                        String quarkusBranch = env.QUARKUS_VERSION.split("\\.")[0] + "." + quarkusVersion.split("\\.")[1]
+                        String quarkusBranch = env.QUARKUS_VERSION.split("\\.")[0] + "." + env.QUARKUS_VERSION.split("\\.")[1]
                         echo "Use quarkus branch ${quarkusBranch}"
                         checkout(githubscm.resolveRepository('quarkus-platform', 'quarkusio', quarkusBranch, false))
 
@@ -83,8 +80,8 @@ pipeline {
                         MavenSettingsUtils.setRepositoryInSettings(this, settingsFile, 'kogito-staging', 'https://repository.jboss.org/nexus/content/groups/kogito-public/')
                         MavenSettingsUtils.setRepositoryInSettings(this, settingsFile, 'kogito-public', 'https://repository.jboss.org/nexus/content/groups/public/')
 
-                        String localQuarkusVersion = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout", returnStdout: true).trim()
-                        echo "Platform Quarkus version ${localQuarkusVersion}"
+                        String localQuarkusPlatformVersion = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout", returnStdout: true).trim()
+                        echo "Platform Quarkus version ${localQuarkusPlatformVersion}"
 
                         // Set Drools/OP & Kogito versions
                         maven.mvnSetVersionProperty('kogito-quarkus.version', env.KOGITO_VERSION)
@@ -93,19 +90,25 @@ pipeline {
 
                         // TODO we should change the Quarkus Platform version
                         // Something like snapshot-kogito-${kogitoVersion}
+                        localQuarkusPlatformVersion = "kogito-${env.KOGITO_VERSION}"
+                        echo "Set quarkus platform version ${localQuarkusPlatformVersion}"
+                        maven.mvnVersionsSet(localQuarkusPlatformVersion, true)
                     }
                 }
             }
         }
-        stage('Build quarkus-platform') {
+        stage('Deploy quarkus-platform') {
             steps {
                 script {
                     dir('quarkus-platform') {
+                        String settingsFile = '.github/mvn-settings.xml'
+                        
                         // Sync Platform boms
                         new MavenCommand(this, ['-fae', '-ntp'])
                             .withSettingsXmlFile(settingsFile)
-                            .withProperty('sync')getBuildBranch
+                            .withProperty('sync')
                             .run('')
+
 
                         // Deploy all
                         new MavenCommand(this, ['-fae', '-ntp'])
@@ -118,9 +121,26 @@ pipeline {
                 }
             }
         }
+
+        stage('Test quarkus-platform') {
+            when {
+                expression { !skipTests() }
+            }
+            steps {
+                script {
+                    dir('quarkus-platform') {
+                        new MavenCommand(this, ['-fae', '-ntp'])
+                            .withSettingsXmlFile(settingsFile)
+                            .run('verify')
+
+                        // Could also do native
+                    }
+                }
+            }
+        }
     }
     post {
-        always {getBuildBranch
+        always {
             cleanWs()
         }
         unsuccessful {
@@ -151,4 +171,8 @@ void sendNotification(String body) {
 
 void sendErrorNotification() {
     sendNotification("Job #${BUILD_NUMBER} was: **${currentBuild.currentResult}**\nPlease look here: ${BUILD_URL}")
+}
+
+boolean skipTests() {
+    return params.SKIP_TESTS
 }
