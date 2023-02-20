@@ -90,6 +90,7 @@ pipeline {
                         maven.mvnSetVersionProperty('kogito-quarkus.version', env.KOGITO_VERSION)
                         maven.mvnSetVersionProperty('drools-quarkus.version', env.KIE_VERSION)
                         maven.mvnSetVersionProperty('optaplanner-quarkus.version', env.KIE_VERSION)
+                        maven.mvnSetVersionProperty('quarkus.version', env.QUARKUS_VERSION)
 
                         // Update platform version
                         localQuarkusPlatformVersion = "kogito-${env.KOGITO_VERSION}"
