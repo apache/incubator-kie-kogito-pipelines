@@ -23,8 +23,7 @@ pipeline {
         // Static env is defined into .jenkins/dsl/jobs.groovy file
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
 
-        QUARKUS_PLATFORM_NEXUS_URL = credentials('kogito-internal-testing-nexus-url')
-        QUARKUS_PLATFORM_NEXUS_CREDS = credentials('kogito-internal-testing-nexus-user')
+        QUARKUS_PLATFORM_NEXUS = credentials("${QUARKUS_PLATFORM_NEXUS_CREDS}")
     }
 
     stages {
@@ -79,7 +78,7 @@ pipeline {
                         // Add Deploy nexus information to settings file
                         sh """
                             set +x
-                            sed -i 's|<settings>|<settings><servers><server><id>quarkus-platform</id><username>${QUARKUS_PLATFORM_NEXUS_CREDS_USR}</username><password>${QUARKUS_PLATFORM_NEXUS_CREDS_PSW}</password></server></servers>|g' ${settingsFile}
+                            sed -i 's|<settings>|<settings><servers><server><id>quarkus-platform</id><username>${QUARKUS_PLATFORM_NEXUS_USR}</username><password>${QUARKUS_PLATFORM_NEXUS_PSW}</password></server></servers>|g' ${settingsFile}
                         """
                         MavenSettingsUtils.setRepositoryInSettings(this, settingsFile, 'kogito-staging', 'https://repository.jboss.org/nexus/content/groups/kogito-public/')
                         MavenSettingsUtils.setRepositoryInSettings(this, settingsFile, 'kogito-public', 'https://repository.jboss.org/nexus/content/groups/public/')

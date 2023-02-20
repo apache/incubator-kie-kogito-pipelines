@@ -202,6 +202,14 @@ class Utils {
         return getBindingValue(script, 'MAVEN_ARTIFACTS_UPLOAD_REPOSITORY_CREDS_ID')
     }
 
+    static String getMavenQuarkusPlatformRepositoryUrl(def script) {
+        return getBindingValue(script, 'MAVEN_QUARKUS_PLATFORM_REPOSITORY_URL')
+    }
+
+    static String getMavenQuarkusPlatformRepositoryCredentialsId(def script) {
+        return getBindingValue(script, 'MAVEN_QUARKUS_PLATFORM_REPOSITORY_CREDS_ID')
+    }
+
     static String getSeedJenkinsfilePath(def script, String jenkinsfileName) {
         return "${KogitoConstants.SEED_JENKINSFILES_PATH}/${jenkinsfileName}"
     }
