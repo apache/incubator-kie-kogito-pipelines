@@ -25,7 +25,6 @@ environments:
   quarkus-branch:
     env_vars:
       QUARKUS_BRANCH: '2.16'
-      # Due to https://github.com/quarkusio/quarkus/pull/30860
       QUARKUS_VERSION: 2.16.999-SNAPSHOT
     ids:
     - quarkus
@@ -64,7 +63,7 @@ environments:
     - ecosystem
 productized_branch: false
 disable:
-  triggers: false
+  triggers: true
 repositories:
 - name: kogito-pipelines
   branch: 1.34.x
