@@ -159,6 +159,9 @@ void setupQuarkusPlatformJob(JobType jobType) {
 
         GIT_BRANCH_NAME: "${GIT_BRANCH}",
         GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
+
+        QUARKUS_PLATFORM_NEXUS_URL: Utils.getMavenQuarkusPlatformRepositoryUrl(this),
+        QUARKUS_PLATFORM_NEXUS_CREDS: Utils.getMavenQuarkusPlatformRepositoryCredentialsId(this),
     ])
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
