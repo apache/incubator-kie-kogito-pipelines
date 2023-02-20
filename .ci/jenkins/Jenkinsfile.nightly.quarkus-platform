@@ -4,6 +4,8 @@ import org.jenkinsci.plugins.workflow.libs.Library
 import org.kie.jenkins.MavenCommand
 import org.kie.jenkins.MavenSettingsUtils
 
+settingsFile = '.github/mvn-settings.xml'
+
 pipeline {
     agent {
         label 'kie-rhel8 && !built-in'
@@ -22,8 +24,6 @@ pipeline {
     environment {
         // Static env is defined into .jenkins/dsl/jobs.groovy file
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
-
-        QUARKUS_PLATFORM_NEXUS = credentials("${QUARKUS_PLATFORM_NEXUS_CREDS}")
     }
 
     stages {
@@ -74,12 +74,6 @@ pipeline {
 
                         // Update platform mvn settings file
                         // We use platform settings file to be sure to get all needed artifacts
-                        String settingsFile = '.github/mvn-settings.xml'
-                        // Add Deploy nexus information to settings file
-                        sh """
-                            set +x
-                            sed -i 's|<settings>|<settings><servers><server><id>quarkus-platform</id><username>${QUARKUS_PLATFORM_NEXUS_USR}</username><password>${QUARKUS_PLATFORM_NEXUS_PSW}</password></server></servers>|g' ${settingsFile}
-                        """
                         MavenSettingsUtils.setRepositoryInSettings(this, settingsFile, 'kogito-staging', 'https://repository.jboss.org/nexus/content/groups/kogito-public/')
                         MavenSettingsUtils.setRepositoryInSettings(this, settingsFile, 'kogito-public', 'https://repository.jboss.org/nexus/content/groups/public/')
 
@@ -100,27 +94,33 @@ pipeline {
                 }
             }
         }
-        stage('Deploy quarkus-platform') {
+        stage('Regenerate platform boms') {
             steps {
                 script {
                     dir('quarkus-platform') {
-                        String settingsFile = '.github/mvn-settings.xml'
-
-                        // Sync Platform boms
                         new MavenCommand(this, ['-fae', '-ntp'])
                             .withSettingsXmlFile(settingsFile)
                             .skipTests()
                             .withProperty('sync')
                             .run('')
-
-
-                        // Deploy all
+                    }
+                }
+            }
+        }
+        stage('Deploy quarkus-platform') {
+            steps {
+                script {
+                    dir('quarkus-platform') {
                         new MavenCommand(this, ['-fae', '-ntp'])
                             .withSettingsXmlFile(settingsFile)
                             .skipTests()
-                            .withProperty('altDeploymentRepository', "quarkus-platform::default::${QUARKUS_PLATFORM_NEXUS_URL}")
+                            .withProperty('altDeploymentRepository', "local::default::file://${getMavenDeployLocalDir()}")
                             .withProperty('enforcer.skip', true)
                             .run('deploy')
+
+                        // Upload to specific repository with credentials
+                        String mavenDeployRepositoryZipUrl = "${QUARKUS_PLATFORM_NEXUS_URL.replaceAll('/content/', '/service/local/').replaceFirst('/*$', '')}/content-compressed"
+                        maven.uploadLocalArtifacts("${QUARKUS_PLATFORM_NEXUS_CREDS}", getMavenDeployLocalDir(), mavenDeployRepositoryZipUrl)
                     }
                 }
             }
@@ -160,4 +160,8 @@ void sendNotification(String body) {
 
 void sendErrorNotification() {
     sendNotification("Job #${BUILD_NUMBER} was: **${currentBuild.currentResult}**\nPlease look here: ${BUILD_URL}")
+}
+
+String getMavenDeployLocalDir() {
+    return "${WORKSPACE}/maven_deploy_dir"
 }
