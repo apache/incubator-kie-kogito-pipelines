@@ -102,3 +102,53 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
         githubProjectUrl("https://github.com/${Utils.getSeedAuthor(this)}/${Utils.getSeedRepo(this)}/")
     }
 }
+
+// Toggle triggers job
+folder("${GENERATION_BRANCH}/tools")
+pipelineJob("${GENERATION_BRANCH}/tools/toggle-dsl-triggers") {
+    description('Toggle DSL triggers')
+
+    logRotator {
+        numToKeep(5)
+    }
+
+    throttleConcurrentBuilds {
+        maxTotal(1)
+    }
+
+    parameters {
+        booleanParam('DISABLE_TRIGGERS', false, 'If selected the triggers will be disabled.')
+    }
+
+    environmentVariables {
+        env('SEED_CONFIG_FILE_GIT_REPOSITORY', "${SEED_CONFIG_FILE_GIT_REPOSITORY}")
+        env('SEED_CONFIG_FILE_GIT_AUTHOR_NAME', "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}")
+        env('SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
+        env('SEED_CONFIG_FILE_GIT_BRANCH', "${SEED_CONFIG_FILE_GIT_BRANCH}")
+        env('SEED_CONFIG_FILE_PATH', "${SEED_CONFIG_FILE_PATH}")
+
+        env('JENKINS_EMAIL_CREDS_ID', Utils.getJenkinsEmailCredsId(this))
+    }
+
+    definition {
+        cpsScm {
+            scm {
+                git {
+                    remote {
+                        url("https://github.com/${Utils.getSeedAuthor(this)}/${Utils.getSeedRepo(this)}.git")
+                        credentials(Utils.getSeedAuthorCredsId(this))
+                    }
+                    branch(Utils.getSeedBranch(this))
+                    extensions {
+                        cleanBeforeCheckout()
+                    }
+                }
+            }
+            scriptPath("dsl/seed/jenkinsfiles/Jenkinsfile.tools.toggle-triggers")
+        }
+    }
+
+    properties {
+        githubProjectUrl("https://github.com/${Utils.getSeedAuthor(this)}/${Utils.getSeedRepo(this)}/")
+    }
+}
