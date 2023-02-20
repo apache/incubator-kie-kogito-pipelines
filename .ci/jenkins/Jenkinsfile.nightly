@@ -98,7 +98,7 @@ pipeline {
                             }
                             post {
                                 failure {
-                                    addFailedStage(RUNTIMES_DEPLOY)
+                                    addFailedStage('quarkus-platform.deploy')
                                 }
                             }
                         }
@@ -420,8 +420,8 @@ List getDefaultBuildParams(String buildBranchName = '', String key = '') {
     return params
 }
 
-void addSkipTestsParam(buildParams, boolean value = params.SKIP_TESTS) {
-    addBooleanParam(buildParams, 'SKIP_TESTS', value)
+void addSkipTestsParam(buildParams) {
+    addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
 }
 
 void addSkipIntegrationTestsParam(buildParams) {

@@ -69,6 +69,20 @@ pipeline {
             }
         }
 
+        stage('Deploy Quarkus platform') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    buildJob('quarkus-platform.deploy', buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage('quarkus-platform.deploy')
+                }
+            }
+        }
+
         stage('Init Kogito Apps') {
             steps {
                 script {

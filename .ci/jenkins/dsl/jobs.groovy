@@ -25,10 +25,11 @@ if (Utils.isMainBranch(this)) {
 
 // Setup branch branch
 createSetupBranchJob()
+setupQuarkusPlatformJob(JobType.SETUP_BRANCH)
 
 // Nightly
 setupNightlyJob()
-setupNightlyQuarkusPlatformJob()
+setupQuarkusPlatformJob(JobType.NIGHTLY)
 
 // Release
 setupReleaseArtifactsJob()
@@ -150,8 +151,8 @@ void setupNightlyJob() {
     }
 }
 
-void setupNightlyQuarkusPlatformJob() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, 'quarkus-platform.deploy', JobType.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly.quarkus-platform", 'Kogito Quarkus platform job')
+void setupQuarkusPlatformJob(JobType jobType) {
+    def jobParams = JobParamsUtils.getBasicJobParams(this, 'quarkus-platform.deploy', jobType, "${JENKINSFILE_PATH}/Jenkinsfile.nightly.quarkus-platform", 'Kogito Quarkus platform job')
     JobParamsUtils.setupJobParamsDefaultMavenConfiguration(this, jobParams)
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
@@ -234,17 +235,3 @@ void setupBuildOperatorNode() {
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
-void setupToggleTriggersJob() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, 'toggle-triggers', JobType.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.toggle-triggers", 'Toggle DSL triggers')
-    jobParams.env.putAll([
-        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
-        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
-        GIT_AUTHOR_CREDENTIALS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
-        BUILD_BRANCH_NAME: "${GIT_BRANCH}",
-    ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
-        parameters {
-            booleanParam('DISABLE_TRIGGERS', false, 'If selected the triggers will be disabled.')
-        }
-    }
-}

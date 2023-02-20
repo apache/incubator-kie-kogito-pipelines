@@ -33,6 +33,10 @@ pipeline {
                 script {
                     cleanWs()
                     sh 'printenv'
+
+                    if (params.DISPLAY_NAME) {
+                        currentBuild.displayName = params.DISPLAY_NAME
+                    }
                 }
             }
         }
@@ -88,8 +92,7 @@ pipeline {
                         maven.mvnSetVersionProperty('drools-quarkus.version', env.KIE_VERSION)
                         maven.mvnSetVersionProperty('optaplanner-quarkus.version', env.KIE_VERSION)
 
-                        // TODO we should change the Quarkus Platform version
-                        // Something like snapshot-kogito-${kogitoVersion}
+                        // Update platform version
                         localQuarkusPlatformVersion = "kogito-${env.KOGITO_VERSION}"
                         echo "Set quarkus platform version ${localQuarkusPlatformVersion}"
                         maven.mvnVersionsSet(localQuarkusPlatformVersion, true)
