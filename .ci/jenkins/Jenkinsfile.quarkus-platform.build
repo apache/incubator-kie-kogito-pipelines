@@ -1,0 +1,154 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+@Library('jenkins-pipeline-shared-libraries')_
+
+import org.kie.jenkins.MavenCommand
+import org.kie.jenkins.MavenSettingsUtils
+
+AGENT_LABEL =
+kogitoPipelinesRepo = 'kogito-pipelines'
+
+pipeline {
+    agent {
+        label 'kie-rhel8 && !built-in'
+    }
+
+    options {
+        timestamps()
+        timeout(time: 120, unit: 'MINUTES')
+    }
+
+    tools {
+        maven "${BUILD_MAVEN_TOOL}"
+        jdk "${BUILD_JDK_TOOL}"
+    }
+
+    environment {
+        // Static env is defined into .jenkins/dsl/jobs.groovy file
+        KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+
+        QUARKUS_PLATFORM_NEXUS_URL = credentials('kogito-internal-testing-nexus-url')
+        QUARKUS_PLATFORM_NEXUS_CREDS = credentials('kogito-internal-testing-nexus-user')
+    }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    cleanWs()
+                    sh 'printenv'
+                }
+            }
+        }
+        stage('Retrieve versions') {
+            steps {
+                script {
+                    dir('kogito-runtimes') {
+                        deleteDir()
+
+                        checkout(githubscm.resolveRepository('kogito-runtimes', getGitAuthor(), getGitBranch(), false))
+
+                        env.KOGITO_VERSION = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -pl :kogito-runtimes -Dexpression=project.version -q -DforceStdout", returnStdout: true).trim()
+                        env.QUARKUS_VERSION = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -pl :kogito-dependencies-bom -Dexpression=version.io.quarkus -q -DforceStdout", returnStdout: true).trim()
+                        env.KIE_VERSION = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -pl :kogito-kie-bom -Dexpression=version.org.kie -q -DforceStdout", returnStdout: true).trim()
+                    }
+
+                    assert env.KOGITO_VERSION : 'Cannot find the Kogito version.'
+                    assert env.QUARKUS_VERSION : 'Cannot find the Quarkus version.'
+                    assert env.KIE_VERSION : 'Cannot find the KIE version.'
+
+                    echo "Configured Kogito version ${env.KOGITO_VERSION}"
+                    echo "Configured Quarkus version ${env.QUARKUS_VERSION}"
+                    echo "Configured Drools/OptaPlanner version ${env.KIE_VERSION}"
+                }
+            }
+        }
+        stage('Prepare quarkus-platform') {
+            steps {
+                script {
+                    dir('quarkus-platform') {
+                        deleteDir()
+
+                        String quarkusBranch = env.QUARKUS_VERSION.split("\\.")[0] + "." + quarkusVersion.split("\\.")[1]
+                        echo "Use quarkus branch ${quarkusBranch}"
+                        checkout(githubscm.resolveRepository('quarkus-platform', 'quarkusio', quarkusBranch, false))
+
+                        // Update platform mvn settings file
+                        // We use platform settings file to be sure to get all needed artifacts
+                        String settingsFile = '.github/mvn-settings.xml'
+                        // Add Deploy nexus information to settings file
+                        sh """
+                            set +x
+                            sed -i 's|<settings>|<settings><servers><server><id>quarkus-platform</id><username>${QUARKUS_PLATFORM_NEXUS_CREDS_USR}</username><password>${QUARKUS_PLATFORM_NEXUS_CREDS_PSW}</password></server></servers>|g' ${settingsFile}
+                        """
+                        MavenSettingsUtils.setRepositoryInSettings(this, settingsFile, 'kogito-staging', 'https://repository.jboss.org/nexus/content/groups/kogito-public/')
+                        MavenSettingsUtils.setRepositoryInSettings(this, settingsFile, 'kogito-public', 'https://repository.jboss.org/nexus/content/groups/public/')
+
+                        String localQuarkusVersion = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout", returnStdout: true).trim()
+                        echo "Platform Quarkus version ${localQuarkusVersion}"
+
+                        // Set Drools/OP & Kogito versions
+                        maven.mvnSetVersionProperty('kogito-quarkus.version', env.KOGITO_VERSION)
+                        maven.mvnSetVersionProperty('drools-quarkus.version', env.KIE_VERSION)
+                        maven.mvnSetVersionProperty('optaplanner-quarkus.version', env.KIE_VERSION)
+
+                        // TODO we should change the Quarkus Platform version
+                        // Something like snapshot-kogito-${kogitoVersion}
+                    }
+                }
+            }
+        }
+        stage('Build quarkus-platform') {
+            steps {
+                script {
+                    dir('quarkus-platform') {
+                        // Sync Platform boms
+                        new MavenCommand(this, ['-fae', '-ntp'])
+                            .withSettingsXmlFile(settingsFile)
+                            .withProperty('sync')getBuildBranch
+                            .run('')
+
+                        // Deploy all
+                        new MavenCommand(this, ['-fae', '-ntp'])
+                            .withSettingsXmlFile(settingsFile)
+                            .skipTests()
+                            .withProperty('altDeploymentRepository', "quarkus-platform::default::${QUARKUS_PLATFORM_NEXUS_URL}")
+                            .withProperty('enforcer.skip', true)
+                            .run('deploy')
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {getBuildBranch
+            cleanWs()
+        }
+        unsuccessful {
+            sendErrorNotification()
+        }
+    }
+}
+
+void checkoutRepo(String repo, String gitAuthor, String branch, String gitAuthorCredsId) {
+    checkout(githubscm.resolveRepository(repo, gitAuthor, branch, false, gitAuthorCredsId))
+    // need to manually checkout branch since on a detached branch after checkout command
+    sh "git checkout ${branch}"
+}
+
+String getGitBranch() {
+    return env.GIT_BRANCH_NAME
+}
+
+String getGitAuthor() {
+    return env.GIT_AUTHOR
+}
+
+void sendNotification(String body) {
+    emailext body: "${body}",
+             subject: "[${getGitBranch()}] Kogito Quarkus Platform",
+             to: env.KOGITO_CI_EMAIL_TO
+}
+
+void sendErrorNotification() {
+    sendNotification("Job #${BUILD_NUMBER} was: **${currentBuild.currentResult}**\nPlease look here: ${BUILD_URL}")
+}

@@ -28,6 +28,7 @@ createSetupBranchJob()
 
 // Nightly
 setupNightlyJob()
+setupQuarkusPlatformJob()
 
 // Release
 setupReleaseArtifactsJob()
@@ -147,6 +148,19 @@ void setupNightlyJob() {
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
         }
     }
+}
+
+void setupQuarkusPlatformJob() {
+    def jobParams = JobParamsUtils.getBasicJobParams(this, 'quarkus-platform', JobType.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.quarkus-platform.build", 'Kogito Quarkus platform job')
+    jobParams.env.putAll([
+        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+
+        GIT_BRANCH_NAME: "${GIT_BRANCH}",
+        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
+
+        QUARKUS_PLATFORM_VERSION: ""
+    ])
+    KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
 void setupReleaseArtifactsJob() {
