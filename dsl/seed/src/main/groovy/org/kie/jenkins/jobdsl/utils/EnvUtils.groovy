@@ -27,6 +27,10 @@ class EnvUtils {
         return value != '' ? value.toBoolean() : false
     }
 
+    static boolean isDefaultEnvironment(def script, String envName) {
+        return envName == ''
+    }
+
     static boolean isEnvironmentDefined(def script, String envName) {
         if (!envName) {
             return true
