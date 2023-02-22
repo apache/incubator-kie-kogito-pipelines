@@ -18,7 +18,7 @@ buildChainProject = env.BUILDCHAIN_PROJECT?.trim()
 defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kogito_pr_settings' : 'kogito_release_settings'
 settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
 
-disableSonarCloudAnalysis = env.DISABLE_SONARCLOUD ? env.DISABLE_SONARCLOUD.toBoolean() : false
+enableSonarCloudAnalysis = env.ENABLE_SONARCLOUD ? env.ENABLE_SONARCLOUD.toBoolean() : false
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
 quarkusBranch = env.QUARKUS_BRANCH ?: ''
 
@@ -160,7 +160,7 @@ pipeline {
         }
         stage('Sonar analysis') {
             when {
-                expression { return isSonarCloudAnalysis() }
+                expression { return enableSonarCloudAnalysis }
             }
             tools {
                 jdk jdkTool
@@ -169,7 +169,7 @@ pipeline {
             steps {
                 script {
                     def project = (buildChainProject ? util.getProjectGroupName(buildChainProject) : util.getProjectTriggeringJob())[1]
-                    
+
                     // First guessing whether there is a clone defined into the buildchain config
                     // If not, fallback to simple folder structure
                     String projectFolder = "bc/kiegroup_${project}/${project}"
@@ -243,19 +243,9 @@ boolean isBranchBuildChainType() {
     return buildChainType == 'branch'
 }
 
-boolean isSonarCloudAnalysis() {
-    if (disableSonarCloudAnalysis) {
-        return false
-    }
-    if (isPRBuildChainType()) {
-        return !downstreamBuild
-    }
-    return false
-}
-
 String getBuildMavenOptsCurrent() {
     List opts_current = []
-    isSonarCloudAnalysis() ? opts_current.add('-Prun-code-coverage') : null
+    enableSonarCloudAnalysis ? opts_current.add('-Prun-code-coverage') : null
     skipTests ? opts_current.add('-DskipTests') : null
     skipIntegrationTests ? opts_current.add('-DskipITs') : null
     return opts_current.join(' ')
