@@ -61,7 +61,7 @@ def jobParamsRemove = [
 
 KogitoJobTemplate.createPipelineJob(this, jobParamsRemove)?.with {
     parameters {
-        stringParam('BRANCH_TO_REMOVE', '' , 'Branch to remove')
+        choiceParam('BRANCH_TO_REMOVE', ALL_BRANCHES.split(',').findAll { it != MAIN_BRANCH_NAME }, 'Which release branch to remove ?') 
     }
 
     environmentVariables {

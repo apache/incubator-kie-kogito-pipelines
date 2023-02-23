@@ -55,6 +55,8 @@ pipeline {
                         SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}",
                         SEED_CONFIG_FILE_GIT_BRANCH: "${SEED_CONFIG_FILE_GIT_BRANCH}",
                         SEED_CONFIG_FILE_PATH: "${SEED_CONFIG_FILE_PATH}",
+                        ALL_BRANCHES: readSeedConfig().git.branches.collect { it.name }.join(','),
+                        MAIN_BRANCH_NAME: readSeedConfig().git.branches.find { it.main_branch }?.name,
                     ]
                     echo 'Got envProperties for generation'
                     echo "${envProperties}"

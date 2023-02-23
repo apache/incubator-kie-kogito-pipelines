@@ -12,12 +12,7 @@ pipeline {
         label 'kie-rhel7 && !built-in'
     }
 
-    // parameters {
-    // For parameters, check into /dsl/seed/jobs/root_jobs.groovy file
-    // }
-
     environment {
-        // Some generated env is also defined into /dsl/seed/jobs/root_jobs.groovy file
         CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
     }
 
