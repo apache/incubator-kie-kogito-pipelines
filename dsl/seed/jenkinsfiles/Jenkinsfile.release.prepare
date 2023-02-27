@@ -125,10 +125,10 @@ pipeline {
 
                         if (githubscm.isThereAnyChanges()) {
                             sh 'git diff'
-                            githubscm.commitChanges("Add release branch ${newBranch} after cut-off")
+                            githubscm.commitChanges("Add release branch ${getEcosystemReleaseBranch()} after cut-off")
                             githubscm.pushObject('origin', env.SEED_CONFIG_FILE_GIT_BRANCH, env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID)
 
-                            sendNotification("Main config has been updated with release branch ${newBranch}")
+                            sendNotification("Main config has been updated with release branch ${getEcosystemReleaseBranch()}")
                         } else {
                             println '[WARN] No changes to commit'
                         }
@@ -142,7 +142,7 @@ pipeline {
                 stage('Call init job on new branch') {
                     steps {
                         script {
-                            String newBranch = getBranchConfigReleaseBranch()
+                            String newBranch = getEcosystemReleaseBranch()
                             sendNotification("Waiting for setup branch job on newly created release branch '${newBranch}' and calling it once available.\n**Please wait for the job to be successful before performing any action on the release branch...**")
                             List buildParams = []
                             def job = [:]
@@ -158,7 +158,7 @@ pipeline {
                                 }
                                 sendNotification("Setup branch job on newly created release branch '${newBranch}' finished successfully. ")
                             } catch (err) {
-                                unstable("Error executing the ${getBranchConfigReleaseBranch()} setup job ...")
+                                unstable("Error executing the ${newBranch} setup job ...")
                                 String msg = "ERROR: Setup branch job on newly created release branch '${newBranch}' was unsuccessful."
                                 if(job) {
                                     msg += "\nPlease review job ${job.absoluteUrl}..."
@@ -172,7 +172,7 @@ pipeline {
                 stage('Call setup job on main branch') {
                     steps {
                         script {
-                            String mainBranch = getMainBranchConfigFileGitBranch()
+                            String mainBranch = readSeedConfig().git.branches.find { it.main_branch }.name
                             if (mainBranch) {
                                 sendNotification("Calling setup branch job on main branch.\n**Please wait for the job to be successful before performing any action on the main branch...**")
 
@@ -240,7 +240,7 @@ List getRepositoriesToBranch() {
                     // we are already going to branch it with the setup of the branch config
                     echo "Repository ${repoConfig.name} is branch config repository"
                     repoConfig.is_branch_config_repo = true
-                    }
+                }
             }
         }
     }
