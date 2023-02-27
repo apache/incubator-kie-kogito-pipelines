@@ -26,7 +26,6 @@ environments:
   quarkus-branch:
     env_vars:
       QUARKUS_BRANCH: '2.16'
-      # Due to https://github.com/quarkusio/quarkus/pull/30860
       QUARKUS_VERSION: 2.16.999-SNAPSHOT
     ids:
     - quarkus
@@ -39,6 +38,7 @@ environments:
     - quarkus
     - lts
     - prod
+    enabled: false
   kogito-bdd:
     auto_generation: false
     ids:
@@ -54,21 +54,27 @@ environments:
     auto_generation: false
     ids:
     - ecosystem
-productized_branch: true
+productized_branch: false
 disable:
   triggers: false
 repositories:
 - name: kogito-pipelines
+  branch: 1.35.x
+  is_branch_config_repo: true
 - name: kogito-runtimes
+  branch: 1.35.x
 - name: kogito-apps
+  branch: 1.35.x
 - name: kogito-examples
+  branch: 1.35.x
 - name: kogito-images
+  branch: 1.35.x
 - name: kogito-operator
+  branch: 1.35.x
 - name: kogito-serverless-operator
-- name: kie-tools
+  branch: 1.35.x
 - name: kogito-docs
-- name: kie-docs
-  branch: main-kogito
+  branch: 1.35.x
 git:
   author:
     name: kiegroup
