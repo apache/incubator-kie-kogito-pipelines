@@ -146,4 +146,12 @@ class JobParamsUtils {
         jobParams.jenkinsfile = Utils.getSeedJenkinsfilePath(script, jenkinsfile)
     }
 
+    static def setupJobParamsIntegrationBranchConfiguration(def script, def jobParams, String envName) {
+        jobParams.env = jobParams.env ?: [:]
+        jobParams.env.putAll([
+            INTEGRATION_BRANCH_CURRENT: "${Utils.getGenerationBranch(script)}-integration-${envName}",
+            COMMIT_MESSAGE: "Update for ${envName} environment",
+            GITHUB_USER: 'kie-ci',
+        ])
+    }
 }
