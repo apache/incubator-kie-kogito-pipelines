@@ -170,7 +170,9 @@ class KogitoJobUtils {
     /**
     * Create a environment integration branch nightly job
     *
-    * @param project Project to update on the platform
+    * parameters:
+    *   - envName: Environment name for which the job will be created
+    *   - scriptCalls: Any command to call before performing the integration branch update
     *
     */
     static def createEnvironmentIntegrationBranchNightlyJob(def script, String envName, def scriptCalls = []) {
