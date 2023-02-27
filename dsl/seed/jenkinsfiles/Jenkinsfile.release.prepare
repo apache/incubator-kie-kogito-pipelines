@@ -182,6 +182,11 @@ pipeline {
                                     String version = project.default_main_version ?: util.getNextVersion(getVersionFromProject(project.name), 'minor')
                                     buildParams.add(string(name: paramKey, value: version))
                                 }
+                                for (def project : getEcosystemDependencyProjects()) {
+                                    String paramKey = getVersionParameterKey(project.name)
+                                    String version = project.default_main_version ?: util.getNextVersion(getVersionFromProject(project.name), 'minor')
+                                    buildParams.add(string(name: paramKey, value: version))
+                                }
 
                                 def job = [:]
                                 echo "Call job './${mainBranch}/setup-branch/0-setup-branch' with buildParams ${buildParams}"
@@ -408,6 +413,10 @@ String getMainBranchConfigFilePath() {
 
 List getEcosystemProjects() {
     return readSeedConfig().ecosystem.projects.findAll { ! (it.ignore_release ? it.ignore_release.toBoolean() : false)  }
+}
+
+List getEcosystemDependencyProjects() {
+    return readSeedConfig().ecosystem.dependencies
 }
 
 String getEcosystemMainProject() {

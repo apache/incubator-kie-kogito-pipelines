@@ -25,6 +25,10 @@ KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
             stringParam("${projectName}_VERSION".toUpperCase(), '', "${Utils.getRepoNameCamelCase(projectName)} version to release as Major.minor.micro")
         }
 
+        DEPENDENCY_PROJECTS.split(',').each { projectName ->
+            stringParam("${projectName}_VERSION".toUpperCase(), '', "${Utils.getRepoNameCamelCase(projectName)} dependency version which this will depend on")
+        }
+
         booleanParam('PRODUCTIZED_BRANCH', false, 'Is the created branch a productized one ?')
     }
 
@@ -59,17 +63,22 @@ def jobParamsRemove = [
     jenkinsfile: 'dsl/seed/jenkinsfiles/Jenkinsfile.remove.branches',
 ]
 
-KogitoJobTemplate.createPipelineJob(this, jobParamsRemove)?.with {
-    parameters {
-        choiceParam('BRANCH_TO_REMOVE', ALL_BRANCHES.split(',').findAll { it != MAIN_BRANCH_NAME }, 'Which release branch to remove ?') 
-    }
+List nonMainBranches = ALL_BRANCHES.split(',').findAll { it != MAIN_BRANCH_NAME }
+if (nonMainBranches) {
+    KogitoJobTemplate.createPipelineJob(this, jobParamsRemove)?.with {
+        parameters {
+            choiceParam('BRANCH_TO_REMOVE', nonMainBranches, 'Which release branch to remove ?') 
+        }
 
-    environmentVariables {
-        env('JENKINS_EMAIL_CREDS_ID', Utils.getJenkinsEmailCredsId(this))
+        environmentVariables {
+            env('JENKINS_EMAIL_CREDS_ID', Utils.getJenkinsEmailCredsId(this))
 
-        env('GIT_REPOSITORY', "${SEED_CONFIG_FILE_GIT_REPOSITORY}")
-        env('GIT_AUTHOR', "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}")
-        env('GIT_AUTHOR_CREDENTIALS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
-        env('GIT_BRANCH_TO_BUILD', "${SEED_CONFIG_FILE_GIT_BRANCH}")
+            env('GIT_REPOSITORY', "${SEED_CONFIG_FILE_GIT_REPOSITORY}")
+            env('GIT_AUTHOR', "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}")
+            env('GIT_AUTHOR_CREDENTIALS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
+            env('GIT_BRANCH_TO_BUILD', "${SEED_CONFIG_FILE_GIT_BRANCH}")
+        }
     }
+} else {
+    println 'No branches to remove ...'
 }
