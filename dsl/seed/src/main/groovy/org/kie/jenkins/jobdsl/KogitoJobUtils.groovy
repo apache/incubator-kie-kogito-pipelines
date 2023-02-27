@@ -179,6 +179,7 @@ class KogitoJobUtils {
         if (!envName) {
             throw new RuntimeException('Please provide a non-empty environment to generate an integration branch job...')
         }
+        JobParamsUtils.setupJobParamsIntegrationBranchConfiguration(script, jobParams, envName)
         jobParams.env.putAll( [
             JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
 
