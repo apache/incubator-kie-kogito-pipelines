@@ -31,6 +31,11 @@ setupQuarkusPlatformJob(JobType.SETUP_BRANCH)
 setupNightlyJob()
 setupQuarkusPlatformJob(JobType.NIGHTLY)
 
+KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-main')
+KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-lts')
+KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-branch')
+KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'native-lts')
+
 // Release
 setupReleaseArtifactsJob()
 setupReleaseCloudJob()
