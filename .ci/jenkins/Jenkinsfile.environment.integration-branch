@@ -1,0 +1,107 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+pipeline {
+    agent {
+        label 'kie-rhel8 && !built-in'
+    }
+
+    environment {
+        CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+        INTEGRATION_BRANCH = "${INTEGRATION_BRANCH_CURRENT}"
+    }
+
+    stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    checkout scm
+
+                    dir(getRepoName()) {
+                        deleteDir()
+                        checkout(githubscm.resolveRepository(getRepoName(), getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsId()))
+                    }
+                }
+            }
+        }
+
+        stage('Execute script(s)') {
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        getScriptCalls().each {
+                            echo "Execute command '${it}'"
+                            sh "${it}"
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Create integration branch') {
+            steps {
+                script {
+                    dir(getRepoName()) {
+                        withCredentials([string(credentialsId: getGitAuthorTokenCredsId(), variable: 'GITHUB_TOKEN')]) {
+                            sh "${WORKSPACE}/dsl/seed/scripts/setup_integration_branch.sh"
+                        }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        unsuccessful {
+            script {
+                sendErrorNotification()
+            }
+        }
+        cleanup {
+            cleanWs()
+        }
+    }
+}
+
+void sendNotification(String body) {
+    emailext body: "${body}",
+             subject: "[${getBuildBranch()}] ${getRepoNameCamelCase()} - ${getJobEnvironment()}",
+             to: env.CI_EMAIL_TO
+}
+
+void sendErrorNotification() {
+    sendNotification("Job #${BUILD_NUMBER} was: **${currentBuild.currentResult}**\nPlease look here: ${BUILD_URL}")
+}
+
+String getRepoName() {
+    return env.REPO_NAME
+}
+
+String getRepoNameCamelCase() {
+    List words = getRepoName().split('-') as List
+    return words.collect { it.isEmpty() ? it : it.substring(0, 1).toUpperCase() + it.substring(1).toLowerCase() }.join(' ')
+}
+
+List getScriptCalls() {
+    return env.SCRIPTS_CALLS ? readJSON(text: env.SCRIPTS_CALLS) : []
+}
+
+String getJobEnvironment() {
+    return "${JOB_ENVIRONMENT}"
+}
+
+String getBuildBranch() {
+    return "${BUILD_BRANCH_NAME}"
+}
+
+String getGitAuthor() {
+    return "${GIT_AUTHOR}"
+}
+
+String getGitAuthorCredsId() {
+    return "${AUTHOR_CREDS_ID}"
+}
+
+String getGitAuthorTokenCredsId() {
+    return "${GIT_AUTHOR_TOKEN_CREDENTIALS_ID}"
+}
