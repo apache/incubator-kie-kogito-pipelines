@@ -5,7 +5,7 @@ pipeline {
         label 'kie-rhel7 && kie-mem24g && !built-in'
     }
     tools {
-        maven 'kie-maven-3.8.1'
+        maven 'kie-maven-3.8.6'
         jdk 'kie-jdk11'
     }
     parameters {
@@ -189,8 +189,8 @@ def getMessageBody(String propertiesFileUrl, String alreadyBuiltProjects) {
     def alreadyBuiltProjectsArray = (alreadyBuiltProjects ?: '').split(";")
     return """
 {
-	"propertiesFileUrl": "${propertiesFileUrl}",
-	"builtProjects": ${new groovy.json.JsonBuilder(alreadyBuiltProjectsArray).toString()}
+    "propertiesFileUrl": "${propertiesFileUrl}",
+    "builtProjects": ${new groovy.json.JsonBuilder(alreadyBuiltProjectsArray).toString()}
 }"""    
 }
 
