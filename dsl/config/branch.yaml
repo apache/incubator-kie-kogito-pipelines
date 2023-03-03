@@ -30,6 +30,15 @@ environments:
       QUARKUS_VERSION: 2.16.999-SNAPSHOT
     ids:
     - quarkus
+  
+  quarkus-3:
+    env_vars:
+      QUARKUS_VERSION: '3.0.0.Alpha3'
+    ids:
+    - quarkus
+    - quarkus3
+
+  # LTS part
   quarkus-lts:
     pull_request_default_check: false
     env_vars:
