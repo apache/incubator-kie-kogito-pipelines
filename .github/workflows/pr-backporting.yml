@@ -3,8 +3,6 @@ name: Pull Request Backporting
 on:
   pull_request_target:
     types: [closed, labeled]
-    branches:
-      - main
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -32,7 +30,7 @@ jobs:
     strategy:
       matrix: 
         target-branch: ${{ fromJSON(needs.compute-targets.outputs.target-branches) }}
-      fail-fast: true
+      fail-fast: false
     steps:
       - name: Backporting
         uses: kiegroup/kogito-pipelines/.ci/actions/backporting@main
