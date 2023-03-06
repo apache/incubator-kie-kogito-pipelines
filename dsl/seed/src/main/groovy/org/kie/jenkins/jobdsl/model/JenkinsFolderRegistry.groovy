@@ -26,11 +26,7 @@ class JenkinsFolderRegistry {
 
     static JenkinsFolder getOrRegisterFolder(def script, JobType jobType, String envName = '') {
         // Create folder struct
-        Map defaultEnv = [:]
-        if (envName) {
-            defaultEnv = EnvUtils.getEnvironmentEnvVars(script, envName)
-        }
-        JenkinsFolder folder = new JenkinsFolder(jobType, defaultEnv, envName)
+        JenkinsFolder folder = new JenkinsFolder(jobType, EnvUtils.getEnvironmentEnvVars(script, envName), envName)
 
         if (hasFolder(folder.getName())) {
             return getFolder(folder.getName())
