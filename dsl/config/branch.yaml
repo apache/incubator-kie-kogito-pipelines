@@ -33,6 +33,7 @@ environments:
     ids:
     - quarkus
   quarkus-lts:
+    enabled: false
     pull_request_default_check: false
     env_vars:
       BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
