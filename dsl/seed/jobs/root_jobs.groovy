@@ -25,8 +25,10 @@ KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
             stringParam("${projectName}_VERSION".toUpperCase(), '', "${Utils.getRepoNameCamelCase(projectName)} version to release as Major.minor.micro")
         }
 
-        DEPENDENCY_PROJECTS.split(',').each { projectName ->
-            stringParam("${projectName}_VERSION".toUpperCase(), '', "${Utils.getRepoNameCamelCase(projectName)} dependency version which this will depend on")
+        if (DEPENDENCY_PROJECTS) {
+            DEPENDENCY_PROJECTS.split(',').each { projectName ->
+                stringParam("${projectName}_VERSION".toUpperCase(), '', "${Utils.getRepoNameCamelCase(projectName)} dependency version which this will depend on")
+            }
         }
 
         booleanParam('PRODUCTIZED_BRANCH', false, 'Is the created branch a productized one ?')
