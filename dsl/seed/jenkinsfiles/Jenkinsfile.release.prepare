@@ -416,7 +416,7 @@ List getEcosystemProjects() {
 }
 
 List getEcosystemDependencyProjects() {
-    return readSeedConfig().ecosystem.dependencies
+    return readSeedConfig().ecosystem.dependencies ?: []
 }
 
 String getEcosystemMainProject() {
