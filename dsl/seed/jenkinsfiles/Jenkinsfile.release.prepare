@@ -57,7 +57,7 @@ pipeline {
                         branchConfig.productized_branch = params.PRODUCTIZED_BRANCH
 
                         // Disable some environments when branching as they make no sense by default
-                        if (branchConfig.environments) {
+                        if (branchConfig.environments) {return readSeedConfig().ecosystem.dependencies ?: []
                             branchConfig.environments."quarkus-main" ? branchConfig.environments."quarkus-main".enabled = false : null
                             branchConfig.environments."quarkus-lts" ? branchConfig.environments."quarkus-lts".enabled = params.PRODUCTIZED_BRANCH : null
                             branchConfig.environments."mandrel-lts" ? branchConfig.environments."mandrel-lts".enabled = params.PRODUCTIZED_BRANCH : null
@@ -416,7 +416,7 @@ List getEcosystemProjects() {
 }
 
 List getEcosystemDependencyProjects() {
-    return readSeedConfig().ecosystem.dependencies
+    return readSeedConfig().ecosystem.dependencies ?: []
 }
 
 String getEcosystemMainProject() {
