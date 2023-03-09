@@ -99,29 +99,6 @@ pipeline {
                 }
             }
         }
-        stage('Build quarkus') {
-            when {
-                expression { quarkusBranch }
-            }
-            steps {
-                script {
-                    dir('quarkus') {
-                        deleteDir()
-                        checkout(githubscm.resolveRepository('quarkus', 'quarkusio', quarkusBranch, false))
-
-                        new MavenCommand(this, ['-fae', '-ntp'])
-                            .withSettingsXmlId(settingsXmlId)
-                            .withProperty('quickly')
-                            .run('clean install')
-
-                        // Setup the quarkus version for the build-chain config
-                        if (!env.QUARKUS_VERSION) {
-                            env.QUARKUS_VERSION = '999-SNAPSHOT'
-                        }
-                    }
-                }
-            }
-        }
         stage('Build projects') {
             tools {
                 jdk jdkTool
