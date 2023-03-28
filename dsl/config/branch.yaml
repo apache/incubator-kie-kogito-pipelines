@@ -63,23 +63,12 @@ environments:
     - ecosystem
 productized_branch: false
 disable:
-  triggers: false
+  triggers: true
 repositories:
 - name: kogito-pipelines
   branch: 1.33.x
-  is_branch_config_repo: true
 - name: drools
   branch: 8.33.x
-- name: drools-website
-  branch: 8.33.x
-- name: kogito-images
-  branch: 1.33.x
-- name: kogito-operator
-  branch: 1.33.x
-- name: kogito-serverless-operator
-  branch: 1.33.x
-- name: kogito-docs
-  branch: 1.33.x
 git:
   author:
     name: kiegroup
