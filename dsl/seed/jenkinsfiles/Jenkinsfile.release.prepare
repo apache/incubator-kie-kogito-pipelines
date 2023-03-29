@@ -57,11 +57,15 @@ pipeline {
                         branchConfig.productized_branch = params.PRODUCTIZED_BRANCH
 
                         // Disable some environments when branching as they make no sense by default
-                        if (branchConfig.environments) {
-                            branchConfig.environments."quarkus-main" ? branchConfig.environments."quarkus-main".enabled = false : null
-                            branchConfig.environments."quarkus-lts" ? branchConfig.environments."quarkus-lts".enabled = params.PRODUCTIZED_BRANCH : null
-                            branchConfig.environments."mandrel-lts" ? branchConfig.environments."mandrel-lts".enabled = params.PRODUCTIZED_BRANCH : null
-                            branchConfig.environments.mandrel ? branchConfig.environments.mandrel.enabled = params.PRODUCTIZED_BRANCH : null
+                        branchConfig.environments.each { envName, envData ->
+                            if (envName.startsWith('quarkus')) {
+                                if (envName != 'quarkus-branch') {
+                                    envData.enabled = false // Keep only quarkus-branch
+                                }
+                            }
+                            if (envData.ids.find { it == 'lts' }) {
+                                envData.enabled = params.PRODUCTIZED_BRANCH // LTS envs depend on param
+                            }
                         }
 
                         echo "Write dsl branch_config => ${branchConfig}"
