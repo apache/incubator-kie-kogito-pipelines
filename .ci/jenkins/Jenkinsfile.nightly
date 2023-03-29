@@ -68,9 +68,9 @@ pipeline {
             when {
                 expression { return isArtifactsDeploy() }
             }
-            parallel {
-                stage('Build & Deploy Kogito Runtimes & Quarkus platform') {
-                    stages {
+            stages {
+                stage('Build & Deploy Kogito Runtimes Apps') {
+                    parallel {
                         stage('Build & Deploy Kogito Runtimes') {
                             steps {
                                 script {
@@ -89,36 +89,36 @@ pipeline {
                             }
                         }
 
-                        stage('Deploy Quarkus platform') {
+                        stage('Build & Deploy Kogito Apps') {
                             steps {
                                 script {
                                     def buildParams = getDefaultBuildParams()
-                                    buildJob('quarkus-platform.deploy', buildParams)
+                                    addSkipTestsParam(buildParams)
+                                    addSkipIntegrationTestsParam(buildParams)
+
+                                    // images and operator deploy testing will use older working artifacts if that one fails
+                                    buildJob(APPS_DEPLOY, buildParams)
                                 }
                             }
                             post {
                                 failure {
-                                    addFailedStage('quarkus-platform.deploy')
+                                    addFailedStage(APPS_DEPLOY)
                                 }
                             }
                         }
                     }
                 }
 
-                stage('Build & Deploy Kogito Apps') {
+                stage('Deploy Quarkus platform') {
                     steps {
                         script {
                             def buildParams = getDefaultBuildParams()
-                            addSkipTestsParam(buildParams)
-                            addSkipIntegrationTestsParam(buildParams)
-
-                            // images and operator deploy testing will use older working artifacts if that one fails
-                            buildJob(APPS_DEPLOY, buildParams)
+                            buildJob('quarkus-platform.deploy', buildParams)
                         }
                     }
                     post {
                         failure {
-                            addFailedStage(APPS_DEPLOY)
+                            addFailedStage('quarkus-platform.deploy')
                         }
                     }
                 }
