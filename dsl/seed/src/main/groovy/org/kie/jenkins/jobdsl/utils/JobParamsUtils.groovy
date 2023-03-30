@@ -2,6 +2,7 @@ package org.kie.jenkins.jobdsl.utils
 
 import org.kie.jenkins.jobdsl.model.JobType
 import org.kie.jenkins.jobdsl.model.JenkinsFolderRegistry
+import org.kie.jenkins.jobdsl.utils.PrintUtils
 import org.kie.jenkins.jobdsl.KogitoConstants
 import org.kie.jenkins.jobdsl.Utils
 
@@ -126,7 +127,6 @@ class JobParamsUtils {
         setupJobParamsSeedPipelineConfiguration(script, jobParams, KogitoConstants.BUILD_CHAIN_JENKINSFILE)
         jobParams.env = jobParams.env ?: [:]
         jobParams.env.putAll([
-            BUILD_ENVIRONMENT: jobParams.job.folder.getEnvironmentName(),
             BUILDCHAIN_PROJECT: "kiegroup/${repository}",
             BUILDCHAIN_TYPE: buildchainType,
             BUILDCHAIN_CONFIG_REPO: Utils.getBuildChainConfigRepo(script) ?: Utils.getSeedRepo(script),
@@ -136,6 +136,12 @@ class JobParamsUtils {
             NOTIFICATION_JOB_NAME: notificationJobName,
             GIT_AUTHOR_TOKEN_CREDENTIALS_ID: Utils.getGitAuthorTokenCredsId(script),
         ])
+        // Set BUILD_ENVIRONMENT if not defined in default environment
+        def jobFolder = jobParams.job.folder
+        if (!jobFolder.getDefaultEnvVars().find { it.key == 'BUILD_ENVIRONMENT' }) {
+            PrintUtils.debug(script, "Adding `BUILD_ENVIRONMENT` env variable as not existing yet")
+            jobParams.env.put('BUILD_ENVIRONMENT', jobFolder.getEnvironmentName())
+        }
     }
 
     static def setupJobParamsSeedPipelineConfiguration(def script, def jobParams, String jenkinsfile) {
