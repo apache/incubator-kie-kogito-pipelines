@@ -71,7 +71,11 @@ class KogitoJobTemplate {
             script.folder(jobFolderName)
         }
 
-        PrintUtils.info(script, "Create job name ${jobParams.job.name} in jobFolder ${jobFolderName} with folder env ${jobFolderEnv}")
+        Map fullEnv = [:]
+        jobFolderEnv ? fullEnv.putAll(jobFolderEnv) : null
+        jobParams.env ? fullEnv.putAll(jobParams.env) : null
+
+        PrintUtils.info(script, "Create job name ${jobParams.job.name} in jobFolder ${jobFolderName} with folder env ${fullEnv}")
 
         return script.pipelineJob("${jobFolderName ? "${jobFolderName}/" : ''}${jobParams.job.name}") {
             description("""
@@ -139,14 +143,9 @@ class KogitoJobTemplate {
                 parameters(paramsClosure)
             }
 
-            if (jobParams.env || jobFolderEnv) {
-                environmentVariables {
-                    jobFolderEnv.each {
-                        env(it.key, it.value)
-                    }
-                    jobParams.env.each {
-                        env(it.key, it.value)
-                    }
+            environmentVariables {
+                fullEnv.each {
+                    env(it.key, it.value)
                 }
             }
 }
