@@ -138,7 +138,6 @@ class JobParamsUtils {
         ])
         // Set BUILD_ENVIRONMENT if not defined in default environment
         def jobFolder = jobParams.job.folder
-        PrintUtils.debug(script, "Default env vars for env '${jobFolder.getEnvironmentName()}' => ${jobFolder.getDefaultEnvVars()}")
         if (!jobFolder.getDefaultEnvVars().find { it.key == 'BUILD_ENVIRONMENT' }) {
             PrintUtils.debug(script, "Adding `BUILD_ENVIRONMENT` env variable as not existing yet")
             jobParams.env.put('BUILD_ENVIRONMENT', jobFolder.getEnvironmentName())
