@@ -20,7 +20,6 @@ settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
 
 enableSonarCloudAnalysis = env.ENABLE_SONARCLOUD ? env.ENABLE_SONARCLOUD.toBoolean() : false
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
-quarkusBranch = env.QUARKUS_BRANCH ?: ''
 
 buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
@@ -199,6 +198,7 @@ pipeline {
             script {
                 // Clean also docker in case of usage of testcontainers lib
                 util.cleanNode('docker')
+                sh 'rm -rf /tmp/quarkus'
             }
         }
     }
@@ -239,6 +239,7 @@ String getBuildChainCommandline(boolean includeToken=false) {
 String getReproducer() {
     return """
 ```spoiler Reproducer
+${QUARKUS_BRANCH ? "export QUARKUS_BRANCH=${QUARKUS_BRANCH}" : '\n'}
 ${BUILD_MVN_OPTS_CURRENT ? "export BUILD_MVN_OPTS_CURRENT=${BUILD_MVN_OPTS_CURRENT}" : '\n'}
 ${getBuildChainCommandline()}
 

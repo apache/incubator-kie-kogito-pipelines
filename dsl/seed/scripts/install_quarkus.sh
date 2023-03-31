@@ -1,10 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 
+current_dir="$(pwd)"
+
 mvn_cmd="mvn ${BUILD_MVN_OPTS:-} ${BUILD_MVN_OPTS_QUARKUS_UPDATE:-}"
 
 quarkus_version="${QUARKUS_VERSION:-}"
 quarkus_branch="${QUARKUS_BRANCH:-${quarkus_version}}"
+ci="${CI:-false}"
 
 is_snapshot=false
 
@@ -31,15 +34,28 @@ tmp_dir=/tmp/quarkus/"${quarkus_branch}"
 mkdir -p "${tmp_dir}"
 cd "${tmp_dir}"
 
+build_repository=false
+
 if [ -f pom.xml ]; then
-    echo "Quarkus already checked out. Fetching origin and rebuilding."
-    git fetch origin
-    git pull origin "${quarkus_branch}"
+    echo "Quarkus already checked out."
+    if [ "$ci" = "true" ]; then
+        echo "CI executing. Should be running in isolation. No rebuild needed."
+    else
+        echo "Local build. Checking out latest changes from origin."
+        hash_before=$(git log -n 1 --pretty=format:"%H")
+        git fetch origin
+        git pull origin "${quarkus_branch}"
+        hash_after=$(git log -n 1 --pretty=format:"%H")
+        if [ "${hash_before}" != "${hash_after}" ]; then 
+            echo "modification were checked out. rebuilding repository"
+            build_repository=true
+        fi
+    fi
 else
     echo "Checking out Quarkus into ${tmp_dir}"
-    rm -rf "${tmp_dir}"
-    mkdir -p "${tmp_dir}"
+    rm -rf *
     git clone --depth 1 --single-branch --branch ${quarkus_branch} https://github.com/quarkusio/quarkus .
+    build_repository=true
 fi
 
 # Read version
@@ -47,6 +63,11 @@ quarkus_version=$(mvn -q -Dexpression=project.version -DforceStdout help:evaluat
 echo "Got quarkus version ${quarkus_version} from repository"
 
 # Install project
-${mvn_cmd} clean install -Dquickly
+if [ "${build_repository}" = 'true' ]; then
+    echo "Installing Quarkus artifacts locally"
+    ${mvn_cmd} clean install -Dquickly
+fi
 
 export QUARKUS_VERSION="${quarkus_version}"
+
+cd ${current_dir}
