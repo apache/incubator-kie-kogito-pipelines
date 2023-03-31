@@ -43,46 +43,39 @@ pipeline {
         }
         stage('Build Nightly projects') {
             steps {
-                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE')
-                {
-                    script {
-                        def pipelineHelper = new PipelineHelper(this)
-                        pipelineHelper.retry(
-                        {
-                            def SETTINGS_XML_ID = '5d9884a1-178a-4d67-a3ac-9735d2df2cef'
-                            def projectCollection = ['drools', 'kogito-runtimes', 'kogito-apps', 'kogito-examples']
-                            def projectVariableMap = ['kiegroup_kogito-runtimes': 'kogitoProductVersion', 'kiegroup_drools': 'droolsProductVersion']
-                            def additionalVariables = [
-                                'droolsProductVersion': env.DROOLS_PRODUCT_VERSION, 
-                                'drools-scmRevision': getDroolsBranch(), 
-                            ]
-                            pmebuild.buildProjects(projectCollection, "${SETTINGS_XML_ID}", "$WORKSPACE/build_config/openshift-serverless-logic/nightly", "${env.PME_CLI_PATH}", projectVariableMap, additionalVariables, [:])
-                        }, 2, 480*60)
-                    }
+                script {
+                    def pipelineHelper = new PipelineHelper(this)
+                    pipelineHelper.retry(
+                    {
+                        def SETTINGS_XML_ID = '5d9884a1-178a-4d67-a3ac-9735d2df2cef'
+                        def projectCollection = ['drools', 'kogito-runtimes', 'kogito-apps', 'kogito-examples']
+                        def projectVariableMap = ['kiegroup_kogito-runtimes': 'kogitoProductVersion', 'kiegroup_drools': 'droolsProductVersion']
+                        def additionalVariables = [
+                            'droolsProductVersion': env.DROOLS_PRODUCT_VERSION, 
+                            'drools-scmRevision': getDroolsBranch(), 
+                        ]
+                        pmebuild.buildProjects(projectCollection, "${SETTINGS_XML_ID}", "$WORKSPACE/build_config/openshift-serverless-logic/nightly", "${env.PME_CLI_PATH}", projectVariableMap, additionalVariables, [:])
+                    }, 2, 480*60)
                 }
             }
         }
         stage('Upload maven repository') {
             steps {
                 script {
-                    if(env.ALREADY_BUILT_PROJECTS?.trim()) {
-                        echo "[INFO] Start uploading ${env.WORKSPACE}/deployDirectory"
-                        def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
-                        if(fileExists("${env.WORKSPACE}/deployDirectory")){
-                            def destDir = "${env.WORKSPACE}/deployDirectoryFinal/openshift-serverless-logic-${PRODUCT_VERSION}-maven-repository/maven-repository/"
-                            sh "mkdir -p ${destDir}"
-                            sh "mv ${env.WORKSPACE}/deployDirectory/* ${destDir}"
-                            dir("${env.WORKSPACE}/deployDirectoryFinal") {
-                                sh "zip -r maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']} ."
-                                def folder="${env.RCM_GUEST_FOLDER}/rhoss/rhoss-logic-${PRODUCT_VERSION}.nightly"
-                                sshagent(credentials: ['rcm-publish-server']) {
-                                    sh "ssh 'rhba@${env.RCM_HOST}' 'mkdir -p ${folder}'"
-                                    sh "scp -o StrictHostKeyChecking=no maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip rhba@${env.RCM_HOST}:${folder}"
-                                }
+                    echo "[INFO] Start uploading ${env.WORKSPACE}/deployDirectory"
+                    def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
+                    if(fileExists("${env.WORKSPACE}/deployDirectory")){
+                        def destDir = "${env.WORKSPACE}/deployDirectoryFinal/openshift-serverless-logic-${PRODUCT_VERSION}-maven-repository/maven-repository/"
+                        sh "mkdir -p ${destDir}"
+                        sh "mv ${env.WORKSPACE}/deployDirectory/* ${destDir}"
+                        dir("${env.WORKSPACE}/deployDirectoryFinal") {
+                            sh "zip -r maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']} ."
+                            def folder="${env.RCM_GUEST_FOLDER}/rhoss/rhoss-logic-${PRODUCT_VERSION}.nightly"
+                            sshagent(credentials: ['rcm-publish-server']) {
+                                sh "ssh 'rhba@${env.RCM_HOST}' 'mkdir -p ${folder}'"
+                                sh "scp -o StrictHostKeyChecking=no maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip rhba@${env.RCM_HOST}:${folder}"
                             }
                         }
-                    } else {
-                        println "[WARNING] No artifacts to upload. None project has been built."
                     }
                 }
             }
@@ -90,32 +83,28 @@ pipeline {
         stage ('Send UMB Message to QE.') {
             steps {
                 script {
-                    if(env.ALREADY_BUILT_PROJECTS?.trim()) {
-                        echo '[INFO] Sending OPENSHIFT SERVERLESS LOGIC UMB message to QE.'
-                        def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
+                    echo '[INFO] Sending OPENSHIFT SERVERLESS LOGIC UMB message to QE.'
+                    def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
 
-                        def mavenRepositoryFileUrl = "${env.STAGING_SERVER_URL}/rhoss/rhoss-logic-${PRODUCT_VERSION}.nightly/maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip"
-                        def topic = "VirtualTopic.qe.ci.ba.openshift-serverless-logic.${env.UMB_VERSION}.nightly.trigger"
-                        def eventType = "openshift-serverless-logic-${env.UMB_VERSION}-nightly-qe-trigger"
-                        def messageBody = getMessageBody(
-                            mavenRepositoryFileUrl, 
-                            env.ALREADY_BUILT_PROJECTS,
-                            ['serverlesslogic': PME_BUILD_VARIABLES['kogitoProductVersion'], 'serverlesslogic-rhba': PME_BUILD_VARIABLES['kogitoProductVersion'], 'drools': PME_BUILD_VARIABLES['droolsProductVersion'], 'platform.quarkus.bom': PME_BUILD_VARIABLES['quarkusPlatformVersion'].replaceAll("\\{\\{.*\\}\\}", PME_BUILD_VARIABLES['quarkusVersionCommunity']), 'quarkus.bom': PME_BUILD_VARIABLES['quarkusVersion'].replaceAll("\\{\\{.*\\}\\}", PME_BUILD_VARIABLES['quarkusVersionCommunity'])],
-                            ['data-index-ephemeral': PME_BUILD_VARIABLES['imageRegistry'].replaceAll("\\{\\{.*\\}\\}", PME_BUILD_VARIABLES['imageTagVersion'])],
-                            gitHashesToCollection(env.GIT_INFORMATION_HASHES)
-                        )
-                        echo "[INFO] Message Body: ${messageBody}"
-                        echo "[INFO] Topic: ${topic}"
-                        echo "[INFO] Event Type: ${eventType}"
-                        build job: env.SEND_UMB_MESSAGE_JOB_PATH, parameters: [
-                                [$class: 'StringParameterValue', name: 'MESSAGE_BODY', value: messageBody],
-                                [$class: 'StringParameterValue', name: 'TOPIC', value: topic],
-                                [$class: 'StringParameterValue', name: 'EVENT_TYPE', value: eventType]
-                        ]
-                        echo '[SUCCESS] Message was successfully sent.'
-                    } else {
-                        println "[WARNING] No artifacts to upload. None project has been built."
-                    }
+                    def mavenRepositoryFileUrl = "${env.STAGING_SERVER_URL}/rhoss/rhoss-logic-${PRODUCT_VERSION}.nightly/maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip"
+                    def topic = "VirtualTopic.qe.ci.ba.openshift-serverless-logic.${env.UMB_VERSION}.nightly.trigger"
+                    def eventType = "openshift-serverless-logic-${env.UMB_VERSION}-nightly-qe-trigger"
+                    def messageBody = getMessageBody(
+                        mavenRepositoryFileUrl, 
+                        env.ALREADY_BUILT_PROJECTS,
+                        ['serverlesslogic': PME_BUILD_VARIABLES['kogitoProductVersion'], 'serverlesslogic-rhba': PME_BUILD_VARIABLES['kogitoProductVersion'], 'drools': PME_BUILD_VARIABLES['droolsProductVersion'], 'platform.quarkus.bom': PME_BUILD_VARIABLES['quarkusPlatformVersion'].replaceAll("\\{\\{.*\\}\\}", PME_BUILD_VARIABLES['quarkusVersionCommunity']), 'quarkus.bom': PME_BUILD_VARIABLES['quarkusVersion'].replaceAll("\\{\\{.*\\}\\}", PME_BUILD_VARIABLES['quarkusVersionCommunity'])],
+                        ['data-index-ephemeral': PME_BUILD_VARIABLES['imageRegistry'].replaceAll("\\{\\{.*\\}\\}", PME_BUILD_VARIABLES['imageTagVersion'])],
+                        gitHashesToCollection(env.GIT_INFORMATION_HASHES)
+                    )
+                    echo "[INFO] Message Body: ${messageBody}"
+                    echo "[INFO] Topic: ${topic}"
+                    echo "[INFO] Event Type: ${eventType}"
+                    build job: env.SEND_UMB_MESSAGE_JOB_PATH, parameters: [
+                            [$class: 'StringParameterValue', name: 'MESSAGE_BODY', value: messageBody],
+                            [$class: 'StringParameterValue', name: 'TOPIC', value: topic],
+                            [$class: 'StringParameterValue', name: 'EVENT_TYPE', value: eventType]
+                    ]
+                    echo '[SUCCESS] Message was successfully sent.'
                 }
             }
         }
