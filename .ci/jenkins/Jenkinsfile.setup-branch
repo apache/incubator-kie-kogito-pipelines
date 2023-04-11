@@ -134,24 +134,6 @@ pipeline {
             parallel {
                 stage('Init Kogito Operator') {
                     stages {
-                        stage('Init Examples Images') {
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams()
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                                    addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
-                                    addStringParam(buildParams, 'EXAMPLES_REF', "nightly-${getBuildBranch()}")
-                                    buildJob('kogito-examples-images', buildParams)
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage('kogito-examples-images')
-                                }
-                            }
-                        }
                         stage('Init Operator') {
                             steps {
                                 script {
@@ -187,7 +169,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Init Docs') {
             steps {
                 script {
