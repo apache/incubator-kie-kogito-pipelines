@@ -20,7 +20,6 @@ settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
 
 enableSonarCloudAnalysis = env.ENABLE_SONARCLOUD ? env.ENABLE_SONARCLOUD.toBoolean() : false
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
-quarkusBranch = env.QUARKUS_BRANCH ?: ''
 
 buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
@@ -96,29 +95,6 @@ pipeline {
                     sh "npm install -g @kie/build-chain-action@${buildChainVersion}${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
 
                     sh "npm list -g | grep build-chain"
-                }
-            }
-        }
-        stage('Build quarkus') {
-            when {
-                expression { quarkusBranch }
-            }
-            steps {
-                script {
-                    dir('quarkus') {
-                        deleteDir()
-                        checkout(githubscm.resolveRepository('quarkus', 'quarkusio', quarkusBranch, false))
-
-                        new MavenCommand(this, ['-fae', '-ntp'])
-                            .withSettingsXmlId(settingsXmlId)
-                            .withProperty('quickly')
-                            .run('clean install')
-
-                        // Setup the quarkus version for the build-chain config
-                        if (!env.QUARKUS_VERSION) {
-                            env.QUARKUS_VERSION = '999-SNAPSHOT'
-                        }
-                    }
                 }
             }
         }
@@ -222,6 +198,7 @@ pipeline {
             script {
                 // Clean also docker in case of usage of testcontainers lib
                 util.cleanNode('docker')
+                sh 'rm -rf /tmp/quarkus'
             }
         }
     }
@@ -262,7 +239,8 @@ String getBuildChainCommandline(boolean includeToken=false) {
 String getReproducer() {
     return """
 ```spoiler Reproducer
-${BUILD_MVN_OPTS_CURRENT ? "export BUILD_MVN_OPTS_CURRENT=${BUILD_MVN_OPTS_CURRENT}" : '\n'}
+${QUARKUS_BRANCH ? "export QUARKUS_BRANCH=${QUARKUS_BRANCH}" : ''}
+${BUILD_MVN_OPTS_CURRENT ? "export BUILD_MVN_OPTS_CURRENT=${BUILD_MVN_OPTS_CURRENT}" : ''}
 ${getBuildChainCommandline()}
 
 NOTE: To install the build-chain tool, please refer to https://github.com/kiegroup/github-action-build-chain#local-execution
