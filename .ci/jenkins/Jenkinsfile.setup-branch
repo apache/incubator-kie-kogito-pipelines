@@ -17,7 +17,7 @@ examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
 // Should be multibranch pipeline
 pipeline {
     agent {
-        label 'kie-rhel7 && !built-in'
+        label 'kie-rhel8 && !built-in'
     }
 
     options {
@@ -65,20 +65,6 @@ pipeline {
             post {
                 failure {
                     addFailedStage('kogito-runtimes')
-                }
-            }
-        }
-
-        stage('Deploy Quarkus platform') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    buildJob('quarkus-platform.deploy', buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage('quarkus-platform.deploy')
                 }
             }
         }
@@ -144,54 +130,64 @@ pipeline {
             }
         }
 
-        stage('Init Examples Images') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                    addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
-                    addStringParam(buildParams, 'EXAMPLES_REF', "nightly-${getBuildBranch()}")
-                    buildJob('kogito-examples-images', buildParams)
+        stage('Init operators') {
+            parallel {
+                stage('Init Kogito Operator') {
+                    stages {
+                        stage('Init Examples Images') {
+                            steps {
+                                script {
+                                    def buildParams = getDefaultBuildParams()
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+                                    addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
+                                    addStringParam(buildParams, 'EXAMPLES_REF', "nightly-${getBuildBranch()}")
+                                    buildJob('kogito-examples-images', buildParams)
+                                }
+                            }
+                            post {
+                                failure {
+                                    addFailedStage('kogito-examples-images')
+                                }
+                            }
+                        }
+                        stage('Init Operator') {
+                            steps {
+                                script {
+                                    def buildParams = getDefaultBuildParams()
+                                    addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
+                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                                    buildJob('kogito-operator', buildParams)
+                                }
+                            }
+                            post {
+                                failure {
+                                    addFailedStage('kogito-operator')
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-            post {
-                failure {
-                    addFailedStage('kogito-examples-images')
+
+                stage('Init Serverless Operator') {
+                    steps {
+                        script {
+                            def buildParams = getDefaultBuildParams()
+                            addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
+                            addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                            buildJob('kogito-serverless-operator', buildParams)
+                        }
+                    }
+                    post {
+                        failure {
+                            addFailedStage('kogito-serverless-operator')
+                        }
+                    }
                 }
             }
         }
-        stage('Init Operator') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                    buildJob('kogito-operator', buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage('kogito-operator')
-                }
-            }
-        }
-        stage('Init Serverless Operator') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                    buildJob('kogito-serverless-operator', buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage('kogito-serverless-operator')
-                }
-            }
-        }
+        
         stage('Init Docs') {
             steps {
                 script {
@@ -205,6 +201,22 @@ pipeline {
                 }
             }
         }
+
+        // Launch the nightly to deploy all artifacts from the branch
+        stage('Launch the nightly') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addBooleanParam(buildParams, 'SKIP_TESTS', true)
+                    buildJob('../nightly/kogito-nightly', buildParams, 'kogito-nightly', false)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage('kogito-nightly')
+                }
+            }
+        }
     }
     post {
         unsuccessful {
@@ -213,10 +225,10 @@ pipeline {
     }
 }
 
-def buildJob(String jobName, List buildParams, String jobKey = jobName) {
+def buildJob(String jobName, List buildParams, String jobKey = jobName, boolean waitForJob = true) {
     echo "[${jobKey}] Build ${jobName} with params ${buildParams}"
 
-    def job = build(job: "${jobName}", wait: true, parameters: buildParams, propagate: false)
+    def job = build(job: "${jobName}", wait: waitForJob, parameters: buildParams, propagate: false)
     JOBS[jobKey] = job
 
     // Set Unstable if job did not succeed
