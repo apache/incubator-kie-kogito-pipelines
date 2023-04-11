@@ -115,9 +115,6 @@ pipeline {
             steps {
                 script {
                     def buildParams = getDefaultBuildParams()
-                    addStringParam(buildParams, 'APPS_REF', "${getBuildBranch()}")
-                    addStringParam(buildParams, 'APPS_URI', "https://github.com/${getGitAuthor()}/kogito-apps")
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
                     addStringParam(buildParams, 'KOGITO_VERSION', getKogitoVersion().toLowerCase())
                     addStringParam(buildParams, 'KOGITO_ARTIFACTS_VERSION', getKogitoVersion())
                     buildJob('kogito-images', buildParams)
@@ -139,7 +136,6 @@ pipeline {
                                 script {
                                     def buildParams = getDefaultBuildParams()
                                     addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
                                     buildJob('kogito-operator', buildParams)
                                 }
                             }
@@ -157,7 +153,6 @@ pipeline {
                         script {
                             def buildParams = getDefaultBuildParams()
                             addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
-                            addImageBuildParams(buildParams, env.NIGHTLY_TAG)
                             buildJob('kogito-serverless-operator', buildParams)
                         }
                     }
