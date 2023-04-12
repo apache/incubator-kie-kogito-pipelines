@@ -25,7 +25,6 @@ if (Utils.isMainBranch(this)) {
 
 // Setup branch branch
 createSetupBranchJob()
-setupQuarkusPlatformJob(JobType.SETUP_BRANCH)
 
 // Nightly
 setupNightlyJob()
