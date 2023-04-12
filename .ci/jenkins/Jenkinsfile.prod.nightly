@@ -70,10 +70,12 @@ pipeline {
                         sh "mv ${env.WORKSPACE}/deployDirectory/* ${destDir}"
                         dir("${env.WORKSPACE}/deployDirectoryFinal") {
                             sh "zip -r maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']} ."
-                            def folder="${env.RCM_GUEST_FOLDER}/rhoss/rhoss-logic-${PRODUCT_VERSION}.nightly"
-                            sshagent(credentials: ['rcm-publish-server']) {
-                                sh "ssh 'rhba@${env.RCM_HOST}' 'mkdir -p ${folder}'"
-                                sh "scp -o StrictHostKeyChecking=no maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip rhba@${env.RCM_HOST}:${folder}"
+                            def relativeFile = "rhoss/rhoss-logic-${PRODUCT_VERSION}.nightly"
+                            def folder="${env.RCM_GUEST_FOLDER}/${relativeFile}"
+
+                            util.withKerberos('rhba-prod-keytab') {
+                                sh "ssh 'rhba-prod@${env.RCM_HOST}' 'mkdir -p ${folder}'"
+                                sh "rsync -rlp --info=progress2 maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip rhba-prod@${env.RCM_HOST}:staging/${relativeFile}"
                             }
                         }
                     }
