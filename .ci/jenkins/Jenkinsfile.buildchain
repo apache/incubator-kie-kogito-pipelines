@@ -239,8 +239,8 @@ String getBuildChainCommandline(boolean includeToken=false) {
 String getReproducer() {
     return """
 ```spoiler Reproducer
-${QUARKUS_BRANCH ? "export QUARKUS_BRANCH=${QUARKUS_BRANCH}" : ''}
-${BUILD_MVN_OPTS_CURRENT ? "export BUILD_MVN_OPTS_CURRENT=${BUILD_MVN_OPTS_CURRENT}" : ''}
+${env.QUARKUS_BRANCH ? "export QUARKUS_BRANCH=${env.QUARKUS_BRANCH}" : ''}
+${env.BUILD_MVN_OPTS_CURRENT ? "export BUILD_MVN_OPTS_CURRENT=${env.BUILD_MVN_OPTS_CURRENT}" : ''}
 ${getBuildChainCommandline()}
 
 NOTE: To install the build-chain tool, please refer to https://github.com/kiegroup/github-action-build-chain#local-execution
