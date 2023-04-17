@@ -69,7 +69,7 @@ pipeline {
                 expression { return isArtifactsDeploy() }
             }
             stages {
-                stage('Build & Deploy Kogito Runtimes Apps') {
+                stage('Build & Deploy base artifacts') {
                     parallel {
                         stage('Build & Deploy Kogito Runtimes') {
                             steps {
@@ -106,48 +106,48 @@ pipeline {
                                 }
                             }
                         }
-                    }
-                }
-
-                stage('Deploy Quarkus platform') {
-                    steps {
-                        script {
-                            def buildParams = getDefaultBuildParams()
-                            buildJob('quarkus-platform.deploy', buildParams)
-                        }
-                    }
-                    post {
-                        failure {
-                            addFailedStage('quarkus-platform.deploy')
-                        }
-                    }
-                }
-
-                stage('Build & Deploy Kogito Examples') {
-                    steps {
-                        script {
-                            def buildParams = getDefaultBuildParams()
-                            addSkipTestsParam(buildParams)
-                            addSkipIntegrationTestsParam(buildParams)
-
-                            // images and operator deploy testing will use older working artifacts if that one fails
-                            buildJob(EXAMPLES_DEPLOY, buildParams)
-
-                            if (isJobSucceeded(EXAMPLES_DEPLOY) || isJobUnstable(EXAMPLES_DEPLOY)) {
-                                // Update examples nightly branch
-                                dir('kogito-examples') {
-                                    deleteDir()
-                                    checkout(githubscm.resolveRepository('kogito-examples', getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsID()))
-                                    String nightlyBranch = "nightly-${getBuildBranch()}"
-                                    githubscm.createBranch(nightlyBranch)
-                                    githubscm.pushObject('origin', nightlyBranch, getGitAuthorCredsID())
+                        
+                        stage('Deploy Quarkus platform') {
+                            steps {
+                                script {
+                                    def buildParams = getDefaultBuildParams()
+                                    buildJob('quarkus-platform.deploy', buildParams)
+                                }
+                            }
+                            post {
+                                failure {
+                                    addFailedStage('quarkus-platform.deploy')
                                 }
                             }
                         }
-                    }
-                    post {
-                        failure {
-                            addFailedStage(EXAMPLES_DEPLOY)
+
+                        stage('Build & Deploy Kogito Examples') {
+                            steps {
+                                script {
+                                    def buildParams = getDefaultBuildParams()
+                                    addSkipTestsParam(buildParams)
+                                    addSkipIntegrationTestsParam(buildParams)
+
+                                    // images and operator deploy testing will use older working artifacts if that one fails
+                                    buildJob(EXAMPLES_DEPLOY, buildParams)
+
+                                    if (isJobSucceeded(EXAMPLES_DEPLOY) || isJobUnstable(EXAMPLES_DEPLOY)) {
+                                        // Update examples nightly branch
+                                        dir('kogito-examples') {
+                                            deleteDir()
+                                            checkout(githubscm.resolveRepository('kogito-examples', getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsID()))
+                                            String nightlyBranch = "nightly-${getBuildBranch()}"
+                                            githubscm.createBranch(nightlyBranch)
+                                            githubscm.pushObject('origin', nightlyBranch, getGitAuthorCredsID())
+                                        }
+                                    }
+                                }
+                            }
+                            post {
+                                failure {
+                                    addFailedStage(EXAMPLES_DEPLOY)
+                                }
+                            }
                         }
                     }
                 }

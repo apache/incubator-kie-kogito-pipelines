@@ -4,11 +4,9 @@ import org.jenkinsci.plugins.workflow.libs.Library
 import org.kie.jenkins.MavenCommand
 import org.kie.jenkins.MavenSettingsUtils
 
-settingsFile = '.github/mvn-settings.xml'
-
 pipeline {
     agent {
-        label 'kie-rhel8 && !built-in'
+        label 'rhel8 && docker && !built-in'
     }
 
     options {
@@ -24,6 +22,8 @@ pipeline {
     environment {
         // Static env is defined into .jenkins/dsl/jobs.groovy file
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
+
+        SETTINGS_FILE = "${WORKSPACE}/quarkus-platform/.github/mvn-settings.xml"
     }
 
     stages {
@@ -39,14 +39,32 @@ pipeline {
                 }
             }
         }
+        stage('Checkout artifacts\'s repositories') {
+            steps {
+                script {
+                    dir('drools') {
+                        deleteDir()
+                        checkout(githubscm.resolveRepository('drools', getGitAuthor(), util.calculateTargetReleaseBranch(getGitBranch(), 7), false))
+                    }
+                    dir('kogito-runtimes') {
+                        deleteDir()
+                        checkout(githubscm.resolveRepository('kogito-runtimes', getGitAuthor(), getGitBranch(), false))
+                    }
+                    dir('kogito-apps') {
+                        deleteDir()
+                        checkout(githubscm.resolveRepository('kogito-apps', getGitAuthor(), getGitBranch(), false))
+                    }
+                    dir('optaplanner') {
+                        deleteDir()
+                        checkout(githubscm.resolveRepository('optaplanner', getGitAuthor(), util.calculateTargetReleaseBranch(getGitBranch(), 7), false))
+                    }
+                }
+            }
+        }
         stage('Retrieve versions') {
             steps {
                 script {
                     dir('kogito-runtimes') {
-                        deleteDir()
-
-                        checkout(githubscm.resolveRepository('kogito-runtimes', getGitAuthor(), getGitBranch(), false))
-
                         env.KOGITO_VERSION = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -pl :kogito-runtimes -Dexpression=project.version -q -DforceStdout", returnStdout: true).trim()
                         env.QUARKUS_VERSION = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -pl :kogito-dependencies-bom -Dexpression=version.io.quarkus -q -DforceStdout", returnStdout: true).trim()
                         env.KIE_VERSION = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -pl :kogito-kie-bom -Dexpression=version.org.kie -q -DforceStdout", returnStdout: true).trim()
@@ -74,8 +92,8 @@ pipeline {
 
                         // Update platform mvn settings file
                         // We use platform settings file to be sure to get all needed artifacts
-                        MavenSettingsUtils.setRepositoryInSettings(this, settingsFile, 'kogito-staging', 'https://repository.jboss.org/nexus/content/groups/kogito-public/')
-                        MavenSettingsUtils.setRepositoryInSettings(this, settingsFile, 'kogito-public', 'https://repository.jboss.org/nexus/content/groups/public/')
+                        MavenSettingsUtils.setRepositoryInSettings(this, env.SETTINGS_FILE, 'kogito-staging', 'https://repository.jboss.org/nexus/content/groups/kogito-public/')
+                        MavenSettingsUtils.setRepositoryInSettings(this, env.SETTINGS_FILE, 'kogito-public', 'https://repository.jboss.org/nexus/content/groups/public/')
 
                         String localQuarkusPlatformVersion = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout", returnStdout: true).trim()
                         echo "Platform Quarkus version ${localQuarkusPlatformVersion}"
@@ -94,15 +112,17 @@ pipeline {
                 }
             }
         }
-        stage('Regenerate platform boms') {
+        stage('Install local artifacts') {
             steps {
                 script {
-                    dir('quarkus-platform') {
-                        new MavenCommand(this, ['-fae', '-ntp'])
-                            .withSettingsXmlFile(settingsFile)
-                            .skipTests()
-                            .withProperty('sync')
-                            .run('')
+                    [ 'drools', 'kogito-runtimes', 'kogito-apps', 'optaplanner'].each { directory ->
+                        echo "Install ${directory} artifacts"
+                        dir(directory) {
+                            new MavenCommand(this, ['-fae', '-ntp'])
+                                .withSettingsXmlFile(env.SETTINGS_FILE)
+                                .withProperty('quickly')
+                                .run('install')
+                        }
                     }
                 }
             }
@@ -112,15 +132,25 @@ pipeline {
                 script {
                     dir('quarkus-platform') {
                         new MavenCommand(this, ['-fae', '-ntp'])
-                            .withSettingsXmlFile(settingsFile)
-                            .skipTests()
+                            .withSettingsXmlFile(env.SETTINGS_FILE)
                             .withProperty('altDeploymentRepository', "local::default::file://${getMavenDeployLocalDir()}")
                             .withProperty('enforcer.skip', true)
+                            .withProperty('maven.test.failure.ignore', true)
                             .run('deploy')
 
                         // Upload to specific repository with credentials
                         String mavenDeployRepositoryZipUrl = "${QUARKUS_PLATFORM_NEXUS_URL.replaceAll('/content/', '/service/local/').replaceFirst('/*$', '')}/content-compressed"
                         maven.uploadLocalArtifacts("${QUARKUS_PLATFORM_NEXUS_CREDS}", getMavenDeployLocalDir(), mavenDeployRepositoryZipUrl)
+                    }
+                }
+            }
+            post {
+                always {
+                    junit(testResults: '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml, **/target/invoker-reports/**/*.xml', allowEmptyResults: true)
+                }
+                unsuccessful {
+                    script {
+                        util.archiveConsoleLog('', 300)
                     }
                 }
             }
