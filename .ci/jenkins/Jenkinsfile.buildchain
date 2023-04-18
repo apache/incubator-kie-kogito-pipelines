@@ -186,7 +186,7 @@ pipeline {
         unsuccessful {
             script {
                 if (isPRBuildChainType()) {
-                    pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, getReproducer(true), "${BUILD_URL}", 'GITHUB'), GIT_AUTHOR_TOKEN_CREDENTIALS_ID)
+                    pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, getReproducer(true), "${BUILD_URL}", 'GITHUB'), "${GIT_AUTHOR_TOKEN_CREDENTIALS_ID}")
                 } else if (shouldNotify()) {
                     withCredentials([string(credentialsId: "${JENKINS_EMAIL_CREDS_ID}", variable: 'KOGITO_CI_EMAIL_TO')]) {
                         mailer.sendMarkdownTestSummaryNotification(env.NOTIFICATION_JOB_NAME ?: '', "[${env.GIT_BRANCH_NAME}] ${getRepoNameCamelCase(env.REPO_NAME)}", [env.KOGITO_CI_EMAIL_TO], getReproducer())
