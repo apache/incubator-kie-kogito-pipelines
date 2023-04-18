@@ -186,7 +186,7 @@ pipeline {
         unsuccessful {
             script {
                 if (isPRBuildChainType()) {
-                    pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, '', "${BUILD_URL}", 'GITHUB'), 'kie-ci3-token')
+                    pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, getReproducer(true), "${BUILD_URL}", 'GITHUB'), "${GIT_AUTHOR_TOKEN_CREDENTIALS_ID}")
                 } else if (shouldNotify()) {
                     withCredentials([string(credentialsId: "${JENKINS_EMAIL_CREDS_ID}", variable: 'KOGITO_CI_EMAIL_TO')]) {
                         mailer.sendMarkdownTestSummaryNotification(env.NOTIFICATION_JOB_NAME ?: '', "[${env.GIT_BRANCH_NAME}] ${getRepoNameCamelCase(env.REPO_NAME)}", [env.KOGITO_CI_EMAIL_TO], getReproducer())
@@ -236,16 +236,29 @@ String getBuildChainCommandline(boolean includeToken=false) {
     return "build-chain build ${buildChainAction} ${includeToken ? "--token ${GITHUB_TOKEN} " : ''}-f 'https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -o 'bc' ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout"
 }
 
-String getReproducer() {
-    return """
-```spoiler Reproducer
+String getReproducer(boolean isGH = false) {
+    String reproducer = """
 ${env.QUARKUS_BRANCH ? "export QUARKUS_BRANCH=${env.QUARKUS_BRANCH}" : ''}
 ${env.BUILD_MVN_OPTS_CURRENT ? "export BUILD_MVN_OPTS_CURRENT=${env.BUILD_MVN_OPTS_CURRENT}" : ''}
 ${getBuildChainCommandline()}
 
 NOTE: To install the build-chain tool, please refer to https://github.com/kiegroup/github-action-build-chain#local-execution
+"""
+
+    if(isGH) {
+        return """
+<details>
+<summary><b>Reproducer</b></summary>
+${reproducer}
+</details>
+"""
+    } else {
+        return """
+```spoiler Reproducer
+${reproducer}
 ```
 """
+    }
 }
 
 String getRepoNameCamelCase(String repo) {
