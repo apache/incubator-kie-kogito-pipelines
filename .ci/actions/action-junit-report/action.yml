@@ -1,0 +1,25 @@
+name: 'Action Junit Report'
+description: 'Generates a test report and annotates failures'
+inputs:
+  report_paths:
+    description: "Glob expression to surefire or failsafe report paths."
+    required: false
+    default: "**/**/TEST-*.xml"
+  annotate_only:
+    description: "Whether to publish test results as only annotation or not"
+    required: false
+    default: "true"
+  detailed_summary:
+    description: "Whether to publish a detailed test report or not"
+    required: false
+    default: "true"
+    
+runs:
+  using: "composite"
+  steps: 
+    - name: Publish Test Results
+      uses: mikepenz/action-junit-report@v3
+      with:
+        annotate_only: ${{ inputs.annotate_only }}
+        report_paths: ${{ inputs.report_paths }}
+        detailed_summary: ${{ inputs.detailed_summary }}
