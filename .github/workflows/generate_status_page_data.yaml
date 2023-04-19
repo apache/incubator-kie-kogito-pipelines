@@ -1,0 +1,28 @@
+name: Generate status page data
+
+on:
+  workflow_dispatch:
+    schedule:
+      - cron: '0 * * * *'
+
+jobs:
+  generate-status-page-data:
+    if: github.repository_owner == 'kiegroup'
+    concurrency:
+      group: generate-status-page-data
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    name: Generate status page data
+    steps:
+      - name: Generate status page data
+        uses: kiegroup/chain-status/.ci/actions/generate-data@main
+        with:
+          definition-file: https://raw.githubusercontent.com/kiegroup/kogito-pipelines/main/.ci/pull-request-config.yaml
+          title: Kogito Status
+          subtitle: Kiegroup Kogito organization repositories CI status
+          base-branch-filter: main,1.13.x,1.13.x-blue,8.13.x
+          branches: 1.13.x,1.13.x-blue
+          created-by: GitHub Action
+          created-url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          logger-level: debug
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
