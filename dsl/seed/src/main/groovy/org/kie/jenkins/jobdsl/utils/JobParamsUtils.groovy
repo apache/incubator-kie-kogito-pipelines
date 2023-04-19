@@ -110,17 +110,21 @@ class JobParamsUtils {
 
     static def setupJobParamsDefaultJDKConfiguration(def script, def jobParams) {
         jobParams.env = jobParams.env ?: [:]
-        jobParams.env.putAll([
-            BUILD_JDK_TOOL: Utils.getJenkinsDefaultJDKTools(script),
-        ])
+        // Set BUILD_JDK_TOOL if not defined in default environment
+        if (!jobParams.job.folder.getDefaultEnvVars().find { it.key == 'BUILD_JDK_TOOL' }) {
+            PrintUtils.debug(script, "Adding `BUILD_JDK_TOOL` env variable as not existing yet")
+            jobParams.env.put('BUILD_JDK_TOOL', Utils.getJenkinsDefaultJDKTools(script))
+        }
     }
 
     static def setupJobParamsDefaultMavenConfiguration(def script, def jobParams) {
         jobParams.env = jobParams.env ?: [:]
         setupJobParamsDefaultJDKConfiguration(script, jobParams)
-        jobParams.env.putAll([
-            BUILD_MAVEN_TOOL: Utils.getJenkinsDefaultMavenTools(script),
-        ])
+        // Set BUILD_MAVEN_TOOL if not defined in default environment
+        if (!jobParams.job.folder.getDefaultEnvVars().find { it.key == 'BUILD_MAVEN_TOOL' }) {
+            PrintUtils.debug(script, "Adding `BUILD_MAVEN_TOOL` env variable as not existing yet")
+            jobParams.env.put('BUILD_MAVEN_TOOL', Utils.getJenkinsDefaultMavenTools(script))
+        }
     }
 
     static def setupJobParamsBuildChainConfiguration(def script, def jobParams, String repository, String buildchainType, String notificationJobName) {
