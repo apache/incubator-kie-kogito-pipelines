@@ -14,13 +14,26 @@ jobs:
     runs-on: ubuntu-latest
     name: Generate status page data
     steps:
+      - uses: actions/checkout@v3
+        with:
+          path: ./kogito-pipelines
+      - name: Retrieve active repositories
+        id: retrieve_active_repos
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq '[.repositories[].name] | join(",")' ./kogito-pipelines/dsl/config/branch.yaml
+      - name: Retrieve active branches
+        id: retrieve_active_branches
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq '[.git.branches[].name] | join(",")' ./kogito-pipelines/dsl/config/main.yaml
       - name: Generate status page data
         uses: kiegroup/chain-status/.ci/actions/generate-data@main
         with:
-          definition-file: https://raw.githubusercontent.com/kiegroup/kogito-pipelines/main/.ci/pull-request-config.yaml
+          projects: "${{ steps.retrieve_active_repos.outputs.result }}"
           title: Kogito Status
           subtitle: Kiegroup Kogito organization repositories CI status
-          base-branch-filter: main,1.13.x,1.13.x-blue,8.13.x
+          base-branch-filter: "${{ steps.retrieve_active_branches.outputs.result }}"
           branches: 1.13.x,1.13.x-blue
           created-by: GitHub Action
           created-url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
