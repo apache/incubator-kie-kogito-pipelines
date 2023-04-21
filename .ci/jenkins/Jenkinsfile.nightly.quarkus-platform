@@ -127,6 +127,19 @@ pipeline {
                 }
             }
         }
+        stage('Regenerate platform boms') {
+            steps {
+                script {
+                    dir('quarkus-platform') {
+                            new MavenCommand(this, ['-fae', '-ntp'])
+                            .withSettingsXmlFile(settingsFile)
+                            .skipTests()
+                            .withProperty('sync')
+                            .run('')
+                    }
+                }
+            }
+        }
         stage('Deploy quarkus-platform') {
             steps {
                 script {
