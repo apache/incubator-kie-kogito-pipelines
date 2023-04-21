@@ -132,7 +132,7 @@ pipeline {
                 script {
                     dir('quarkus-platform') {
                             new MavenCommand(this, ['-fae', '-ntp'])
-                            .withSettingsXmlFile(settingsFile)
+                            .withSettingsXmlFile(env.SETTINGS_FILE)
                             .skipTests()
                             .withProperty('sync')
                             .run('')
