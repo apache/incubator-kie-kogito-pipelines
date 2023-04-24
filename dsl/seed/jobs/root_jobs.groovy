@@ -84,3 +84,44 @@ if (nonMainBranches) {
 } else {
     println 'No branches to remove ...'
 }
+
+def jobParamsProd = [
+    job: [
+        name: '0-prepare-productized-branch',
+        description: 'Prepare productized branch',
+    ],
+    git: [
+        repository: Utils.getSeedRepo(this),
+        author: Utils.getSeedAuthor(this),
+        credentials: Utils.getSeedAuthorCredsId(this),
+        branch: Utils.getSeedBranch(this),
+    ],
+    env: [:],
+    jenkinsfile: 'dsl/seed/jenkinsfiles/Jenkinsfile.prod.prepare',
+]
+
+KogitoJobTemplate.createPipelineJob(this, jobParamsProd)?.with {
+    parameters {
+        PRODUCTIZED_PROJECTS.split(',').each { projectName ->
+            stringParam("${projectName}_RELEASE_BRANCH".toUpperCase(), '', "${Utils.getRepoNameCamelCase(projectName)} version to release as Major.minor.micro")
+        }
+
+        stringParam('QUARKUS_VERSION', '', 'Quarkus version to which to update all productized branches, usually latest LTS version')
+        booleanParam('PRODUCTIZED_BRANCH', true, 'Is the created branch a productized one ?')
+    }
+
+    environmentVariables {
+        env('JENKINS_EMAIL_CREDS_ID', Utils.getJenkinsEmailCredsId(this))
+
+        env('SEED_CONFIG_FILE_GIT_REPOSITORY', "${SEED_CONFIG_FILE_GIT_REPOSITORY}")
+        env('SEED_CONFIG_FILE_GIT_AUTHOR_NAME', "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}")
+        env('SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
+        env('SEED_CONFIG_FILE_GIT_BRANCH', "${SEED_CONFIG_FILE_GIT_BRANCH}")
+        env('SEED_CONFIG_FILE_PATH', "${SEED_CONFIG_FILE_PATH}")
+
+        env('SEED_REPO', Utils.getSeedRepo(this))
+        env('SEED_AUTHOR', Utils.getSeedAuthor(this))
+        env('SEED_BRANCH', Utils.getSeedBranch(this))
+        env('SEED_CREDENTIALS_ID', Utils.getSeedAuthorCredsId(this))
+    }
+}

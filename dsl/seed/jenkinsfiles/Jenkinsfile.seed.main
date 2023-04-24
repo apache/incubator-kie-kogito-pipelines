@@ -43,9 +43,11 @@ pipeline {
             steps {
                 script {
                     def releaseProjects = readSeedConfig().ecosystem.projects.findAll { ! (it.ignore_release ? it.ignore_release.toBoolean() : false)  }
+                    def productizeProjects = readSeedConfig().ecosystem.projects.findAll { ! (it.ignore_productization ? it.ignore_productization.toBoolean() : false)  }
                     def envProperties = [
                         JENKINS_EMAIL_CREDS_ID: readSeedConfig().jenkins.email_creds_id,
                         RELEASE_PROJECTS: releaseProjects.collect { it.name }.join(','),
+                        PRODUCTIZED_PROJECTS: productizeProjects.collect { it.name }.join(','),
                         DEPENDENCY_PROJECTS: readSeedConfig().ecosystem.dependencies.collect { it.name } .join(','),
                         SEED_REPO: "${SEED_REPO}",
                         SEED_AUTHOR: "${SEED_AUTHOR}",

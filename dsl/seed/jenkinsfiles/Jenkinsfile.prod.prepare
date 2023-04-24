@@ -1,0 +1,360 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+import java.util.regex.Pattern
+
+@Library('jenkins-pipeline-shared-libraries')_
+
+// TODO: add parameters
+// 1. <prj>_RELEASE_BRANCH
+// 2. QUARKUS_VERSION
+// 3. 
+
+seedConfig = [:]
+mainBranchConfig = [:]
+repositoriesToBranch = []
+
+pipeline{
+    agent{
+        label 'kie-rhel7 && !built-in'
+    }
+    stages{
+        stage('Initialize'){
+            steps{
+              script {
+                    checkout scm
+
+                    String projectListStr = getEcosystemProjects().collect { "${getRepoNameCamelCase(it.name)} ${getBranchFromRepository(it.name)}" }.join(' / ')
+                    currentBuild.displayName = "Productize Branch for ${projectListStr}"
+              }
+            }
+        }
+
+        stage('Create productized branch'){
+            steps{
+                script {
+                    List repositories = getRepositoriesToBranch()
+                    createBranches(repositories)
+                }
+            }
+        }
+
+        // update the main seed config by adding the new prod branch, e.g.,
+        //   - name: 8.36.x-prod
+        //      seed:
+        //      branch: seed-drools-8.36.x // this branch MUST already exist
+        stage('Update main seed config') {
+            steps {
+                script {
+                    // String newBranch = getBranchConfigReleaseBranch() // FIXME: remove since not needed
+                    String seedConfigFile = env.SEED_CONFIG_FILE_PATH
+
+                    dir(checkoutMainSeedConfigFileRepo()) {
+                        def seedConfig = readYaml file: seedConfigFile
+
+                        if (!seedConfig.git.branches.find { it.name == getEcosystemProductizedBranch() }) {
+                            def branchConfig = [
+                                name: getEcosystemProductizedBranch(),
+                                seed: [
+                                    branch: getSeedRepoReleaseBranch(),
+                                ]
+                            ]
+                            // FIXME: remove? no need I think 
+                            // if (newBranch != getEcosystemReleaseBranch()) {
+                            //     branchConfig.seed.config_file = [
+                            //         git: [
+                            //             branch: newBranch
+                            //         ]
+                            //     ]
+                            // }
+                            seedConfig.git.branches.add(branchConfig)
+                        }
+
+                        echo "Write seed config => ${seedConfig}"
+                        sh "rm ${seedConfigFile}"
+                        writeYaml file: seedConfigFile, data: seedConfig, overwrite: true
+
+                        pushIfChanged(env.SEED_CONFIG_FILE_GIT_BRANCH, env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID, "Add productized branch ${getEcosystemProductizedBranch()} after upstream release")
+                    }
+                }
+            }
+        }
+
+        // 1. update productized branch seed config repo
+        //          this will:
+        //              - disable those jobs that are no more needed on branch.yaml [this MUST be executed only on seed repo, e.g., kogito-pipelines]
+        //              - enable productized profile (-Dproductized) on jenkins environments branch.yaml [this MUST be executed only on seed repo, e.g., kogito-pipelines]
+        //              - disable some environments when branching as they make no sense by default [this MUST be executed only on seed repo, e.g., kogito-pipelines]
+        //              - create PR ? or do these changes directly on the prod branch
+
+        stage("Update prod branch seed config repo"){
+            steps{
+               script {
+                // TODO: implement
+               }
+            }
+        }
+
+        // 2. update productized branch on other projects
+        //              - disable PR checks from jobs.groovy
+        //              - comment out projects we are not interested in from the buildchain-config.yaml
+        //              - disable GHA jobs no more needed by commenting out workflows
+        //              - enable productized profile (-Dproductized) on GHA PR checks workflows
+        //              - ensure that fullProfile is not enabled on .ci/jenkins/dsl/jobs.groovy, if so remove it
+
+        stage("Update prod branch for all projects to be productized"){
+            steps{
+               script {
+                // TODO: implement
+               }
+            }
+        }
+
+        // 3. call update quarkus job in order to downgrade quarkus to LTS version (version provided as parameter QUARKUS_VERSION)
+        //          this will:
+        //              - downgrade quarkus, there already exists a job doing this
+        //              - apply patches from .ci/environments/quarkus-lts on the same PR
+
+        stage('Downgrade quarkus to LTS version'){
+            steps{
+                script {
+                    // TODO: implement
+                }
+            }
+        }
+    }
+    post{
+        unsuccessful {
+            script {
+                // TODO: send notification
+            }
+        }
+        success {
+            script {
+                // TODO: send notification with new branches and PRs if any
+            }
+        }
+    }
+}
+
+// Retrieve job parameters keys
+
+String getBranchParameterKey(String projectName) {
+    return "${projectName}_RELEASE_BRANCH".toUpperCase()
+}
+
+String getProdBranchSuffixParameterKey(String projectName) {
+    return "${projectName}_PROD_BRANCH_SUFFIX".toUpperCase()
+}
+
+String getQuarkusVersionParameterKey() {
+    return "QUARKUS-VERSION"
+}
+
+// Retrieve seed configuration
+
+String checkoutMainSeedConfigFileRepo() {
+    assert env.SEED_CONFIG_FILE_GIT_REPOSITORY : 'Missing main seed config file Git Repository into the environment. Please check the job configuration.'
+    assert env.SEED_CONFIG_FILE_GIT_AUTHOR_NAME : 'Missing main seed config file Git Author Name into the environment. Please check the job configuration.'
+    assert env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID : 'Missing main seed config file Git Author Credentials ID into the environment. Please check the job configuration.'
+    assert env.SEED_CONFIG_FILE_GIT_BRANCH : 'Missing main seed config file Git Branch into the environment. Please check the job configuration.'
+
+    String dirName = "seed-main-${env.SEED_CONFIG_FILE_GIT_REPOSITORY}"
+    dir(dirName) {
+        deleteDir()
+        checkout(githubscm.resolveRepository(env.SEED_CONFIG_FILE_GIT_REPOSITORY, env.SEED_CONFIG_FILE_GIT_AUTHOR_NAME, env.SEED_CONFIG_FILE_GIT_BRANCH, false, env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID))
+        sh "git checkout ${env.SEED_CONFIG_FILE_GIT_BRANCH}"
+    }
+    return dirName
+}
+
+def readSeedConfig() {
+    assert env.SEED_CONFIG_FILE_PATH : 'Missing main seed config file Path into the environment. Please check the job configuration.'
+    if (!seedConfig) {
+        dir(checkoutMainSeedConfigFileRepo()) {
+            seedConfig = readYaml(file: "${env.SEED_CONFIG_FILE_PATH}")
+        }
+    }
+    return seedConfig
+}
+
+String getMainBranchConfigFilePath() {
+    return readSeedConfig().seed.config_file.path
+}
+
+String getMainBranchConfigFileGitAuthorCredentialsId() {
+    return readSeedConfig().seed.config_file.git.author.credentials_id
+}
+
+String checkoutMainBranchSeedConfigFileRepo() {
+    String dirName = "seed-branch-${getMainBranchConfigFileGitRepository()}"
+    dir(dirName) {
+        deleteDir()
+        checkout(githubscm.resolveRepository(getMainBranchConfigFileGitRepository(), getMainBranchConfigFileGitAuthorName(), getMainBranchConfigFileGitBranch(), false, getMainBranchConfigFileGitAuthorCredentialsId()))
+        sh "git checkout ${getMainBranchConfigFileGitBranch()}"
+    }
+    return dirName
+}
+
+def readMainBranchConfig() {
+    if (!mainBranchConfig) {
+        dir(checkoutMainBranchSeedConfigFileRepo()) {
+            mainBranchConfig = readYaml(file: "${getMainBranchConfigFilePath()}")
+        }
+    }
+    return mainBranchConfig
+}
+
+String getRepoNameCamelCase(String repo) {
+    List words = repo.split('-') as List
+    return words.collect { it.isEmpty() ? it : it.substring(0, 1).toUpperCase() + it.substring(1).toLowerCase() }.join(' ')
+}
+
+
+// Retrieve impacted projects
+
+List getEcosystemProjects() {
+    return readSeedConfig().ecosystem.projects.findAll { ! (it.ignore_productization ? it.ignore_productization.toBoolean() : false)  }
+}
+
+
+// Retrieve branch to productize starting from current repository/project
+
+String getProjectFromRepository(String repository) {
+    return getEcosystemProjects().find { project -> project.regexs?.any { Pattern.compile(it).matcher(repository).matches() } }?.name
+}
+
+String getBranchFromProject(String projectName) {
+    String key = getBranchParameterKey(projectName)
+    assert params."${key}" : "No parameter ${key} available for project ${projectName}. Please check job configuration."
+    return params."${key}"
+}
+
+String getBranchFromRepository(String repository) {
+    def projectName = getProjectFromRepository(repository)
+    if (projectName) {
+        return getBranchFromProject(projectName)
+    } else {
+        error "Cannot retrieve repository from repository name: ${repository}. Make sure it matches pattern from ecosystem projects in the main config"
+    }
+}
+
+// Retrieve repositories to branch
+
+String getMainBranchConfigFileGitRepository() {
+    return readSeedConfig().seed.config_file.git.repository
+}
+
+String getMainBranchConfigFileGitAuthorName() {
+    return readSeedConfig().seed.config_file.git.author.name
+}
+
+String getMainBranchConfigFileGitBranch() {
+    return readSeedConfig().seed.config_file.git.branch
+}
+
+List getRepositoriesToBranch() {
+    if (!repositoriesToBranch) {
+        repositoriesToBranch = readMainBranchConfig().repositories.findAll { getProjectFromRepository(it.name) && (it.to_productize ? it.to_productize.toBoolean() : false) }
+        def branches = readSeedConfig().git.branches
+        if (!branches) {
+            error "No branches are defined in main configuration..."
+        }
+        def mainBranch = branches.find { it.main_branch }?.name ?: ''
+        if (!mainBranch) {
+            error "No main branch defined into the main configuration..."
+        }
+        repositoriesToBranch.each { repoConfig ->
+            // set  repoConfig.branch to the prod release one (e.g., 1.37.x) - input parameter
+            def baseBranch = getBranchFromRepository(repoConfig.name)
+            repoConfig.branch = baseBranch ?: mainBranch
+
+            // TODO do we need this? I don't think so
+            if (repoConfig.name == getMainBranchConfigFileGitRepository()) {
+                String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
+                if (gitAuthor == getMainBranchConfigFileGitAuthorName() &&
+                    repoConfig.branch == getMainBranchConfigFileGitBranch()) {
+                    // we are already going to branch it with the setup of the branch config
+                    echo "Repository ${repoConfig.name} is branch config repository"
+                    repoConfig.is_branch_config_repo = true
+                }
+            }
+        }
+    }
+    return repositoriesToBranch
+}
+
+// Create productized branches
+
+String getProductizedBranchFromProject(String projectName) {
+    String suffix = params."${getProdBranchSuffixParameterKey(projectName)}" ?: 'prod'
+    return "${getBranchFromProject(projectName)}-${suffix}"
+}
+
+String getProductizedBranchFromRepository(String repository) {
+    def projectName = getProjectFromRepository(repository)
+    return getProductizedBranchFromProject(projectName)
+}
+
+void createBranches(List repositories) {
+    repositories.each { repoConfig ->
+        String repoName = repoConfig.name
+        String baseBranch = repoConfig.branch
+        String prodBranch = getProductizedBranchFromRepository(repoConfig.name)
+        String gitAuthorCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
+        assert gitAuthorCredsId : "Cannot find any credentials Id for git author ${repoConfig.author.name}. Please check your branch seed config file."
+        String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
+
+        echo "Checkout repo ${gitAuthor}/${repoName} on branch ${baseBranch}"
+        dir(repoName) {
+            deleteDir()
+            checkout(githubscm.resolveRepository(repoName, gitAuthor, baseBranch, false, gitAuthorCredsId))
+            getOrCreateGitBranch(prodBranch, gitAuthorCredsId)
+        }
+        // Update the branch with the new productized branch
+        repoConfig.branch = prodBranch
+    }
+}
+
+// Update main seed config
+
+String getEcosystemMainProject() {
+    return readSeedConfig().ecosystem.main_project
+}
+
+String getEcosystemProductizedBranch() {
+    return getProductizedBranchFromProject(getEcosystemMainProject())
+}
+
+String getEcosystemReleaseBranch() {
+    return getBranchFromProject(getEcosystemMainProject())
+}
+
+String getSeedRepoReleaseBranch() {
+    return "seed-${getEcosystemMainProject()}-${getEcosystemReleaseBranch()}"
+}
+
+// Git utilities
+
+void getOrCreateGitBranch(String branch, String credentialsId) {
+    sh 'git fetch origin'
+    String branchRemoteResult = sh(script: "git ls-remote origin ${branch} | wc -l", returnStdout: true).trim()
+    if (Integer.parseInt(branchRemoteResult) > 0) {
+        echo "Branch ${branch} already exist ... will not create it. Checking out !"
+        sh "git checkout ${branch}"
+    } else {
+        echo "Branch ${branch} does not exist ... gonna create it"
+        // FIXME uncomment following lines
+        // githubscm.createBranch(branch)
+        // githubscm.pushObject('origin', branch,  credentialsId)
+    }
+}
+
+def pushIfChanged(String branch, String credentialsId, String commitMsg) {
+    if (githubscm.isThereAnyChanges()) {
+        sh 'git diff'
+        // FIXME uncomment following lines
+        // githubscm.commitChanges(commitMsg)
+        // githubscm.pushObject('origin', branch, credentialsId)
+    } else {
+        println '[WARN] No changes to commit'
+    }
+}

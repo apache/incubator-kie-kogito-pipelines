@@ -9,10 +9,12 @@ ecosystem:
     - kogito.*
   - name: kie-tools
     ignore_release: true
+    ignore_productization: true
     regexs:
     - kie-tools.*
   - name: kie-docs
     ignore_release: true
+    ignore_productization: true
     regexs:
     - kie-docs.*
 git:
@@ -52,9 +54,11 @@ seed:
     git:
       repository: kogito-pipelines
       author:
-        name: kiegroup
+        # FIXME change back to kiegroup
+        name: lampajr
         credentials_id: kie-ci3
-      branch: main
+      # FIXME change back to main
+      branch: BXMSPROD-2019_prod_branch_job
     path: dsl/config/branch.yaml
   jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
 jenkins:

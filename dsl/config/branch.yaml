@@ -69,9 +69,13 @@ disable:
   triggers: false
 repositories:
 - name: kogito-pipelines
+  to_productize: true
 - name: kogito-runtimes
+  to_productize: true
 - name: kogito-apps
+  to_productize: true
 - name: kogito-examples
+  to_productize: true
 - name: kogito-images
 - name: kogito-operator
 - name: kogito-serverless-operator
@@ -81,7 +85,8 @@ repositories:
   branch: main-kogito
 git:
   author:
-    name: kiegroup
+    # TODO change back to kiegroup
+    name: lampajr
     credentials_id: kie-ci3
     token_credentials_id: kie-ci3-token
   bot_author:
