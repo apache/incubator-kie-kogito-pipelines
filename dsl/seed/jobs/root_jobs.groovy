@@ -100,12 +100,12 @@ def jobParamsProd = [
     jenkinsfile: 'dsl/seed/jenkinsfiles/Jenkinsfile.prod.prepare',
 ]
 
-
-if (nonMainBranches) {
+List communityReleaseBranches = ALL_BRANCHES.split(',').findAll { it != MAIN_BRANCH_NAME && !it.endsWith('-prod') }
+if (communityReleaseBranches) {
     KogitoJobTemplate.createPipelineJob(this, jobParamsProd)?.with {
         parameters {
             PRODUCTIZED_PROJECTS.split(',').each { projectName ->
-                choiceParam("${projectName}_RELEASE_BRANCH".toUpperCase(), nonMainBranches, "${Utils.getRepoNameCamelCase(projectName)} community branch to which to create the productized branch from")
+                choiceParam("${projectName}_RELEASE_BRANCH".toUpperCase(), communityReleaseBranches, "${Utils.getRepoNameCamelCase(projectName)} community branch to which to create the productized branch from")
             }
 
             stringParam('QUARKUS_VERSION', '', 'Quarkus version to which to update all productized branches, usually latest LTS version')
