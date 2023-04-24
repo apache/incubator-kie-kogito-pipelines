@@ -14,7 +14,7 @@ repositoriesToBranch = []
 
 pipeline{
     agent{
-        label 'kie-rhel7 && !built-in'
+        label 'kie-rhel8 && !built-in'
     }
     stages{
         stage('Initialize'){
@@ -253,7 +253,7 @@ String getMainBranchConfigFileGitBranch() {
 
 List getRepositoriesToBranch() {
     if (!repositoriesToBranch) {
-        repositoriesToBranch = readMainBranchConfig().repositories.findAll { getProjectFromRepository(it.name) && (it.to_productize ? it.to_productize.toBoolean() : false) }
+        repositoriesToBranch = readMainBranchConfig().productized_repositories.findAll { getProjectFromRepository(it.name) }
         def branches = readSeedConfig().git.branches
         if (!branches) {
             error "No branches are defined in main configuration..."
@@ -342,18 +342,16 @@ void getOrCreateGitBranch(String branch, String credentialsId) {
         sh "git checkout ${branch}"
     } else {
         echo "Branch ${branch} does not exist ... gonna create it"
-        // FIXME uncomment following lines
-        // githubscm.createBranch(branch)
-        // githubscm.pushObject('origin', branch,  credentialsId)
+        githubscm.createBranch(branch)
+        githubscm.pushObject('origin', branch,  credentialsId)
     }
 }
 
 def pushIfChanged(String branch, String credentialsId, String commitMsg) {
     if (githubscm.isThereAnyChanges()) {
         sh 'git diff'
-        // FIXME uncomment following lines
-        // githubscm.commitChanges(commitMsg)
-        // githubscm.pushObject('origin', branch, credentialsId)
+        githubscm.commitChanges(commitMsg)
+        githubscm.pushObject('origin', branch, credentialsId)
     } else {
         println '[WARN] No changes to commit'
     }
