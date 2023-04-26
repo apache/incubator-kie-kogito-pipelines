@@ -29,6 +29,7 @@ class JobParamsUtils {
                 REPO_NAME: Utils.getRepoName(script)
             ],
             pr: [
+                target_repository: Utils.getRepoName(script),
                 excluded_regions: [
                     'LICENSE',
                     '\\.gitignore',

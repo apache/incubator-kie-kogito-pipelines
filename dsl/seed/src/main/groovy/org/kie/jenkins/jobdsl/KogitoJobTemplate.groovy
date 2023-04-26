@@ -190,7 +190,7 @@ class KogitoJobTemplate {
 
             // Enable PR test only if main branch
             if (Utils.isMainBranch(script)) {
-                jobParams.git.project_url = "https://github.com/kiegroup/${jobParams.git.repository}/"
+                jobParams.git.project_url = "https://github.com/kiegroup/${jobParams.pr.target_repository ?: jobParams.git.repository}/"
             }
         }
 
@@ -371,7 +371,7 @@ class KogitoJobTemplate {
                 jobParams.jenkinsfile = jobCfg.jenkinsfile
             }
 
-            jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.git.repository}/"
+            jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${${jobParams.pr.target_repository ?: jobParams.git.repository}}/"
 
             boolean downstream = jobCfg.repository && jobCfg.repository != jobParams.git.repository
 
