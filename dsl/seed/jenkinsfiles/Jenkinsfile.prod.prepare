@@ -87,7 +87,7 @@ pipeline{
                     dir(checkoutMainBranchSeedConfigFileRepo()) {
                         getOrCreateGitBranch(prodBranch, getMainBranchConfigFileGitAuthorCredentialsId())
 
-                        def branchConfigFilePath = getMainBranchConfigFilePath()
+                        def branchConfigFilePath = getProdBranchConfigFilePath()
                         def branchConfig = readYaml file: branchConfigFilePath
 
                         branchConfig.productized_repositories = prodRepositories
@@ -100,24 +100,15 @@ pipeline{
                                     envData.enabled = false // Keep only quarkus-branch
                                 }
                             }
-                            if (envData.ids.find { it == 'lts' }) {
-                                envData.enabled = branchConfig.productized_branch
-                            }
                         }
-
-                        // disable DSL triggers
-                        branchConfig.disable.triggers = true
 
 
                         // enable productized profile
                         def buildMvnOpts = "-Dproductized ${getAdditionalDefaultBuildMavenOpts()} "
 
                         branchConfig.environments.each { envName, envData ->
-                            if (envData.enabled && envData.env_vars.BUILD_MVN_OPTS) {
-                                envData.env_vars.BUILD_MVN_OPTS = buildMvnOpts + envData.env_vars.BUILD_MVN_OPTS
-                            }
+                            envData.env_vars.BUILD_MVN_OPTS = buildMvnOpts + (envData.env_vars.BUILD_MVN_OPTS ?: '')
                         }
-                        branchConfig.default.env_vars.BUILD_MVN_OPTS = buildMvnOpts
 
                         echo "Write dsl branch_config => ${branchConfig}"
                         sh "rm -f ${branchConfigFilePath}"
@@ -227,7 +218,7 @@ def readSeedConfig() {
     return seedConfig
 }
 
-String getMainBranchConfigFilePath() {
+String getProdBranchConfigFilePath() {
     return readSeedConfig().seed.config_file.path
 }
 
@@ -248,7 +239,7 @@ String checkoutMainBranchSeedConfigFileRepo() {
 def readMainBranchConfig() {
     if (!mainBranchConfig) {
         dir(checkoutMainBranchSeedConfigFileRepo()) {
-            mainBranchConfig = readYaml(file: "${getMainBranchConfigFilePath()}")
+            mainBranchConfig = readYaml(file: "${getProdBranchConfigFilePath()}")
         }
     }
     return mainBranchConfig
