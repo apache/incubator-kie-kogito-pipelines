@@ -107,6 +107,7 @@ pipeline{
                         def buildMvnOpts = "-Dproductized ${getAdditionalDefaultBuildMavenOpts()} "
 
                         branchConfig.environments.each { envName, envData ->
+                            envData.env_vars = envData.env_vars ?: [:]
                             envData.env_vars.BUILD_MVN_OPTS = buildMvnOpts + (envData.env_vars.BUILD_MVN_OPTS ?: '')
                         }
 
