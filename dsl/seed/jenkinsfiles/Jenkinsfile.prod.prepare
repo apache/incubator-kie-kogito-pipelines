@@ -312,14 +312,15 @@ List getProdRepositoriesToBranch() {
         if (!branches) {
             error "No branches are defined in main configuration..."
         }
-        def mainBranch = branches.find { it.main_branch }?.name ?: ''
-        if (!mainBranch) {
-            error "No main branch defined into the main configuration..."
+
+        def releaseBranch = branches.find { it.name == getEcosystemReleaseBranch() }?.name ?: ''
+        if (!releaseBranch) {
+            error "No ${getEcosystemReleaseBranch()} branch defined into the main configuration..."
         }
         repositoriesToBranch.each { repoConfig ->
             // set  repoConfig.branch to the prod release one (e.g., 1.37.x) - input parameter
             def baseBranch = getBranchFromRepository(repoConfig.name)
-            repoConfig.branch = baseBranch ?: mainBranch
+            repoConfig.branch = repoConfig.branch ?: baseBranch ?: releaseBranch
 
             if (repoConfig.name == getMainBranchConfigFileGitRepository()) {
                 String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
