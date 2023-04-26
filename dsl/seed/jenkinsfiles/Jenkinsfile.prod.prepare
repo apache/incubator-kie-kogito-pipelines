@@ -3,10 +3,10 @@ import java.util.regex.Pattern
 
 @Library('jenkins-pipeline-shared-libraries')_
 
-// TODO: add parameters
+// parameters
 // 1. <prj>_RELEASE_BRANCH
 // 2. QUARKUS_VERSION
-// 3. 
+// 3. ADDITIONAL_BUILD_MAVEN_OPTS
 
 seedConfig = [:]
 mainBranchConfig = [:]
@@ -14,7 +14,7 @@ repositoriesToBranch = []
 
 pipeline{
     agent{
-        label 'kie-rhel8 && !built-in'
+        label 'rhel8 && !built-in'
     }
     stages{
         stage('Initialize'){
@@ -101,6 +101,9 @@ pipeline{
                         // additional maven opt that enables productized profile
                         def buildMvnOpts = "-Dproductized ${getAdditionalDefaultBuildMavenOpts()} "
 
+                        // create default env if not already existing
+                        enabledEnvs.default = enabledEnvs.default ?: [:]
+
                         // apply changes on remaining envs
                         enabledEnvs.each { envName, envData ->
                             // ensure env is enabled
@@ -109,11 +112,6 @@ pipeline{
                             envData.env_vars = envData.env_vars ?: [:]
                             envData.env_vars.BUILD_MVN_OPTS = buildMvnOpts + (envData.env_vars.BUILD_MVN_OPTS ?: '')
                         }
-
-                        // create default env if not already existing
-                        enabledEnvs.default = enabledEnvs.default ?: [:]
-                        enabledEnvs.default.env_vars = enabledEnvs.default.env_vars ?: [:]
-                        enabledEnvs.default.env_vars.BUILD_MVN_OPTS = buildMvnOpts + (enabledEnvs.default.env_vars.BUILD_MVN_OPTS ?: '')
 
                         // update environments
                         branchConfig.environments = enabledEnvs
