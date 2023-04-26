@@ -93,11 +93,10 @@ pipeline{
                         branchConfig.productized_repositories = prodRepositories
                         branchConfig.productized_branch = true
 
-                        // keep only those environments that are really needed on productized branch
-                        // remove those that have lts as id and those that start with 'quarkus' except for `quarkus-branch`
-                        enabledEnvs = branchConfig.environments.findAll { envName, envData ->
-                            return (!envData.ids.find { it == 'lts' }) && (!envName.startsWith('quarkus') || envName == 'quarkus-branch')
-                        }
+                        // keep only those environments that are really needed on productized branch:
+                        // native, quarkus-branch and default if exists
+                        def envsToKeep = ['native', 'quarkus-branch', 'default']
+                        enabledEnvs = branchConfig.environments.findAll { envName, envData ->  envsToKeep.contains(envName) }
 
                         // additional maven opt that enables productized profile
                         def buildMvnOpts = "-Dproductized ${getAdditionalDefaultBuildMavenOpts()} "
