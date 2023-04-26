@@ -110,6 +110,11 @@ pipeline{
                             envData.env_vars.BUILD_MVN_OPTS = buildMvnOpts + (envData.env_vars.BUILD_MVN_OPTS ?: '')
                         }
 
+                        if (!branchConfig.environments.default) {
+                            // create default env if not already existing
+                            branchConfig.environments.default.env_vars.BUILD_MVN_OPTS = buildMvnOpts
+                        }
+
                         echo "Write dsl branch_config => ${branchConfig}"
                         sh "rm -f ${branchConfigFilePath}"
                         writeYaml file: "${branchConfigFilePath}", data: branchConfig, overwrite: true
