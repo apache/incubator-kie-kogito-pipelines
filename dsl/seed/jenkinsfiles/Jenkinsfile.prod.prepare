@@ -113,7 +113,11 @@ pipeline{
 
                         if (!branchConfig.environments.default) {
                             // create default env if not already existing
-                            branchConfig.environments.default.env_vars.BUILD_MVN_OPTS = buildMvnOpts
+                            branchConfig.environments.default = [
+                                env_vars : [
+                                    BUILD_MVN_OPTS: buildMvnOpts
+                                ]
+                            ]
                         }
 
                         echo "Write dsl branch_config => ${branchConfig}"
