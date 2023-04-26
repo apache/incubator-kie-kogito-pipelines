@@ -93,32 +93,35 @@ pipeline{
                         branchConfig.productized_repositories = prodRepositories
                         branchConfig.productized_branch = true
 
-                        // disable some environments when branching as they make no sense by default
-                        branchConfig.environments.each { envName, envData ->
-                            if (envName.startsWith('quarkus')) {
-                                if (envName != 'quarkus-branch') {
-                                    envData.enabled = false // Keep only quarkus-branch
-                                }
-                            }
+                        // keep only those environments that are really needed on productized branch
+                        // remove those that have lts as id and those that start with 'quarkus' except for `quarkus-branch`
+                        enabledEnvs = branchConfig.environments.findAll { envName, envData ->
+                            return (!envData.ids.find { it == 'lts' }) && (!envName.startsWith('quarkus') || envName == 'quarkus-branch')
                         }
 
-
-                        // enable productized profile
+                        // additional maven opt that enables productized profile
                         def buildMvnOpts = "-Dproductized ${getAdditionalDefaultBuildMavenOpts()} "
 
-                        branchConfig.environments.each { envName, envData ->
+                        // apply changes on remaining envs
+                        enabledEnvs.each { envName, envData ->
+                            // ensure env is enabled
+                            envData.enabled = true
+
                             envData.env_vars = envData.env_vars ?: [:]
                             envData.env_vars.BUILD_MVN_OPTS = buildMvnOpts + (envData.env_vars.BUILD_MVN_OPTS ?: '')
                         }
 
-                        if (!branchConfig.environments.default) {
-                            // create default env if not already existing
-                            branchConfig.environments.default = [
-                                env_vars : [
-                                    BUILD_MVN_OPTS: buildMvnOpts
-                                ]
-                            ]
-                        }
+                        // create default env if not already existing
+                        enabledEnvs.default = enabledEnvs.default ?: [:]
+                        enabledEnvs.default.env_vars = enabledEnvs.default.env_vars ?: [:]
+                        enabledEnvs.default.env_vars.BUILD_MVN_OPTS = buildMvnOpts + (enabledEnvs.default.env_vars.BUILD_MVN_OPTS ?: '')
+
+                        // update environments
+                        branchConfig.environments = enabledEnvs
+
+                        // ignore the job creation for jobs in environment which are not defined (apart from the default env)
+                        branchConfig.generation_config = branchConfig.generation_config ?: [:]
+                        branchConfig.generation_config.missing_environment = 'ignore'
 
                         echo "Write dsl branch_config => ${branchConfig}"
                         sh "rm -f ${branchConfigFilePath}"
