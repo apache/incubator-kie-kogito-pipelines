@@ -109,6 +109,7 @@ if (communityReleaseBranches) {
             }
 
             stringParam('QUARKUS_VERSION', '', 'Quarkus version to which to update all productized branches, usually latest LTS version')
+            stringParam('ADDITIONAL_BUILD_MAVEN_OPTS', '', 'Additional default maven opts for jenkins jobs, e.g., -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral')
         }
 
         environmentVariables {

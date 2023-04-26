@@ -28,10 +28,10 @@ pipeline{
             }
         }
 
-        stage('Create productized branch'){
+        stage('Create productized branches'){
             steps{
                 script {
-                    List repositories = getRepositoriesToBranch()
+                    List repositories = getProdRepositoriesToBranch()
                     createBranches(repositories)
                 }
             }
@@ -44,7 +44,6 @@ pipeline{
         stage('Update main seed config') {
             steps {
                 script {
-                    // String newBranch = getBranchConfigReleaseBranch() // FIXME: remove since not needed
                     String seedConfigFile = env.SEED_CONFIG_FILE_PATH
 
                     dir(checkoutMainSeedConfigFileRepo()) {
@@ -57,14 +56,7 @@ pipeline{
                                     branch: getSeedRepoReleaseBranch(),
                                 ]
                             ]
-                            // FIXME: remove? no need I think 
-                            // if (newBranch != getEcosystemReleaseBranch()) {
-                            //     branchConfig.seed.config_file = [
-                            //         git: [
-                            //             branch: newBranch
-                            //         ]
-                            //     ]
-                            // }
+
                             seedConfig.git.branches.add(branchConfig)
                         }
 
@@ -78,20 +70,65 @@ pipeline{
             }
         }
 
-        // 1. update productized branch seed config repo
-        //          this will:
-        //              - disable those jobs that are no more needed on branch.yaml [this MUST be executed only on seed repo, e.g., kogito-pipelines]
-        //              - enable productized profile (-Dproductized) on jenkins environments branch.yaml [this MUST be executed only on seed repo, e.g., kogito-pipelines]
-        //              - disable some environments when branching as they make no sense by default [this MUST be executed only on seed repo, e.g., kogito-pipelines]
-        //              - create PR ? or do these changes directly on the prod branch
+        // 1. update seed config repo on productized branch (e.g., 1.37.x-prod)
+        // [DONE]             - enable productized profile (-Dproductized) on jenkins environments branch.yaml [this MUST be executed only on config file repo, e.g., kogito-pipelines]
+        // [DONE]             - disable some environments when branching as they make no sense by default [this MUST be executed only on config file repo, e.g., kogito-pipelines]
+        // [DONE]             - set productized_repositories[].branch to the productized one, e.g., 1.37.x-prod
+        // [DONE]             - set productized_repositories[].is_branch_config_repo to true for the config file repo
+        // [DONE]             - do these changes directly on the prod branch
 
-        stage("Update prod branch seed config repo"){
+
+        stage("Update branch config on productized branch"){
             steps{
-               script {
-                // TODO: implement
-               }
+                script {
+                    def prodBranch = getBranchConfigProductizedBranch()
+                    def prodRepositories = getProdRepositoriesToBranch()
+
+                    dir(checkoutMainBranchSeedConfigFileRepo()) {
+                        getOrCreateGitBranch(prodBranch, getMainBranchConfigFileGitAuthorCredentialsId())
+
+                        def branchConfigFilePath = getMainBranchConfigFilePath()
+                        def branchConfig = readYaml file: branchConfigFilePath
+
+                        branchConfig.productized_repositories = prodRepositories
+                        branchConfig.productized_branch = true
+
+                        // disable some environments when branching as they make no sense by default
+                        branchConfig.environments.each { envName, envData ->
+                            if (envName.startsWith('quarkus')) {
+                                if (envName != 'quarkus-branch') {
+                                    envData.enabled = false // Keep only quarkus-branch
+                                }
+                            }
+                            if (envData.ids.find { it == 'lts' }) {
+                                envData.enabled = branchConfig.productized_branch
+                            }
+                        }
+
+                        // disable DSL triggers
+                        branchConfig.disable.triggers = true
+
+
+                        // enable productized profile
+                        def buildMvnOpts = "-Dproductized ${getAdditionalDefaultBuildMavenOpts()} "
+
+                        branchConfig.environments.each { envName, envData ->
+                            if (envData.enabled && envData.env_vars.BUILD_MVN_OPTS) {
+                                envData.env_vars.BUILD_MVN_OPTS = buildMvnOpts + envData.env_vars.BUILD_MVN_OPTS
+                            }
+                        }
+                        branchConfig.default.env_vars.BUILD_MVN_OPTS = buildMvnOpts
+
+                        echo "Write dsl branch_config => ${branchConfig}"
+                        sh "rm -f ${branchConfigFilePath}"
+                        writeYaml file: "${branchConfigFilePath}", data: branchConfig, overwrite: true
+
+                        pushIfChanged(prodBranch, getMainBranchConfigFileGitAuthorCredentialsId(), "Setup DSL branch config after productized branch creation")
+                    }
+                }
             }
         }
+
 
         // 2. update productized branch on other projects
         //              - disable PR checks from jobs.groovy
@@ -135,18 +172,24 @@ pipeline{
     }
 }
 
-// Retrieve job parameters keys
+// Retrieve job parameters keys or values
 
 String getBranchParameterKey(String projectName) {
     return "${projectName}_RELEASE_BRANCH".toUpperCase()
 }
 
 String getProdBranchSuffixParameterKey(String projectName) {
-    return "${projectName}_PROD_BRANCH_SUFFIX".toUpperCase()
+    def key = "${projectName}_PROD_BRANCH_SUFFIX".toUpperCase()
+    return params."${key}"
 }
 
-String getQuarkusVersionParameterKey() {
-    return "QUARKUS-VERSION"
+String getQuarkusVersion() {
+    return params.QUARKUS_VERSION
+}
+
+
+def getAdditionalDefaultBuildMavenOpts() {
+     return params.ADDITIONAL_BUILD_MAVEN_OPTS ?: ''
 }
 
 // Retrieve seed configuration
@@ -251,7 +294,7 @@ String getMainBranchConfigFileGitBranch() {
     return readSeedConfig().seed.config_file.git.branch
 }
 
-List getRepositoriesToBranch() {
+List getProdRepositoriesToBranch() {
     if (!repositoriesToBranch) {
         repositoriesToBranch = readMainBranchConfig().productized_repositories.findAll { getProjectFromRepository(it.name) }
         def branches = readSeedConfig().git.branches
@@ -267,7 +310,6 @@ List getRepositoriesToBranch() {
             def baseBranch = getBranchFromRepository(repoConfig.name)
             repoConfig.branch = baseBranch ?: mainBranch
 
-            // TODO do we need this? I don't think so
             if (repoConfig.name == getMainBranchConfigFileGitRepository()) {
                 String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
                 if (gitAuthor == getMainBranchConfigFileGitAuthorName() &&
@@ -285,7 +327,7 @@ List getRepositoriesToBranch() {
 // Create productized branches
 
 String getProductizedBranchFromProject(String projectName) {
-    String suffix = params."${getProdBranchSuffixParameterKey(projectName)}" ?: 'prod'
+    String suffix = getProdBranchSuffixParameterKey(projectName) ?: 'prod'
     return "${getBranchFromProject(projectName)}-${suffix}"
 }
 
@@ -329,7 +371,12 @@ String getEcosystemReleaseBranch() {
 }
 
 String getSeedRepoReleaseBranch() {
-    return "seed-${getEcosystemMainProject()}-${getEcosystemReleaseBranch()}"
+    return readSeedConfig().git.branches.find{ it -> it.name == getEcosystemReleaseBranch() }?.seed.branch ?: "seed-${getEcosystemMainProject()}-${getEcosystemReleaseBranch()}"
+}
+
+String getBranchConfigProductizedBranch() {
+    // Check if repository already branched
+    return (getProdRepositoriesToBranch().find { it -> it.is_branch_config_repo }?.branch) ?: "${getEcosystemMainProject()}-${getEcosystemProductizedBranch()}"
 }
 
 // Git utilities
@@ -356,3 +403,4 @@ def pushIfChanged(String branch, String credentialsId, String commitMsg) {
         println '[WARN] No changes to commit'
     }
 }
+
