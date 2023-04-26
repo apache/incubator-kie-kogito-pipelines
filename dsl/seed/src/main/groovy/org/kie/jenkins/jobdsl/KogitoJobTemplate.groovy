@@ -180,9 +180,8 @@ class KogitoJobTemplate {
 
         if (Utils.isTestEnvironment(script)) {
             jobParams.pr = jobParams.pr ?: [:]
-
-            jobParams.pr.run_only_for_labels = (jobParams.pr.run_only_for_labels ?: []) + [KogitoConstants.LABEL_DSL_TEST]
             jobParams.pr.putAll ([
+                run_only_for_labels: (jobParams.pr.run_only_for_labels ?: []) + [KogitoConstants.LABEL_DSL_TEST],
                 run_only_for_branches: [ jobParams.git.repository == 'optaplanner-quickstarts' ? 'development' : 'main' ],
                 authorized_users: [ 'kiegroup' ],
                 authorized_groups: [ 'kiegroup' ],
@@ -371,7 +370,7 @@ class KogitoJobTemplate {
                 jobParams.jenkinsfile = jobCfg.jenkinsfile
             }
 
-            jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${${jobParams.pr.target_repository ?: jobParams.git.repository}}/"
+            jobParams.git.project_url = "https://github.com/${jobParams.git.author}/${jobParams.pr.target_repository ?: jobParams.git.repository}/"
 
             boolean downstream = jobCfg.repository && jobCfg.repository != jobParams.git.repository
 
