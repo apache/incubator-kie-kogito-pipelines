@@ -64,18 +64,18 @@ pipeline{
                         sh "rm ${seedConfigFile}"
                         writeYaml file: seedConfigFile, data: seedConfig, overwrite: true
 
-                        pushIfChanged(env.SEED_CONFIG_FILE_GIT_BRANCH, env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID, "Add productized branch ${getEcosystemProductizedBranch()} after upstream release")
+                        pushIfChanged(env.SEED_CONFIG_FILE_GIT_BRANCH, env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID, "Add productized branch ${getEcosystemProductizedBranch()} after upstream release", "Main config has been updated with release branch ${getEcosystemProductizedBranch()}")
                     }
                 }
             }
         }
 
         // 1. update seed config repo on productized branch (e.g., 1.37.x-prod)
-        // [DONE]             - enable productized profile (-Dproductized) on jenkins environments branch.yaml [this MUST be executed only on config file repo, e.g., kogito-pipelines]
-        // [DONE]             - disable some environments when branching as they make no sense by default [this MUST be executed only on config file repo, e.g., kogito-pipelines]
-        // [DONE]             - set productized_repositories[].branch to the productized one, e.g., 1.37.x-prod
-        // [DONE]             - set productized_repositories[].is_branch_config_repo to true for the config file repo
-        // [DONE]             - do these changes directly on the prod branch
+        //       - enable productized profile (-Dproductized) on jenkins environments branch.yaml [this MUST be executed only on config file repo, e.g., kogito-pipelines]
+        //       - disable some environments when branching as they make no sense by default [this MUST be executed only on config file repo, e.g., kogito-pipelines]
+        //       - set productized_repositories[].branch to the productized one, e.g., 1.37.x-prod
+        //       - set productized_repositories[].is_branch_config_repo to true for the config file repo
+        //       - do these changes directly on the prod branch
 
 
         stage("Update branch config on productized branch"){
@@ -123,7 +123,7 @@ pipeline{
                         sh "rm -f ${branchConfigFilePath}"
                         writeYaml file: "${branchConfigFilePath}", data: branchConfig, overwrite: true
 
-                        pushIfChanged(prodBranch, getMainBranchConfigFileGitAuthorCredentialsId(), "Setup DSL branch config after productized branch creation")
+                        pushIfChanged(prodBranch, getMainBranchConfigFileGitAuthorCredentialsId(), "Setup DSL branch config after productized branch creation", "Branch config on ${prodBranch} has been updated with correct configuration")
                     }
                 }
             }
@@ -137,39 +137,47 @@ pipeline{
         //              - enable productized profile (-Dproductized) on GHA PR checks workflows
         //              - ensure that fullProfile is not enabled on .ci/jenkins/dsl/jobs.groovy, if so remove it
 
-        stage("Update prod branch for all projects to be productized"){
-            steps{
-               script {
-                // TODO: implement
-               }
-            }
-        }
+        // stage("Update prod branch for all projects to be productized"){
+        //     steps{
+        //        script {
+        //         // TODO: implement
+        //        }
+        //     }
+        // }
 
         // 3. call update quarkus job in order to downgrade quarkus to LTS version (version provided as parameter QUARKUS_VERSION)
         //          this will:
         //              - downgrade quarkus, there already exists a job doing this
         //              - apply patches from .ci/environments/quarkus-lts on the same PR
 
-        stage('Downgrade quarkus to LTS version'){
-            steps{
-                script {
-                    // TODO: implement
-                }
-            }
-        }
+        // stage('Downgrade quarkus to LTS version'){
+        //     steps{
+        //         script {
+        //             // TODO: implement
+        //         }
+        //     }
+        // }
     }
     post{
         unsuccessful {
             script {
-                // TODO: send notification
+                sendNotification("${getEcosystemMainProject()}: Branch Productization Pipeline job #${BUILD_NUMBER} was: ${currentBuild.currentResult}\nPlease look here: ${BUILD_URL}")
             }
         }
         success {
             script {
-                // TODO: send notification with new branches and PRs if any
+                sendNotification("${getEcosystemMainProject()}: Branch Productization Pipeline job #${BUILD_NUMBER} was: ${currentBuild.currentResult}")
             }
         }
     }
+}
+
+
+void sendNotification(String body) {
+    echo 'Send Notification'
+    echo body
+    emailext body: body, subject: "[${getEcosystemProductizedBranch()}] ${getEcosystemMainProject()}",
+                to: env.CI_EMAIL_TO
 }
 
 // Retrieve job parameters keys or values
@@ -394,11 +402,13 @@ void getOrCreateGitBranch(String branch, String credentialsId) {
     }
 }
 
-def pushIfChanged(String branch, String credentialsId, String commitMsg) {
+def pushIfChanged(String branch, String credentialsId, String commitMsg, String notificationMsg) {
     if (githubscm.isThereAnyChanges()) {
         sh 'git diff'
         githubscm.commitChanges(commitMsg)
         githubscm.pushObject('origin', branch, credentialsId)
+
+        sendNotification(notificationMsg)
     } else {
         println '[WARN] No changes to commit'
     }
