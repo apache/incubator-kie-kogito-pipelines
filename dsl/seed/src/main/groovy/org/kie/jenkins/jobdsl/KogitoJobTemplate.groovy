@@ -42,7 +42,6 @@ class KogitoJobTemplate {
     */
     static def createPipelineJob(def script, Map jobParams = [:]) {
         String jobFolderName = ''
-        Map jobFolderEnv = [:]
         def jobFolder = jobParams.job.folder
         if (jobFolder) {
             if (![JenkinsFolder].any { it.isAssignableFrom(jobFolder.getClass()) }) {
@@ -51,7 +50,6 @@ class KogitoJobTemplate {
 
             // Expect org.kie.jenkins.jobdsl.model.Folder structure
             jobFolderName = jobFolder.getName()
-            jobFolderEnv = jobFolder.getDefaultEnvVars()
 
             if (!EnvUtils.isEnvironmentDefined(script, jobFolder.getEnvironmentName())) {
                 String output = "Cannot create job name ${jobParams.job.name} in jobFolder ${jobFolderName} as environment ${jobFolder.getEnvironmentName()} is NOT configured"
@@ -71,9 +69,15 @@ class KogitoJobTemplate {
             script.folder(jobFolderName)
         }
 
+        // Setup job full environment
         Map fullEnv = [:]
-        jobFolderEnv ? fullEnv.putAll(jobFolderEnv) : null
         jobParams.env ? fullEnv.putAll(jobParams.env) : null
+        // Add folder default env vars only if not existing already ...
+        jobFolder?.getDefaultEnvVars().each { key, value ->
+            if (!fullEnv.find { "${key}" == "${it.key}" }) { // Use `.find{}` method due to gstring vs string comparison issues...
+                fullEnv.put(key, value)
+            }
+        }
 
         PrintUtils.info(script, "Create job name ${jobParams.job.name} in jobFolder ${jobFolderName} with folder env ${fullEnv}")
 

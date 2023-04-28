@@ -44,6 +44,10 @@ class JenkinsFolder {
         return new HashMap(env)
     }
 
+    String getDefaultEnvVarValue(String key) {
+        return getDefaultEnvVars().find { defaultKey, defaultValue -> "${defaultKey}" == "${key}" }?.value
+    }
+
     // A JenkinsFolder is active if jobType AND environment are active
     boolean isActive(def script) {
         return this.jobType.isActive(script) &&
