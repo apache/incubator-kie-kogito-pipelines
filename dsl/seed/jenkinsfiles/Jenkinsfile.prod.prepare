@@ -177,8 +177,10 @@ pipeline{
 void sendNotification(String body) {
     echo 'Send Notification'
     echo body
-    emailext body: body, subject: "[${getEcosystemProductizedBranch()}] ${getEcosystemMainProject()}",
-                to: env.CI_EMAIL_TO
+    if (!isDryRun()) {
+        emailext body: body, subject: "[${getEcosystemProductizedBranch()}] ${getEcosystemMainProject()}",
+                    to: env.CI_EMAIL_TO
+    }
 }
 
 // Retrieve job parameters keys or values
@@ -194,6 +196,10 @@ String getProdBranchSuffixParameterKey(String projectName) {
 
 String getQuarkusVersion() {
     return params.QUARKUS_VERSION
+}
+
+Boolean isDryRun() {
+    return params.DRY_RUN
 }
 
 
@@ -323,7 +329,7 @@ List getProdRepositoriesToBranch() {
             if (repoConfig.name == getMainBranchConfigFileGitRepository()) {
                 String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
                 if (gitAuthor == getMainBranchConfigFileGitAuthorName() &&
-                    repoConfig.branch == getMainBranchConfigFileGitBranch()) {
+                    repoConfig.branch == getEcosystemReleaseBranch()) {
                     // we are already going to branch it with the setup of the branch config
                     echo "Repository ${repoConfig.name} is branch config repository"
                     repoConfig.is_branch_config_repo = true
@@ -400,15 +406,20 @@ void getOrCreateGitBranch(String branch, String credentialsId) {
     } else {
         echo "Branch ${branch} does not exist ... gonna create it"
         githubscm.createBranch(branch)
-        githubscm.pushObject('origin', branch,  credentialsId)
+        if (!isDryRun()) {
+            githubscm.pushObject('origin', branch,  credentialsId)
+        }
     }
 }
 
 def pushIfChanged(String branch, String credentialsId, String commitMsg, String notificationMsg) {
     if (githubscm.isThereAnyChanges()) {
         sh 'git diff'
-        githubscm.commitChanges(commitMsg)
-        githubscm.pushObject('origin', branch, credentialsId)
+
+        if (!isDryRun()) {
+            githubscm.commitChanges(commitMsg)
+            githubscm.pushObject('origin', branch, credentialsId)
+        }
 
         sendNotification(notificationMsg)
     } else {
