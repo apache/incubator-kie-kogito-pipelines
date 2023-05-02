@@ -323,7 +323,7 @@ List getProdRepositoriesToBranch() {
             if (repoConfig.name == getMainBranchConfigFileGitRepository()) {
                 String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
                 if (gitAuthor == getMainBranchConfigFileGitAuthorName() &&
-                    repoConfig.branch == getMainBranchConfigFileGitBranch()) {
+                    repoConfig.branch == getEcosystemReleaseBranch()) {
                     // we are already going to branch it with the setup of the branch config
                     echo "Repository ${repoConfig.name} is branch config repository"
                     repoConfig.is_branch_config_repo = true
