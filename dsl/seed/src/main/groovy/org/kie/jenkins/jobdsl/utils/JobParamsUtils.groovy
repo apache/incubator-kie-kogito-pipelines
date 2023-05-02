@@ -95,6 +95,15 @@ class JobParamsUtils {
         return jobParams
     }
 
+    static def addJobParamsEnvIfNotExisting(def script, def jobParams, String key, String value) {
+        jobParams.env = jobParams.env ?: [:]
+        if (!jobParams.job?.folder?.getDefaultEnvVars().find { it.key == key }
+            && !jobParams.env.keySet().find { it == key }) {
+            PrintUtils.debug(script, "Adding `${key}` env variable as it is not present yet")
+            jobParams.env.put(key, value)
+    }
+}
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////
     // Setup job params methods
 
@@ -110,21 +119,13 @@ class JobParamsUtils {
 
     static def setupJobParamsDefaultJDKConfiguration(def script, def jobParams) {
         jobParams.env = jobParams.env ?: [:]
-        // Set BUILD_JDK_TOOL if not defined in default environment
-        if (!jobParams.job.folder.getDefaultEnvVars().find { it.key == 'BUILD_JDK_TOOL' }) {
-            PrintUtils.debug(script, "Adding `BUILD_JDK_TOOL` env variable as not existing yet")
-            jobParams.env.put('BUILD_JDK_TOOL', Utils.getJenkinsDefaultJDKTools(script))
-        }
+        addJobParamsEnvIfNotExisting(script, jobParams, 'BUILD_JDK_TOOL', Utils.getJenkinsDefaultJDKTools(script))
     }
 
     static def setupJobParamsDefaultMavenConfiguration(def script, def jobParams) {
         jobParams.env = jobParams.env ?: [:]
         setupJobParamsDefaultJDKConfiguration(script, jobParams)
-        // Set BUILD_MAVEN_TOOL if not defined in default environment
-        if (!jobParams.job.folder.getDefaultEnvVars().find { it.key == 'BUILD_MAVEN_TOOL' }) {
-            PrintUtils.debug(script, "Adding `BUILD_MAVEN_TOOL` env variable as not existing yet")
-            jobParams.env.put('BUILD_MAVEN_TOOL', Utils.getJenkinsDefaultMavenTools(script))
-        }
+        addJobParamsEnvIfNotExisting(script, jobParams, 'BUILD_MAVEN_TOOL', Utils.getJenkinsDefaultMavenTools(script))
     }
 
     static def setupJobParamsBuildChainConfiguration(def script, def jobParams, String repository, String buildchainType, String notificationJobName) {
@@ -140,12 +141,7 @@ class JobParamsUtils {
             NOTIFICATION_JOB_NAME: notificationJobName,
             GIT_AUTHOR_TOKEN_CREDENTIALS_ID: Utils.getGitAuthorTokenCredsId(script),
         ])
-        // Set BUILD_ENVIRONMENT if not defined in default environment
-        def jobFolder = jobParams.job.folder
-        if (!jobFolder.getDefaultEnvVars().find { it.key == 'BUILD_ENVIRONMENT' }) {
-            PrintUtils.debug(script, "Adding `BUILD_ENVIRONMENT` env variable as not existing yet")
-            jobParams.env.put('BUILD_ENVIRONMENT', jobFolder.getEnvironmentName())
-        }
+        addJobParamsEnvIfNotExisting(script, jobParams, 'BUILD_ENVIRONMENT', jobParams.job.folder.getEnvironmentName())
     }
 
     static def setupJobParamsSeedPipelineConfiguration(def script, def jobParams, String jenkinsfile) {
@@ -159,9 +155,17 @@ class JobParamsUtils {
     static def setupJobParamsIntegrationBranchConfiguration(def script, def jobParams, String envName) {
         jobParams.env = jobParams.env ?: [:]
         jobParams.env.putAll([
-            INTEGRATION_BRANCH_CURRENT: "${Utils.getGenerationBranch(script)}-integration-${envName}",
             COMMIT_MESSAGE: "Update for ${envName} environment",
             GITHUB_USER: 'kie-ci',
         ])
+        addJobParamsEnvIfNotExisting(script, jobParams, 'INTEGRATION_BRANCH_CURRENT', "${Utils.getGenerationBranch(script)}-integration-${envName}")
     }
+
+    static def setupJobParamsDeployConfiguration(def script, def jobParams) {
+        jobParams.env = jobParams.env ?: [:]
+        jobParams.env.put('ENABLE_DEPLOY', 'true')
+        addJobParamsEnvIfNotExisting(script, jobParams, 'MAVEN_DEPLOY_REPOSITORY', Utils.getMavenArtifactsUploadRepositoryUrl(script))
+        addJobParamsEnvIfNotExisting(script, jobParams, 'MAVEN_DEPLOY_REPOSITORY_CREDS_ID', Utils.getMavenArtifactsUploadRepositoryCredentialsId(script))
+    }
+
 }
