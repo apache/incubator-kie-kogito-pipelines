@@ -21,7 +21,7 @@ jobs:
         id: retrieve_active_repos
         uses: mikefarah/yq@master
         with:
-          cmd: yq '[.repositories[].name] | join(",")' ./kogito-pipelines/dsl/config/branch.yaml
+          cmd: yq '[.repositories[].name] | map("${{ github.repository_owner }}/" + .) | join(",")' ./kogito-pipelines/dsl/config/branch.yaml
       - name: Retrieve active branches
         id: retrieve_active_branches
         uses: mikefarah/yq@master
