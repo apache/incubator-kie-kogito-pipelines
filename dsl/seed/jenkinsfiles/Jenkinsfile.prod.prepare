@@ -120,6 +120,15 @@ pipeline{
                         branchConfig.generation_config = branchConfig.generation_config ?: [:]
                         branchConfig.generation_config.missing_environment = 'ignore'
 
+                        // disable community triggers
+                        branchConfig.disable = branchConfig.disable ?: [:]
+                        branchConfig.disable.triggers = true
+
+                        // update repositories branches to the productized one
+                        branchConfig.repositories.each { repo ->
+                            repo.branch = getEcosystemProductizedBranch()
+                        }
+
                         echo "Write dsl branch_config => ${branchConfig}"
                         sh "rm -f ${branchConfigFilePath}"
                         writeYaml file: "${branchConfigFilePath}", data: branchConfig, overwrite: true
