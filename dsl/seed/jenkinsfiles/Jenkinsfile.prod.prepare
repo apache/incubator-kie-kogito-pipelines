@@ -7,6 +7,7 @@ import java.util.regex.Pattern
 // 1. <prj>_RELEASE_BRANCH
 // 2. QUARKUS_VERSION
 // 3. ADDITIONAL_BUILD_MAVEN_OPTS
+// 4. PROJECTS_TO_REMOVE_FROM_PR_CHECKS
 
 seedConfig = [:]
 mainBranchConfig = [:]
@@ -133,6 +134,38 @@ pipeline{
                         sh "rm -f ${branchConfigFilePath}"
                         writeYaml file: "${branchConfigFilePath}", data: branchConfig, overwrite: true
 
+                        // update GHA build-chain configuration
+                        // comment out projects we are not interested in from the buildchain-config.yaml
+                        def projectToRemoveFromBCPRChecks = getProjectsToRemoveFromBuildChainConfig()
+
+                        if (projectToRemoveFromBCPRChecks && projectToRemoveFromBCPRChecks.size() > 0) {
+                            // update build-chain config
+                            def buildChainConfigFilePath = readMainBranchConfig().buildchain_config.git.path
+                            def buildChainConfig = readYaml file: buildChainConfigFilePath
+
+                            def builds = buildChainConfig.build.findAll { build ->
+                                !projectToRemoveFromBCPRChecks.contains(build.project)
+                            }
+                            buildChainConfig.build = builds
+
+                            echo "Write build-chain configuration => ${buildChainConfig}"
+                            sh "rm -f ${buildChainConfigFilePath}"
+                            writeYaml file: "${buildChainConfigFilePath}", data: buildChainConfig, overwrite: true
+
+                            // update build-chain project dependencies
+                            def buildChainConfigDependenciesFilePath = buildChainConfigFilePath.substring(0, buildChainConfigFilePath.lastIndexOf('/') + 1) + "${buildChainConfig.dependencies}"
+                            def buildChainConfigDependencies = readYaml file: buildChainConfigDependenciesFilePath
+
+                            def deps = buildChainConfigDependencies.dependencies.findAll { dep ->
+                                !projectToRemoveFromBCPRChecks.contains(dep.project)
+                            }
+                            buildChainConfigDependencies.dependencies = deps
+
+                            echo "Write build-chain dependencies configuration => ${buildChainConfigDependencies}"
+                            sh "rm -f ${buildChainConfigDependenciesFilePath}"
+                            writeYaml file: "${buildChainConfigDependenciesFilePath}", data: buildChainConfigDependencies, overwrite: true
+                        }
+
                         pushIfChanged(prodBranch, getMainBranchConfigFileGitAuthorCredentialsId(), "Setup DSL branch config after productized branch creation", "Branch config on ${prodBranch} has been updated with correct configuration")
                     }
                 }
@@ -149,9 +182,12 @@ pipeline{
 
         // stage("Update prod branch for all projects to be productized"){
         //     steps{
-        //        script {
-        //         // TODO: implement
-        //        }
+        //         script {
+        //             def prodRepositories = getProdRepositoriesToBranch()
+        //             prodRepositories.each { repo ->
+        //                 updateProductizedBranch(repo.name)
+        //             }
+        //         }
         //     }
         // }
 
@@ -214,6 +250,10 @@ Boolean isDryRun() {
 
 def getAdditionalDefaultBuildMavenOpts() {
      return params.ADDITIONAL_BUILD_MAVEN_OPTS ?: ''
+}
+
+def getProjectsToRemoveFromBuildChainConfig() {
+    return params.PROJECTS_TO_REMOVE_FROM_PR_CHECKS.split(',') as List ?: []
 }
 
 // Retrieve seed configuration
@@ -403,6 +443,37 @@ String getBranchConfigProductizedBranch() {
     // Check if repository already branched
     return (getProdRepositoriesToBranch().find { it -> it.is_branch_config_repo }?.branch) ?: "${getEcosystemMainProject()}-${getEcosystemProductizedBranch()}"
 }
+
+// Update productized branch on all projects to be productized
+
+//              - disable PR checks from jobs.groovy
+//              - disable GHA jobs no more needed by commenting out workflows
+//              - enable productized profile (-Dproductized) on GHA PR checks workflows
+//              - ensure that fullProfile is not enabled on .ci/jenkins/dsl/jobs.groovy, if so remove it
+// def updateProductizedBranch(String repository) {
+//     def repoConfig = getProdRepositoriesToBranch().find { it -> it.name.equalsIgnoreCase(repository) }
+//     assert repoConfig : "Cannot find repo ${repository} in the productized list"
+
+//     String repoAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
+//     String repoCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
+
+//     // TODO is this value saved somewhere such that we do not have to hardcode?
+//     String jobsGroovyPath = '.ci/jenkins/dsl/jobs.groovy'
+
+//     dir(repository) {
+//         deleteDir()
+//         // here productized branches should have been already created on repos to be productized
+//         checkout(githubscm.resolveRepository(repository, repoAuthor, getProductizedBranchFromRepository(repository), false, repoCredsId))
+
+//         getOrCreateGitBranch(repoConfig.branch, getRepositoryAuthorCredsId())
+
+//         // TODO: check if file exist otherwise, skip it with warning
+//         def jobsGroovy = readFile file: jobsGroovyPath
+//         // TODO: update jobs.groovy
+
+//         sh 'ls -la'
+//     }
+// }
 
 // Git utilities
 
