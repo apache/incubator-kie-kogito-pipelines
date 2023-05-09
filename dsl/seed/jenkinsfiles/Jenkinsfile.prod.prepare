@@ -6,8 +6,9 @@ import java.util.regex.Pattern
 // parameters
 // 1. <prj>_RELEASE_BRANCH
 // 2. QUARKUS_VERSION
-// 3. ADDITIONAL_BUILD_MAVEN_OPTS
-// 4. PROJECTS_TO_REMOVE_FROM_PR_CHECKS
+// 3. DOWNGRADE_PR_BRANCH
+// 4. ADDITIONAL_BUILD_MAVEN_OPTS
+// 5. PROJECTS_TO_REMOVE_FROM_PR_CHECKS
 
 seedConfig = [:]
 mainBranchConfig = [:]
@@ -179,30 +180,107 @@ pipeline{
         //              - disable GHA jobs no more needed by commenting out workflows
         //              - enable productized profile (-Dproductized) on GHA PR checks workflows
         //              - ensure that fullProfile is not enabled on .ci/jenkins/dsl/jobs.groovy, if so remove it
+        stage("Update prod branch for all projects to be productized"){
+            steps{
+                script {
+                    def prodRepositories = getProdRepositoriesToBranch()
+                    prodRepositories.each { repoConfig ->
+                        String repository = repoConfig.name
+                        String repoAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
+                        String repoCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
 
-        // stage("Update prod branch for all projects to be productized"){
-        //     steps{
-        //         script {
-        //             def prodRepositories = getProdRepositoriesToBranch()
-        //             prodRepositories.each { repo ->
-        //                 updateProductizedBranch(repo.name)
-        //             }
-        //         }
-        //     }
-        // }
+                        // TODO is this value saved somewhere such that we do not have to hardcode?
+                        String jobsGroovyPath = '.ci/jenkins/dsl/jobs.groovy'
+
+                        dir(repository) {
+                            deleteDir()
+                            // here productized branches should have been already created on repos to be productized
+                            checkout(githubscm.resolveRepository(repository, repoAuthor, getProductizedBranchFromRepository(repository), false, repoCredsId))
+
+                            getOrCreateGitBranch(repoConfig.branch, getRepositoryAuthorCredsId())
+
+                            if (fileExists("${jobsGroovyPath}")) {
+                                // def jobsGroovy = readFile file: jobsGroovyPath
+                                // remove fullProfile
+                                sh "sed -i 's/, addFullProfileJobParamsGetter)/)/g' ${jobsGroovyPath}"
+                                // TODO: disable pr checks in getMultijobPRConfig, get them from params
+                            } else {
+                                echo "[WARN] Unable to find jobs.groovy for '${repository}' at '${jobsGroovyPath}'"
+                            }
+
+
+                            // TODO iterate over PR workflows
+                            // - comment out if not needed (get these from param?)
+                            // - if PR check is needed, keep it and add -Dproductized
+                        }
+                    }
+                }
+            }
+        }
 
         // 3. call update quarkus job in order to downgrade quarkus to LTS version (version provided as parameter QUARKUS_VERSION)
         //          this will:
         //              - downgrade quarkus, there already exists a job doing this
         //              - apply patches from .ci/environments/quarkus-lts on the same PR
 
-        // stage('Downgrade quarkus to LTS version'){
-        //     steps{
-        //         script {
-        //             // TODO: implement
-        //         }
-        //     }
-        // }
+        stage('Downgrade quarkus to LTS version'){
+            when {
+                expression { return params.QUARKUS_VERSION }
+            }
+            steps{
+                script {
+                    println "Launch update quarkus all"
+
+                    String jobName = "${getEcosystemProductizedBranch()}/tools/update-quarkus-all"
+                    String quarkusDowngradePrBranch = getQuarkusDowngradePrBranch()
+                    List jobParams = []
+                    jobParams.add(stringParam(name: 'NEW_VERSION', value: getQuarkusVersion()))
+                    jobParams.add(stringParam(name: 'PR_BRANCH', value: quarkusDowngradePrBranch))
+
+                    echo "Build ./${jobName} with parameters ${jobParams}"
+                    if (!isDryRun()) {
+                        def job = build(job: "./${jobName}", parameters: jobParams, wait: true, propagate: false)
+
+                        if (job.result == 'SUCCESS') {
+                            def prodRepositories = getProdRepositoriesToBranch()
+                            prodRepositories.each { repoConfig ->
+                                String repoAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
+                                String repoCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
+                                String repository = repoConfig.name
+                                String baseBranch = repoConfig.branch ?: 'main'
+
+                                // FIXME apply patches only if the quarkusDowngradePrBranch already exist, otherwise skip it
+
+                                dir(repository) {
+                                    deleteDir()
+                                    checkout(githubscm.resolveRepository(repository, repoAuthor, baseBranch, false, repoCredsId))
+
+                                    // if quarkusDowngradePrBranch has been created by update-quarkus-all job, checkout it
+                                    if (checkoutGitBranchIfExists(quarkusDowngradePrBranch, repoCredsId)) {
+                                        // apply patches from .ci/environments/quarkus-lts/patches
+                                        def patchesDirectory = '.ci/environments/quarkus-lts/patches'
+                                        def patches = findFiles(glob: "${patchesDirectory}/*")
+
+                                        if (patches && patches.size() > 0) {
+                                            patches.each { patch ->
+                                                echo "Applying patch ${patch}"
+                                                sh "git apply ${patch}"
+                                            }
+                                        } else {
+                                            echo "No patches found at ${patchesDirectory}"
+                                        }
+
+                                        pushIfChanged(quarkusDowngradePrBranch, repoCredsId, "Applied patches after Quarkus downgrade to ${getQuarkusVersion()}", "Quarkus LTS patches on ${quarkusDowngradePrBranch} have been applied")
+                                    }
+                                }
+                            }
+                        } else {
+                            unstable("Update Quarkus on repositories was not successful")
+                        }
+                    }
+                }
+            }
+        }
     }
     post{
         unsuccessful {
@@ -241,6 +319,10 @@ String getProdBranchSuffixParameterKey(String projectName) {
 
 String getQuarkusVersion() {
     return params.QUARKUS_VERSION
+}
+
+String getQuarkusDowngradePrBranch() {
+    return params.DOWNGRADE_PR_BRANCH ?: "${getEcosystemProductizedBranch()}-${getQuarkusVersion()}-downgrade"
 }
 
 Boolean isDryRun() {
@@ -444,37 +526,6 @@ String getBranchConfigProductizedBranch() {
     return (getProdRepositoriesToBranch().find { it -> it.is_branch_config_repo }?.branch) ?: "${getEcosystemMainProject()}-${getEcosystemProductizedBranch()}"
 }
 
-// Update productized branch on all projects to be productized
-
-//              - disable PR checks from jobs.groovy
-//              - disable GHA jobs no more needed by commenting out workflows
-//              - enable productized profile (-Dproductized) on GHA PR checks workflows
-//              - ensure that fullProfile is not enabled on .ci/jenkins/dsl/jobs.groovy, if so remove it
-// def updateProductizedBranch(String repository) {
-//     def repoConfig = getProdRepositoriesToBranch().find { it -> it.name.equalsIgnoreCase(repository) }
-//     assert repoConfig : "Cannot find repo ${repository} in the productized list"
-
-//     String repoAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
-//     String repoCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
-
-//     // TODO is this value saved somewhere such that we do not have to hardcode?
-//     String jobsGroovyPath = '.ci/jenkins/dsl/jobs.groovy'
-
-//     dir(repository) {
-//         deleteDir()
-//         // here productized branches should have been already created on repos to be productized
-//         checkout(githubscm.resolveRepository(repository, repoAuthor, getProductizedBranchFromRepository(repository), false, repoCredsId))
-
-//         getOrCreateGitBranch(repoConfig.branch, getRepositoryAuthorCredsId())
-
-//         // TODO: check if file exist otherwise, skip it with warning
-//         def jobsGroovy = readFile file: jobsGroovyPath
-//         // TODO: update jobs.groovy
-
-//         sh 'ls -la'
-//     }
-// }
-
 // Git utilities
 
 void getOrCreateGitBranch(String branch, String credentialsId) {
@@ -490,6 +541,20 @@ void getOrCreateGitBranch(String branch, String credentialsId) {
             githubscm.pushObject('origin', branch,  credentialsId)
         }
     }
+}
+
+// If the provided branch exists, checkout it and return true, otherwise return false and skip checkout.
+boolean checkoutGitBranchIfExists(String branch, String credentialsId) {
+    sh 'git fetch origin'
+    String branchRemoteResult = sh(script: "git ls-remote origin ${branch} | wc -l", returnStdout: true).trim()
+    if (Integer.parseInt(branchRemoteResult) > 0) {
+        echo "Branch ${branch} exist. Checking out !"
+        sh "git checkout ${branch}"
+        return true
+    }
+
+    echo "Branch ${branch} does not exist... skipping checkout"
+    return false
 }
 
 def pushIfChanged(String branch, String credentialsId, String commitMsg, String notificationMsg) {

@@ -110,8 +110,8 @@ if (communityReleaseBranches) {
             }
 
             stringParam('QUARKUS_VERSION', '', 'Quarkus version to which to update all productized branches, usually latest LTS version')
+            stringParam('DOWNGRADE_PR_BRANCH', '', 'Which PR branch name to use for Quarkus downgrade? If none given, a name will be generated automatically.')
             stringParam('ADDITIONAL_BUILD_MAVEN_OPTS', '', 'Additional default maven opts for jenkins jobs, e.g., -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral')
-
             stringParam('PROJECTS_TO_REMOVE_FROM_PR_CHECKS', '', 'Comma-separated list of projects (<owner>/<repo>) to be removed/disabled from build chain pull request config')
 
             booleanParam('DRY_RUN', false, 'If enabled no changes will be applied to remote branches')
