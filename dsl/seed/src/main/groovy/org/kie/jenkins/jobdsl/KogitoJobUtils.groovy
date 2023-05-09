@@ -257,11 +257,7 @@ class KogitoJobUtils {
     */
     static def createNightlyBuildChainBuildAndDeployJob(def script, String envName = '', String repository, Map extraEnv = [:], boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
         def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${repository}.build-and-deploy", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
-        jobParams.env.putAll([
-            ENABLE_DEPLOY: true,
-            MAVEN_DEPLOY_REPOSITORY: Utils.getMavenArtifactsUploadRepositoryUrl(script),
-            MAVEN_DEPLOY_REPOSITORY_CREDS_ID: Utils.getMavenArtifactsUploadRepositoryCredentialsId(script),
-        ])
+        JobParamsUtils.setupJobParamsDeployConfiguration(script, jobParams)
         jobParams.env.putAll(extraEnv)
         return createBranchBuildChainJob(script, jobParams, repository, enableNotification, envName)
     }
