@@ -141,7 +141,7 @@ pipeline{
 
                         if (projectToRemoveFromBCPRChecks && projectToRemoveFromBCPRChecks.size() > 0) {
                             // update build-chain config
-                            def buildChainConfigFilePath = readMainBranchConfig().buildchain_config.git.path
+                            def buildChainConfigFilePath = readMainBranchConfig().buildchain_config.git.file_path
                             def buildChainConfig = readYaml file: buildChainConfigFilePath
 
                             def builds = buildChainConfig.build.findAll { build ->
