@@ -7,9 +7,9 @@ pipeline {
     tools {
         maven 'kie-maven-3.8.7'
         jdk 'kie-jdk11'
+        nodejs 'nodejs-16.2.0'
     }
     parameters {
-        booleanParam(description: 'Skip Tests? True as default', name: 'SKIP_TESTS', defaultValue: true)
         string(description: 'The UMB message version', name: 'UMB_VERSION', defaultValue: 'main')
         string(description: 'The product version, if not provided the kogito-runtimes main branch one will be use', name: 'PRODUCT_VERSION')
         string(description: 'The drools product version, if not provided the drools main branch one will be used', name: 'DROOLS_PRODUCT_VERSION')
@@ -26,18 +26,47 @@ pipeline {
             steps {
                 script {
                     // Fetch versions from pom if not provided
-                    env.PRODUCT_VERSION = "${PRODUCT_VERSION ?: parseVersionFromPom('kiegroup/kogito-runtimes', getCurrentBranch())}"
+                    env.PRODUCT_VERSION = "${PRODUCT_VERSION ?: parseVersionFromPom('kiegroup/kogito-runtimes', getBuildBranch())}"
                     env.DROOLS_PRODUCT_VERSION = "${DROOLS_PRODUCT_VERSION ?: parseVersionFromPom('kiegroup/drools', getDroolsBranch())}"
                 }
-                sh 'printenv'
+            }
+        }
+        stage('Install build-chain tool') {
+            steps {
+                script {
+                    println "[INFO] Installing build-chain tool"
+                    sh "npm install -g @kie/build-chain-action${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
+
+                    sh "npm list -g | grep build-chain"
+                }
             }
         }
         stage('Clone build configuration repo') {
             steps {
                 script {
-                    def currentBranch = env.CONFIG_BRANCH ?: env.DEFAULT_CONFIG_BRANCH ?: env.BRANCH_NAME ?: env.GIT_BRANCH
+                    def currentBranch = getBuildConfigBranch()
                     println "Checking out ${env.BUILD_CONFIGURATION_REPO_URL}:${currentBranch} into build_config folder"
                     sh "git clone -b ${currentBranch} --single-branch ${env.BUILD_CONFIGURATION_REPO_URL} build_config"
+
+                    // export PME parameters and build scripts from nightly build config
+                    def buildConfigAdditionalVariables = [
+                        'productVersion': env.PRODUCT_VERSION,
+                        'droolsProductVersion': env.DROOLS_PRODUCT_VERSION
+                    ]
+                    pmebuild.parseBuildConfig("$WORKSPACE/build_config/openshift-serverless-logic/nightly", buildConfigAdditionalVariables)
+
+                    def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
+
+                    // export Quarkus community versions
+                    env.QUARKUS_VERSION_COMMUNITY = PME_BUILD_VARIABLES['quarkusVersionCommunity']
+                    env.QUARKUS_VERSION = PME_BUILD_VARIABLES['quarkusVersion'].replaceAll("\\{\\{.*\\}\\}", env.QUARKUS_VERSION_COMMUNITY)
+                    env.QUARKUS_PLATFORM_VERSION = PME_BUILD_VARIABLES['quarkusPlatformVersion'].replaceAll("\\{\\{.*\\}\\}", env.QUARKUS_VERSION_COMMUNITY)
+
+                    // export image registry
+                    env.IMAGE_TAG_VERSION = PME_BUILD_VARIABLES['imageTagVersion']
+                    env.IMAGE_REGISTRY = PME_BUILD_VARIABLES['imageRegistry'].replaceAll("\\{\\{.*\\}\\}", env.IMAGE_TAG_VERSION)
+                    
+                    sh 'printenv'
                 }
             }
         }
@@ -47,14 +76,15 @@ pipeline {
                     def pipelineHelper = new PipelineHelper(this)
                     pipelineHelper.retry(
                     {
-                        def SETTINGS_XML_ID = '5d9884a1-178a-4d67-a3ac-9735d2df2cef'
-                        def projectCollection = ['drools', 'kogito-runtimes', 'kogito-apps', 'kogito-examples']
-                        def projectVariableMap = ['kiegroup_kogito-runtimes': 'kogitoProductVersion', 'kiegroup_drools': 'droolsProductVersion']
-                        def additionalVariables = [
-                            'droolsProductVersion': env.DROOLS_PRODUCT_VERSION, 
-                            'drools-scmRevision': getDroolsBranch(), 
-                        ]
-                        pmebuild.buildProjects(projectCollection, "${SETTINGS_XML_ID}", "$WORKSPACE/build_config/openshift-serverless-logic/nightly", "${env.PME_CLI_PATH}", projectVariableMap, additionalVariables, [:])
+                        withCredentials([string(credentialsId: "kie-ci1-token", variable: 'GITHUB_TOKEN')]) {
+                            def SETTINGS_XML_ID = '5d9884a1-178a-4d67-a3ac-9735d2df2cef'
+                            def buildBranch = getBuildBranch()
+                            def definitionFile = "https://raw.githubusercontent.com/\\\${GROUP:kiegroup}/kogito-pipelines/${getDefinitionFileBranch()}/.ci/nightly-build-config.yaml"
+                            
+                            configFileProvider([configFile(fileId: "${SETTINGS_XML_ID}", variable: 'PME_MAVEN_SETTINGS_XML')]) {
+                                sh "build-chain build branch --token=${GITHUB_TOKEN} -f ${definitionFile} -b ${buildBranch} -o bc -p kiegroup/kogito-runtimes --fullProjectDependencyTree --skipParallelCheckout"
+                            }
+                        }
                     }, 2, 480*60)
                 }
             }
@@ -63,22 +93,40 @@ pipeline {
             steps {
                 script {
                     echo "[INFO] Start uploading ${env.WORKSPACE}/deployDirectory"
-                    def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
                     if(fileExists("${env.WORKSPACE}/deployDirectory")){
                         def destDir = "${env.WORKSPACE}/deployDirectoryFinal/openshift-serverless-logic-${PRODUCT_VERSION}-maven-repository/maven-repository/"
                         sh "mkdir -p ${destDir}"
                         sh "mv ${env.WORKSPACE}/deployDirectory/* ${destDir}"
                         dir("${env.WORKSPACE}/deployDirectoryFinal") {
-                            sh "zip -r maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']} ."
+                            sh "zip -r maven-repository-${env.DATE_TIME_SUFFIX} ."
                             def relativeFile = "rhoss/rhoss-logic-${PRODUCT_VERSION}.nightly"
                             def folder="${env.RCM_GUEST_FOLDER}/${relativeFile}"
 
                             util.withKerberos('rhba-prod-keytab') {
                                 sh "ssh 'rhba-prod@${env.RCM_HOST}' 'mkdir -p ${folder}'"
-                                sh "rsync -rlp --info=progress2 maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip rhba-prod@${env.RCM_HOST}:staging/${relativeFile}"
+                                sh "rsync -rlp --info=progress2 maven-repository-${env.DATE_TIME_SUFFIX}.zip rhba-prod@${env.RCM_HOST}:staging/${relativeFile}"
                             }
                         }
                     }
+                }
+            }
+        }
+        stage ('Extract Git Information') {
+            steps {
+                script {
+                    def projectFolders = sh(returnStdout: true, script: "ls ${env.WORKSPACE}/bc").trim().split("\n")
+                    for (f in projectFolders) {
+                        dir("${env.WORKSPACE}/bc/${f}") {
+                            def projectName = f.replace("_", "/")
+                            // extract git infos
+                            util.storeGitInformation(projectName)
+                            env.ALREADY_BUILT_PROJECTS = "${env.ALREADY_BUILT_PROJECTS ?: ''}${projectName};"
+
+                            env["VERSION_${f}"] = mvnGetVersionProperty('project.version')
+                        }
+                    }
+                    
+                    sh 'printenv'
                 }
             }
         }
@@ -86,16 +134,15 @@ pipeline {
             steps {
                 script {
                     echo '[INFO] Sending OPENSHIFT SERVERLESS LOGIC UMB message to QE.'
-                    def PME_BUILD_VARIABLES = env.PME_BUILD_VARIABLES.split(';').collect{ it.split('=')}.inject([:]) {map, item -> map << [(item.length == 2 ? item[0] : null): (item.length == 2 ? item[1] : null)]}
 
-                    def mavenRepositoryFileUrl = "${env.STAGING_SERVER_URL}/rhoss/rhoss-logic-${PRODUCT_VERSION}.nightly/maven-repository-${PME_BUILD_VARIABLES['datetimeSuffix']}.zip"
+                    def mavenRepositoryFileUrl = "${env.STAGING_SERVER_URL}/rhoss/rhoss-logic-${PRODUCT_VERSION}.nightly/maven-repository-${env.DATE_TIME_SUFFIX}.zip"
                     def topic = "VirtualTopic.qe.ci.ba.openshift-serverless-logic.${env.UMB_VERSION}.nightly.trigger"
                     def eventType = "openshift-serverless-logic-${env.UMB_VERSION}-nightly-qe-trigger"
                     def messageBody = getMessageBody(
                         mavenRepositoryFileUrl, 
                         env.ALREADY_BUILT_PROJECTS,
-                        ['serverlesslogic': PME_BUILD_VARIABLES['kogitoProductVersion'], 'serverlesslogic-rhba': PME_BUILD_VARIABLES['kogitoProductVersion'], 'drools': PME_BUILD_VARIABLES['droolsProductVersion'], 'platform.quarkus.bom': PME_BUILD_VARIABLES['quarkusPlatformVersion'].replaceAll("\\{\\{.*\\}\\}", PME_BUILD_VARIABLES['quarkusVersionCommunity']), 'quarkus.bom': PME_BUILD_VARIABLES['quarkusVersion'].replaceAll("\\{\\{.*\\}\\}", PME_BUILD_VARIABLES['quarkusVersionCommunity'])],
-                        ['data-index-ephemeral': PME_BUILD_VARIABLES['imageRegistry'].replaceAll("\\{\\{.*\\}\\}", PME_BUILD_VARIABLES['imageTagVersion'])],
+                        ['serverlesslogic': env['VERSION_kiegroup_kogito-runtimes'], 'serverlesslogic-rhba': env['VERSION_kiegroup_kogito-runtimes'], 'drools': env.VERSION_kiegroup_drools, 'platform.quarkus.bom': env.QUARKUS_PLATFORM_VERSION, 'quarkus.bom': env.QUARKUS_VERSION],
+                        ['data-index-ephemeral': env.IMAGE_REGISTRY],
                         gitHashesToCollection(env.GIT_INFORMATION_HASHES)
                     )
                     echo "[INFO] Message Body: ${messageBody}"
@@ -161,8 +208,22 @@ def gitHashesToCollection(String gitInformationHashes) {
     return gitInformationHashes.replaceAll(/([\w\d\-\_\.]*\/)([\w\d\-\_\.]*)/,'$2').split(';').findAll { it.split('=').size() }.collectEntries{ [it.split('=')[0], it.split('=')[1]] }
 }
 
+String getBuildConfigBranch() {
+  return env.CONFIG_BRANCH ?: env.DEFAULT_CONFIG_BRANCH ?: env.BRANCH_NAME ?: env.GIT_BRANCH
+}
+
+String getBuildBranch() {
+  // Fallback to main if none exist
+  return env.CHANGE_BRANCH ?: env.BRANCH_NAME ?: env.GIT_BRANCH ?: 'main'
+}
+
 String getDroolsBranch() {
-    return calculateKieRepoBranch(env.CHANGE_BRANCH ?: BRANCH_NAME)
+    return calculateKieRepoBranch(getBuildBranch())
+}
+
+String getDefinitionFileBranch() {
+  // Fallback to getBuildBranch if DEFINITION_FILE_BRANCH not set
+  return env.DEFINITION_FILE_BRANCH ?: getBuildBranch()
 }
 
 String calculateKieRepoBranch(String branch) {
@@ -179,10 +240,6 @@ String calculateKieRepoBranch(String branch) {
     }
 }
 
-String getCurrentBranch() {
-    return env.CHANGE_BRANCH ?: env.BRANCH_NAME
-}
-
 // Parse version from main branch of the given project
 //      * project: in the form of owner/repository
 def parseVersionFromPom(String project, String branch) {
@@ -192,4 +249,8 @@ def parseVersionFromPom(String project, String branch) {
     sh "curl https://raw.githubusercontent.com/${project}/${branch}/pom.xml -o ${pomPath}"
     def pom = readMavenPom file: pomPath
     return pom.getVersion().replaceAll('-SNAPSHOT', '')
+}
+
+def mvnGetVersionProperty(String property, String pomFile = 'pom.xml') {
+    return sh(returnStdout: true, script: "mvn -B -q -f ${pomFile} help:evaluate -Dexpression=${property} -DforceStdout -Dproductized")
 }
