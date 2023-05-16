@@ -124,7 +124,7 @@ pipeline {
                             util.storeGitInformation(projectName)
                             env.ALREADY_BUILT_PROJECTS = "${env.ALREADY_BUILT_PROJECTS ?: ''}${projectName};"
 
-                            env["VERSION_${f}"] = mvnGetVersionProperty('project.version')
+                            env["VERSION_${f}"] = maven.mvnGetVersionProperty(new MavenCommand(this).withProperty('productized'), 'project.version')
                         }
                     }
                     
@@ -251,9 +251,4 @@ def parseVersionFromPom(String project, String branch) {
     sh "curl https://raw.githubusercontent.com/${project}/${branch}/pom.xml -o ${pomPath}"
     def pom = readMavenPom file: pomPath
     return pom.getVersion().replaceAll('-SNAPSHOT', '')
-}
-
-def mvnGetVersionProperty(String property, String pomFile = 'pom.xml') {
-    def mvnCmd = new MavenCommand(this).withProperty('productized')
-    return maven.mvnGetVersionProperty(mvnCmd, property)
 }
