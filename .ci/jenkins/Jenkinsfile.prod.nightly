@@ -1,5 +1,7 @@
 @Library('jenkins-pipeline-shared-libraries')_
 
+import org.kie.jenkins.MavenCommand
+
 pipeline {
     agent {
         label 'kie-rhel7 && kie-mem24g && !built-in'
@@ -252,5 +254,6 @@ def parseVersionFromPom(String project, String branch) {
 }
 
 def mvnGetVersionProperty(String property, String pomFile = 'pom.xml') {
-    return sh(returnStdout: true, script: "mvn -B -q -f ${pomFile} help:evaluate -Dexpression=${property} -DforceStdout -Dproductized")
+    def mvnCmd = new MavenCommand(this).withProperty('productized')
+    return maven.mvnGetVersionProperty(mvnCmd, property)
 }
