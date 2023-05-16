@@ -16,7 +16,7 @@ setupCleanOldNamespacesToolsJob()
 setupCleanOldNightlyImagesToolsJob()
 KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'kogito')
 KogitoJobUtils.createMainQuarkusUpdateToolsJob(this,
-        [ 'kogito-runtimes', 'kogito-examples', 'kogito-docs' ],
+        [ 'kogito-runtimes', 'kogito-examples', 'kogito-docs', 'kogito-images' ],
         [ 'radtriste', 'cristianonicolai' ]
 )
 if (Utils.isMainBranch(this)) {
