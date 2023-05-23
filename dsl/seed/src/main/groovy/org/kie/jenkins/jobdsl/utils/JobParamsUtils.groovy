@@ -29,6 +29,7 @@ class JobParamsUtils {
                 REPO_NAME: Utils.getRepoName(script)
             ],
             pr: [
+                target_repository: Utils.getRepoName(script),
                 excluded_regions: [
                     'LICENSE',
                     '\\.gitignore',
@@ -167,5 +168,4 @@ class JobParamsUtils {
         addJobParamsEnvIfNotExisting(script, jobParams, 'MAVEN_DEPLOY_REPOSITORY', Utils.getMavenArtifactsUploadRepositoryUrl(script))
         addJobParamsEnvIfNotExisting(script, jobParams, 'MAVEN_DEPLOY_REPOSITORY_CREDS_ID', Utils.getMavenArtifactsUploadRepositoryCredentialsId(script))
     }
-
 }
