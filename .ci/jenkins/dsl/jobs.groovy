@@ -49,13 +49,13 @@ setupDroolsQuarkus3IntegrationJob('quarkus-3')
 /////////////////////////////////////////////////////////////////
 
 void setupDroolsQuarkus3IntegrationJob(String envName) {
-    KogitoJobUtils.createNightlyBuildChainIntegrationJob(this, envName, Utils.getRepoName(this), true){ script ->
+    KogitoJobUtils.createNightlyBuildChainIntegrationJob(this, envName, 'drools', true){ script ->
     def jobParams = JobParamsUtils.getDefaultJobParams(script, 'drools')
     jobParams.git.branch = VersionUtils.getProjectTargetBranch('drools', Utils.getGitBranch(this), Utils.getRepoName(this))
     jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
     jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
     JobParamsUtils.setupJobParamsDeployConfiguration(script, jobParams)
-    jobParams.triggers = [] // Remove nightly trigger as it will be managed by the main pipeline
+    jobParams.triggers = [:] // Remove nightly trigger as it will be managed by the main pipeline
     return jobParams
 }
 }

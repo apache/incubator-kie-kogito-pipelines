@@ -87,8 +87,12 @@ pipeline {
             }
             post {
                 failure {
-                    addFailedStage(APPS_DEPLOY)addSkipTestsParam(buildParams)
-                                    addSkipIntegrationTestsParam(buildParams)
+                    addFailedStage(APPS_DEPLOY)
+                }
+            }
+        }
+
+        stage('Kogito Examples') {
             steps {
                 script {
                     buildJob(EXAMPLES_DEPLOY, getDefaultBuildParams())
@@ -165,15 +169,22 @@ void sendPipelineErrorNotification() {
 }
 
 List getDefaultBuildParams() {
-    buildBranchName = buildBranchName ?: getBuildBranch()
-    List params = []
-    addStringParam(params, 'DISPLAY_NAME', env.NIGHTLY_TAG)
-    addBooleanParam(params, 'SEND_NOTIFICATION', true)
+    List buildParams = []
+    addStringParam(buildParams, 'DISPLAY_NAME', env.NIGHTLY_TAG)
+    addBooleanParam(buildParams, 'SEND_NOTIFICATION', true)
     addBooleanParam(buildParams, 'SKIP_TESTS', params.SKIP_TESTS)
     addBooleanParam(buildParams, 'SKIP_INTEGRATION_TESTS', params.SKIP_TESTS)
-    return params
+    return buildParams
 }
 
 String getBuildBranch() {
     return env.GIT_BRANCH_NAME
+}
+
+void addStringParam(List buildParams, String key, String value) {
+    buildParams.add(string(name: key, value: value))
+}
+
+void addBooleanParam(List buildParams, String key, boolean value) {
+    buildParams.add(booleanParam(name: key, value: value))
 }
