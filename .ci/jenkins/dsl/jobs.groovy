@@ -41,24 +41,9 @@ KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'native-lts')
 setupReleaseArtifactsJob()
 setupReleaseCloudJob()
 
-// Drools quarkus 3 integration job
-setupDroolsQuarkus3IntegrationJob('quarkus-3') 
-
 /////////////////////////////////////////////////////////////////
 // Methods
 /////////////////////////////////////////////////////////////////
-
-void setupDroolsQuarkus3IntegrationJob(String envName) {
-    KogitoJobUtils.createNightlyBuildChainIntegrationJob(this, envName, 'drools', true){ script ->
-    def jobParams = JobParamsUtils.getDefaultJobParams(script, 'drools')
-    jobParams.git.branch = VersionUtils.getProjectTargetBranch('drools', Utils.getGitBranch(this), Utils.getRepoName(this))
-    jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
-    jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
-    JobParamsUtils.setupJobParamsDeployConfiguration(script, jobParams)
-    jobParams.triggers = [:] // Remove nightly trigger as it will be managed by the main pipeline
-    return jobParams
-}
-}
 
 void setupKogitoRuntimesBDDPrJob() {
     def jobParams = JobParamsUtils.getBasicJobParamsWithEnv(this, '0-runtimes-bdd-testing', JobType.PULL_REQUEST, 'kogito-bdd', "${JENKINSFILE_PATH}/Jenkinsfile.pr.bdd-tests", 'Run on demand BDD tests from runtimes repository')
@@ -173,17 +158,14 @@ void setupNightlyJob() {
 }
 
 void setupQuarkus3NightlyJob() {
-    def jobParams = JobParamsUtils.getBasicJobParamsWithEnv(this, '0-main', JobType.NIGHTLY, 'quarkus-3', "${JENKINSFILE_PATH}/Jenkinsfile.nightly.quarkus-3", 'Kogito Nightly')
-    jobParams.triggers = [cron : '@midnight']
-    jobParams.env.putAll([
-        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
-
-        GIT_BRANCH_NAME: "${GIT_BRANCH}",
-    ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
-        parameters {
-            booleanParam('SKIP_TESTS', false, 'Skip all tests')
-        }
+    KogitoJobUtils.createNightlyBuildChainIntegrationJob(this, envName, 'drools', true){ script ->
+        def jobParams = JobParamsUtils.getDefaultJobParams(script, 'drools')
+        jobParams.git.branch = VersionUtils.getProjectTargetBranch('drools', Utils.getGitBranch(this), Utils.getRepoName(this))
+        jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
+        jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
+        jobParams.env.put('BUILDCHAIN_FULL_BRANCH_DOWNSTREAM_BUILD', 'true')
+        JobParamsUtils.setupJobParamsDeployConfiguration(script, jobParams)
+        return jobParams
     }
 }
 

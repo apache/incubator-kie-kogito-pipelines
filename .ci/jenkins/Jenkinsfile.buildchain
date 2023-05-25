@@ -30,6 +30,9 @@ buildChainAdditionalArguments = buildChainProject ? [ "-p ${buildChainProject}" 
 if (isBranchBuildChainType()) {
     buildChainAdditionalArguments.add("-b ${env.GIT_BRANCH_NAME.trim()}")
     buildChainAdditionalArguments.add("-g ${env.GIT_AUTHOR.trim()}")
+    if(env.BUILDCHAIN_FULL_BRANCH_DOWNSTREAM_BUILD) {
+        buildChainAdditionalArguments.add("--fullProjectDependencyTree")
+    }
 } else {
     buildChainAdditionalArguments.add("-u ${env.ghprbPullLink}")
 }
@@ -225,6 +228,7 @@ String getBuildMavenOptsCurrent() {
     enableSonarCloudAnalysis ? opts_current.add('-Prun-code-coverage') : null
     skipTests ? opts_current.add('-DskipTests') : null
     skipIntegrationTests ? opts_current.add('-DskipITs') : null
+
     return opts_current.join(' ')
 }
 
