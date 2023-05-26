@@ -12,24 +12,25 @@ class JobParamsUtils {
         return getDefaultJobParams(script)
     }
 
-    static def getDefaultJobParams(def script) {
+    static def getDefaultJobParams(def script, String repository = '') {
+        repository = repository ?: Utils.getRepoName(script)
         def jobParams = [
             job: [
-                name: Utils.getRepoName(script)
+                name: repository,
             ],
             git: [
                 author: Utils.getGitAuthor(script),
                 branch: Utils.getGitBranch(script),
-                repository: Utils.getRepoName(script),
+                repository: repository,
                 credentials: Utils.getGitAuthorCredsId(script),
                 token_credentials: Utils.getGitAuthorTokenCredsId(script)
             ],
             parametersClosures: [],
             env: [
-                REPO_NAME: Utils.getRepoName(script)
+                REPO_NAME: repository,
             ],
             pr: [
-                target_repository: Utils.getRepoName(script),
+                target_repository: repository,
                 excluded_regions: [
                     'LICENSE',
                     '\\.gitignore',

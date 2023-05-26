@@ -1,6 +1,7 @@
 import org.kie.jenkins.jobdsl.KogitoJobTemplate
 import org.kie.jenkins.jobdsl.model.JobType
 import org.kie.jenkins.jobdsl.utils.JobParamsUtils
+import org.kie.jenkins.jobdsl.utils.VersionUtils
 import org.kie.jenkins.jobdsl.KogitoJobUtils
 import org.kie.jenkins.jobdsl.Utils
 
@@ -29,6 +30,7 @@ createSetupBranchJob()
 // Nightly
 setupNightlyJob()
 setupQuarkusPlatformJob(JobType.NIGHTLY)
+setupQuarkus3NightlyJob()
 
 KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-main')
 KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-lts')
@@ -152,6 +154,18 @@ void setupNightlyJob() {
 
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
         }
+    }
+}
+
+void setupQuarkus3NightlyJob() {
+    KogitoJobUtils.createNightlyBuildChainIntegrationJob(this, 'quarkus-3', 'drools', true) { script ->
+        def jobParams = JobParamsUtils.getDefaultJobParams(script, 'drools')
+        jobParams.git.branch = VersionUtils.getProjectTargetBranch('drools', Utils.getGitBranch(this), Utils.getRepoName(this))
+        jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
+        jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
+        jobParams.env.put('BUILDCHAIN_FULL_BRANCH_DOWNSTREAM_BUILD', 'true')
+        JobParamsUtils.setupJobParamsDeployConfiguration(script, jobParams)
+        return jobParams
     }
 }
 
