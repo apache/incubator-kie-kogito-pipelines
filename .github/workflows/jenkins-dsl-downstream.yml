@@ -152,7 +152,7 @@ jobs:
           echo 'BASE_BRANCH=${{ github.base_ref }}' >> $GITHUB_ENV
 
       - name: DSL tests
-        uses: kiegroup/kogito-pipelines/.ci/actions/dsl-tests@main
+        uses: kiegroup/kie-ci/.ci/actions/dsl-tests@main
         with:
           project: kogito
           repository: ${{ matrix.repository }}
@@ -316,7 +316,7 @@ jobs:
           echo 'BASE_BRANCH=development' >> $GITHUB_ENV
       
       - name: DSL tests
-        uses: kiegroup/kogito-pipelines/.ci/actions/dsl-tests@main
+        uses: kiegroup/kie-ci/.ci/actions/dsl-tests@main
         with:
           project: optaplanner
           repository: ${{ matrix.repository }}
@@ -475,7 +475,7 @@ jobs:
           echo 'BASE_BRANCH=${{ github.base_ref }}' >> $GITHUB_ENV
       
       - name: DSL tests
-        uses: kiegroup/kogito-pipelines/.ci/actions/dsl-tests@main
+        uses: kiegroup/kie-ci/.ci/actions/dsl-tests@main
         with:
           project: drools
           repository: ${{ matrix.repository }}
