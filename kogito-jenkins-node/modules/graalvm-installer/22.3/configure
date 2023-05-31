@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+tar xf  /tmp/artifacts/graalvm-ce-linux-amd64.tar.gz  -C /usr/share
+mv /usr/share/graalvm-ce-java${GRAALVM_JAVA_VERSION}-${GRAALVM_VERSION}   /usr/share/graalvm
+/usr/share/graalvm/bin/gu install native-image

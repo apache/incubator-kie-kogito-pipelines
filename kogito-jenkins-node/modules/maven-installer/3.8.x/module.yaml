@@ -1,0 +1,16 @@
+name: org.kie.kogito.maven
+version: "3.8"
+description: "Module used to install maven 3.8"
+envs:
+  - name: "MAVEN_VERSION"
+    value: "3.8.7"
+  - name: "MAVEN_HOME"
+    value: "/usr/local/apache-maven-3.8.8/"
+  - name: PATH
+    value: /usr/local/apache-maven-3.8.8/bin/:$PATH
+artifacts:
+  - name: apache-maven-3.8.8-bin.tar.gz
+    url: https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
+    md5: 7b417085cabb71501147ca5411c251c2
+execute:
+  - script: install.sh
