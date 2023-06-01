@@ -64,10 +64,13 @@ pipeline {
                     env.QUARKUS_VERSION = PME_BUILD_VARIABLES['quarkusVersion'].replaceAll("\\{\\{.*\\}\\}", env.QUARKUS_VERSION_COMMUNITY)
                     env.QUARKUS_PLATFORM_VERSION = PME_BUILD_VARIABLES['quarkusPlatformVersion'].replaceAll("\\{\\{.*\\}\\}", env.QUARKUS_VERSION_COMMUNITY)
 
-                    // export image registry
+                    // export images registries
                     env.IMAGE_TAG_VERSION = PME_BUILD_VARIABLES['imageTagVersion']
-                    env.IMAGE_REGISTRY = PME_BUILD_VARIABLES['imageRegistry'].replaceAll("\\{\\{.*\\}\\}", env.IMAGE_TAG_VERSION)
-                    
+                    env.DATA_INDEX_IMAGE_REGISTRY = PME_BUILD_VARIABLES['dataIndexImageRegistry'].replaceAll("\\{\\{.*\\}\\}", env.IMAGE_TAG_VERSION)
+                    env.SWF_BUILDER_IMAGE_REGISTRY = PME_BUILD_VARIABLES['swfBuilderImageRegistry'].replaceAll("\\{\\{.*\\}\\}", env.IMAGE_TAG_VERSION)
+                    env.SWF_DEVMODE_IMAGE_REGISTRY = PME_BUILD_VARIABLES['swfDevModeImageRegistry'].replaceAll("\\{\\{.*\\}\\}", env.IMAGE_TAG_VERSION)
+                    env.OPERATOR_IMAGE_REGISTRY = PME_BUILD_VARIABLES['operatorImageRegistry'].replaceAll("\\{\\{.*\\}\\}", env.IMAGE_TAG_VERSION)
+
                     sh 'printenv'
                 }
             }
@@ -144,7 +147,7 @@ pipeline {
                         mavenRepositoryFileUrl, 
                         env.ALREADY_BUILT_PROJECTS,
                         ['serverlesslogic': env['VERSION_kiegroup_kogito-runtimes'], 'serverlesslogic-rhba': env['VERSION_kiegroup_kogito-runtimes'], 'drools': env.VERSION_kiegroup_drools, 'platform.quarkus.bom': env.QUARKUS_PLATFORM_VERSION, 'quarkus.bom': env.QUARKUS_VERSION],
-                        ['data-index-ephemeral': env.IMAGE_REGISTRY],
+                        ['data-index-ephemeral': env.DATA_INDEX_IMAGE_REGISTRY, 'swf-builder': env.SWF_BUILDER_IMAGE_REGISTRY, 'swf-devmode': env.SWF_DEVMODE_IMAGE_REGISTRY, 'operator': env.OPERATOR_IMAGE_REGISTRY],
                         gitHashesToCollection(env.GIT_INFORMATION_HASHES)
                     )
                     echo "[INFO] Message Body: ${messageBody}"
