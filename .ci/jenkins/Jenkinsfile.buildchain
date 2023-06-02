@@ -3,7 +3,7 @@
 import org.kie.jenkins.MavenCommand
 import org.kie.jenkins.MavenSettingsUtils
 
-agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'kie-rhel7 && kie-mem16g'} && !built-in"
+agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'kie-rhel8 && docker && kie-mem16g'} && !built-in"
 timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: '180'
 jdkTool = env.BUILD_JDK_TOOL
 mavenTool = env.BUILD_MAVEN_TOOL
