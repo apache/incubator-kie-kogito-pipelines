@@ -2,9 +2,9 @@
   "metadata": {
     "title": "Kogito Status",
     "subtitle": "Kiegroup Kogito organization repositories CI status",
-    "date": "2023-06-02T08:21:05.048Z",
+    "date": "2023-06-02T09:16:37.488Z",
     "createdBy": "GitHub Action",
-    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153413472"
+    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153906879"
   },
   "projects": [
     {
@@ -19,6 +19,279 @@
       "repo_url": "https://github.com/kiegroup/kogito-pipelines",
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-pipelines/pulls{/number}",
       "pullRequests": [
+        {
+          "number": 980,
+          "title": "KOGITO-9275 Jenkins: Switch jobs to use RHEL8",
+          "url": "https://api.github.com/repos/kiegroup/kogito-pipelines/pulls/980",
+          "html_url": "https://github.com/kiegroup/kogito-pipelines/pull/980",
+          "state": "open",
+          "labels": [],
+          "draft": true,
+          "requested_reviewers": [],
+          "created_at": "2023-06-02T08:45:02Z",
+          "updated_at": "2023-06-02T08:50:32Z",
+          "closed_at": null,
+          "merged_at": null,
+          "base": {
+            "ref": "main",
+            "sha": "fc16b01d573bec9afa660e65650d315d5f8680cd",
+            "label": "kiegroup:main"
+          },
+          "head": {
+            "ref": "kogito-9275-build-chain-rhel8",
+            "sha": "c2f77ad3a68ffb4d85a9643424954b6bab4d784e",
+            "label": "radtriste:kogito-9275-build-chain-rhel8"
+          },
+          "user": {
+            "login": "radtriste",
+            "avatar_url": "https://avatars.githubusercontent.com/u/17157711?v=4",
+            "html_url": "https://github.com/radtriste"
+          },
+          "checks": [
+            {
+              "id": 13951757797,
+              "name": "Kogito DSL Downstream tests - radtriste/kogito-pipelines",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281419166",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:14:25Z",
+              "completed_at": "2023-06-02T09:15:59Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951757537,
+              "name": "Kogito DSL Downstream tests - radtriste/kogito-runtimes",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281418969",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:14:29Z",
+              "completed_at": "2023-06-02T09:16:22Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951757306,
+              "name": "Kogito DSL Downstream tests - radtriste/kogito-serverless-operator",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281418791",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:14:11Z",
+              "completed_at": "2023-06-02T09:15:58Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951757079,
+              "name": "Kogito DSL Downstream tests - radtriste/kogito-operator",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281418596",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:13:59Z",
+              "completed_at": "2023-06-02T09:15:38Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951756859,
+              "name": "Kogito DSL Downstream tests - radtriste/kogito-images",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281418416",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:09:34Z",
+              "completed_at": "2023-06-02T09:10:50Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951756594,
+              "name": "Kogito DSL Downstream tests - radtriste/kogito-examples",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281418197",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:08:29Z",
+              "completed_at": "2023-06-02T09:09:50Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951756354,
+              "name": "Kogito DSL Downstream tests - radtriste/kogito-docs",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281417987",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:09:29Z",
+              "completed_at": "2023-06-02T09:11:37Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951756105,
+              "name": "Kogito DSL Downstream tests - radtriste/kie-tools",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281417773",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:05:03Z",
+              "completed_at": "2023-06-02T09:06:31Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951755807,
+              "name": "Kogito DSL Downstream tests - radtriste/kie-docs",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281417522",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:04:52Z",
+              "completed_at": "2023-06-02T09:06:09Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951755487,
+              "name": "Kogito DSL Downstream tests - radtriste/kogito-apps",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281417252",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:04:58Z",
+              "completed_at": "2023-06-02T09:06:16Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951748661,
+              "name": "OptaPlanner DSL Downstream tests - radtriste/kie-benchmarks",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281411619",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:03:31Z",
+              "completed_at": "2023-06-02T09:04:56Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951748425,
+              "name": "OptaPlanner DSL Downstream tests - radtriste/optaplanner",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281411426",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:03:54Z",
+              "completed_at": "2023-06-02T09:05:58Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951748222,
+              "name": "OptaPlanner DSL Downstream tests - radtriste/optaplanner-quickstarts",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281411259",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:04:51Z",
+              "completed_at": "2023-06-02T09:07:10Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951748010,
+              "name": "OptaPlanner DSL Downstream tests - radtriste/optaplanner-website",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281411081",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:03:12Z",
+              "completed_at": "2023-06-02T09:05:27Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951735717,
+              "name": "Drools DSL Downstream tests - radtriste/drools",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281401477",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:02:51Z",
+              "completed_at": "2023-06-02T09:04:45Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951735469,
+              "name": "Drools DSL Downstream tests - radtriste/drools-website",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281401276",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:02:57Z",
+              "completed_at": "2023-06-02T09:04:52Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951735148,
+              "name": "Drools DSL Downstream tests - radtriste/kie-benchmarks",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281401010",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:02:40Z",
+              "completed_at": "2023-06-02T09:04:43Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951458627,
+              "name": "Get Drools DSL downstream projects",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281185510",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:01:31Z",
+              "completed_at": "2023-06-02T09:02:02Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951458464,
+              "name": "Get Kogito DSL downstream projects",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281185376",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:02:38Z",
+              "completed_at": "2023-06-02T09:02:44Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951458431,
+              "name": "dsl-tests",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669458/jobs/9281185349",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:01:27Z",
+              "completed_at": "2023-06-02T09:02:51Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951458264,
+              "name": "Get OptaPlanner DSL downstream projects",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669453/jobs/9281185222",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:02:09Z",
+              "completed_at": "2023-06-02T09:02:30Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951458259,
+              "name": "Jenkinsfiles",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5153669458/jobs/9281185218",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:01:21Z",
+              "completed_at": "2023-06-02T09:03:05Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            }
+          ]
+        },
         {
           "number": 967,
           "title": "[BXMSPROD-2019] Productized branch creation",
@@ -1357,160 +1630,207 @@
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-runtimes/pulls{/number}",
       "pullRequests": [
         {
-          "number": 3031,
-          "title": "[DROOLS-7450] fix split packages in drools-base",
-          "url": "https://api.github.com/repos/kiegroup/kogito-runtimes/pulls/3031",
-          "html_url": "https://github.com/kiegroup/kogito-runtimes/pull/3031",
+          "number": 3033,
+          "title": "[KOGITO-9217] Set property name to \"kogito.codegen.process.failOnError\"",
+          "url": "https://api.github.com/repos/kiegroup/kogito-runtimes/pulls/3033",
+          "html_url": "https://github.com/kiegroup/kogito-runtimes/pull/3033",
           "state": "open",
           "labels": [],
           "draft": false,
-          "requested_reviewers": [],
-          "created_at": "2023-06-01T10:52:56Z",
-          "updated_at": "2023-06-01T18:01:20Z",
+          "requested_reviewers": [
+            {
+              "login": "ricardozanini",
+              "avatar_url": "https://avatars.githubusercontent.com/u/1538000?v=4",
+              "html_url": "https://github.com/ricardozanini"
+            },
+            {
+              "login": "spolti",
+              "avatar_url": "https://avatars.githubusercontent.com/u/1863987?v=4",
+              "html_url": "https://github.com/spolti"
+            },
+            {
+              "login": "tiagodolphine",
+              "avatar_url": "https://avatars.githubusercontent.com/u/7445313?v=4",
+              "html_url": "https://github.com/tiagodolphine"
+            }
+          ],
+          "created_at": "2023-06-02T08:47:12Z",
+          "updated_at": "2023-06-02T08:47:13Z",
           "closed_at": null,
           "merged_at": null,
           "base": {
             "ref": "main",
-            "sha": "3a001a3cf06c13c800f51e0bd3e37fda7f5ff684",
+            "sha": "887e7df81e2ec0c1f3995fcd1fb28cda13b92eab",
             "label": "kiegroup:main"
           },
           "head": {
-            "ref": "d7450",
-            "sha": "550f69e315ce57eea598b8463423321e3640ecd3",
-            "label": "mariofusco:d7450"
+            "ref": "KOGITO-9217a",
+            "sha": "fffd481f324b5998bafa422d51ab9f8c43c0a76e",
+            "label": "fjtirado:KOGITO-9217a"
           },
           "user": {
-            "login": "mariofusco",
-            "avatar_url": "https://avatars.githubusercontent.com/u/372781?v=4",
-            "html_url": "https://github.com/mariofusco"
+            "login": "fjtirado",
+            "avatar_url": "https://avatars.githubusercontent.com/u/65240126?v=4",
+            "html_url": "https://github.com/fjtirado"
           },
           "checks": [
             {
-              "id": 13935104318,
-              "name": "SonarCloud",
-              "html_url": "https://github.com/kiegroup/kogito-runtimes/runs/13935104318",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-06-01T18:01:16Z",
-              "completed_at": "2023-06-01T18:01:21Z",
-              "slug": "github-code-scanning",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13935103578,
-              "name": "SonarCloud Code Analysis",
-              "html_url": "https://github.com/kiegroup/kogito-runtimes/runs/13935103578",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-06-01T17:58:41Z",
-              "completed_at": "2023-06-01T18:01:13Z",
-              "slug": "sonarcloud",
-              "avatar_url": "https://avatars.githubusercontent.com/u/545988?v=4"
-            },
-            {
-              "id": 13934078092,
+              "id": 13951381115,
               "name": "serverless-workflow-examples (ubuntu-latest / Java-11 / Maven-3.8.7)",
-              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5147325448/jobs/9267562506",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-06-01T17:36:25Z",
-              "completed_at": "2023-06-01T18:30:12Z",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5153642269/jobs/9281124653",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-02T08:48:32Z",
+              "completed_at": null,
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 13934077819,
-              "name": "kogito-apps (ubuntu-latest / Java-11 / Maven-3.8.7)",
-              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5147325448/jobs/9267562312",
-              "status": "completed",
-              "conclusion": "failure",
-              "started_at": "2023-06-01T17:34:41Z",
-              "completed_at": "2023-06-01T19:22:16Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13934077572,
-              "name": "kogito-quarkus-examples (ubuntu-latest / Java-11 / Maven-3.8.7)",
-              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5147325448/jobs/9267562128",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-06-01T17:26:00Z",
-              "completed_at": "2023-06-01T18:34:10Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13934077366,
-              "name": "ubuntu-latest / Java-11 / Maven-3.8.7",
-              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5147325450/jobs/9267561968",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-06-01T17:27:37Z",
-              "completed_at": "2023-06-01T18:30:26Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13934077350,
+              "id": 13951380957,
               "name": "kogito-springboot-examples (ubuntu-latest / Java-11 / Maven-3.8.7)",
-              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5147325448/jobs/9267561957",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-06-01T17:27:27Z",
-              "completed_at": "2023-06-01T18:15:12Z",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5153642269/jobs/9281124529",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-02T08:48:20Z",
+              "completed_at": null,
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 23412996732,
-              "name": "(build) kogito-springboot-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-springboot-examples/1069/display/redirect",
-              "conclusion": "success",
-              "started_at": "2023-06-01T17:55:24Z",
-              "completed_at": "2023-06-01T17:55:24Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+              "id": 13951380781,
+              "name": "kogito-apps (ubuntu-latest / Java-11 / Maven-3.8.7)",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5153642269/jobs/9281124391",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-02T08:47:59Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 23413093347,
-              "name": "(build) serverless-workflow-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.serverless-workflow-examples/1041/display/redirect",
-              "conclusion": "failure",
-              "started_at": "2023-06-01T17:59:52Z",
-              "completed_at": "2023-06-01T17:59:52Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+              "id": 13951380713,
+              "name": "ubuntu-latest / Java-11 / Maven-3.8.7",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5153642268/jobs/9281124338",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-02T08:47:47Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 23413128354,
-              "name": "(build) kogito-runtimes",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.kogito-runtimes/2640/display/redirect",
-              "conclusion": "success",
-              "started_at": "2023-06-01T18:01:23Z",
-              "completed_at": "2023-06-01T18:01:23Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+              "id": 13951380562,
+              "name": "kogito-quarkus-examples (ubuntu-latest / Java-11 / Maven-3.8.7)",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5153642269/jobs/9281124248",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-02T08:48:01Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 23413225551,
+              "id": 23424644686,
               "name": "(build) kogito-quarkus-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-quarkus-examples/1056/display/redirect",
-              "conclusion": "success",
-              "started_at": "2023-06-01T18:05:44Z",
-              "completed_at": "2023-06-01T18:05:44Z",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-quarkus-examples/1058/display/redirect",
+              "conclusion": "pending",
+              "started_at": "2023-06-02T08:47:18Z",
+              "completed_at": "2023-06-02T08:47:18Z",
               "slug": true,
               "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
             },
             {
-              "id": 23414209819,
-              "name": "(build) kogito-apps",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-apps/2695/display/redirect",
-              "conclusion": "success",
-              "started_at": "2023-06-01T18:52:44Z",
-              "completed_at": "2023-06-01T18:52:44Z",
+              "id": 23424644715,
+              "name": "(build) serverless-workflow-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.serverless-workflow-examples/1043/display/redirect",
+              "conclusion": "pending",
+              "started_at": "2023-06-02T08:47:18Z",
+              "completed_at": "2023-06-02T08:47:18Z",
               "slug": true,
               "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424644747,
+              "name": "(build) kogito-apps",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-apps/2697/display/redirect",
+              "conclusion": "pending",
+              "started_at": "2023-06-02T08:47:18Z",
+              "completed_at": "2023-06-02T08:47:18Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424644801,
+              "name": "(build) kogito-runtimes",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.kogito-runtimes/2642/display/redirect",
+              "conclusion": "pending",
+              "started_at": "2023-06-02T08:47:19Z",
+              "completed_at": "2023-06-02T08:47:19Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23425145630,
+              "name": "(build) kogito-springboot-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-springboot-examples/1071/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:15:41Z",
+              "completed_at": "2023-06-02T09:15:41Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            }
+          ]
+        },
+        {
+          "number": 3032,
+          "title": "KOGITO-9275 Jenkins: Switch jobs to use RHEL8",
+          "url": "https://api.github.com/repos/kiegroup/kogito-runtimes/pulls/3032",
+          "html_url": "https://github.com/kiegroup/kogito-runtimes/pull/3032",
+          "state": "open",
+          "labels": [],
+          "draft": true,
+          "requested_reviewers": [],
+          "created_at": "2023-06-02T08:45:29Z",
+          "updated_at": "2023-06-02T08:48:24Z",
+          "closed_at": null,
+          "merged_at": null,
+          "base": {
+            "ref": "main",
+            "sha": "887e7df81e2ec0c1f3995fcd1fb28cda13b92eab",
+            "label": "kiegroup:main"
+          },
+          "head": {
+            "ref": "kogito-9275-build-chain-rhel8",
+            "sha": "200322a974b7c91b44915541d68ae25cb411d1e3",
+            "label": "radtriste:kogito-9275-build-chain-rhel8"
+          },
+          "user": {
+            "login": "radtriste",
+            "avatar_url": "https://avatars.githubusercontent.com/u/17157711?v=4",
+            "html_url": "https://github.com/radtriste"
+          },
+          "checks": [
+            {
+              "id": 13951339323,
+              "name": "Jenkinsfiles",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5153627124/jobs/9281090932",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:47:33Z",
+              "completed_at": "2023-06-02T08:50:12Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951339172,
+              "name": "DSL",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5153627124/jobs/9281090817",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:47:27Z",
+              "completed_at": "2023-06-02T08:49:11Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             }
           ]
         },
@@ -1676,7 +1996,7 @@
             }
           ],
           "created_at": "2023-05-30T15:21:25Z",
-          "updated_at": "2023-06-02T08:03:19Z",
+          "updated_at": "2023-06-02T08:41:44Z",
           "closed_at": null,
           "merged_at": null,
           "base": {
@@ -1696,6 +2016,17 @@
           },
           "checks": [
             {
+              "id": 13951252482,
+              "name": "SonarCloud Code Analysis",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/runs/13951252482",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:39:10Z",
+              "completed_at": "2023-06-02T08:41:35Z",
+              "slug": "sonarcloud",
+              "avatar_url": "https://avatars.githubusercontent.com/u/545988?v=4"
+            },
+            {
               "id": 13867560476,
               "name": "SonarCloud",
               "html_url": "https://github.com/kiegroup/kogito-runtimes/runs/13867560476",
@@ -1705,17 +2036,6 @@
               "completed_at": "2023-05-30T16:52:55Z",
               "slug": "github-code-scanning",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13867559797,
-              "name": "SonarCloud Code Analysis",
-              "html_url": "https://github.com/kiegroup/kogito-runtimes/runs/13867559797",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-05-30T16:45:33Z",
-              "completed_at": "2023-05-30T16:52:50Z",
-              "slug": "sonarcloud",
-              "avatar_url": "https://avatars.githubusercontent.com/u/545988?v=4"
             },
             {
               "id": 13864883284,
@@ -1773,52 +2093,52 @@
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 23423914818,
-              "name": "(build) kogito-springboot-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-springboot-examples/1070/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T08:03:23Z",
-              "completed_at": "2023-06-02T08:03:23Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
-              "id": 23423914849,
-              "name": "(build) kogito-quarkus-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-quarkus-examples/1057/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T08:03:23Z",
-              "completed_at": "2023-06-02T08:03:23Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
-              "id": 23423914861,
-              "name": "(build) serverless-workflow-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.serverless-workflow-examples/1042/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T08:03:23Z",
-              "completed_at": "2023-06-02T08:03:23Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
-              "id": 23423914892,
-              "name": "(build) kogito-runtimes",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.kogito-runtimes/2641/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T08:03:23Z",
-              "completed_at": "2023-06-02T08:03:23Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
               "id": 23423914907,
               "name": "(build) kogito-apps",
               "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-apps/2696/display/redirect",
               "conclusion": "pending",
               "started_at": "2023-06-02T08:03:23Z",
               "completed_at": "2023-06-02T08:03:23Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424393814,
+              "name": "(build) kogito-springboot-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-springboot-examples/1070/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:32:49Z",
+              "completed_at": "2023-06-02T08:32:49Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424481328,
+              "name": "(build) serverless-workflow-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.serverless-workflow-examples/1042/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:37:57Z",
+              "completed_at": "2023-06-02T08:37:57Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424550646,
+              "name": "(build) kogito-runtimes",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.kogito-runtimes/2641/display/redirect",
+              "conclusion": "failure",
+              "started_at": "2023-06-02T08:41:56Z",
+              "completed_at": "2023-06-02T08:41:56Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424580790,
+              "name": "(build) kogito-quarkus-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-quarkus-examples/1057/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:43:40Z",
+              "completed_at": "2023-06-02T08:43:40Z",
               "slug": true,
               "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
             }
@@ -6291,6 +6611,48 @@
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-apps/pulls{/number}",
       "pullRequests": [
         {
+          "number": 1754,
+          "title": "KOGITO-9275 Jenkins: Switch jobs to use RHEL8",
+          "url": "https://api.github.com/repos/kiegroup/kogito-apps/pulls/1754",
+          "html_url": "https://github.com/kiegroup/kogito-apps/pull/1754",
+          "state": "open",
+          "labels": [],
+          "draft": true,
+          "requested_reviewers": [],
+          "created_at": "2023-06-02T08:45:31Z",
+          "updated_at": "2023-06-02T08:48:26Z",
+          "closed_at": null,
+          "merged_at": null,
+          "base": {
+            "ref": "main",
+            "sha": "9361e52350740a7d3c17a5170ab0a127b1b998d4",
+            "label": "kiegroup:main"
+          },
+          "head": {
+            "ref": "kogito-9275-build-chain-rhel8",
+            "sha": "201a9d66d16a699a1f3680b310c0ad59668c2340",
+            "label": "radtriste:kogito-9275-build-chain-rhel8"
+          },
+          "user": {
+            "login": "radtriste",
+            "avatar_url": "https://avatars.githubusercontent.com/u/17157711?v=4",
+            "html_url": "https://github.com/radtriste"
+          },
+          "checks": [
+            {
+              "id": 13951340131,
+              "name": "DSL",
+              "html_url": "https://github.com/kiegroup/kogito-apps/actions/runs/5153627423/jobs/9281091566",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:46:27Z",
+              "completed_at": "2023-06-02T08:47:52Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            }
+          ]
+        },
+        {
           "number": 1753,
           "title": "KOGITO-9200 Dev UI shows an error when data-index is loading",
           "url": "https://api.github.com/repos/kiegroup/kogito-apps/pulls/1753",
@@ -6306,7 +6668,7 @@
             }
           ],
           "created_at": "2023-06-02T05:50:28Z",
-          "updated_at": "2023-06-02T07:33:02Z",
+          "updated_at": "2023-06-02T08:34:47Z",
           "closed_at": null,
           "merged_at": null,
           "base": {
@@ -6325,6 +6687,28 @@
             "html_url": "https://github.com/bxf12315"
           },
           "checks": [
+            {
+              "id": 13951099468,
+              "name": "SonarCloud",
+              "html_url": "https://github.com/kiegroup/kogito-apps/runs/13951099468",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:34:49Z",
+              "completed_at": "2023-06-02T08:34:51Z",
+              "slug": "github-code-scanning",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951098406,
+              "name": "SonarCloud Code Analysis",
+              "html_url": "https://github.com/kiegroup/kogito-apps/runs/13951098406",
+              "status": "completed",
+              "conclusion": "failure",
+              "started_at": "2023-06-02T08:32:24Z",
+              "completed_at": "2023-06-02T08:34:45Z",
+              "slug": "sonarcloud",
+              "avatar_url": "https://avatars.githubusercontent.com/u/545988?v=4"
+            },
             {
               "id": 13948827950,
               "name": "kogito-springboot-examples (ubuntu-latest / Java-11 / Maven-3.8.7)",
@@ -6351,10 +6735,10 @@
               "id": 13948827658,
               "name": "ubuntu-latest / Java-11 / Maven-3.8.7",
               "html_url": "https://github.com/kiegroup/kogito-apps/actions/runs/5152707062/jobs/9279093670",
-              "status": "in_progress",
-              "conclusion": null,
+              "status": "completed",
+              "conclusion": "failure",
               "started_at": "2023-06-02T06:50:30Z",
-              "completed_at": null,
+              "completed_at": "2023-06-02T09:14:57Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
@@ -6368,16 +6752,6 @@
               "completed_at": "2023-06-02T07:30:45Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 23422950635,
-              "name": "(build) kogito-apps",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.kogito-apps/1048/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T06:50:02Z",
-              "completed_at": "2023-06-02T06:50:02Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
             },
             {
               "id": 23423096367,
@@ -6406,6 +6780,16 @@
               "conclusion": "success",
               "started_at": "2023-06-02T07:24:15Z",
               "completed_at": "2023-06-02T07:24:15Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424436741,
+              "name": "(build) kogito-apps",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.kogito-apps/1048/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:35:21Z",
+              "completed_at": "2023-06-02T08:35:21Z",
               "slug": true,
               "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
             }
@@ -8226,42 +8610,42 @@
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 23424022049,
-              "name": "(build) kogito-springboot-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.kogito-springboot-examples/493/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T08:09:46Z",
-              "completed_at": "2023-06-02T08:09:46Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
-              "id": 23424022051,
-              "name": "(build) kogito-quarkus-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.kogito-quarkus-examples/476/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T08:09:46Z",
-              "completed_at": "2023-06-02T08:09:46Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
-              "id": 23424022058,
-              "name": "(build) serverless-workflow-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.serverless-workflow-examples/482/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T08:09:46Z",
-              "completed_at": "2023-06-02T08:09:46Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
               "id": 23424022092,
               "name": "(build) kogito-apps",
               "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.kogito-apps/1049/display/redirect",
               "conclusion": "pending",
               "started_at": "2023-06-02T08:09:46Z",
               "completed_at": "2023-06-02T08:09:46Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424236173,
+              "name": "(build) kogito-quarkus-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.kogito-quarkus-examples/476/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:23:24Z",
+              "completed_at": "2023-06-02T08:23:24Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424544225,
+              "name": "(build) kogito-springboot-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.kogito-springboot-examples/493/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:41:32Z",
+              "completed_at": "2023-06-02T08:41:32Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424553685,
+              "name": "(build) serverless-workflow-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.serverless-workflow-examples/482/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:42:06Z",
+              "completed_at": "2023-06-02T08:42:06Z",
               "slug": true,
               "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
             }
@@ -8547,42 +8931,42 @@
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 23424035935,
-              "name": "(build) serverless-workflow-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.serverless-workflow-examples/483/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T08:10:38Z",
-              "completed_at": "2023-06-02T08:10:38Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
-              "id": 23424035952,
-              "name": "(build) kogito-quarkus-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.kogito-quarkus-examples/477/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T08:10:38Z",
-              "completed_at": "2023-06-02T08:10:38Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
-              "id": 23424035963,
-              "name": "(build) kogito-springboot-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.kogito-springboot-examples/494/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T08:10:38Z",
-              "completed_at": "2023-06-02T08:10:38Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
               "id": 23424035991,
               "name": "(build) kogito-apps",
               "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.kogito-apps/1050/display/redirect",
               "conclusion": "pending",
               "started_at": "2023-06-02T08:10:38Z",
               "completed_at": "2023-06-02T08:10:38Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424246806,
+              "name": "(build) kogito-quarkus-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.kogito-quarkus-examples/477/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:24:04Z",
+              "completed_at": "2023-06-02T08:24:04Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424528440,
+              "name": "(build) kogito-springboot-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.kogito-springboot-examples/494/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:40:37Z",
+              "completed_at": "2023-06-02T08:40:37Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424601428,
+              "name": "(build) serverless-workflow-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.serverless-workflow-examples/483/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:44:52Z",
+              "completed_at": "2023-06-02T08:44:52Z",
               "slug": true,
               "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
             }
@@ -8889,42 +9273,42 @@
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 23424043158,
-              "name": "(build) kogito-springboot-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.kogito-springboot-examples/495/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T08:11:04Z",
-              "completed_at": "2023-06-02T08:11:04Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
-              "id": 23424043161,
-              "name": "(build) serverless-workflow-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.serverless-workflow-examples/484/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T08:11:04Z",
-              "completed_at": "2023-06-02T08:11:04Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
-              "id": 23424043162,
-              "name": "(build) kogito-quarkus-examples",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.kogito-quarkus-examples/478/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T08:11:04Z",
-              "completed_at": "2023-06-02T08:11:04Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
               "id": 23424043163,
               "name": "(build) kogito-apps",
               "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.kogito-apps/1052/display/redirect",
               "conclusion": "pending",
               "started_at": "2023-06-02T08:11:04Z",
               "completed_at": "2023-06-02T08:11:04Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424244154,
+              "name": "(build) kogito-quarkus-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.kogito-quarkus-examples/478/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:23:54Z",
+              "completed_at": "2023-06-02T08:23:54Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424546655,
+              "name": "(build) kogito-springboot-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.kogito-springboot-examples/495/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:41:40Z",
+              "completed_at": "2023-06-02T08:41:40Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23424575717,
+              "name": "(build) serverless-workflow-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-apps.tests.downstream.serverless-workflow-examples/484/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-02T08:43:22Z",
+              "completed_at": "2023-06-02T08:43:22Z",
               "slug": true,
               "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
             }
@@ -10387,6 +10771,36 @@
       "repo_url": "https://github.com/kiegroup/kogito-examples",
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-examples/pulls{/number}",
       "pullRequests": [
+        {
+          "number": 1682,
+          "title": "KOGITO-9275 Jenkins: Switch jobs to use RHEL8",
+          "url": "https://api.github.com/repos/kiegroup/kogito-examples/pulls/1682",
+          "html_url": "https://github.com/kiegroup/kogito-examples/pull/1682",
+          "state": "open",
+          "labels": [],
+          "draft": true,
+          "requested_reviewers": [],
+          "created_at": "2023-06-02T08:45:33Z",
+          "updated_at": "2023-06-02T08:48:29Z",
+          "closed_at": null,
+          "merged_at": null,
+          "base": {
+            "ref": "main",
+            "sha": "463b2d0f21950eb46a4f9ade87234f7a2b3ac98d",
+            "label": "kiegroup:main"
+          },
+          "head": {
+            "ref": "kogito-9275-build-chain-rhel8",
+            "sha": "de2887ddbfd435b14e9e5dd415cef7ccffc5bed5",
+            "label": "radtriste:kogito-9275-build-chain-rhel8"
+          },
+          "user": {
+            "login": "radtriste",
+            "avatar_url": "https://avatars.githubusercontent.com/u/17157711?v=4",
+            "html_url": "https://github.com/radtriste"
+          },
+          "checks": []
+        },
         {
           "number": 1679,
           "title": "Kogito 8057:Add dataindex service to serverless-workflow-newsletter-subscription",
@@ -12770,7 +13184,7 @@
           "draft": false,
           "requested_reviewers": [],
           "created_at": "2023-06-02T07:56:52Z",
-          "updated_at": "2023-06-02T07:56:52Z",
+          "updated_at": "2023-06-02T08:47:06Z",
           "closed_at": null,
           "merged_at": null,
           "base": {
@@ -12823,12 +13237,12 @@
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 23423816014,
+              "id": 23424641636,
               "name": "Linux",
               "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-images/718/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-06-02T07:56:57Z",
-              "completed_at": "2023-06-02T07:56:57Z",
+              "conclusion": "failure",
+              "started_at": "2023-06-02T08:47:07Z",
+              "completed_at": "2023-06-02T08:47:07Z",
               "slug": true,
               "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
             }
@@ -12903,80 +13317,6 @@
               "conclusion": "failure",
               "started_at": "2023-06-01T09:34:49Z",
               "completed_at": "2023-06-01T09:34:49Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            }
-          ]
-        },
-        {
-          "number": 1554,
-          "title": "[KOGITO-9251] - [Dev-mode] KSW Discovery - You need to define a Kuber…",
-          "url": "https://api.github.com/repos/kiegroup/kogito-images/pulls/1554",
-          "html_url": "https://github.com/kiegroup/kogito-images/pull/1554",
-          "state": "open",
-          "labels": [],
-          "draft": false,
-          "requested_reviewers": [],
-          "created_at": "2023-05-30T18:54:09Z",
-          "updated_at": "2023-06-02T07:31:13Z",
-          "closed_at": null,
-          "merged_at": null,
-          "base": {
-            "ref": "main",
-            "sha": "f1ee3ecd15c448785bd44946f46be95669a9c9cd",
-            "label": "kiegroup:main"
-          },
-          "head": {
-            "ref": "KOGITO-9251",
-            "sha": "0697fdcdaa1bb4c1e6ced95b475b47735b6fd633",
-            "label": "spolti:KOGITO-9251"
-          },
-          "user": {
-            "login": "spolti",
-            "avatar_url": "https://avatars.githubusercontent.com/u/1863987?v=4",
-            "html_url": "https://github.com/spolti"
-          },
-          "checks": [
-            {
-              "id": 13940248075,
-              "name": "ShellCheck",
-              "html_url": "https://github.com/kiegroup/kogito-images/actions/runs/5149372742/jobs/9272285504",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-06-01T21:23:01Z",
-              "completed_at": "2023-06-01T21:23:07Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13940247901,
-              "name": "Validate Kogito imagestreams",
-              "html_url": "https://github.com/kiegroup/kogito-images/actions/runs/5149372742/jobs/9272285365",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-06-01T21:23:01Z",
-              "completed_at": "2023-06-01T21:23:05Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13940247717,
-              "name": "Bats Tests",
-              "html_url": "https://github.com/kiegroup/kogito-images/actions/runs/5149372742/jobs/9272285235",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-06-01T21:23:02Z",
-              "completed_at": "2023-06-01T21:23:50Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 23418165995,
-              "name": "Linux",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-images/717/display/redirect",
-              "conclusion": "success",
-              "started_at": "2023-06-01T22:14:48Z",
-              "completed_at": "2023-06-01T22:14:48Z",
               "slug": true,
               "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
             }
@@ -13448,206 +13788,6 @@
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-operator/pulls{/number}",
       "pullRequests": [
         {
-          "number": 1482,
-          "title": "Update PR Jenkins node label",
-          "url": "https://api.github.com/repos/kiegroup/kogito-operator/pulls/1482",
-          "html_url": "https://github.com/kiegroup/kogito-operator/pull/1482",
-          "state": "open",
-          "labels": [
-            "backport-1.13.x-blue",
-            "backport-1.13.x",
-            "backport-1.13.x-next",
-            "backport-1.13.x-blue-next",
-            "backport-1.39.x"
-          ],
-          "draft": false,
-          "requested_reviewers": [],
-          "created_at": "2023-06-01T13:02:19Z",
-          "updated_at": "2023-06-02T07:40:04Z",
-          "closed_at": null,
-          "merged_at": null,
-          "base": {
-            "ref": "main",
-            "sha": "6fa698d8bf608ababb9ae9502bc3b7a69ee6c254",
-            "label": "kiegroup:main"
-          },
-          "head": {
-            "ref": "update_pr_jenkins_node",
-            "sha": "50dbd0369a37fa0724a581ce70130fda04502690",
-            "label": "radtriste:update_pr_jenkins_node"
-          },
-          "user": {
-            "login": "radtriste",
-            "avatar_url": "https://avatars.githubusercontent.com/u/17157711?v=4",
-            "html_url": "https://github.com/radtriste"
-          },
-          "checks": [
-            {
-              "id": 13926633453,
-              "name": "[${{ matrix.target-branch }}] - Backporting",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/5144907064/jobs/9261811393",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-06-01T13:24:08Z",
-              "completed_at": "2023-06-01T13:24:08Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13926633247,
-              "name": "[${{ matrix.target-branch }}] - Backporting",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/5144907026/jobs/9261811245",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-06-01T13:24:07Z",
-              "completed_at": "2023-06-01T13:24:07Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13926633237,
-              "name": "[${{ matrix.target-branch }}] - Backporting",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/5144907078/jobs/9261811229",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-06-01T13:24:07Z",
-              "completed_at": "2023-06-01T13:24:07Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13926633234,
-              "name": "[${{ matrix.target-branch }}] - Backporting",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/5144907051/jobs/9261811227",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-06-01T13:24:07Z",
-              "completed_at": "2023-06-01T13:24:07Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13926633231,
-              "name": "[${{ matrix.target-branch }}] - Backporting",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/5144907062/jobs/9261811226",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-06-01T13:24:07Z",
-              "completed_at": "2023-06-01T13:24:07Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13926632723,
-              "name": "compute-targets",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/5144907064/jobs/9261810831",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-06-01T13:24:06Z",
-              "completed_at": "2023-06-01T13:24:06Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13926632428,
-              "name": "compute-targets",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/5144907078/jobs/9261810600",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-06-01T13:24:06Z",
-              "completed_at": "2023-06-01T13:24:06Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13926632426,
-              "name": "compute-targets",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/5144907026/jobs/9261810601",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-06-01T13:24:06Z",
-              "completed_at": "2023-06-01T13:24:06Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13926632422,
-              "name": "compute-targets",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/5144907062/jobs/9261810599",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-06-01T13:24:06Z",
-              "completed_at": "2023-06-01T13:24:06Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13926632414,
-              "name": "compute-targets",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/5144907051/jobs/9261810589",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-06-01T13:24:06Z",
-              "completed_at": "2023-06-01T13:24:06Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13925927794,
-              "name": "dsl-tests",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/5144672502/jobs/9261261355",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-06-01T13:37:29Z",
-              "completed_at": "2023-06-01T13:38:44Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13925927419,
-              "name": "Lint",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/5144672503/jobs/9261261070",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-06-01T13:37:30Z",
-              "completed_at": "2023-06-01T13:42:27Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13925927172,
-              "name": "Bats Test",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/5144672503/jobs/9261260876",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-06-01T13:36:46Z",
-              "completed_at": "2023-06-01T13:37:22Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 23407961504,
-              "name": "Operator RHPAM BDD Tests IBM",
-              "html_url": "https://jenkins-kogito-tools.kogito-cluster-0ad6762cc85bcef5745bb684498c2436-0000.us-south.containers.appdomain.cloud/job/kogito/job/rhpam-kogito-operator-PR-check-new/139/display/redirect",
-              "conclusion": "success",
-              "started_at": "2023-06-01T14:30:30Z",
-              "completed_at": "2023-06-01T14:30:30Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            },
-            {
-              "id": 23423961240,
-              "name": "Operator BDD Tests IBM",
-              "html_url": "https://jenkins-kogito-tools.kogito-cluster-0ad6762cc85bcef5745bb684498c2436-0000.us-south.containers.appdomain.cloud/job/kogito/job/kogito-operator-PR-check/855/display/redirect",
-              "conclusion": "success",
-              "started_at": "2023-06-02T08:06:17Z",
-              "completed_at": "2023-06-02T08:06:17Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
-            }
-          ]
-        },
-        {
           "number": 1386,
           "title": "[Misc] Automate OperatorHub PRs creation",
           "url": "https://api.github.com/repos/kiegroup/kogito-operator/pulls/1386",
@@ -13828,10 +13968,10 @@
         "1.13.x": {
           "1.13.x-blue": [
             {
-              "sha": "05a1a2bf5e3b1416c82de957e696abdd08e7e8b4"
+              "sha": "edf249f058a6ce97abc52f82828272301a39adda"
             },
             {
-              "sha": "cd919605a6aebb15ad43517ea7f0bc8b47801add"
+              "sha": "f4da0a90c00c39bfbd598a6b30a8a339d8d14c9b"
             },
             {
               "sha": "4a249f5dbb90db21aee23205995a3f07f01f0dbf"
@@ -14291,10 +14431,10 @@
         "1.13.x-blue": {
           "1.13.x": [
             {
-              "sha": "05a1a2bf5e3b1416c82de957e696abdd08e7e8b4"
+              "sha": "edf249f058a6ce97abc52f82828272301a39adda"
             },
             {
-              "sha": "5bd96e99f9137e3614085db9933e73c4fd534d41"
+              "sha": "15a111ff85fcce436ca4c63084d2319752bf0275"
             },
             {
               "sha": "4a249f5dbb90db21aee23205995a3f07f01f0dbf"
@@ -15010,7 +15150,7 @@
           "draft": false,
           "requested_reviewers": [],
           "created_at": "2023-05-17T13:19:15Z",
-          "updated_at": "2023-06-02T08:11:02Z",
+          "updated_at": "2023-06-02T09:08:42Z",
           "closed_at": null,
           "merged_at": null,
           "base": {
@@ -15020,7 +15160,7 @@
           },
           "head": {
             "ref": "KOGITO-8648",
-            "sha": "5076d8db1483131875af30bc7aec99f6a04da062",
+            "sha": "5a9fb7f112447fec50ce5271dc39feda9f1307a8",
             "label": "davidesalerno:KOGITO-8648"
           },
           "user": {
@@ -15030,46 +15170,46 @@
           },
           "checks": [
             {
-              "id": 13950496099,
-              "name": "Check files generation",
-              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153324309/jobs/9280419618",
+              "id": 13951924032,
+              "name": "Unit tests And Coverage",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153834602/jobs/9281553008",
               "status": "completed",
-              "conclusion": "failure",
-              "started_at": "2023-06-02T08:10:38Z",
-              "completed_at": "2023-06-02T08:15:55Z",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:10:42Z",
+              "completed_at": "2023-06-02T09:13:53Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 13950495876,
+              "id": 13951923857,
+              "name": "Check files generation",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153834602/jobs/9281552882",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:10:17Z",
+              "completed_at": "2023-06-02T09:14:19Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 13951923705,
               "name": "End-to-end tests (Minikube)",
-              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153324372/jobs/9280419429",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153834601/jobs/9281552771",
               "status": "in_progress",
               "conclusion": null,
-              "started_at": "2023-06-02T08:10:56Z",
+              "started_at": "2023-06-02T09:09:28Z",
               "completed_at": null,
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 13950495871,
-              "name": "Unit tests And Coverage",
-              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153324309/jobs/9280419428",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-06-02T08:10:38Z",
-              "completed_at": "2023-06-02T08:14:20Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 13950495641,
+              "id": 13951923683,
               "name": "Check headers",
-              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153324309/jobs/9280419230",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153834602/jobs/9281552749",
               "status": "completed",
               "conclusion": "success",
-              "started_at": "2023-06-02T08:10:39Z",
-              "completed_at": "2023-06-02T08:10:53Z",
+              "started_at": "2023-06-02T09:09:57Z",
+              "completed_at": "2023-06-02T09:10:10Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             }
@@ -15085,17 +15225,17 @@
           "draft": true,
           "requested_reviewers": [],
           "created_at": "2023-05-02T10:04:43Z",
-          "updated_at": "2023-05-24T07:50:10Z",
+          "updated_at": "2023-06-02T08:56:25Z",
           "closed_at": null,
           "merged_at": null,
           "base": {
             "ref": "main",
-            "sha": "1479d4b471d1cd35c984e9fe4d6b19644a01db75",
+            "sha": "0190a5f6606adc8cf0b47c22450d3b609c068600",
             "label": "kiegroup:main"
           },
           "head": {
             "ref": "kogito-9011-test-openshift",
-            "sha": "276f6261620353524272cc4131adf4b4dae29e4e",
+            "sha": "1e8b3ee45fc085a779429e48edda0d5961544e7e",
             "label": "radtriste:kogito-9011-test-openshift"
           },
           "user": {
@@ -15105,90 +15245,90 @@
           },
           "checks": [
             {
-              "id": 13716341901,
+              "id": 13951972136,
               "name": "Integration tests (docker)",
-              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5066058988/jobs/9095431006",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153715442/jobs/9281591268",
               "status": "completed",
               "conclusion": "success",
-              "started_at": "2023-05-24T07:53:28Z",
-              "completed_at": "2023-05-24T07:56:11Z",
+              "started_at": "2023-06-02T09:10:56Z",
+              "completed_at": "2023-06-02T09:14:05Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 13716341692,
+              "id": 13951971853,
               "name": "Integration tests (kaniko-docker)",
-              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5066058988/jobs/9095430836",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153715442/jobs/9281591052",
               "status": "completed",
               "conclusion": "success",
-              "started_at": "2023-05-24T07:53:26Z",
-              "completed_at": "2023-05-24T07:56:49Z",
+              "started_at": "2023-06-02T09:11:44Z",
+              "completed_at": "2023-06-02T09:14:21Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 13716269564,
+              "id": 13951594268,
               "name": "Unit tests And Coverage",
-              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5066058991/jobs/9095373698",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153715438/jobs/9281291726",
               "status": "completed",
               "conclusion": "success",
-              "started_at": "2023-05-24T07:50:23Z",
-              "completed_at": "2023-05-24T07:53:39Z",
+              "started_at": "2023-06-02T09:06:06Z",
+              "completed_at": "2023-06-02T09:09:21Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 13716269365,
+              "id": 13951594076,
               "name": "Check headers",
-              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5066058991/jobs/9095373536",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153715438/jobs/9281291577",
               "status": "completed",
               "conclusion": "success",
-              "started_at": "2023-05-24T07:50:23Z",
-              "completed_at": "2023-05-24T07:50:37Z",
+              "started_at": "2023-06-02T09:05:34Z",
+              "completed_at": "2023-06-02T09:05:45Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 13716269125,
+              "id": 13951593861,
               "name": "Unit Tests",
-              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5066058988/jobs/9095373333",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153715442/jobs/9281291423",
               "status": "completed",
               "conclusion": "success",
-              "started_at": "2023-05-24T07:50:22Z",
-              "completed_at": "2023-05-24T07:53:19Z",
+              "started_at": "2023-06-02T09:06:22Z",
+              "completed_at": "2023-06-02T09:10:36Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 13716269101,
+              "id": 13951593849,
               "name": "dsl-tests",
-              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5066058990/jobs/9095373312",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153715437/jobs/9281291413",
               "status": "completed",
               "conclusion": "success",
-              "started_at": "2023-05-24T07:50:23Z",
-              "completed_at": "2023-05-24T07:52:04Z",
+              "started_at": "2023-06-02T09:06:38Z",
+              "completed_at": "2023-06-02T09:08:46Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 13716269100,
+              "id": 13951593840,
               "name": "End-to-end tests (Minikube)",
-              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5066058992/jobs/9095373307",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-05-24T07:50:22Z",
-              "completed_at": "2023-05-24T08:03:22Z",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153715440/jobs/9281291404",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-02T09:06:21Z",
+              "completed_at": null,
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 13716269092,
+              "id": 13951593839,
               "name": "Check files generation",
-              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5066058991/jobs/9095373299",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5153715438/jobs/9281291403",
               "status": "completed",
-              "conclusion": "failure",
-              "started_at": "2023-05-24T07:50:22Z",
-              "completed_at": "2023-05-24T07:51:26Z",
+              "conclusion": "success",
+              "started_at": "2023-06-02T09:06:16Z",
+              "completed_at": "2023-06-02T09:09:28Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             }
@@ -16397,10 +16537,10 @@
               "id": 13949893966,
               "name": "run (macos-latest)",
               "html_url": "https://github.com/kiegroup/kie-tools/actions/runs/5153110159/jobs/9279944855",
-              "status": "in_progress",
-              "conclusion": null,
+              "status": "completed",
+              "conclusion": "failure",
               "started_at": "2023-06-02T07:44:31Z",
-              "completed_at": null,
+              "completed_at": "2023-06-02T08:23:20Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
