@@ -107,6 +107,13 @@ if (communityReleaseBranches) {
             PRODUCTIZED_PROJECTS.split(',').each { projectName ->
                 choiceParam("${projectName}_RELEASE_BRANCH".toUpperCase(), communityReleaseBranches, "${Utils.getRepoNameCamelCase(projectName)} community branch to which to create the productized branch from")
                 stringParam("${projectName}_PROD_BRANCH_SUFFIX".toUpperCase(), 'prod', "${Utils.getRepoNameCamelCase(projectName)} productized branch suffix")
+                stringParam("${projectName}_UPDATE_VERSION".toUpperCase(), '', "${Utils.getRepoNameCamelCase(projectName)} dependency version which this will depend on")
+            }
+
+            if (DEPENDENCY_PROJECTS) {
+                DEPENDENCY_PROJECTS.split(',').each { projectName ->
+                    stringParam("${projectName}_UPDATE_VERSION".toUpperCase(), '', "${Utils.getRepoNameCamelCase(projectName)} dependency version which this will depend on")
+                }
             }
 
             stringParam('QUARKUS_VERSION', '', 'Quarkus version to which to update all productized branches, usually latest LTS version')

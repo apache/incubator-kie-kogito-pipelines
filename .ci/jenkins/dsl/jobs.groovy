@@ -119,6 +119,7 @@ void createSetupBranchJob() {
         parameters {
             stringParam('KOGITO_VERSION', '', 'Kogito version')
             stringParam('DROOLS_VERSION', '', 'Drools version')
+            booleanParam('DEPLOY_ARTIFACTS', true, 'Deploy artifacts')
         }
     }
 }

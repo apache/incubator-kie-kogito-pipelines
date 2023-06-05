@@ -5,10 +5,11 @@ import java.util.regex.Pattern
 
 // parameters
 // 1. <prj>_RELEASE_BRANCH
-// 2. QUARKUS_VERSION
-// 3. DOWNGRADE_PR_BRANCH
-// 4. ADDITIONAL_BUILD_MAVEN_OPTS
-// 5. PROJECTS_TO_REMOVE_FROM_PR_CHECKS
+// 2. <prj>_UPDATE_VERSION (this includes also dependencies)
+// 3. QUARKUS_VERSION
+// 4. DOWNGRADE_PR_BRANCH
+// 5. ADDITIONAL_BUILD_MAVEN_OPTS
+// 6. PROJECTS_TO_REMOVE_FROM_PR_CHECKS
 
 seedConfig = [:]
 mainBranchConfig = [:]
@@ -218,7 +219,36 @@ pipeline{
             }
         }
 
-        // 3. call update quarkus job in order to downgrade quarkus to LTS version (version provided as parameter QUARKUS_VERSION)
+        // 3. update the projects version in order to avoid any kind of conflicts with already existing and deployed artifacts
+
+        stage("Update projects version"){
+            when {
+                expression { return getProjectUpdateVersionKeys().findAll{ it.value != '' } }
+            }
+            steps{
+                script {
+                    println "Updating projects versions"
+
+                    String jobName = "${getEcosystemProductizedBranch()}/setup-branch/0-setup-branch"
+                    List jobParams = []
+                    jobParams.add(booleanParam(name: 'DEPLOY_ARTIFACTS', value: false))
+                    // here we could have a variable number of params
+                    getProjectUpdateVersionKeys().each{ p ->
+                        jobParams.add(stringParam(name: p.key.replace('_UPDATE', ''), value: p.value))
+                    }
+
+                    echo "Build ./${jobName} with parameters ${jobParams}"
+                    if (!isDryRun()) {
+                        def job = build(job: "./${jobName}", parameters: jobParams, wait: true, propagate: false)
+                        if (job.result != 'SUCCESS') {
+                            unstable("Update projects version on repositories was not successful")
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. call update quarkus job in order to downgrade quarkus to LTS version (version provided as parameter QUARKUS_VERSION)
         //          this will:
         //              - downgrade quarkus, there already exists a job doing this
         //              - apply patches from .ci/environments/quarkus-lts on the same PR
@@ -315,6 +345,10 @@ String getBranchParameterKey(String projectName) {
 String getProdBranchSuffixParameterKey(String projectName) {
     def key = "${projectName}_PROD_BRANCH_SUFFIX".toUpperCase()
     return params."${key}"
+}
+
+def getProjectUpdateVersionKeys() {
+    return params.findAll{ it.key.contains('_UPDATE_VERSION') }
 }
 
 String getQuarkusVersion() {
