@@ -161,6 +161,7 @@ void setupQuarkus3NightlyJob() {
     KogitoJobUtils.createNightlyBuildChainIntegrationJob(this, 'quarkus-3', 'drools', true) { script ->
         def jobParams = JobParamsUtils.getDefaultJobParams(script, 'drools')
         jobParams.git.branch = VersionUtils.getProjectTargetBranch('drools', Utils.getGitBranch(this), Utils.getRepoName(this))
+        jobParams.env.put('ADDITIONAL_TIMEOUT', '720')
         jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
         jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
         jobParams.env.put('BUILDCHAIN_FULL_BRANCH_DOWNSTREAM_BUILD', 'true')
