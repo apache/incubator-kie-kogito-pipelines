@@ -165,6 +165,7 @@ void setupQuarkus3NightlyJob() {
         jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
         jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
         jobParams.env.put('BUILDCHAIN_FULL_BRANCH_DOWNSTREAM_BUILD', 'true')
+        jobParams.env.put('NODE_OPTIONS', '--max_old_space_size=4096')
         JobParamsUtils.setupJobParamsDeployConfiguration(script, jobParams)
         return jobParams
     }
