@@ -70,6 +70,9 @@ pipeline {
                     }
 
                     currentBuild.displayName = params.DISPLAY_NAME ?: env.GIT_BRANCH_NAME ?: currentBuild.displayName
+
+                    // Needed by Kogito Apps
+                    setupCypressEnv('9.7.0')
                 }
             }
         }
@@ -204,6 +207,12 @@ pipeline {
                 sh 'rm -rf /tmp/quarkus'
             }
         }
+    }
+}
+
+void setupCypressEnv(String cypressVersion) {
+    if (env.CYPRESS_BINARY_URL) {
+        env.CYPRESS_INSTALL_BINARY = "${CYPRESS_BINARY_URL}/cypress-${cypressVersion}.zip"
     }
 }
 
