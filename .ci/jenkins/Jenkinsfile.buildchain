@@ -120,7 +120,7 @@ pipeline {
                             env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
                             echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
 
-                            runWithPythonVirtualEnv("${getBuildChainCommandline(true)}")
+                            util.runWithPythonVirtualEnv("${getBuildChainCommandline(true)}", 'swf')
                         }
                     }
                 }
@@ -205,13 +205,6 @@ pipeline {
             }
         }
     }
-}
-
-void runWithPythonVirtualEnv(String cmd, boolean stdout = false) {
-    return sh(returnStdout: stdout, script: """
-source ~/virtenvs/cekit/bin/activate
-${cmd}
-""")
 }
 
 boolean isPRBuildChainType() {
