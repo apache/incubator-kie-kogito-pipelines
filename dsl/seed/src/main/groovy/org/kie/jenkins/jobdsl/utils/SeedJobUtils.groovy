@@ -38,7 +38,7 @@ class SeedJobUtils {
                 env('JOB_RELATIVE_PATH_TO_TRIGGER', jobRelativePathToTrigger)
                 env('LISTEN_TO_MODIFIED_PATHS', new groovy.json.JsonBuilder(pathsToListen).toString())
 
-                env('AGENT_LABEL', Utils.isProdEnvironment(jenkinsScript) ? 'kie-rhel8 && !built-in' : 'kie-rhel8-priority')
+                env('AGENT_LABEL', Utils.isProdEnvironment(jenkinsScript) ? 'rhel8 && !built-in' : 'kie-rhel8-priority')
             }
 
             definition {
