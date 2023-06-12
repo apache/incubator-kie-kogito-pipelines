@@ -2,9 +2,9 @@
   "metadata": {
     "title": "Kogito Status",
     "subtitle": "Kiegroup Kogito organization repositories CI status",
-    "date": "2023-06-12T01:51:47.817Z",
+    "date": "2023-06-12T02:55:52.471Z",
     "createdBy": "GitHub Action",
-    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5238681730"
+    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5239017787"
   },
   "projects": [
     {
@@ -1415,6 +1415,163 @@
       "repo_url": "https://github.com/kiegroup/kogito-runtimes",
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-runtimes/pulls{/number}",
       "pullRequests": [
+        {
+          "number": 3049,
+          "title": "[kie-issues-333] Fix CVE by removing Batik dependency",
+          "url": "https://api.github.com/repos/kiegroup/kogito-runtimes/pulls/3049",
+          "html_url": "https://github.com/kiegroup/kogito-runtimes/pull/3049",
+          "state": "open",
+          "labels": [],
+          "draft": false,
+          "requested_reviewers": [
+            {
+              "login": "baldimir",
+              "avatar_url": "https://avatars.githubusercontent.com/u/125682?v=4",
+              "html_url": "https://github.com/baldimir"
+            },
+            {
+              "login": "cristianonicolai",
+              "avatar_url": "https://avatars.githubusercontent.com/u/570894?v=4",
+              "html_url": "https://github.com/cristianonicolai"
+            },
+            {
+              "login": "pefernan",
+              "avatar_url": "https://avatars.githubusercontent.com/u/2429832?v=4",
+              "html_url": "https://github.com/pefernan"
+            },
+            {
+              "login": "nmirasch",
+              "avatar_url": "https://avatars.githubusercontent.com/u/2443754?v=4",
+              "html_url": "https://github.com/nmirasch"
+            }
+          ],
+          "created_at": "2023-06-12T02:53:11Z",
+          "updated_at": "2023-06-12T02:55:11Z",
+          "closed_at": null,
+          "merged_at": null,
+          "base": {
+            "ref": "main",
+            "sha": "47cc3875980ffe225591c142f46757295f91b531",
+            "label": "kiegroup:main"
+          },
+          "head": {
+            "ref": "kie-issues-333",
+            "sha": "99ec32b7705afefc18f85921dc64cc9af79dada0",
+            "label": "porcelli:kie-issues-333"
+          },
+          "user": {
+            "login": "porcelli",
+            "avatar_url": "https://avatars.githubusercontent.com/u/119395?v=4",
+            "html_url": "https://github.com/porcelli"
+          },
+          "checks": [
+            {
+              "id": 14174352391,
+              "name": "serverless-workflow-examples (ubuntu-latest / Java-11 / Maven-3.8.7)",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5239005273/jobs/9458440296",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-12T02:53:23Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14174352285,
+              "name": "kogito-springboot-examples (ubuntu-latest / Java-11 / Maven-3.8.7)",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5239005273/jobs/9458440197",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-12T02:53:22Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14174352169,
+              "name": "kogito-apps (ubuntu-latest / Java-11 / Maven-3.8.7)",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5239005273/jobs/9458440096",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-12T02:53:23Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14174352038,
+              "name": "kogito-quarkus-examples (ubuntu-latest / Java-11 / Maven-3.8.7)",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5239005273/jobs/9458439972",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-12T02:53:22Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14174352031,
+              "name": "ubuntu-latest / Java-11 / Maven-3.8.7",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5239005278/jobs/9458439966",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-12T02:53:22Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 23563672661,
+              "name": "(build) kogito-quarkus-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-quarkus-examples/1090/display/redirect",
+              "conclusion": "pending",
+              "started_at": "2023-06-12T02:53:20Z",
+              "completed_at": "2023-06-12T02:53:20Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23563672665,
+              "name": "(build) kogito-springboot-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-springboot-examples/1103/display/redirect",
+              "conclusion": "pending",
+              "started_at": "2023-06-12T02:53:20Z",
+              "completed_at": "2023-06-12T02:53:20Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23563672666,
+              "name": "(build) serverless-workflow-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.serverless-workflow-examples/1077/display/redirect",
+              "conclusion": "pending",
+              "started_at": "2023-06-12T02:53:20Z",
+              "completed_at": "2023-06-12T02:53:20Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23563672834,
+              "name": "(build) kogito-apps",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-apps/2733/display/redirect",
+              "conclusion": "pending",
+              "started_at": "2023-06-12T02:53:22Z",
+              "completed_at": "2023-06-12T02:53:22Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23563672835,
+              "name": "(build) kogito-runtimes",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.kogito-runtimes/2697/display/redirect",
+              "conclusion": "pending",
+              "started_at": "2023-06-12T02:53:22Z",
+              "completed_at": "2023-06-12T02:53:22Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            }
+          ]
+        },
         {
           "number": 3048,
           "title": "Remove duplicate assertj-core dependency",
