@@ -130,8 +130,13 @@ pipeline {
             }
             post {
                 always {
-                    junit(testResults: '**/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml, **/target/invoker-reports/**/*.xml', allowEmptyResults: true)
-                    archiveArtifacts(artifacts: '**/cypress/screenshots/**,**/cypress/videos/**', fingerprint: false, allowEmptyArchive: true)
+                    script {
+                        dir(getProjectFolder()) {
+                            sh 'find . -type d -name node_modules -exec rm -rf {} \\; || true' // Remove `node_modules` to avoid heap space issues with junit command thereafter
+                            junit(testResults: '**/junit.xml, **/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml, **/target/invoker-reports/**/*.xml', allowEmptyResults: true)
+                            archiveArtifacts(artifacts: '**/cypress/screenshots/**,**/cypress/videos/**', fingerprint: false, allowEmptyArchive: true)
+                        }
+                    }
                 }
                 unsuccessful {
                     script {
@@ -150,15 +155,7 @@ pipeline {
             }
             steps {
                 script {
-                    def project = (buildChainProject ? util.getProjectGroupName(buildChainProject) : util.getProjectTriggeringJob())[1]
-
-                    // First guessing whether there is a clone defined into the buildchain config
-                    // If not, fallback to simple folder structure
-                    String projectFolder = "bc/kiegroup_${project}/${project}"
-                    if (!fileExists(projectFolder)) {
-                        projectFolder = "bc/kiegroup_${project}"
-                    }
-                    dir(projectFolder) {
+                    dir(getProjectFolder()) {
                         maven.runMavenWithSettingsSonar(settingsXmlId, "-e -nsu validate -Psonarcloud-analysis -Denforcer.skip=true ${env.SONARCLOUD_ANALYSIS_MVN_OPTS ?: ''}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
                     }
                 }
@@ -243,6 +240,19 @@ String getBuildMavenOptsCurrent() {
 
 boolean shouldNotify() {
     return env.ENABLE_NOTIFICATION
+}
+
+String getProjectFolder() {
+    def project = (buildChainProject ? util.getProjectGroupName(buildChainProject) : util.getProjectTriggeringJob())[1]
+
+    // First guessing whether there is a clone defined into the buildchain config
+    // If not, fallback to simple folder structure
+    String projectFolder = "bc/kiegroup_${project}/${project}"
+    if (!fileExists(projectFolder)) {
+        projectFolder = "bc/kiegroup_${project}"
+    }
+
+    return projectFolder
 }
 
 String getBuildChainCommandline(boolean includeToken=false) {
