@@ -127,7 +127,10 @@ pipeline {
                             util.storeGitInformation(projectName)
                             env.ALREADY_BUILT_PROJECTS = "${env.ALREADY_BUILT_PROJECTS ?: ''}${projectName};"
 
-                            env["VERSION_${f}"] = maven.mvnGetVersionProperty(new MavenCommand(this).withProperty('productized'), 'project.version')
+                            def sanitizedProjectName = f.replaceAll('/', '_').replaceAll('-', '_')
+                            def buildScript = env["PME_BUILD_SCRIPT_${sanitizedProjectName}"]
+                            def pomPath = maven.getProjectPomFromBuildCmd(buildScript)
+                            env["VERSION_${f}"] = maven.mvnGetVersionProperty(new MavenCommand(this).withProperty('productized'), 'project.version', pomPath)
                         }
                     }
                     
