@@ -58,7 +58,8 @@ pipeline {
             steps {
                 script {
                     println '[INFO] Getting build-chain version from composite action file'
-                    def buildChainVersion = buildChain.getBuildChainVersionFromCompositeActionFile()
+                    // if version is v2.y.z keep just v2
+                    def buildChainVersion = buildChain.getBuildChainVersionFromCompositeActionFile().split('\\.')[0]
                     if ([null, 'null'].contains(buildChainVersion)) {
                         def errorMessage = "[ERROR] The build-chain version can't be recovered. Please contact administrator"
                         println errorMessage
