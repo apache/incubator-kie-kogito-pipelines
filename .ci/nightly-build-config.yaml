@@ -1,6 +1,6 @@
 version: "2.1"
 
-dependencies: ./project-dependencies.yaml
+dependencies: ./nightly-project-dependencies.yaml
 
 pre: |
   export PME_CMD="java -jar ${{ env.PME_CLI_PATH }} -s ${{ env.PME_MAVEN_SETTINGS_XML }} -DallowConfigFilePrecedence=true -DprojectSrcSkip=false"
@@ -47,3 +47,15 @@ build:
         ${{ env.PME_CMD }} ${{ env.PME_ALIGNMENT_PARAMS_kiegroup_kogito_examples }}
         bash -c "set -o pipefail ; ${{ env.ALIGN_QUARKUS }} | tee ${{ env.WORKSPACE }}/kogito_examples.quarkus-alignment.maven.log"
         bash -c "set -o pipefail ; ${{ env.PME_BUILD_SCRIPT_kiegroup_kogito_examples }} ${{ env.BUILD_MVN_OPTS }} | tee ${{ env.WORKSPACE }}/kogito_examples.maven.log"
+
+  - project: kiegroup/kogito-images
+    build-command:
+      downstream: |
+        export MAVEN_OPTIONS="-s ${{ env.PME_MAVEN_SETTINGS_XML }}"
+        echo "MAVEN_OPTIONS=${{ env.MAVEN_OPTIONS }}"
+        export NIGHTLY="true"
+        echo "NIGHTLY=${{ env.NIGHTLY }}"
+        export NIGHTLY_DEPLOY_FOLDER="${{ env.WORKSPACE }}/deployDirectory"
+        echo "NIGHTLY_DEPLOY_FOLDER=${{ env.NIGHTLY_DEPLOY_FOLDER }}"
+        ${{ env.PME_CMD }} ${{ env.PME_ALIGNMENT_PARAMS_kiegroup_kogito_images }}
+        bash -c "set -o pipefail ; ${{ env.PME_BUILD_SCRIPT_kiegroup_kogito_images }} ${{ env.BUILD_MVN_OPTS }} | tee ${{ env.WORKSPACE }}/kogito_images.maven.log"
