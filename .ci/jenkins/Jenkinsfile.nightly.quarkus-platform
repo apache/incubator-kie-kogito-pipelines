@@ -61,7 +61,7 @@ pipeline {
                         try {
                             checkout(githubscm.resolveRepository('optaplanner', getGitAuthor(), opBranch, false))
                         } catch(err) {
-                            echo "Error checking out ${util.calculateTargetReleaseBranch(getGitBranch(), 7)}. Fallback to latest tag."
+                            echo "Error checking out ${opBranch}. Fallback to latest tag."
                             String latestTag = githubscm.getLatestTag("${opBranch.split("\\.")[0]}\\.")
                             echo "Got latest tag = ${latestTag}"
                             checkout(githubscm.resolveRepository('optaplanner', getGitAuthor(), latestTag, false))
