@@ -111,6 +111,9 @@ pipeline {
             }
             steps {
                 script {
+                    env.LD_LIBRARY_PATH = "${env.LD_LIBRARY_PATH ? "${env.LD_LIBRARY_PATH}:": ''}${GRAALVM_HOME}/lib/server"
+                    echo "LD_LIBRARY_PATH = ${LD_LIBRARY_PATH}"
+                    
                     env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
                     echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
                     if (mavenDeployArtifacts) {
