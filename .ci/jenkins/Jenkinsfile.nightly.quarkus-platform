@@ -56,7 +56,16 @@ pipeline {
                     }
                     dir('optaplanner') {
                         deleteDir()
-                        checkout(githubscm.resolveRepository('optaplanner', getGitAuthor(), util.calculateTargetReleaseBranch(getGitBranch(), 7), false))
+                        // Get current corresponding branch and if not working, latest tag
+                        String opBranch = util.calculateTargetReleaseBranch(getGitBranch(), 7)
+                        try {
+                            checkout(githubscm.resolveRepository('optaplanner', getGitAuthor(), opBranch, false))
+                        } catch(err) {
+                            echo "Error checking out ${opBranch}. Fallback to latest tag."
+                            String latestTag = githubscm.getLatestTag("${opBranch.split("\\.")[0]}\\.")
+                            echo "Got latest tag = ${latestTag}"
+                            checkout(githubscm.resolveRepository('optaplanner', getGitAuthor(), latestTag, false))
+                        }
                     }
                 }
             }
@@ -64,19 +73,25 @@ pipeline {
         stage('Retrieve versions') {
             steps {
                 script {
+                    dir('drools') {
+                        env.DROOLS_VERSION = sh(script: 'mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -pl :drools-parent -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
+                        assert env.DROOLS_VERSION : 'Cannot find the Drools version.'
+                    }
                     dir('kogito-runtimes') {
-                        env.KOGITO_VERSION = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -pl :kogito-runtimes -Dexpression=project.version -q -DforceStdout", returnStdout: true).trim()
-                        env.QUARKUS_VERSION = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -pl :kogito-dependencies-bom -Dexpression=version.io.quarkus -q -DforceStdout", returnStdout: true).trim()
-                        env.KIE_VERSION = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -pl :kogito-kie-bom -Dexpression=version.org.kie -q -DforceStdout", returnStdout: true).trim()
+                        env.KOGITO_VERSION = sh(script: 'mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -pl :kogito-runtimes -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
+                        env.QUARKUS_VERSION = sh(script: 'mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -pl :kogito-dependencies-bom -Dexpression=version.io.quarkus -q -DforceStdout', returnStdout: true).trim()
+                        assert env.KOGITO_VERSION : 'Cannot find the Kogito version.'
+                        assert env.QUARKUS_VERSION : 'Cannot find the Quarkus version.'
+                    }
+                    dir('optaplanner') {
+                        env.OPTAPLANNER_VERSION = sh(script: 'mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -pl :optaplanner-parent -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
+                        assert env.OPTAPLANNER_VERSION : 'Cannot find the OptaPlanner version.'
                     }
 
-                    assert env.KOGITO_VERSION : 'Cannot find the Kogito version.'
-                    assert env.QUARKUS_VERSION : 'Cannot find the Quarkus version.'
-                    assert env.KIE_VERSION : 'Cannot find the KIE version.'
-
+                    echo "Configured Drools version ${env.DROOLS_VERSION}"
                     echo "Configured Kogito version ${env.KOGITO_VERSION}"
                     echo "Configured Quarkus version ${env.QUARKUS_VERSION}"
-                    echo "Configured Drools/OptaPlanner version ${env.KIE_VERSION}"
+                    echo "Configured OptaPlanner version ${env.OPTAPLANNER_VERSION}"
                 }
             }
         }
@@ -86,7 +101,7 @@ pipeline {
                     dir('quarkus-platform') {
                         deleteDir()
 
-                        String quarkusBranch = env.QUARKUS_VERSION.split("\\.")[0] + "." + env.QUARKUS_VERSION.split("\\.")[1]
+                        String quarkusBranch = env.QUARKUS_VERSION.split("\\.")[0] + '.' + env.QUARKUS_VERSION.split("\\.")[1]
                         echo "Use quarkus branch ${quarkusBranch}"
                         checkout(githubscm.resolveRepository('quarkus-platform', 'quarkusio', quarkusBranch, false))
 
@@ -95,13 +110,13 @@ pipeline {
                         MavenSettingsUtils.setRepositoryInSettings(this, env.SETTINGS_FILE, 'kogito-staging', 'https://repository.jboss.org/nexus/content/groups/kogito-public/')
                         MavenSettingsUtils.setRepositoryInSettings(this, env.SETTINGS_FILE, 'kogito-public', 'https://repository.jboss.org/nexus/content/groups/public/')
 
-                        String localQuarkusPlatformVersion = sh(script: "mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout", returnStdout: true).trim()
+                        String localQuarkusPlatformVersion = sh(script: 'mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
                         echo "Platform Quarkus version ${localQuarkusPlatformVersion}"
 
                         // Set Drools/OP & Kogito versions
                         maven.mvnSetVersionProperty('kogito-quarkus.version', env.KOGITO_VERSION)
-                        maven.mvnSetVersionProperty('drools-quarkus.version', env.KIE_VERSION)
-                        maven.mvnSetVersionProperty('optaplanner-quarkus.version', env.KIE_VERSION)
+                        maven.mvnSetVersionProperty('drools-quarkus.version', env.DROOLS_VERSION)
+                        maven.mvnSetVersionProperty('optaplanner-quarkus.version', env.OPTAPLANNER_VERSION)
                         maven.mvnSetVersionProperty('quarkus.version', env.QUARKUS_VERSION)
 
                         // Update platform version
@@ -156,7 +171,7 @@ pipeline {
             }
         }
 
-        // Tests of platform should be done in a separate job
+    // Tests of platform should be done in a separate job
     }
     post {
         always {
