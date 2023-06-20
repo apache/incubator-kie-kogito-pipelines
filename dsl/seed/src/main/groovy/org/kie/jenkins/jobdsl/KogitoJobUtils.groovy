@@ -177,7 +177,7 @@ class KogitoJobUtils {
     */
     static def createEnvironmentIntegrationBranchNightlyJob(def script, String envName, def scriptCalls = []) {
         def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${Utils.getRepoName(script)}.integration", JobType.NIGHTLY, envName, 'Jenkinsfile.environment.integration-branch', "Generic Integration branch job for specific environment")
-        jobParams.triggers = [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
+        jobParams.triggers = jobParams.triggers ?: [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
         if (!envName) {
             throw new RuntimeException('Please provide a non-empty environment to generate an integration branch job...')
         }
@@ -237,7 +237,7 @@ class KogitoJobUtils {
     static def createNightlyBuildChainBuildAndTestJob(def script, String envName = '', String repository, Map extraEnv = [:], boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
         def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${repository}.build-and-test", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
         jobParams.env.putAll(extraEnv)
-        jobParams.triggers = [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
+        jobParams.triggers = jobParams.triggers ?: [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
         return createBranchBuildChainJob(script, jobParams, repository, enableNotification, envName)
     }
 
@@ -270,7 +270,7 @@ class KogitoJobUtils {
     */
     static def createNightlyBuildChainIntegrationJob(def script, String envName, String repository, boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
         def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${repository}.integration", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Integration with Quarkus for ${repository} using the build-chain", defaultJobParamsGetter)
-        jobParams.triggers = [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
+        jobParams.triggers = jobParams.triggers ?: [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
         if (!envName) {
             throw new RuntimeException('Please provide a non-empty environment to generate an integration branch job...')
         }
