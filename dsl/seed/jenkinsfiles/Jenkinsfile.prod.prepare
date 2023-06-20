@@ -136,11 +136,11 @@ pipeline{
                         sh "rm -f ${branchConfigFilePath}"
                         writeYaml file: "${branchConfigFilePath}", data: branchConfig, overwrite: true
 
-                        // update GHA build-chain configuration
+                        // update build-chain configuration
                         // comment out projects we are not interested in from the buildchain-config.yaml
                         def projectToRemoveFromBCPRChecks = getProjectsToRemoveFromBuildChainConfig()
 
-                        if (projectToRemoveFromBCPRChecks && projectToRemoveFromBCPRChecks.size() > 0) {
+                        if (projectToRemoveFromBCPRChecks) {
                             // update build-chain config
                             def buildChainConfigFilePath = readMainBranchConfig().buildchain_config.git.file_path
                             def buildChainConfig = readYaml file: buildChainConfigFilePath
@@ -294,7 +294,7 @@ pipeline{
                                         if (patches && patches.size() > 0) {
                                             patches.each { patch ->
                                                 echo "Applying patch ${patch}"
-                                                sh "git apply ${patch}"
+                                                sh "git apply --whitespace=fix ${patch}"
                                             }
                                         } else {
                                             echo "No patches found at ${patchesDirectory}"
