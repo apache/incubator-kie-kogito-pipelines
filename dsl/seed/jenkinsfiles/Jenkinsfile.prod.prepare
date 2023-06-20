@@ -284,18 +284,9 @@ pipeline{
 
                                     // if quarkusDowngradePrBranch has been created by update-quarkus-all job, checkout it
                                     if (checkoutGitBranchIfExists(quarkusDowngradePrBranch, repoCredsId)) {
-                                        // apply patches from .ci/environments/quarkus-lts/patches
-                                        def patchesDirectory = '.ci/environments/quarkus-lts/patches'
-                                        def patches = findFiles(glob: "${patchesDirectory}/*")
-
-                                        if (patches && patches.size() > 0) {
-                                            patches.each { patch ->
-                                                echo "Applying patch ${patch}"
-                                                sh "git apply --whitespace=fix ${patch}"
-                                            }
-                                        } else {
-                                            echo "No patches found at ${patchesDirectory}"
-                                        }
+                                        // thefollowing script takes care of applying all patches needed when downgrading to Quarkus LTS
+                                        // i.e., it will apply all patches found under .ci/environments/quarkus-lts/patches
+                                        sh '.ci/environments/update.sh quarkus-lts'
 
                                         pushIfChanged(quarkusDowngradePrBranch, repoCredsId, "Applied patches after Quarkus downgrade to ${getQuarkusVersion()}", "Quarkus LTS patches on ${quarkusDowngradePrBranch} have been applied")
                                     }
