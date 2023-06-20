@@ -7,7 +7,7 @@ import java.util.regex.Pattern
 // 1. <prj>_RELEASE_BRANCH
 // 2. <prj>_UPDATE_VERSION (this includes also dependencies)
 // 3. QUARKUS_VERSION
-// 4. DOWNGRADE_PR_BRANCH
+// 4. DOWNGRADE_QUARKUS_PR_BRANCH
 // 5. ADDITIONAL_BUILD_MAVEN_OPTS
 // 6. PROJECTS_TO_REMOVE_FROM_PR_CHECKS
 
@@ -190,8 +190,7 @@ pipeline{
                         String repoAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
                         String repoCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
 
-                        // TODO is this value saved somewhere such that we do not have to hardcode?
-                        String jobsGroovyPath = '.ci/jenkins/dsl/jobs.groovy'
+                        String jobsGroovyPath = getJobDefinitionFilePath()
 
                         dir(repository) {
                             deleteDir()
@@ -279,8 +278,6 @@ pipeline{
                                 String repository = repoConfig.name
                                 String baseBranch = repoConfig.branch ?: 'main'
 
-                                // FIXME apply patches only if the quarkusDowngradePrBranch already exist, otherwise skip it
-
                                 dir(repository) {
                                     deleteDir()
                                     checkout(githubscm.resolveRepository(repository, repoAuthor, baseBranch, false, repoCredsId))
@@ -356,7 +353,7 @@ String getQuarkusVersion() {
 }
 
 String getQuarkusDowngradePrBranch() {
-    return params.DOWNGRADE_PR_BRANCH ?: "${getEcosystemProductizedBranch()}-${getQuarkusVersion()}-downgrade"
+    return params.DOWNGRADE_QUARKUS_PR_BRANCH ?: "${getEcosystemProductizedBranch()}-${getQuarkusVersion()}-downgrade"
 }
 
 Boolean isDryRun() {
@@ -431,6 +428,9 @@ String getRepoNameCamelCase(String repo) {
     return words.collect { it.isEmpty() ? it : it.substring(0, 1).toUpperCase() + it.substring(1).toLowerCase() }.join(' ')
 }
 
+String getJobDefinitionFilePath() {
+    return readMainBranchConfig().jenkins?.jobs_definition_file ?: '.ci/jenkins/dsl/jobs.groovy'
+}
 
 // Retrieve impacted projects
 
