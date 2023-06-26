@@ -228,7 +228,8 @@ pipeline{
                 script {
                     println "Updating projects versions"
 
-                    String jobName = "${getEcosystemProductizedBranch()}/setup-branch/0-setup-branch"
+                    def prodBranch = getEcosystemProductizedBranch()
+                    String jobName = "${prodBranch}/setup-branch/0-setup-branch"
                     List jobParams = []
                     jobParams.add(booleanParam(name: 'DEPLOY_ARTIFACTS', value: false))
                     // here we could have a variable number of params
@@ -236,12 +237,30 @@ pipeline{
                         jobParams.add(stringParam(name: p.key.replace('_UPDATE', ''), value: p.value))
                     }
 
-                    echo "Build ./${jobName} with parameters ${jobParams}"
                     if (!isDryRun()) {
-                        def job = build(job: "./${jobName}", parameters: jobParams, wait: true, propagate: false)
-                        if (job.result != 'SUCCESS') {
-                            unstable("Update projects version on repositories was not successful")
+                        def job = [:]
+                        try {
+                            // Retry 20 times every 5 min in order to assure seed job ran
+                            retry(20) {
+                                sleep 300
+                                echo "Build ./${jobName} with parameters ${jobParams}"
+                                job = build(job: "./${jobName}", parameters: jobParams, wait: true, propagate: false)
+                            }
+
+                            if (job.result != 'SUCCESS') {
+                                unstable("Update projects version on repositories was not successful")
+                            }
+                        } catch (err) {
+                            unstable("Error executing the ${prodBranch} setup job ...")
+                            String msg = "ERROR: Setup branch job on newly created release branch '${prodBranch}' was unsuccessful."
+                            if(job) {
+                                msg += "\nPlease review job ${job.absoluteUrl}..."
+                            }
+                            sendNotification(msg)
                         }
+                    } else {
+                        // dry run - just print the job name and params
+                        echo "Build ./${jobName} with parameters ${jobParams}"
                     }
                 }
             }
