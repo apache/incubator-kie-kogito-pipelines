@@ -197,7 +197,7 @@ pipeline{
                             // here productized branches should have been already created on repos to be productized
                             checkout(githubscm.resolveRepository(repository, repoAuthor, getProductizedBranchFromRepository(repository), false, repoCredsId))
 
-                            getOrCreateGitBranch(repoConfig.branch, getRepositoryAuthorCredsId())
+                            getOrCreateGitBranch(repoConfig.branch, repoCredsId)
 
                             if (fileExists("${jobsGroovyPath}")) {
                                 // def jobsGroovy = readFile file: jobsGroovyPath
