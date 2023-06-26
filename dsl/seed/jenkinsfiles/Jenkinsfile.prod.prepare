@@ -212,6 +212,9 @@ pipeline{
                             // TODO iterate over PR workflows
                             // - comment out if not needed (get these from param?)
                             // - if PR check is needed, keep it and add -Dproductized
+
+                            // push changes
+                            pushIfChanged(repoConfig.branch, repoCredsId, "Pull request checks updated for productized branch", "Pull request checks updated for productized branch")
                         }
                     }
                 }
