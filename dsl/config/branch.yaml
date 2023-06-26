@@ -109,6 +109,7 @@ git:
 buildchain_config:
   git:
     repository: kogito-pipelines
+    file_path: .ci/pull-request-config.yaml
 maven:
   settings_file_id: kogito_release_settings
   nexus:
@@ -140,3 +141,4 @@ jenkins:
   default_tools:
     jdk: kie-jdk11
     maven: kie-maven-3.8.7
+  jobs_definition_file: .ci/jenkins/dsl/jobs.groovy

@@ -5,8 +5,11 @@ import java.util.regex.Pattern
 
 // parameters
 // 1. <prj>_RELEASE_BRANCH
-// 2. QUARKUS_VERSION
-// 3. ADDITIONAL_BUILD_MAVEN_OPTS
+// 2. <prj>_UPDATE_VERSION (this includes also dependencies)
+// 3. QUARKUS_VERSION
+// 4. DOWNGRADE_QUARKUS_PR_BRANCH
+// 5. ADDITIONAL_BUILD_MAVEN_OPTS
+// 6. PROJECTS_TO_REMOVE_FROM_PR_CHECKS
 
 seedConfig = [:]
 mainBranchConfig = [:]
@@ -133,6 +136,38 @@ pipeline{
                         sh "rm -f ${branchConfigFilePath}"
                         writeYaml file: "${branchConfigFilePath}", data: branchConfig, overwrite: true
 
+                        // update build-chain configuration
+                        // comment out projects we are not interested in from the buildchain-config.yaml
+                        def projectToRemoveFromBCPRChecks = getProjectsToRemoveFromBuildChainConfig()
+
+                        if (projectToRemoveFromBCPRChecks) {
+                            // update build-chain config
+                            def buildChainConfigFilePath = readMainBranchConfig().buildchain_config.git.file_path
+                            def buildChainConfig = readYaml file: buildChainConfigFilePath
+
+                            def builds = buildChainConfig.build.findAll { build ->
+                                !projectToRemoveFromBCPRChecks.contains(build.project)
+                            }
+                            buildChainConfig.build = builds
+
+                            echo "Write build-chain configuration => ${buildChainConfig}"
+                            sh "rm -f ${buildChainConfigFilePath}"
+                            writeYaml file: "${buildChainConfigFilePath}", data: buildChainConfig, overwrite: true
+
+                            // update build-chain project dependencies
+                            def buildChainConfigDependenciesFilePath = buildChainConfigFilePath.substring(0, buildChainConfigFilePath.lastIndexOf('/') + 1) + "${buildChainConfig.dependencies}"
+                            def buildChainConfigDependencies = readYaml file: buildChainConfigDependenciesFilePath
+
+                            def deps = buildChainConfigDependencies.dependencies.findAll { dep ->
+                                !projectToRemoveFromBCPRChecks.contains(dep.project)
+                            }
+                            buildChainConfigDependencies.dependencies = deps
+
+                            echo "Write build-chain dependencies configuration => ${buildChainConfigDependencies}"
+                            sh "rm -f ${buildChainConfigDependenciesFilePath}"
+                            writeYaml file: "${buildChainConfigDependenciesFilePath}", data: buildChainConfigDependencies, overwrite: true
+                        }
+
                         pushIfChanged(prodBranch, getMainBranchConfigFileGitAuthorCredentialsId(), "Setup DSL branch config after productized branch creation", "Branch config on ${prodBranch} has been updated with correct configuration")
                     }
                 }
@@ -146,27 +181,124 @@ pipeline{
         //              - disable GHA jobs no more needed by commenting out workflows
         //              - enable productized profile (-Dproductized) on GHA PR checks workflows
         //              - ensure that fullProfile is not enabled on .ci/jenkins/dsl/jobs.groovy, if so remove it
+        stage("Update prod branch for all projects to be productized"){
+            steps{
+                script {
+                    def prodRepositories = getProdRepositoriesToBranch()
+                    prodRepositories.each { repoConfig ->
+                        String repository = repoConfig.name
+                        String repoAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
+                        String repoCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
 
-        // stage("Update prod branch for all projects to be productized"){
-        //     steps{
-        //        script {
-        //         // TODO: implement
-        //        }
-        //     }
-        // }
+                        String jobsGroovyPath = getJobDefinitionFilePath()
 
-        // 3. call update quarkus job in order to downgrade quarkus to LTS version (version provided as parameter QUARKUS_VERSION)
+                        dir(repository) {
+                            deleteDir()
+                            // here productized branches should have been already created on repos to be productized
+                            checkout(githubscm.resolveRepository(repository, repoAuthor, getProductizedBranchFromRepository(repository), false, repoCredsId))
+
+                            getOrCreateGitBranch(repoConfig.branch, getRepositoryAuthorCredsId())
+
+                            if (fileExists("${jobsGroovyPath}")) {
+                                // def jobsGroovy = readFile file: jobsGroovyPath
+                                // remove fullProfile
+                                sh "sed -i 's/, addFullProfileJobParamsGetter)/)/g' ${jobsGroovyPath}"
+                                // TODO: disable pr checks in getMultijobPRConfig, get them from params
+                            } else {
+                                echo "[WARN] Unable to find jobs.groovy for '${repository}' at '${jobsGroovyPath}'"
+                            }
+
+
+                            // TODO iterate over PR workflows
+                            // - comment out if not needed (get these from param?)
+                            // - if PR check is needed, keep it and add -Dproductized
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. update the projects version in order to avoid any kind of conflicts with already existing and deployed artifacts
+
+        stage("Update projects version"){
+            when {
+                expression { return getProjectUpdateVersionKeys().findAll{ it.value != '' } }
+            }
+            steps{
+                script {
+                    println "Updating projects versions"
+
+                    String jobName = "${getEcosystemProductizedBranch()}/setup-branch/0-setup-branch"
+                    List jobParams = []
+                    jobParams.add(booleanParam(name: 'DEPLOY_ARTIFACTS', value: false))
+                    // here we could have a variable number of params
+                    getProjectUpdateVersionKeys().each{ p ->
+                        jobParams.add(stringParam(name: p.key.replace('_UPDATE', ''), value: p.value))
+                    }
+
+                    echo "Build ./${jobName} with parameters ${jobParams}"
+                    if (!isDryRun()) {
+                        def job = build(job: "./${jobName}", parameters: jobParams, wait: true, propagate: false)
+                        if (job.result != 'SUCCESS') {
+                            unstable("Update projects version on repositories was not successful")
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. call update quarkus job in order to downgrade quarkus to LTS version (version provided as parameter QUARKUS_VERSION)
         //          this will:
         //              - downgrade quarkus, there already exists a job doing this
         //              - apply patches from .ci/environments/quarkus-lts on the same PR
 
-        // stage('Downgrade quarkus to LTS version'){
-        //     steps{
-        //         script {
-        //             // TODO: implement
-        //         }
-        //     }
-        // }
+        stage('Downgrade quarkus to LTS version'){
+            when {
+                expression { return params.QUARKUS_VERSION }
+            }
+            steps{
+                script {
+                    println "Launch update quarkus all"
+
+                    String jobName = "${getEcosystemProductizedBranch()}/tools/update-quarkus-all"
+                    String quarkusDowngradePrBranch = getQuarkusDowngradePrBranch()
+                    List jobParams = []
+                    jobParams.add(stringParam(name: 'NEW_VERSION', value: getQuarkusVersion()))
+                    jobParams.add(stringParam(name: 'PR_BRANCH', value: quarkusDowngradePrBranch))
+
+                    echo "Build ./${jobName} with parameters ${jobParams}"
+                    if (!isDryRun()) {
+                        def job = build(job: "./${jobName}", parameters: jobParams, wait: true, propagate: false)
+
+                        if (job.result == 'SUCCESS') {
+                            def prodRepositories = getProdRepositoriesToBranch()
+                            prodRepositories.each { repoConfig ->
+                                String repoAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
+                                String repoCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
+                                String repository = repoConfig.name
+                                String baseBranch = repoConfig.branch ?: 'main'
+
+                                dir(repository) {
+                                    deleteDir()
+                                    checkout(githubscm.resolveRepository(repository, repoAuthor, baseBranch, false, repoCredsId))
+
+                                    // if quarkusDowngradePrBranch has been created by update-quarkus-all job, checkout it
+                                    if (checkoutGitBranchIfExists(quarkusDowngradePrBranch, repoCredsId)) {
+                                        // thefollowing script takes care of applying all patches needed when downgrading to Quarkus LTS
+                                        // i.e., it will apply all patches found under .ci/environments/quarkus-lts/patches
+                                        sh '.ci/environments/update.sh quarkus-lts'
+
+                                        pushIfChanged(quarkusDowngradePrBranch, repoCredsId, "Applied patches after Quarkus downgrade to ${getQuarkusVersion()}", "Quarkus LTS patches on ${quarkusDowngradePrBranch} have been applied")
+                                    }
+                                }
+                            }
+                        } else {
+                            unstable("Update Quarkus on repositories was not successful")
+                        }
+                    }
+                }
+            }
+        }
     }
     post{
         unsuccessful {
@@ -203,8 +335,16 @@ String getProdBranchSuffixParameterKey(String projectName) {
     return params."${key}"
 }
 
+def getProjectUpdateVersionKeys() {
+    return params.findAll{ it.key.contains('_UPDATE_VERSION') }
+}
+
 String getQuarkusVersion() {
     return params.QUARKUS_VERSION
+}
+
+String getQuarkusDowngradePrBranch() {
+    return params.DOWNGRADE_QUARKUS_PR_BRANCH ?: "${getEcosystemProductizedBranch()}-${getQuarkusVersion()}-downgrade"
 }
 
 Boolean isDryRun() {
@@ -214,6 +354,10 @@ Boolean isDryRun() {
 
 def getAdditionalDefaultBuildMavenOpts() {
      return params.ADDITIONAL_BUILD_MAVEN_OPTS ?: ''
+}
+
+def getProjectsToRemoveFromBuildChainConfig() {
+    return params.PROJECTS_TO_REMOVE_FROM_PR_CHECKS.split(',') as List ?: []
 }
 
 // Retrieve seed configuration
@@ -275,6 +419,9 @@ String getRepoNameCamelCase(String repo) {
     return words.collect { it.isEmpty() ? it : it.substring(0, 1).toUpperCase() + it.substring(1).toLowerCase() }.join(' ')
 }
 
+String getJobDefinitionFilePath() {
+    return readMainBranchConfig().jenkins?.jobs_definition_file ?: '.ci/jenkins/dsl/jobs.groovy'
+}
 
 // Retrieve impacted projects
 
@@ -419,6 +566,20 @@ void getOrCreateGitBranch(String branch, String credentialsId) {
             githubscm.pushObject('origin', branch,  credentialsId)
         }
     }
+}
+
+// If the provided branch exists, checkout it and return true, otherwise return false and skip checkout.
+boolean checkoutGitBranchIfExists(String branch, String credentialsId) {
+    sh 'git fetch origin'
+    String branchRemoteResult = sh(script: "git ls-remote origin ${branch} | wc -l", returnStdout: true).trim()
+    if (Integer.parseInt(branchRemoteResult) > 0) {
+        echo "Branch ${branch} exist. Checking out !"
+        sh "git checkout ${branch}"
+        return true
+    }
+
+    echo "Branch ${branch} does not exist... skipping checkout"
+    return false
 }
 
 def pushIfChanged(String branch, String credentialsId, String commitMsg, String notificationMsg) {
