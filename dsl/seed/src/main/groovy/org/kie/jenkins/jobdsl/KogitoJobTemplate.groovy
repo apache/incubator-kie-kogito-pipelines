@@ -268,11 +268,11 @@ class KogitoJobTemplate {
                             extensions {
                                 ghprbSimpleStatus {
                                     commitStatusContext(jobParams.pr.commitContext ?: 'Linux')
-                                    addTestResults(true)
+                                    addTestResults(jobParams.pr.containsKey('contextShowtestResults') ? jobParams.pr.contextShowtestResults : true)
                                     showMatrixStatus(false)
                                     statusUrl('${BUILD_URL}display/redirect')
-                                    triggeredStatus('Build triggered.')
-                                    startedStatus('Build started.')
+                                    triggeredStatus(jobParams.pr.contextTriggeredStatus ?: 'Build triggered.')
+                                    startedStatus(jobParams.pr.contextStartedStatus ?: 'Build started.')
                                 }
                                 ghprbBuildStatus {
                                     messages {
