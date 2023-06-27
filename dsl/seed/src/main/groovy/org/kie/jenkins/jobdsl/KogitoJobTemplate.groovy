@@ -271,23 +271,36 @@ class KogitoJobTemplate {
                                     addTestResults(jobParams.pr.containsKey('contextShowtestResults') ? jobParams.pr.contextShowtestResults : true)
                                     showMatrixStatus(false)
                                     statusUrl('${BUILD_URL}display/redirect')
-                                    triggeredStatus(jobParams.pr.contextTriggeredStatus ?: 'Build triggered.')
-                                    startedStatus(jobParams.pr.contextStartedStatus ?: 'Build started.')
+                                    triggeredStatus(jobParams.pr.contextTriggeredStatus ?: 'Queued')
+                                    startedStatus(jobParams.pr.contextStartedStatus ?: 'In Progress')
                                 }
                                 ghprbBuildStatus {
                                     messages {
-                                        if (!jobParams.pr.disable_status_message_error) {
-                                            ghprbBuildResultMessage {
-                                                result('ERROR')
-                                                message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **an error**. Please check [the logs](\${BUILD_URL}display/redirect).")
+                                        if (jobParams.pr.buildStatusMessages) {
+                                            jobParams.pr.buildStatusMessages.each { status, statusMessage ->
+                                                String resultMessage = statusMessage
+                                                resultMessage = resultMessage ?: "The ${jobParams.pr.commitContext ?: 'Linux'} check finished with status **${status}**."
+                                                resultMessage += status != 'SUCCESS' ? ' Please check [the logs](\${BUILD_URL}display/redirect).' : ''
+                                                ghprbBuildResultMessage {
+                                                    result(status)
+                                                    message(resultMessage)
+                                                }
+                                            }
+                                        } else { // Keep for BC
+                                            if (!jobParams.pr.disable_status_message_error) {
+                                                ghprbBuildResultMessage {
+                                                    result('ERROR')
+                                                    message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **an error**. Please check [the logs](\${BUILD_URL}display/redirect).")
+                                                }
+                                            }
+                                            if (!jobParams.pr.disable_status_message_failure) {
+                                                ghprbBuildResultMessage {
+                                                    result('FAILURE')
+                                                    message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **failed**. Please check [the logs](\${BUILD_URL}display/redirect).")
+                                                }
                                             }
                                         }
-                                        if (!jobParams.pr.disable_status_message_failure) {
-                                            ghprbBuildResultMessage {
-                                                result('FAILURE')
-                                                message("The ${jobParams.pr.commitContext ?: 'Linux'} check has **failed**. Please check [the logs](\${BUILD_URL}display/redirect).")
-                                            }
-                                        }
+                                        
                                     }
                                 }
                                 ghprbCancelBuildsOnUpdate {
