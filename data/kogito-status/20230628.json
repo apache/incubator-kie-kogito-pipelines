@@ -2,9 +2,9 @@
   "metadata": {
     "title": "Kogito Status",
     "subtitle": "Kiegroup Kogito organization repositories CI status",
-    "date": "2023-06-28T06:25:56.949Z",
+    "date": "2023-06-28T07:18:08.991Z",
     "createdBy": "GitHub Action",
-    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5397945199"
+    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5398332794"
   },
   "projects": [
     {
@@ -1422,6 +1422,165 @@
       "repo_url": "https://github.com/kiegroup/kogito-runtimes",
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-runtimes/pulls{/number}",
       "pullRequests": [
+        {
+          "number": 3095,
+          "title": "[1.13.x] quarkus to 2.13.8.Final",
+          "url": "https://api.github.com/repos/kiegroup/kogito-runtimes/pulls/3095",
+          "html_url": "https://github.com/kiegroup/kogito-runtimes/pull/3095",
+          "state": "open",
+          "labels": [
+            "backport-1.13.x-blue"
+          ],
+          "draft": false,
+          "requested_reviewers": [
+            {
+              "login": "rgdoliveira",
+              "avatar_url": "https://avatars.githubusercontent.com/u/25102037?v=4",
+              "html_url": "https://github.com/rgdoliveira"
+            },
+            {
+              "login": "lampajr",
+              "avatar_url": "https://avatars.githubusercontent.com/u/26715795?v=4",
+              "html_url": "https://github.com/lampajr"
+            }
+          ],
+          "created_at": "2023-06-28T07:00:44Z",
+          "updated_at": "2023-06-28T07:07:00Z",
+          "closed_at": null,
+          "merged_at": null,
+          "base": {
+            "ref": "1.13.x",
+            "sha": "ca571b9d3955f40bacd559b6f6707f7abb3dc482",
+            "label": "kiegroup:1.13.x"
+          },
+          "head": {
+            "ref": "quarkus_upgrade",
+            "sha": "e98799889c177d05b15c8dcb38b96ca0feabd1d7",
+            "label": "Ginxo:quarkus_upgrade"
+          },
+          "user": {
+            "login": "Ginxo",
+            "avatar_url": "https://avatars.githubusercontent.com/u/25130444?v=4",
+            "html_url": "https://github.com/Ginxo"
+          },
+          "checks": [
+            {
+              "id": 14614020136,
+              "name": "Maven Build (ubuntu-latest, 11, 3.8.6)",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5398185795/jobs/9803698050",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-28T07:00:58Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14614020132,
+              "name": "Maven Build (ubuntu-latest, 11, 3.8.6)",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5398185796/jobs/9803698049",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-28T07:01:00Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14614020122,
+              "name": "Maven Build (ubuntu-latest, 11, 3.8.6)",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5398185797/jobs/9803698036",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-28T07:00:59Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14614019707,
+              "name": "[${{ matrix.target-branch }}] - Backporting",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5398185700/jobs/9803697710",
+              "status": "completed",
+              "conclusion": "skipped",
+              "started_at": "2023-06-28T07:00:49Z",
+              "completed_at": "2023-06-28T07:00:49Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14614019333,
+              "name": "compute-targets",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5398185700/jobs/9803697423",
+              "status": "completed",
+              "conclusion": "skipped",
+              "started_at": "2023-06-28T07:00:48Z",
+              "completed_at": "2023-06-28T07:00:48Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 23833054929,
+              "name": "(build) kogito-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/1.13.x/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-examples/70/display/redirect",
+              "conclusion": "pending",
+              "started_at": "2023-06-28T07:00:50Z",
+              "completed_at": "2023-06-28T07:00:50Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23833054930,
+              "name": "(build) optaplanner",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/1.13.x/job/pullrequest/job/kogito-runtimes.tests.downstream.optaplanner/66/display/redirect",
+              "conclusion": "pending",
+              "started_at": "2023-06-28T07:00:50Z",
+              "completed_at": "2023-06-28T07:00:50Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23833220431,
+              "name": "(build) optaweb-vehicle-routing",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/1.13.x/job/pullrequest/job/kogito-runtimes.tests.downstream.optaweb-vehicle-routing/65/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-28T07:13:24Z",
+              "completed_at": "2023-06-28T07:13:24Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23833224112,
+              "name": "(build) kogito-runtimes",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/1.13.x/job/pullrequest/job/kogito-runtimes.tests.kogito-runtimes/68/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-28T07:13:42Z",
+              "completed_at": "2023-06-28T07:13:42Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23833278245,
+              "name": "(build) optaplanner-quickstarts",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/1.13.x/job/pullrequest/job/kogito-runtimes.tests.downstream.optaplanner-quickstarts/65/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-28T07:17:35Z",
+              "completed_at": "2023-06-28T07:17:35Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 23833279629,
+              "name": "(build) optaweb-employee-rostering",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/1.13.x/job/pullrequest/job/kogito-runtimes.tests.downstream.optaweb-employee-rostering/65/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-06-28T07:17:41Z",
+              "completed_at": "2023-06-28T07:17:41Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            }
+          ]
+        },
         {
           "number": 3091,
           "title": "[KOGITO-9434] Moving python modules under python profile",
@@ -9848,6 +10007,93 @@
       "repo_url": "https://github.com/kiegroup/kogito-examples",
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-examples/pulls{/number}",
       "pullRequests": [
+        {
+          "number": 1720,
+          "title": "[1.13.x] quarkus to 2.13.8.Final",
+          "url": "https://api.github.com/repos/kiegroup/kogito-examples/pulls/1720",
+          "html_url": "https://github.com/kiegroup/kogito-examples/pull/1720",
+          "state": "open",
+          "labels": [
+            "backport-1.13.x-blue"
+          ],
+          "draft": false,
+          "requested_reviewers": [
+            {
+              "login": "rgdoliveira",
+              "avatar_url": "https://avatars.githubusercontent.com/u/25102037?v=4",
+              "html_url": "https://github.com/rgdoliveira"
+            },
+            {
+              "login": "lampajr",
+              "avatar_url": "https://avatars.githubusercontent.com/u/26715795?v=4",
+              "html_url": "https://github.com/lampajr"
+            }
+          ],
+          "created_at": "2023-06-28T06:59:34Z",
+          "updated_at": "2023-06-28T07:06:53Z",
+          "closed_at": null,
+          "merged_at": null,
+          "base": {
+            "ref": "1.13.x",
+            "sha": "4e8f810cba144aa5753ef0e79beb0b763c17fffe",
+            "label": "kiegroup:1.13.x"
+          },
+          "head": {
+            "ref": "quarkus_upgrade",
+            "sha": "7084027ffb9c7aea95e0d7cbc73ba093bb010ae0",
+            "label": "Ginxo:quarkus_upgrade"
+          },
+          "user": {
+            "login": "Ginxo",
+            "avatar_url": "https://avatars.githubusercontent.com/u/25130444?v=4",
+            "html_url": "https://github.com/Ginxo"
+          },
+          "checks": [
+            {
+              "id": 14613993052,
+              "name": "Maven Build (ubuntu-latest, 11, 3.8.6)",
+              "html_url": "https://github.com/kiegroup/kogito-examples/actions/runs/5398176596/jobs/9803677805",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-06-28T06:59:45Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14613993030,
+              "name": "[${{ matrix.target-branch }}] - Backporting",
+              "html_url": "https://github.com/kiegroup/kogito-examples/actions/runs/5398176486/jobs/9803677789",
+              "status": "completed",
+              "conclusion": "skipped",
+              "started_at": "2023-06-28T06:59:38Z",
+              "completed_at": "2023-06-28T06:59:38Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14613992833,
+              "name": "compute-targets",
+              "html_url": "https://github.com/kiegroup/kogito-examples/actions/runs/5398176486/jobs/9803677634",
+              "status": "completed",
+              "conclusion": "skipped",
+              "started_at": "2023-06-28T06:59:37Z",
+              "completed_at": "2023-06-28T06:59:37Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 23833038765,
+              "name": "(build) kogito-examples",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/1.13.x/job/pullrequest/job/kogito-examples.tests.kogito-examples/42/display/redirect",
+              "conclusion": "pending",
+              "started_at": "2023-06-28T06:59:38Z",
+              "completed_at": "2023-06-28T06:59:38Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            }
+          ]
+        },
         {
           "number": 1718,
           "title": "[KOGITO-9490]-Testing CLI + Operator using serverless-workflow-parall…",
