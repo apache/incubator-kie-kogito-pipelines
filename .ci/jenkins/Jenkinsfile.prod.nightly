@@ -30,6 +30,9 @@ pipeline {
                     // Fetch versions from pom if not provided
                     env.PRODUCT_VERSION = "${PRODUCT_VERSION ?: parseVersionFromPom('kiegroup/kogito-runtimes', getBuildBranch())}"
                     env.DROOLS_PRODUCT_VERSION = "${DROOLS_PRODUCT_VERSION ?: parseVersionFromPom('kiegroup/drools', getDroolsBranch())}"
+
+                    // Needed by Kogito Apps
+                    setupCypressEnv('9.7.0')
                 }
             }
         }
@@ -210,6 +213,12 @@ def getMessageBody(String mavenRepositoryFileUrl, String alreadyBuiltProjects, M
     "scm_hash": ${new groovy.json.JsonBuilder(scmHashes).toString()},
     "built_projects": ${new groovy.json.JsonBuilder(alreadyBuiltProjectsArray).toString()}
 }"""
+}
+
+def setupCypressEnv(String cypressVersion) {
+    if (env.CYPRESS_BINARY_URL) {
+        env.CYPRESS_INSTALL_BINARY = "${CYPRESS_BINARY_URL}/cypress-${cypressVersion}.zip"
+    }
 }
 
 def gitHashesToCollection(String gitInformationHashes) {
