@@ -2,9 +2,9 @@
   "metadata": {
     "title": "Kogito Status",
     "subtitle": "Kiegroup Kogito organization repositories CI status",
-    "date": "2023-07-12T21:16:31.974Z",
+    "date": "2023-07-12T22:18:17.964Z",
     "createdBy": "GitHub Action",
-    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5536518567"
+    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5536959820"
   },
   "projects": [
     {
@@ -15439,6 +15439,124 @@
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-serverless-operator/pulls{/number}",
       "pullRequests": [
         {
+          "number": 185,
+          "title": "[KOGITO-9417] Introduce workflowproj-apiserver",
+          "url": "https://api.github.com/repos/kiegroup/kogito-serverless-operator/pulls/185",
+          "html_url": "https://github.com/kiegroup/kogito-serverless-operator/pull/185",
+          "state": "open",
+          "labels": [],
+          "draft": true,
+          "requested_reviewers": [],
+          "created_at": "2023-07-12T21:16:50Z",
+          "updated_at": "2023-07-12T21:16:50Z",
+          "closed_at": null,
+          "merged_at": null,
+          "base": {
+            "ref": "main",
+            "sha": "589a65e9cddb522ac59ecd9ab5bdce9555156d81",
+            "label": "kiegroup:main"
+          },
+          "head": {
+            "ref": "kogito-9417",
+            "sha": "c3d33e4fdac4f993b3d086e8aa3c74c4f8e4cad6",
+            "label": "ricardozanini:kogito-9417"
+          },
+          "user": {
+            "login": "ricardozanini",
+            "avatar_url": "https://avatars.githubusercontent.com/u/1538000?v=4",
+            "html_url": "https://github.com/ricardozanini"
+          },
+          "checks": [
+            {
+              "id": 14994771011,
+              "name": "Integration tests (docker)",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5536524096/jobs/10104394322",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-07-12T21:22:11Z",
+              "completed_at": "2023-07-12T21:24:58Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14994770764,
+              "name": "Integration tests (kaniko-docker)",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5536524096/jobs/10104394132",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-07-12T21:22:11Z",
+              "completed_at": "2023-07-12T21:26:53Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14994646781,
+              "name": "Unit tests And Coverage",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5536524098/jobs/10104300064",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-07-12T21:17:04Z",
+              "completed_at": "2023-07-12T21:21:34Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14994646431,
+              "name": "Check headers",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5536524098/jobs/10104299786",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-07-12T21:17:04Z",
+              "completed_at": "2023-07-12T21:17:18Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14994646213,
+              "name": "Unit Tests",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5536524096/jobs/10104299622",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-07-12T21:17:02Z",
+              "completed_at": "2023-07-12T21:22:02Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14994646199,
+              "name": "Check files generation",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5536524098/jobs/10104299612",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-07-12T21:17:04Z",
+              "completed_at": "2023-07-12T21:21:06Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 14994646194,
+              "name": "End-to-end tests (Minikube)",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5536524095/jobs/10104299608",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-07-12T21:17:04Z",
+              "completed_at": "2023-07-12T21:35:44Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 24060356880,
+              "name": "Openshift tests",
+              "html_url": "https://jenkins-kogito-tools.kogito-cluster-0ad6762cc85bcef5745bb684498c2436-0000.us-south.containers.appdomain.cloud/job/kogito/job/kogito-serverless-operator-PR-check/210/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-07-12T21:30:46Z",
+              "completed_at": "2023-07-12T21:30:46Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            }
+          ]
+        },
+        {
           "number": 184,
           "title": "[main] [1.41.x] Allow to override the Container registry URL",
           "url": "https://api.github.com/repos/kiegroup/kogito-serverless-operator/pulls/184",
@@ -16835,10 +16953,10 @@
               "id": 14993052064,
               "name": "run (windows-latest)",
               "html_url": "https://github.com/kiegroup/kie-tools/actions/runs/5536010397/jobs/10103099872",
-              "status": "in_progress",
-              "conclusion": null,
+              "status": "completed",
+              "conclusion": "success",
               "started_at": "2023-07-12T20:13:27Z",
-              "completed_at": null,
+              "completed_at": "2023-07-12T21:45:24Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
