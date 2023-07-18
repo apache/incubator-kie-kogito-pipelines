@@ -159,7 +159,7 @@ void sendErrorNotification() {
 }
 
 String getCommitMessage() {
-    return "Bump up ${getProjectName()} to ${getNewVersion()}"
+    return "[${getQuarkusPlatformBranch()}] Bump up ${getProjectName()} to ${getNewVersion()}"
 }
 
 String getLocalBranchName() {
