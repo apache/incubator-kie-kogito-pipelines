@@ -78,6 +78,7 @@ pipeline{
         //       - disable some environments when branching as they make no sense by default [this MUST be executed only on config file repo, e.g., kogito-pipelines]
         //       - set productized_repositories[].branch to the productized one, e.g., 1.37.x-prod
         //       - set productized_repositories[].is_branch_config_repo to true for the config file repo
+        //       - enable productized profile (-Dproductized) on build chain config
         //       - do these changes directly on the prod branch
 
 
@@ -102,6 +103,7 @@ pipeline{
                         enabledEnvs = branchConfig.environments.findAll { envName, envData ->  envsToKeep.contains(envName) }
 
                         // additional maven opt that enables productized profile
+                        // FIXME do we need -Dproductized here as we are already adding it on buildchain config
                         def buildMvnOpts = "-Dproductized ${getAdditionalDefaultBuildMavenOpts()} "
 
                         // create default env if not already existing
@@ -132,18 +134,41 @@ pipeline{
                             repo.branch = getEcosystemProductizedBranch()
                         }
 
+                        // add cloud.images if operating on kogito project
+
+                        branchConfig.cloud = branchConfig.cloud ?: [:]
+                        if (getEcosystemMainProject() == 'kogito') {
+                            branchConfig.cloud.images = 'kogito-data-index-ephemeral,kogito-swf-builder,kogito-swf-devmode'
+                        }
+
+                        // override nexus artifacts repository
+
+                        def nexusRepo = "${env.BXMS_QE_NEXUS}/content/repositories/osl-prod-nightly/"
+                        branchConfig.maven = branchConfig.maven ?: [:]
+                        branchConfig.maven.artifacts_repository = nexusRepo
+
+                        branchConfig.maven.artifacts_upload_repository = branchConfig.maven.artifacts_upload_repository ?: [:]
+                        branchConfig.maven.artifacts_upload_repository.url = nexusRepo
+                        branchConfig.maven.artifacts_upload_repository.creds_id = 'unpacks-zip-on-qa-nexus'
+
                         echo "Write dsl branch_config => ${branchConfig}"
                         sh "rm -f ${branchConfigFilePath}"
                         writeYaml file: "${branchConfigFilePath}", data: branchConfig, overwrite: true
 
                         // update build-chain configuration
+
+                        def buildChainConfigFilePath = readMainBranchConfig().buildchain_config.git.file_path
+                        def buildChainConfig = readYaml file: buildChainConfigFilePath
+
+                        // add -Dproductized in BUILD_MVN_OPTS, then we don't have to add -Dproductized inside DSL configs
+
+                        sh "sed -i 's/export BUILD_MVN_OPTS=\"\\\${{ env.BUILD_MVN_OPTS }}/export BUILD_MVN_OPTS=\"\\\${{ env.BUILD_MVN_OPTS }} -Dproductized/' ${buildChainConfigFilePath}"
+
                         // comment out projects we are not interested in from the buildchain-config.yaml
                         def projectToRemoveFromBCPRChecks = getProjectsToRemoveFromBuildChainConfig()
 
-                        if (projectToRemoveFromBCPRChecks) {
-                            // update build-chain config
-                            def buildChainConfigFilePath = readMainBranchConfig().buildchain_config.git.file_path
-                            def buildChainConfig = readYaml file: buildChainConfigFilePath
+                        if (projectToRemoveFromBCPRChecks.isEmpty()) {
+                            echo "Removing projects ${projectToRemoveFromBCPRChecks} from build chain configuration"
 
                             def builds = buildChainConfig.build.findAll { build ->
                                 !projectToRemoveFromBCPRChecks.contains(build.project)
@@ -179,7 +204,6 @@ pipeline{
         //              - disable PR checks from jobs.groovy
         //              - comment out projects we are not interested in from the buildchain-config.yaml
         //              - disable GHA jobs no more needed by commenting out workflows
-        //              - enable productized profile (-Dproductized) on GHA PR checks workflows
         //              - ensure that fullProfile is not enabled on .ci/jenkins/dsl/jobs.groovy, if so remove it
         stage("Update prod branch for all projects to be productized"){
             steps{
@@ -210,8 +234,7 @@ pipeline{
 
 
                             // TODO iterate over PR workflows
-                            // - comment out if not needed (get these from param?)
-                            // - if PR check is needed, keep it and add -Dproductized
+                            // - comment out/remove if not needed (get these from param?)
 
                             // push changes
                             pushIfChanged(repoConfig.branch, repoCredsId, "Pull request checks updated for productized branch", "Pull request checks updated for productized branch")
@@ -308,7 +331,12 @@ pipeline{
                                     if (checkoutGitBranchIfExists(quarkusDowngradePrBranch, repoCredsId)) {
                                         // thefollowing script takes care of applying all patches needed when downgrading to Quarkus LTS
                                         // i.e., it will apply all patches found under .ci/environments/quarkus-lts/patches
-                                        sh '.ci/environments/update.sh quarkus-lts'
+                                        def updateQuarkusLtsScriptPath = '.ci/environments/update.sh'
+                                        if (fileExists(updateQuarkusLtsScriptPath)) {
+                                            sh "${updateQuarkusLtsScriptPath} quarkus-lts"
+                                        } else {
+                                            echo "[WARN] Unable to find '${updateQuarkusLtsScriptPath}' for '${repository}'"
+                                        }
 
                                         pushIfChanged(quarkusDowngradePrBranch, repoCredsId, "Applied patches after Quarkus downgrade to ${getQuarkusVersion()}", "Quarkus LTS patches on ${quarkusDowngradePrBranch} have been applied")
                                     }
