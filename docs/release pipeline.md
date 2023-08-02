@@ -267,7 +267,6 @@ In order to test the full Release Pipeline, and in order to avoid any problem, y
 
 * Have a specific container registry and credentials registered with `push` rights on it
 * Have a specific author repository that you can test against
-* If you don't want to flood your test author repository with temporary branches, you should use also another author, referred as "bot account", and that you can setup in environment variables `BOT_*`
 * Have a specific Maven repository to deploy jar artifacts
 * Create all the required Jenkins jobs (see [Jenkins doc](./jenkins.md))
 

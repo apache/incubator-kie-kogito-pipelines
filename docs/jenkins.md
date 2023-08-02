@@ -162,9 +162,6 @@ git:
     name: radtriste
     credentials_id: radtriste
     token_credentials_id: radtriste-gh-token
-  bot_author:
-    name: radtriste-bot-account
-    credentials_id: radtriste-bot
   jenkins_config_path: .ci/jenkins
 
 # Full repository Example
@@ -176,9 +173,6 @@ git:
 #       name: another_gh_author
 #       credentials_id: another_gh_author_creds
 #       token_credentials_id: another_gh_author_creds_token
-#     bot_author:
-#       name: another_gh_bot_author
-#       credentials_id: another_gh_bot_author_creds
 #     jenkins_config_path: .ci/jenkins/
 
 maven:
