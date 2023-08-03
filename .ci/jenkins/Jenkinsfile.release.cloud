@@ -24,6 +24,8 @@ examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
 baseImageParamsPrefix = 'BASE_IMAGE'
 promoteImageParamsPrefix = 'PROMOTE_IMAGE'
 
+kogitoPrBranch = "${KOGITO_PR_BRANCH?.trim() ?: "kogito-${version}"}"
+
 pipeline {
     agent {
         label 'kie-rhel8 && !built-in'
@@ -39,6 +41,8 @@ pipeline {
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
 
         IMAGE_NAME_NIGHTLY_SUFFIX = 'nightly'
+
+        PR_BRANCH_HASH = "${util.generateHash(10)}"
     }
 
     stages {
@@ -425,6 +429,9 @@ List getDefaultBuildParams(String version) {
     List buildParams = []
     addDisplayNameParam(buildParams, getDisplayName(version))
     addStringParam(buildParams, 'PROJECT_VERSION', version)
+    if ( kogitoPrBranch == '' ) {
+        addStringParam(buildParams, 'KOGITO_PR_BRANCH', "${kogitoPrBranch}")
+    }
     return buildParams
 }
 
