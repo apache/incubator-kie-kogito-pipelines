@@ -2,9 +2,9 @@
   "metadata": {
     "title": "Kogito Status",
     "subtitle": "Kiegroup Kogito organization repositories CI status",
-    "date": "2023-08-03T07:15:30.880Z",
+    "date": "2023-08-03T08:20:43.743Z",
     "createdBy": "GitHub Action",
-    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5747757138"
+    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5748336639"
   },
   "projects": [
     {
@@ -1711,7 +1711,7 @@
           "draft": false,
           "requested_reviewers": [],
           "created_at": "2023-08-02T10:40:32Z",
-          "updated_at": "2023-08-02T12:21:33Z",
+          "updated_at": "2023-08-03T07:23:29Z",
           "closed_at": null,
           "merged_at": null,
           "base": {
@@ -1895,6 +1895,17 @@
           },
           "checks": [
             {
+              "id": 15579496182,
+              "name": "ubuntu-latest / Java-11 / Maven-3.8.7",
+              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5740357846/job/15579496182",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-08-03T07:22:24Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
               "id": 15559500486,
               "name": "SonarCloud",
               "html_url": "https://github.com/kiegroup/kogito-runtimes/runs/15559500486",
@@ -1946,17 +1957,6 @@
               "conclusion": "success",
               "started_at": "2023-08-02T14:49:42Z",
               "completed_at": "2023-08-02T17:09:28Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 15557996580,
-              "name": "ubuntu-latest / Java-11 / Maven-3.8.7",
-              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5740357846/job/15557996580",
-              "status": "completed",
-              "conclusion": "failure",
-              "started_at": "2023-08-02T14:49:41Z",
-              "completed_at": "2023-08-02T16:24:11Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
@@ -15033,6 +15033,107 @@
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-serverless-operator/pulls{/number}",
       "pullRequests": [
         {
+          "number": 215,
+          "title": "[KOGITO-8276] Fixing Dockerfile to COPY the new log package",
+          "url": "https://api.github.com/repos/kiegroup/kogito-serverless-operator/pulls/215",
+          "html_url": "https://github.com/kiegroup/kogito-serverless-operator/pull/215",
+          "state": "open",
+          "labels": [],
+          "draft": false,
+          "requested_reviewers": [
+            {
+              "login": "manstis",
+              "avatar_url": "https://avatars.githubusercontent.com/u/497544?v=4",
+              "html_url": "https://github.com/manstis"
+            },
+            {
+              "login": "ricardozanini",
+              "avatar_url": "https://avatars.githubusercontent.com/u/1538000?v=4",
+              "html_url": "https://github.com/ricardozanini"
+            },
+            {
+              "login": "spolti",
+              "avatar_url": "https://avatars.githubusercontent.com/u/1863987?v=4",
+              "html_url": "https://github.com/spolti"
+            }
+          ],
+          "created_at": "2023-08-03T07:42:33Z",
+          "updated_at": "2023-08-03T08:05:28Z",
+          "closed_at": null,
+          "merged_at": null,
+          "base": {
+            "ref": "main",
+            "sha": "89edffd0a3ba0b2cb1dfee97aab2d959819adcd8",
+            "label": "kiegroup:main"
+          },
+          "head": {
+            "ref": "fixKOGITO-8276",
+            "sha": "d7a851246834687f2ff5b5223789cacdea2a356d",
+            "label": "davidesalerno:fixKOGITO-8276"
+          },
+          "user": {
+            "login": "davidesalerno",
+            "avatar_url": "https://avatars.githubusercontent.com/u/640621?v=4",
+            "html_url": "https://github.com/davidesalerno"
+          },
+          "checks": [
+            {
+              "id": 15580177904,
+              "name": "Unit tests And Coverage",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5747990168/job/15580177904",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-08-03T07:50:54Z",
+              "completed_at": "2023-08-03T07:55:12Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 15580177755,
+              "name": "Check files generation",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5747990168/job/15580177755",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-08-03T07:42:46Z",
+              "completed_at": "2023-08-03T07:46:21Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 15580177553,
+              "name": "Check headers",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5747990168/job/15580177553",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-08-03T07:42:45Z",
+              "completed_at": "2023-08-03T07:42:58Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 15579982916,
+              "name": "End-to-end tests (Minikube)",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5747990169/job/15579982916",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-08-03T07:42:46Z",
+              "completed_at": "2023-08-03T07:59:45Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 24406693839,
+              "name": "Openshift tests",
+              "html_url": "https://jenkins-kogito-tools.kogito-cluster-0ad6762cc85bcef5745bb684498c2436-0000.us-south.containers.appdomain.cloud/job/kogito/job/kogito-serverless-operator-PR-check/358/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-08-03T07:56:00Z",
+              "completed_at": "2023-08-03T07:56:00Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            }
+          ]
+        },
+        {
           "number": 214,
           "title": "[KOGITO-9218] - Implement Conditions API and review SonataFlowPlatform",
           "url": "https://api.github.com/repos/kiegroup/kogito-serverless-operator/pulls/214",
@@ -15587,7 +15688,7 @@
           "draft": false,
           "requested_reviewers": [],
           "created_at": "2023-06-21T16:18:06Z",
-          "updated_at": "2023-08-02T13:02:04Z",
+          "updated_at": "2023-08-03T07:32:39Z",
           "closed_at": null,
           "merged_at": null,
           "base": {
@@ -15736,7 +15837,7 @@
             }
           ],
           "created_at": "2023-05-31T15:53:02Z",
-          "updated_at": "2023-08-02T15:11:19Z",
+          "updated_at": "2023-08-03T07:41:56Z",
           "closed_at": null,
           "merged_at": null,
           "base": {
@@ -16164,7 +16265,6 @@
           "html_url": "https://github.com/kiegroup/kie-tools/pull/1886",
           "state": "open",
           "labels": [
-            "waiting-for-qe",
             "Serverless Workflow"
           ],
           "draft": false,
@@ -16178,15 +16278,10 @@
               "login": "tiagobento",
               "avatar_url": "https://avatars.githubusercontent.com/u/1584568?v=4",
               "html_url": "https://github.com/tiagobento"
-            },
-            {
-              "login": "LuboTerifaj",
-              "avatar_url": "https://avatars.githubusercontent.com/u/12122769?v=4",
-              "html_url": "https://github.com/LuboTerifaj"
             }
           ],
           "created_at": "2023-08-02T17:17:43Z",
-          "updated_at": "2023-08-02T21:22:57Z",
+          "updated_at": "2023-08-03T07:55:36Z",
           "closed_at": null,
           "merged_at": null,
           "base": {
@@ -19284,7 +19379,7 @@
             }
           ],
           "created_at": "2023-07-20T11:18:05Z",
-          "updated_at": "2023-08-02T17:01:50Z",
+          "updated_at": "2023-08-03T07:31:23Z",
           "closed_at": null,
           "merged_at": null,
           "base": {
