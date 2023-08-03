@@ -10,6 +10,10 @@ JOBS = [:]
 FAILED_STAGES = [:]
 UNSTABLE_STAGES = [:]
 
+defaultImageParamsPrefix = 'IMAGE'
+kogitoImagesParamsPrefix = 'KOGITO_IMAGES'
+examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
+
 pipeline {
     agent {
         label 'kie-rhel8 && !built-in'
@@ -21,7 +25,7 @@ pipeline {
 
     environment {
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
-    }
+}
 
     stages {
         stage('Initialize') {
@@ -32,74 +36,56 @@ pipeline {
             }
         }
 
-        stage('Init Kogito Runtimes') {
+        stage('Init Images') {
             steps {
                 script {
                     def buildParams = getDefaultBuildParams()
-                    addDroolsVersionParam(buildParams)
-                    addKogitoVersionParam(buildParams)
-                    buildJob('kogito-runtimes', buildParams)
+                    addStringParam(buildParams, 'KOGITO_VERSION', getKogitoVersion().toLowerCase())
+                    addStringParam(buildParams, 'KOGITO_ARTIFACTS_VERSION', getKogitoVersion())
+                    buildJob('kogito-images', buildParams)
                 }
             }
             post {
                 failure {
-                    addFailedStage('kogito-runtimes')
+                    addFailedStage('kogito-images')
                 }
             }
         }
 
-        stage('Init Kogito Apps') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addKogitoVersionParam(buildParams)
-                    buildJob('kogito-apps', buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage('kogito-apps')
-                }
-            }
-        }
-
-        stage('Init Kogito Examples') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addDroolsVersionParam(buildParams)
-                    addKogitoVersionParam(buildParams)
-                    buildJob('kogito-examples', buildParams)
-
-                    if (isJobSucceeded('kogito-examples') || isJobUnstable('kogito-examples')) {
-                        // Update examples nightly branch
-                        dir('kogito-examples') {
-                            deleteDir()
-                            checkout(githubscm.resolveRepository('kogito-examples', getGitAuthor(), getBuildBranch(), false))
-                            String nightlyBranch = "nightly-${getBuildBranch()}"
-                            githubscm.createBranch(nightlyBranch)
-                            githubscm.pushObject('origin', nightlyBranch, getGitAuthorCredsID())
+        stage('Init operators') {
+            parallel {
+                stage('Init Kogito Operator') {
+                    stages {
+                        stage('Init Operator') {
+                            steps {
+                                script {
+                                    def buildParams = getDefaultBuildParams()
+                                    addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
+                                    buildJob('kogito-operator', buildParams)
+                                }
+                            }
+                            post {
+                                failure {
+                                    addFailedStage('kogito-operator')
+                                }
+                            }
                         }
                     }
                 }
-            }
-            post {
-                failure {
-                    addFailedStage('kogito-examples')
-                }
-            }
-        }
 
-        stage('Init Docs') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    buildJob('kogito-docs', buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage('kogito-docs')
+                stage('Init Serverless Operator') {
+                    steps {
+                        script {
+                            def buildParams = getDefaultBuildParams()
+                            addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
+                            buildJob('kogito-serverless-operator', buildParams)
+                        }
+                    }
+                    post {
+                        failure {
+                            addFailedStage('kogito-serverless-operator')
+                        }
+                    }
                 }
             }
         }
@@ -107,29 +93,13 @@ pipeline {
         // Launch the nightly to deploy all artifacts from the branch
         stage('Launch the nightly') {
             when {
-                expression { return params.DEPLOY }
+                expression { return params.DEPLOY_IMAGES }
             }
             steps {
                 script {
                     def buildParams = getDefaultBuildParams()
                     addBooleanParam(buildParams, 'SKIP_TESTS', true)
-                    addBooleanParam(buildParams, 'SKIP_CLOUD_NIGHTLY', true)
-                    buildJob('../nightly/0-kogito-nightly', buildParams, 'kogito-nightly', false)
-                }
-            }
-        }
-
-        // Launch the nightly to deploy all artifacts from the branch
-        stage('Launch cloud setup branch') {
-            when {
-                expression { return !params.SKIP_CLOUD_SETUP_BRANCH }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addKogitoVersionParam(buildParams)
-                    addBooleanParam(buildParams, 'DEPLOY', params.DEPLOY)
-                    buildJob('./0-setup-branch-cloud', buildParams, 'setup-branch', false)
+                    buildJob('../nightly/0-kogito-nightly-cloud', buildParams, 'kogito-nightly-cloud', false)
                 }
             }
         }
@@ -201,15 +171,8 @@ List getDefaultBuildParams() {
     List buildParams = []
     addStringParam(buildParams, 'DISPLAY_NAME', getKogitoVersion())
     addBooleanParam(buildParams, 'SEND_NOTIFICATION', true)
+
     return buildParams
-}
-
-void addDroolsVersionParam(buildParams) {
-    addStringParam(buildParams, 'DROOLS_VERSION', getDroolsVersion())
-}
-
-void addKogitoVersionParam(buildParams) {
-    addStringParam(buildParams, 'KOGITO_VERSION', getKogitoVersion())
 }
 
 void addStringParam(List params, String key, String value) {
@@ -230,10 +193,6 @@ String getGitAuthor() {
 
 String getGitAuthorCredsID() {
     return env.GIT_AUTHOR_CREDS_ID
-}
-
-String getDroolsVersion() {
-    return params.DROOLS_VERSION ?: getVersionFromReleaseBranch(util.calculateTargetReleaseBranch(getBuildBranch(), 7))
 }
 
 String getKogitoVersion() {

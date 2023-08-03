@@ -257,6 +257,16 @@ pipeline {
                 }
             }
         }
+
+        stage('Setup next snapshot version') {
+            steps {
+                script {
+                    def buildParams = []
+                    addStringParam(buildParams, 'KOGITO_VERSION', util.getNextVersion(getKogitoVersion(), 'micro'))
+                    buildJob('../setup-branch/0-setup-branch-cloud', buildParams, false)
+                }
+            }
+        }
     }
     post {
         always {
@@ -461,7 +471,6 @@ void addExamplesParam(buildParams) {
 }
 
 void addImageBuildParams(List buildParams, String tag, boolean isFinalImage = false, String paramsPrefix = defaultImageParamsPrefix) {
-    addBooleanParam(buildParams, constructKey(paramsPrefix, 'USE_OPENSHIFT_REGISTRY'), !isFinalImage && params.USE_TEMP_OPENSHIFT_REGISTRY)
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
     addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)

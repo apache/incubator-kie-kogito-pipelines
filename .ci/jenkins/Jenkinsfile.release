@@ -172,6 +172,18 @@ pipeline {
             }
         }
 
+        stage('Setup next snapshot version') {
+            steps {
+                script {
+                    def buildParams = []
+                    addStringParam(buildParams, 'KOGITO_VERSION', util.getNextVersion(getKogitoVersion(), 'micro'))
+                    addStringParam(buildParams, 'DROOLS_VERSION', util.getNextVersion(getDroolsVersion(), 'micro'))
+                    addBooleanParam(buildParams, 'SKIP_CLOUD_SETUP_BRANCH', true)
+                    buildJob('../setup-branch/0-setup-branch', buildParams, false)
+                }
+            }
+        }
+
         stage('Start Cloud release') {
             when {
                 expression { isCloudRelease() }

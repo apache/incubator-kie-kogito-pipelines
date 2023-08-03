@@ -26,9 +26,11 @@ if (Utils.isMainBranch(this)) {
 
 // Setup branch branch
 createSetupBranchJob()
+createSetupBranchCloudJob()
 
 // Nightly
 setupNightlyJob()
+setupNightlyCloudJob()
 setupQuarkusPlatformJob(JobType.NIGHTLY)
 setupQuarkus3NightlyJob()
 
@@ -103,32 +105,61 @@ void setupUpdateJenkinsDependenciesJob() {
 }
 
 void createSetupBranchJob() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-setup-branch', JobType.SETUP_BRANCH, "${JENKINSFILE_PATH}/Jenkinsfile.setup-branch", 'Kogito Setup Branch')
+    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-setup-branch', JobType.SETUP_BRANCH, "${JENKINSFILE_PATH}/Jenkinsfile.setup-branch.artifacts", 'Kogito Setup Branch for Artifacts')
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
         GIT_BRANCH_NAME: "${GIT_BRANCH}",
         GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
         GIT_AUTHOR_CREDS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
-
-        IMAGE_REGISTRY_CREDENTIALS: "${CLOUD_IMAGE_REGISTRY_CREDENTIALS_NIGHTLY}",
-        IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
-        IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
-
-        IS_MAIN_BRANCH: "${Utils.isMainBranch(this)}"
     ])
     KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         parameters {
             stringParam('KOGITO_VERSION', '', 'Kogito version')
             stringParam('DROOLS_VERSION', '', 'Drools version')
-            booleanParam('DEPLOY_ARTIFACTS', true, 'Deploy artifacts')
+            booleanParam('DEPLOY', true, 'Should be deployed after setup ?')
+            booleanParam('SKIP_CLOUD_SETUP_BRANCH', false, 'Skip Cloud setup branch call')
+        }
+    }
+}
+
+void createSetupBranchCloudJob() {
+    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-setup-branch-cloud', JobType.SETUP_BRANCH, "${JENKINSFILE_PATH}/Jenkinsfile.setup-branch.cloud", 'Kogito Setup Branch for Cloud')
+    jobParams.env.putAll([
+        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+
+        GIT_BRANCH_NAME: "${GIT_BRANCH}",
+        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
+        GIT_AUTHOR_CREDS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
+    ])
+    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
+        parameters {
+            stringParam('KOGITO_VERSION', '', 'Kogito version')
+            booleanParam('DEPLOY', true, 'Should be deployed after setup ?')
         }
     }
 }
 
 void setupNightlyJob() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, 'kogito-nightly', JobType.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly", 'Kogito Nightly')
+    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-nightly', JobType.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly", 'Kogito Nightly')
     jobParams.triggers = [cron : '@midnight']
+    jobParams.env.putAll([
+        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+
+        GIT_BRANCH_NAME: "${GIT_BRANCH}",
+        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
+        GIT_AUTHOR_CREDS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
+    ])
+    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
+        parameters {
+            booleanParam('SKIP_TESTS', false, 'Skip all tests')
+            booleanParam('SKIP_CLOUD_NIGHTLY', false, 'Skip cloud nightly execution')
+        }
+    }
+}
+
+void setupNightlyCloudJob() {
+    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-nightly-cloud', JobType.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly.cloud", 'Kogito Nightly')
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
@@ -148,12 +179,9 @@ void setupNightlyJob() {
         parameters {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
-            booleanParam('SKIP_ARTIFACTS', false, 'To skip Artifacts (runtimes, apps, examples) Deployment')
             booleanParam('SKIP_IMAGES', false, 'To skip Images Deployment')
             booleanParam('SKIP_EXAMPLES_IMAGES', false, 'To skip Examples Images Deployment')
             booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
-
-            booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
         }
     }
 }
@@ -188,7 +216,7 @@ void setupQuarkusPlatformJob(JobType jobType) {
 }
 
 void setupReleaseArtifactsJob() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-release', JobType.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release.artifacts", 'Kogito Artifacts Release')
+    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-release', JobType.RELEASE, "${JENKINSFILE_PATH}/Jenkinsfile.release", 'Kogito Artifacts Release')
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
@@ -248,8 +276,6 @@ void setupReleaseCloudJob() {
             booleanParam('SKIP_EXAMPLES_IMAGES_RELEASE', false, 'To skip Examples Images Deployment')
             booleanParam('SKIP_OPERATOR_RELEASE', false, 'To skip Operator Test & Deployment.')
             booleanParam('SKIP_SERVERLESS_OPERATOR_RELEASE', false, 'To skip Serverless Operator Test & Deployment.')
-
-            booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
         }
     }
 }

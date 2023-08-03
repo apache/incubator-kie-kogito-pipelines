@@ -257,7 +257,7 @@ pipeline{
                     def prodBranch = getEcosystemProductizedBranch()
                     String jobName = "${prodBranch}/setup-branch/0-setup-branch"
                     List jobParams = []
-                    jobParams.add(booleanParam(name: 'DEPLOY_ARTIFACTS', value: false))
+                    jobParams.add(booleanParam(name: 'DEPLOY', value: false))
                     // here we could have a variable number of params
                     getProjectUpdateVersionKeys().each{ p ->
                         jobParams.add(stringParam(name: p.key.replace('_UPDATE', ''), value: p.value))
