@@ -181,9 +181,9 @@ pipeline {
         }
         success {
             script {
-                if (!("SUCCESS".equals(currentBuild.previousBuild.result))) {
+                if (!("SUCCESS".equals(currentBuild.previousBuild?.result))) {
                     emailext body: "**Seed job #${BUILD_NUMBER} recovered and finished successfully",
-                        subject: "[${GENERATION_BRANCH}] Seed",
+                        subject: "[${SEED_CONFIG_FILE_GIT_BRANCH}] Seed",
                         to: env.KOGITO_CI_EMAIL_TO
                 }
             }
@@ -203,7 +203,7 @@ void launchBranchSeedJob(String branch) {
     jobParams.add(booleanParam(name: 'SKIP_TESTS', value: params.SKIP_TESTS))
 
     echo "Build ./${branch}/${getBranchSeedJobName()} with parameters ${jobParams}"
-    build(job: "./${branch}/${getBranchSeedJobName()}", parameters: jobParams, wait: false)
+    build(job: "./${branch}/${getBranchSeedJobName()}", parameters: jobParams, wait: false, propagate: false)
 }
 
 def readSeedConfig() {
