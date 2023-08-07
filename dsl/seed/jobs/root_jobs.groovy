@@ -79,6 +79,7 @@ if (nonMainBranches) {
             env('GIT_AUTHOR', "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}")
             env('GIT_AUTHOR_CREDENTIALS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
             env('GIT_BRANCH_TO_BUILD', "${SEED_CONFIG_FILE_GIT_BRANCH}")
+            env('CONFIG_FILE_PATH', "${SEED_CONFIG_FILE_PATH}")
         }
     }
 } else {
