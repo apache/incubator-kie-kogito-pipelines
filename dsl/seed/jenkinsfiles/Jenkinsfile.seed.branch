@@ -206,6 +206,15 @@ pipeline {
                     to: env.KOGITO_CI_EMAIL_TO
             }
         }
+        success {
+            script {
+                if (!("SUCCESS".equals(currentBuild.previousBuild.result))) {
+                    emailext body: "**Seed job #${BUILD_NUMBER} recovered and finished successfully",
+                        subject: "[${GENERATION_BRANCH}] Seed",
+                        to: env.KOGITO_CI_EMAIL_TO
+                }
+            }
+        }
     }
 }
 
