@@ -2,9 +2,9 @@
   "metadata": {
     "title": "Kogito Status",
     "subtitle": "Kiegroup Kogito organization repositories CI status",
-    "date": "2023-08-07T07:15:40.196Z",
+    "date": "2023-08-07T08:21:55.943Z",
     "createdBy": "GitHub Action",
-    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5782162988"
+    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5782748063"
   },
   "projects": [
     {
@@ -2029,65 +2029,6 @@
       "repo_url": "https://github.com/kiegroup/kogito-runtimes",
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-runtimes/pulls{/number}",
       "pullRequests": [
-        {
-          "number": 3164,
-          "title": "Revert #3145 correct deploy pipeline",
-          "url": "https://api.github.com/repos/kiegroup/kogito-runtimes/pulls/3164",
-          "html_url": "https://github.com/kiegroup/kogito-runtimes/pull/3164",
-          "state": "open",
-          "labels": [],
-          "draft": false,
-          "requested_reviewers": [
-            {
-              "login": "cristianonicolai",
-              "avatar_url": "https://avatars.githubusercontent.com/u/570894?v=4",
-              "html_url": "https://github.com/cristianonicolai"
-            }
-          ],
-          "created_at": "2023-08-04T13:06:05Z",
-          "updated_at": "2023-08-04T13:14:45Z",
-          "closed_at": null,
-          "merged_at": null,
-          "base": {
-            "ref": "main",
-            "sha": "d838ba23280aa02836c273a018f9f33262061d22",
-            "label": "kiegroup:main"
-          },
-          "head": {
-            "ref": "revert-3145-correct_deploy_pipeline",
-            "sha": "ce32d4ed0a882e9aeaf3dd65533369cae4da56b8",
-            "label": "kiegroup:revert-3145-correct_deploy_pipeline"
-          },
-          "user": {
-            "login": "radtriste",
-            "avatar_url": "https://avatars.githubusercontent.com/u/17157711?v=4",
-            "html_url": "https://github.com/radtriste"
-          },
-          "checks": [
-            {
-              "id": 15622735362,
-              "name": "DSL",
-              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5762629199/job/15622735362",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-08-04T13:15:59Z",
-              "completed_at": "2023-08-04T13:18:07Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 15622735090,
-              "name": "Jenkinsfiles",
-              "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/5762629199/job/15622735090",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-08-04T13:15:35Z",
-              "completed_at": "2023-08-04T13:23:05Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            }
-          ]
-        },
         {
           "number": 3162,
           "title": "KOGITO-9676 CI: Promote call setup-branch job",
@@ -15889,6 +15830,91 @@
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-serverless-operator/pulls{/number}",
       "pullRequests": [
         {
+          "number": 220,
+          "title": "[1.42.x] Update project version to 1.42.0",
+          "url": "https://api.github.com/repos/kiegroup/kogito-serverless-operator/pulls/220",
+          "html_url": "https://github.com/kiegroup/kogito-serverless-operator/pull/220",
+          "state": "open",
+          "labels": [],
+          "draft": false,
+          "requested_reviewers": [],
+          "created_at": "2023-08-07T08:04:37Z",
+          "updated_at": "2023-08-07T08:21:30Z",
+          "closed_at": null,
+          "merged_at": null,
+          "base": {
+            "ref": "1.42.x",
+            "sha": "0647c220f815e4ecbf361b14f42bd795186c4675",
+            "label": "kiegroup:1.42.x"
+          },
+          "head": {
+            "ref": "1.42.0-bb2j3u5psv",
+            "sha": "8b5e4a9b86a6a49970194da71a2ad2a55b6682ae",
+            "label": "kiegroup:1.42.0-bb2j3u5psv"
+          },
+          "user": {
+            "login": "kie-ci3",
+            "avatar_url": "https://avatars.githubusercontent.com/u/106377484?v=4",
+            "html_url": "https://github.com/kie-ci3"
+          },
+          "checks": [
+            {
+              "id": 15669685583,
+              "name": "Unit tests And Coverage",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5782581351/job/15669685583",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-08-07T08:04:49Z",
+              "completed_at": "2023-08-07T08:08:20Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 15669685172,
+              "name": "Check files generation",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5782581351/job/15669685172",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-08-07T08:04:49Z",
+              "completed_at": "2023-08-07T08:07:55Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 15669684913,
+              "name": "End-to-end tests (Minikube)",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5782581350/job/15669684913",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-08-07T08:04:50Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 15669684911,
+              "name": "Check headers",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5782581351/job/15669684911",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-08-07T08:04:47Z",
+              "completed_at": "2023-08-07T08:04:57Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 24453267976,
+              "name": "Openshift tests",
+              "html_url": "https://jenkins-kogito-tools.kogito-cluster-0ad6762cc85bcef5745bb684498c2436-0000.us-south.containers.appdomain.cloud/job/kogito/job/kogito-serverless-operator-PR-check/410/display/redirect",
+              "conclusion": "failure",
+              "started_at": "2023-08-07T08:21:34Z",
+              "completed_at": "2023-08-07T08:21:34Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            }
+          ]
+        },
+        {
           "number": 219,
           "title": "[1.42.x] [KOGITO-8276] Fix setup log",
           "url": "https://api.github.com/repos/kiegroup/kogito-serverless-operator/pulls/219",
@@ -19925,15 +19951,9 @@
           "state": "open",
           "labels": [],
           "draft": false,
-          "requested_reviewers": [
-            {
-              "login": "radtriste",
-              "avatar_url": "https://avatars.githubusercontent.com/u/17157711?v=4",
-              "html_url": "https://github.com/radtriste"
-            }
-          ],
+          "requested_reviewers": [],
           "created_at": "2023-08-03T20:54:54Z",
-          "updated_at": "2023-08-07T04:35:15Z",
+          "updated_at": "2023-08-07T08:01:18Z",
           "closed_at": null,
           "merged_at": null,
           "base": {
@@ -19943,7 +19963,7 @@
           },
           "head": {
             "ref": "kogito-9218",
-            "sha": "4bbdc247b94b33e78a0f28b3e93275d5de3506dd",
+            "sha": "47387c7ae3514272aa923cc0ec6b54331f9613ed",
             "label": "ricardozanini:kogito-9218"
           },
           "user": {
@@ -19953,67 +19973,67 @@
           },
           "checks": [
             {
-              "id": 15632586454,
+              "id": 15669533801,
               "name": "Mixed content - tangerine-crostata-04a6bf",
-              "html_url": "https://github.com/kiegroup/kogito-docs/runs/15632586454",
+              "html_url": "https://github.com/kiegroup/kogito-docs/runs/15669533801",
               "status": "completed",
               "conclusion": "success",
-              "started_at": "2023-08-04T19:25:41Z",
-              "completed_at": "2023-08-04T19:26:12Z",
+              "started_at": "2023-08-07T07:59:44Z",
+              "completed_at": "2023-08-07T08:00:11Z",
               "slug": "netlify",
               "avatar_url": "https://avatars.githubusercontent.com/u/7892489?v=4"
             },
             {
-              "id": 15632586340,
+              "id": 15669533679,
               "name": "Redirect rules - tangerine-crostata-04a6bf",
-              "html_url": "https://github.com/kiegroup/kogito-docs/runs/15632586340",
+              "html_url": "https://github.com/kiegroup/kogito-docs/runs/15669533679",
               "status": "completed",
               "conclusion": "neutral",
-              "started_at": "2023-08-04T19:25:41Z",
-              "completed_at": "2023-08-04T19:26:12Z",
+              "started_at": "2023-08-07T07:59:44Z",
+              "completed_at": "2023-08-07T08:00:11Z",
               "slug": "netlify",
               "avatar_url": "https://avatars.githubusercontent.com/u/7892489?v=4"
             },
             {
-              "id": 15632586232,
+              "id": 15669533581,
               "name": "Header rules - tangerine-crostata-04a6bf",
-              "html_url": "https://github.com/kiegroup/kogito-docs/runs/15632586232",
+              "html_url": "https://github.com/kiegroup/kogito-docs/runs/15669533581",
               "status": "completed",
               "conclusion": "neutral",
-              "started_at": "2023-08-04T19:25:41Z",
-              "completed_at": "2023-08-04T19:26:12Z",
+              "started_at": "2023-08-07T07:59:44Z",
+              "completed_at": "2023-08-07T08:00:11Z",
               "slug": "netlify",
               "avatar_url": "https://avatars.githubusercontent.com/u/7892489?v=4"
             },
             {
-              "id": 15632586103,
+              "id": 15669533463,
               "name": "Pages changed - tangerine-crostata-04a6bf",
-              "html_url": "https://github.com/kiegroup/kogito-docs/runs/15632586103",
+              "html_url": "https://github.com/kiegroup/kogito-docs/runs/15669533463",
               "status": "completed",
               "conclusion": "neutral",
-              "started_at": "2023-08-04T19:25:41Z",
-              "completed_at": "2023-08-04T19:26:12Z",
+              "started_at": "2023-08-07T07:59:44Z",
+              "completed_at": "2023-08-07T08:00:11Z",
               "slug": "netlify",
               "avatar_url": "https://avatars.githubusercontent.com/u/7892489?v=4"
             },
             {
-              "id": 15632579486,
+              "id": 15669519052,
               "name": "Building Serverless Workflow Documentation with Antora",
-              "html_url": "https://github.com/kiegroup/kogito-docs/actions/runs/5765833470/job/15632579486",
+              "html_url": "https://github.com/kiegroup/kogito-docs/actions/runs/5782525609/job/15669519052",
               "status": "completed",
               "conclusion": "success",
-              "started_at": "2023-08-04T19:25:30Z",
-              "completed_at": "2023-08-04T19:26:35Z",
+              "started_at": "2023-08-07T07:59:16Z",
+              "completed_at": "2023-08-07T08:00:11Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
             {
-              "id": 24439416769,
+              "id": 24452916914,
               "name": "netlify/tangerine-crostata-04a6bf/deploy-preview",
               "html_url": "https://deploy-preview-427--tangerine-crostata-04a6bf.netlify.app",
               "conclusion": "success",
-              "started_at": "2023-08-04T19:26:13Z",
-              "completed_at": "2023-08-04T19:26:13Z",
+              "started_at": "2023-08-07T08:00:12Z",
+              "completed_at": "2023-08-07T08:00:12Z",
               "slug": false,
               "avatar_url": "https://avatars.githubusercontent.com/in/13473?v=4"
             }
@@ -20121,201 +20141,6 @@
               "conclusion": "success",
               "started_at": "2023-08-02T08:02:57Z",
               "completed_at": "2023-08-02T08:02:57Z",
-              "slug": false,
-              "avatar_url": "https://avatars.githubusercontent.com/in/13473?v=4"
-            }
-          ]
-        },
-        {
-          "number": 425,
-          "title": "Update operator installation instructions to new prefix",
-          "url": "https://api.github.com/repos/kiegroup/kogito-docs/pulls/425",
-          "html_url": "https://github.com/kiegroup/kogito-docs/pull/425",
-          "state": "open",
-          "labels": [
-            "backport-1.40.x",
-            "backport-1.41.x",
-            "backport-1.40.x-prod",
-            "backport-1.42.x"
-          ],
-          "draft": false,
-          "requested_reviewers": [
-            {
-              "login": "MarianMacik",
-              "avatar_url": "https://avatars.githubusercontent.com/u/6797884?v=4",
-              "html_url": "https://github.com/MarianMacik"
-            }
-          ],
-          "created_at": "2023-08-01T20:55:16Z",
-          "updated_at": "2023-08-07T04:36:01Z",
-          "closed_at": null,
-          "merged_at": null,
-          "base": {
-            "ref": "main",
-            "sha": "938e6af363008310e15d3a27fe1d99be234f581b",
-            "label": "kiegroup:main"
-          },
-          "head": {
-            "ref": "update_operator_install_doc",
-            "sha": "9f13598c8ead9556cbd462d112ce97c4cdbdb822",
-            "label": "masayag:update_operator_install_doc"
-          },
-          "user": {
-            "login": "masayag",
-            "avatar_url": "https://avatars.githubusercontent.com/u/316242?v=4",
-            "html_url": "https://github.com/masayag"
-          },
-          "checks": [
-            {
-              "id": 15632470540,
-              "name": "Building Serverless Workflow Documentation with Antora",
-              "html_url": "https://github.com/kiegroup/kogito-docs/actions/runs/5763980284/job/15632470540",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-08-04T19:20:21Z",
-              "completed_at": "2023-08-04T19:21:12Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 15632470236,
-              "name": "[${{ matrix.target-branch }}] - Backporting",
-              "html_url": "https://github.com/kiegroup/kogito-docs/actions/runs/5765798510/job/15632470236",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-08-04T19:20:14Z",
-              "completed_at": "2023-08-04T19:20:14Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 15632469993,
-              "name": "[${{ matrix.target-branch }}] - Backporting",
-              "html_url": "https://github.com/kiegroup/kogito-docs/actions/runs/5765798493/job/15632469993",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-08-04T19:20:13Z",
-              "completed_at": "2023-08-04T19:20:13Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 15632469987,
-              "name": "[${{ matrix.target-branch }}] - Backporting",
-              "html_url": "https://github.com/kiegroup/kogito-docs/actions/runs/5765798468/job/15632469987",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-08-04T19:20:13Z",
-              "completed_at": "2023-08-04T19:20:13Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 15632469980,
-              "name": "[${{ matrix.target-branch }}] - Backporting",
-              "html_url": "https://github.com/kiegroup/kogito-docs/actions/runs/5765798447/job/15632469980",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-08-04T19:20:13Z",
-              "completed_at": "2023-08-04T19:20:13Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 15632469712,
-              "name": "compute-targets",
-              "html_url": "https://github.com/kiegroup/kogito-docs/actions/runs/5765798510/job/15632469712",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-08-04T19:20:13Z",
-              "completed_at": "2023-08-04T19:20:13Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 15632469513,
-              "name": "compute-targets",
-              "html_url": "https://github.com/kiegroup/kogito-docs/actions/runs/5765798447/job/15632469513",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-08-04T19:20:12Z",
-              "completed_at": "2023-08-04T19:20:12Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 15632469500,
-              "name": "compute-targets",
-              "html_url": "https://github.com/kiegroup/kogito-docs/actions/runs/5765798493/job/15632469500",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-08-04T19:20:12Z",
-              "completed_at": "2023-08-04T19:20:12Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 15632469474,
-              "name": "compute-targets",
-              "html_url": "https://github.com/kiegroup/kogito-docs/actions/runs/5765798468/job/15632469474",
-              "status": "completed",
-              "conclusion": "skipped",
-              "started_at": "2023-08-04T19:20:12Z",
-              "completed_at": "2023-08-04T19:20:12Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 15626950750,
-              "name": "Mixed content - tangerine-crostata-04a6bf",
-              "html_url": "https://github.com/kiegroup/kogito-docs/runs/15626950750",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-08-04T15:34:27Z",
-              "completed_at": "2023-08-04T15:35:03Z",
-              "slug": "netlify",
-              "avatar_url": "https://avatars.githubusercontent.com/u/7892489?v=4"
-            },
-            {
-              "id": 15626950557,
-              "name": "Redirect rules - tangerine-crostata-04a6bf",
-              "html_url": "https://github.com/kiegroup/kogito-docs/runs/15626950557",
-              "status": "completed",
-              "conclusion": "neutral",
-              "started_at": "2023-08-04T15:34:27Z",
-              "completed_at": "2023-08-04T15:35:03Z",
-              "slug": "netlify",
-              "avatar_url": "https://avatars.githubusercontent.com/u/7892489?v=4"
-            },
-            {
-              "id": 15626950133,
-              "name": "Header rules - tangerine-crostata-04a6bf",
-              "html_url": "https://github.com/kiegroup/kogito-docs/runs/15626950133",
-              "status": "completed",
-              "conclusion": "neutral",
-              "started_at": "2023-08-04T15:34:27Z",
-              "completed_at": "2023-08-04T15:35:03Z",
-              "slug": "netlify",
-              "avatar_url": "https://avatars.githubusercontent.com/u/7892489?v=4"
-            },
-            {
-              "id": 15626949983,
-              "name": "Pages changed - tangerine-crostata-04a6bf",
-              "html_url": "https://github.com/kiegroup/kogito-docs/runs/15626949983",
-              "status": "completed",
-              "conclusion": "neutral",
-              "started_at": "2023-08-04T15:34:27Z",
-              "completed_at": "2023-08-04T15:35:03Z",
-              "slug": "netlify",
-              "avatar_url": "https://avatars.githubusercontent.com/u/7892489?v=4"
-            },
-            {
-              "id": 24435513311,
-              "name": "netlify/tangerine-crostata-04a6bf/deploy-preview",
-              "html_url": "https://deploy-preview-425--tangerine-crostata-04a6bf.netlify.app",
-              "conclusion": "success",
-              "started_at": "2023-08-04T15:35:04Z",
-              "completed_at": "2023-08-04T15:35:04Z",
               "slug": false,
               "avatar_url": "https://avatars.githubusercontent.com/in/13473?v=4"
             }
