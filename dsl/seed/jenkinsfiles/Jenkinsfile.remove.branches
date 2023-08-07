@@ -47,15 +47,14 @@ pipeline {
         stage('Remove branch from the main config') {
             steps {
                 script{
-                    dir("${getRepo()}/dsl/config"){
-                        String branchConfigFile = 'main.yaml'
+                    dir(getRepo()){
                         // Update branch config
-                        def branchConfig = readYaml file: branchConfigFile
+                        def config = readYaml file: env.CONFIG_FILE_PATH
                         // remove lines in yaml.file
-                        branchConfig.git.branches = branchConfig.git.branches.findAll { it.name != "${getRemoveBranch()}" }
-                        echo "Write dsl branch_config => ${branchConfig}"
-                        sh "rm -f ${branchConfigFile}"
-                        writeYaml file: "${branchConfigFile}", data: branchConfig, overwrite: true
+                        config.git.branches = config.git.branches.findAll { it.name != "${getRemoveBranch()}" }
+                        echo "Write dsl branch_config => ${config}"
+                        sh "rm -f ${env.CONFIG_FILE_PATH}"
+                        writeYaml file: "${env.CONFIG_FILE_PATH}", data: config, overwrite: true
                     }
                 }
             }
