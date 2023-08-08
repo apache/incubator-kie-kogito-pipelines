@@ -76,6 +76,7 @@ class KogitoJobUtils {
             parameters {
                 stringParam('NEW_VERSION', '', 'Which version to set ?')
                 stringParam('PR_BRANCH', '', '(Optional) Which PR branch name to use ? If none given, a name will be generated automatically.')
+                stringParam('JIRA_NUMBER', '', '(Optional) Is there any issues.redhat.com JIRA associated to that change ? .')
             }
         }
         return job
@@ -125,6 +126,7 @@ class KogitoJobUtils {
             parameters {
                 stringParam('NEW_VERSION', '', 'Which version to set ?')
                 stringParam('PR_BRANCH', '', '(Optional) Which PR branch name to use ? If none given, a name will be generated automatically.')
+                stringParam('JIRA_NUMBER', '', '(Optional) Is there any issues.redhat.com JIRA associated to that change ? .')
             }
         }
         return job
