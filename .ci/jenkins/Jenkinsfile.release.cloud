@@ -41,8 +41,6 @@ pipeline {
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
 
         IMAGE_NAME_NIGHTLY_SUFFIX = 'nightly'
-
-        PR_BRANCH_HASH = "${util.generateHash(10)}"
     }
 
     stages {
