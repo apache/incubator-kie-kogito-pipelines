@@ -183,7 +183,7 @@ pipeline {
                     addBooleanParam(buildParams, 'DEPLOY_AS_LATEST', isDeployAsLatest())
                     addSkipTestsParam(buildParams)
 
-                    buildJob('0-kogito-release-cloud', buildParams, false)
+                    build(job: "./0-kogito-release-cloud", wait: false, parameters: buildParams, propagate: false)
                 }
             }
         }
