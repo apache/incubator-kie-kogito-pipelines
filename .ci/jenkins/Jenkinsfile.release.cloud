@@ -427,9 +427,7 @@ List getDefaultBuildParams(String version) {
     List buildParams = []
     addDisplayNameParam(buildParams, getDisplayName(version))
     addStringParam(buildParams, 'PROJECT_VERSION', version)
-    if ( kogitoPrBranch == '' ) {
-        addStringParam(buildParams, 'KOGITO_PR_BRANCH', "${kogitoPrBranch}")
-    }
+    addStringParam(buildParams, 'KOGITO_PR_BRANCH', KOGITO_PR_BRANCH?.trim() ?: "kogito-${version}")
     return buildParams
 }
 
