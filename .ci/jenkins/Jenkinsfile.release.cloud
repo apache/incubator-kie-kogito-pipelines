@@ -257,6 +257,16 @@ pipeline {
                 }
             }
         }
+
+        stage('Setup next snapshot version') {
+            steps {
+                script {
+                    def buildParams = []
+                    addStringParam(buildParams, 'KOGITO_VERSION', util.getNextVersion(getKogitoVersion(), 'micro'))
+                    build(job: '../setup-branch/0-setup-branch-cloud', wait: false, parameters: buildParams, propagate: false)
+                }
+            }
+        }
     }
     post {
         always {

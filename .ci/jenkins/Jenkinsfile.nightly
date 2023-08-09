@@ -6,10 +6,7 @@ import org.jenkinsci.plugins.workflow.libs.Library
 RUNTIMES_DEPLOY = 'kogito-runtimes.build-and-deploy'
 APPS_DEPLOY = 'kogito-apps.build-and-deploy'
 EXAMPLES_DEPLOY = 'kogito-examples.build-and-deploy'
-IMAGES_DEPLOY = 'kogito-images-deploy'
-EXAMPLES_IMAGES_DEPLOY = 'kogito-examples-images-deploy'
-OPERATOR_DEPLOY = 'kogito-operator-deploy'
-SEVERLESS_OPERATOR_DEPLOY = 'kogito-serverless-operator-deploy'
+QUARKUS_PLATFORM_DEPLOY = 'quarkus-platform.deploy'
 
 // Map of executed jobs
 // See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
@@ -19,12 +16,6 @@ JOBS = [:]
 FAILED_STAGES = [:]
 UNSTABLE_STAGES = [:]
 
-defaultImageParamsPrefix = 'IMAGE'
-kogitoImagesParamsPrefix = 'KOGITO_IMAGES'
-examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
-baseImageParamsPrefix = 'BASE_IMAGE'
-promoteImageParamsPrefix = 'PROMOTE_IMAGE'
-
 // Should be multibranch pipeline
 pipeline {
     agent {
@@ -32,7 +23,7 @@ pipeline {
     }
 
     options {
-        timeout(time: 1380, unit: 'MINUTES')
+        timeout(time: 720, unit: 'MINUTES')
     }
 
     // parameters {
@@ -41,10 +32,7 @@ pipeline {
 
     environment {
         // Some generated env is also defined into ./dsl/jobs.groovy file
-
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
-
-        IMAGE_NAME_NIGHTLY_SUFFIX = 'nightly'
 
         // Use branch name in nightly tag as we may have parallel main and release branch builds
         NIGHTLY_TAG = """${getBuildBranch()}-${sh(
@@ -65,266 +53,97 @@ pipeline {
         }
 
         stage('Build & Deploy artifacts') {
-            when {
-                expression { return isArtifactsDeploy() }
-            }
-            stages {
-                stage('Build & Deploy base artifacts') {
-                    parallel {
-                        stage('Build & Deploy Kogito Runtimes') {
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams()
-                                    addSkipTestsParam(buildParams)
-                                    addSkipIntegrationTestsParam(buildParams)
-
-                                    // images and operator deploy testing will use older working artifacts if that one fails
-                                    buildJob(RUNTIMES_DEPLOY, buildParams)
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage(RUNTIMES_DEPLOY)
-                                }
-                            }
-                        }
-
-                        stage('Build & Deploy Kogito Apps') {
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams()
-                                    addSkipTestsParam(buildParams)
-                                    addSkipIntegrationTestsParam(buildParams)
-
-                                    // images and operator deploy testing will use older working artifacts if that one fails
-                                    buildJob(APPS_DEPLOY, buildParams)
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage(APPS_DEPLOY)
-                                }
-                            }
-                        }
-                        
-                        stage('Deploy Quarkus platform') {
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams()
-                                    buildJob('quarkus-platform.deploy', buildParams)
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage('quarkus-platform.deploy')
-                                }
-                            }
-                        }
-
-                        stage('Build & Deploy Kogito Examples') {
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams()
-                                    addSkipTestsParam(buildParams)
-                                    addSkipIntegrationTestsParam(buildParams)
-
-                                    // images and operator deploy testing will use older working artifacts if that one fails
-                                    buildJob(EXAMPLES_DEPLOY, buildParams)
-
-                                    if (isJobSucceeded(EXAMPLES_DEPLOY) || isJobUnstable(EXAMPLES_DEPLOY)) {
-                                        // Update examples nightly branch
-                                        dir('kogito-examples') {
-                                            deleteDir()
-                                            checkout(githubscm.resolveRepository('kogito-examples', getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsID()))
-                                            String nightlyBranch = "nightly-${getBuildBranch()}"
-                                            githubscm.createBranch(nightlyBranch)
-                                            githubscm.pushObject('origin', nightlyBranch, getGitAuthorCredsID())
-                                        }
-                                    }
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage(EXAMPLES_DEPLOY)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Build & Deploy Images') {
-            when {
-                expression { return isImagesDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                    addDeployImageWithLatestTagParam(buildParams)
-
-                    // For building
-                    addAppsParam(buildParams)
-
-                    // For testing
-                    addSkipTestsParam(buildParams)
-                    addExamplesParam(buildParams)
-
-                    // Ask to create the PR with changes occuring in this
-                    addBooleanParam(buildParams, 'CREATE_PR', true)
-
-                    buildJob(IMAGES_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(IMAGES_DEPLOY)
-                }
-            }
-        }
-
-        stage('Build examples images & BDD testing') {
             parallel {
-                stage('Main Build examples images & BDD testing') {
-                    stages {
-                        stage('Build & Deploy Examples Images') {
-                            when {
-                                expression { return isExamplesImagesDeploy() }
-                            }
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams()
-                                    addSkipTestsParam(buildParams)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                                    addDeployImageWithLatestTagParam(buildParams)
-
-                                    // For BDD tests
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                                    addExamplesParam(buildParams)
-
-                                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams)
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage(EXAMPLES_IMAGES_DEPLOY)
-                                }
-                            }
-                        }
-                        stage('Build & Deploy Operator') {
-                            when {
-                                expression { return isOperatorDeploy() }
-                            }
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams()
-                                    addSkipTestsParam(buildParams)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                                    addDeployImageWithLatestTagParam(buildParams)
-
-                                    // For BDD tests
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix)
-                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
-                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
-                                    addExamplesParam(buildParams)
-
-                                    buildJob(OPERATOR_DEPLOY, buildParams)
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage(OPERATOR_DEPLOY)
-                                }
-                            }
-                        }
-                    }
-                }
-                stage('Mandrel Build examples images & BDD testing') {
-                    when {
-                        expression { return getNativeBuilderImage() }
-                    }
-                    stages {
-                        stage('Build & Deploy Examples Images with Mandrel') {
-                            when {
-                                expression { return isExamplesImagesDeploy() }
-                            }
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams(getBuildBranch(), 'mandrel')
-                                    addSkipTestsParam(buildParams)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, defaultImageParamsPrefix, 'mandrel')
-                                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                                    addDeployImageWithLatestTagParam(buildParams)
-
-                                    // For BDD tests
-                                    addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getNativeBuilderImage())
-                                    addStringParam(buildParams, 'BDD_TEST_TAGS', '~@ignorelts')
-                                    addBooleanParam(buildParams, 'SKIP_NON_NATIVE_TESTS', true)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                                    addExamplesParam(buildParams)
-
-                                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams, getMandrelJobKey(EXAMPLES_IMAGES_DEPLOY))
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage(getMandrelJobKey(EXAMPLES_IMAGES_DEPLOY))
-                                }
-                            }
-                        }
-                        stage('Build & Deploy Operator with Mandrel') {
-                            when {
-                                expression { return getNativeBuilderImage() && isOperatorDeploy() }
-                            }
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams(getBuildBranch(), 'mandrel')
-                                    addSkipTestsParam(buildParams)
-                                    addBooleanParam(buildParams, 'SKIP_DEPLOY', true)
-
-                                    // For BDD tests
-                                    addStringParam(buildParams, 'NATIVE_BUILDER_IMAGE', getNativeBuilderImage())
-                                    addStringParam(buildParams, 'BDD_TEST_TAGS', '~@ignorelts')
-                                    addBooleanParam(buildParams, 'SKIP_NON_NATIVE_TESTS', true)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix, 'mandrel')
-                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
-                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
-                                    addExamplesParam(buildParams)
-
-                                    buildJob(OPERATOR_DEPLOY, buildParams, getMandrelJobKey(OPERATOR_DEPLOY))
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage(getMandrelJobKey(OPERATOR_DEPLOY))
-                                }
-                            }
-                        }
-                    }
-                }
-                stage('Build & Deploy Serverless Operator') {
-                    when {
-                        expression { return isOperatorDeploy() }
-                    }
+                stage('Build & Deploy Kogito Runtimes') {
                     steps {
                         script {
                             def buildParams = getDefaultBuildParams()
                             addSkipTestsParam(buildParams)
-                            addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                            addDeployImageWithLatestTagParam(buildParams)
+                            addSkipIntegrationTestsParam(buildParams)
 
-                            buildJob(SEVERLESS_OPERATOR_DEPLOY, buildParams)
+                            // images and operator deploy testing will use older working artifacts if that one fails
+                            buildJob(RUNTIMES_DEPLOY, buildParams)
                         }
                     }
                     post {
                         failure {
-                            addFailedStage(SEVERLESS_OPERATOR_DEPLOY)
+                            addFailedStage(RUNTIMES_DEPLOY)
                         }
                     }
+                }
+
+                stage('Build & Deploy Kogito Apps') {
+                    steps {
+                        script {
+                            def buildParams = getDefaultBuildParams()
+                            addSkipTestsParam(buildParams)
+                            addSkipIntegrationTestsParam(buildParams)
+
+                            // images and operator deploy testing will use older working artifacts if that one fails
+                            buildJob(APPS_DEPLOY, buildParams)
+                        }
+                    }
+                    post {
+                        failure {
+                            addFailedStage(APPS_DEPLOY)
+                        }
+                    }
+                }
+
+                stage('Deploy Quarkus platform') {
+                    steps {
+                        script {
+                            def buildParams = getDefaultBuildParams()
+                            buildJob(QUARKUS_PLATFORM_DEPLOY, buildParams)
+                        }
+                    }
+                    post {
+                        failure {
+                            addFailedStage(QUARKUS_PLATFORM_DEPLOY)
+                        }
+                    }
+                }
+
+                stage('Build & Deploy Kogito Examples') {
+                    steps {
+                        script {
+                            def buildParams = getDefaultBuildParams()
+                            addSkipTestsParam(buildParams)
+                            addSkipIntegrationTestsParam(buildParams)
+
+                            // images and operator deploy testing will use older working artifacts if that one fails
+                            buildJob(EXAMPLES_DEPLOY, buildParams)
+
+                            if (isJobSucceeded(EXAMPLES_DEPLOY) || isJobUnstable(EXAMPLES_DEPLOY)) {
+                                // Update examples nightly branch
+                                dir('kogito-examples') {
+                                    deleteDir()
+                                    checkout(githubscm.resolveRepository('kogito-examples', getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsID()))
+                                    String nightlyBranch = "nightly-${getBuildBranch()}"
+                                    githubscm.createBranch(nightlyBranch)
+                                    githubscm.pushObject('origin', nightlyBranch, getGitAuthorCredsID())
+                                }
+                            }
+                        }
+                    }
+                    post {
+                        failure {
+                            addFailedStage(EXAMPLES_DEPLOY)
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Start Cloud nightly') {
+            when {
+                expression { !params.SKIP_CLOUD_NIGHTLY }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    build(job: './0-kogito-nightly-cloud', wait: false, parameters: buildParams, propagate: false)
                 }
             }
         }
@@ -367,10 +186,6 @@ boolean isJobUnstable(String jobKey) {
     return getJob(jobKey)?.result == 'UNSTABLE'
 }
 
-String getMandrelJobKey(String jobName) {
-    return "${jobName}-mandrel"
-}
-
 void addFailedStage(String jobKey = '') {
     FAILED_STAGES.put("${env.STAGE_NAME}", jobKey)
 }
@@ -380,21 +195,6 @@ void addUnstableStage(String jobKey = '') {
 
 void sendPipelineErrorNotification() {
     String bodyMsg = "Kogito nightly job #${env.BUILD_NUMBER} was: ${currentBuild.currentResult}"
-
-    paramsStr = ''
-    if (params.SKIP_TESTS) {
-        paramsStr += '\n- Tests skipped'
-    }
-    if (params.SKIP_ARTIFACTS) {
-        paramsStr += '\n- Artifacts skipped'
-    }
-    if (params.SKIP_IMAGES) {
-        paramsStr += '\n- Images skipped'
-    }
-    if (params.SKIP_OPERATOR) {
-        paramsStr += '\n- Operator skipped'
-    }
-    bodyMsg += paramsStr ? "\n\nConfiguration:${paramsStr}" : '\n'
 
     if (FAILED_STAGES.size() > 0) {
         bodyMsg += '\nFailed stages: \n- '
@@ -411,10 +211,9 @@ void sendPipelineErrorNotification() {
                 to: env.KOGITO_CI_EMAIL_TO
 }
 
-List getDefaultBuildParams(String buildBranchName = '', String key = '') {
-    buildBranchName = buildBranchName ?: getBuildBranch()
+List getDefaultBuildParams() {
     List params = []
-    addStringParam(params, 'DISPLAY_NAME', "${key ? "${key}-" : ''}${env.NIGHTLY_TAG}")
+    addStringParam(params, 'DISPLAY_NAME', env.NIGHTLY_TAG)
     addBooleanParam(params, 'SEND_NOTIFICATION', true)
 
     return params
@@ -428,38 +227,12 @@ void addSkipIntegrationTestsParam(buildParams) {
     addBooleanParam(buildParams, 'SKIP_INTEGRATION_TESTS', params.SKIP_TESTS)
 }
 
-void addAppsParam(buildParams) {
-    addStringParam(buildParams, 'APPS_REF', "${getBuildBranch()}")
-    addStringParam(buildParams, 'APPS_URI', "https://github.com/${getGitAuthor()}/kogito-apps")
-}
-
-void addExamplesParam(buildParams) {
-    addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
-    addStringParam(buildParams, 'EXAMPLES_REF', "nightly-${getBuildBranch()}")
-}
-
-void addImageBuildParams(List buildParams, String tag, String paramsPrefix = defaultImageParamsPrefix, String extraSuffix = '') {
-    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
-    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
-    addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
-    addStringParam(buildParams, constructKey(paramsPrefix, 'NAME_SUFFIX'), (extraSuffix ? "${extraSuffix}-" : '') + env.IMAGE_NAME_NIGHTLY_SUFFIX)
-    addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)
-}
-
-void addDeployImageWithLatestTagParam(buildParams) {
-    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
-}
-
 void addStringParam(List params, String key, String value) {
     params.add(string(name: key, value: value))
 }
 
 void addBooleanParam(List params, String key, boolean value) {
     params.add(booleanParam(name: key, value: value))
-}
-
-String constructKey(String prefix, String paramId) {
-    return prefix ? "${prefix}_${paramId}" : paramId
 }
 
 String getBuildBranch() {
@@ -472,32 +245,4 @@ String getGitAuthor() {
 
 String getGitAuthorCredsID() {
     return env.GIT_AUTHOR_CREDS_ID
-}
-
-boolean isDeployImagesLatestTag() {
-    return getBuildBranch() == env.BRANCH_FOR_LATEST
-}
-
-boolean isArtifactsDeploy() {
-    return !params.SKIP_ARTIFACTS
-}
-
-boolean isImagesDeploy() {
-    return !params.SKIP_IMAGES
-}
-
-boolean isExamplesImagesDeploy() {
-    return !params.SKIP_EXAMPLES_IMAGES
-}
-
-boolean isOperatorDeploy() {
-    return !params.SKIP_OPERATOR
-}
-
-String getNativeBuilderImage() {
-    return env.NATIVE_BUILDER_IMAGE
-}
-
-String getArtifactsRepositoryParam() {
-    return env['ARTIFACTS_REPOSITORY'] ?: ''
 }
