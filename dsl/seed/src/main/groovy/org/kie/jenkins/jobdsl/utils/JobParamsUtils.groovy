@@ -26,6 +26,7 @@ class JobParamsUtils {
                 token_credentials: Utils.getGitAuthorTokenCredsId(script)
             ],
             parametersClosures: [],
+            parametersValues: [:],
             env: [
                 REPO_NAME: repository,
             ],

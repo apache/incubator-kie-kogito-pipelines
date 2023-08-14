@@ -40,6 +40,8 @@ if (isBranchBuildChainType()) {
 skipTests = params.SKIP_TESTS ?: false
 skipIntegrationTests = params.SKIP_INTEGRATION_TESTS ?: false
 
+launchDownstreamJobs = env.LAUNCH_DOWNSTREAM_JOBS ? env.LAUNCH_DOWNSTREAM_JOBS.split(',') : []
+
 notificationJobName = env.NOTIFICATION_JOB_NAME ?: 'PR'
 
 pipeline {
@@ -178,6 +180,19 @@ pipeline {
                     // Upload to specific repository with credentials
                     String mavenDeployRepositoryZipUrl = "${mavenDeployRepository.replaceAll('/content/', '/service/local/').replaceFirst('/*$', '')}/content-compressed"
                     maven.uploadLocalArtifacts(mavenDeployRepositoryCredsId, getMavenDeployLocalDir(), mavenDeployRepositoryZipUrl)
+                }
+            }
+        }
+        stage('Trigger downstream jobs') {
+            when {
+                expression { return launchDownstreamJobs }
+            }
+            steps {
+                script {
+                    launchDownstreamJobs.each {
+                        echo "Launch downstream jobs with path ${it}"
+                        build(job: "${it}", wait: false, parameters: [], propagate: false)
+                    }
                 }
             }
         }

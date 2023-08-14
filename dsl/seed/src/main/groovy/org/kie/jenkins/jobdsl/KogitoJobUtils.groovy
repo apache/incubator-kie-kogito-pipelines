@@ -271,8 +271,20 @@ class KogitoJobUtils {
     *
     */
     static def createNightlyBuildChainIntegrationJob(def script, String envName, String repository, boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        return createBuildChainIntegrationJob(script, envName, repository, enableNotification) { jenkinsScript ->
+            def jobParams = defaultJobParamsGetter(jenkinsScript)
+            jobParams.triggers = jobParams.triggers ?: [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
+        }
+    }
+
+    /**
+    * Create a job creating an integration branch when performing the build
+    *
+    * This job will call the build-chain with extra environment variables to allow for the creation of an integration branch
+    *
+    */
+    static def createBuildChainIntegrationJob(def script, String envName, String repository, boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
         def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${repository}.integration", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Integration with Quarkus for ${repository} using the build-chain", defaultJobParamsGetter)
-        jobParams.triggers = jobParams.triggers ?: [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
         if (!envName) {
             throw new RuntimeException('Please provide a non-empty environment to generate an integration branch job...')
         }
@@ -294,12 +306,12 @@ class KogitoJobUtils {
         JobParamsUtils.setupJobParamsBuildChainConfiguration(script, jobParams, repository, 'branch', notificationJobName)
 
         jobParams.parametersClosures.add({
-            stringParam('DISPLAY_NAME', '', 'Setup a specific build display name')
+            stringParam('DISPLAY_NAME', jobParams.parametersValues?.DISPLAY_NAME ?: '', 'Setup a specific build display name')
 
             stringParam('GIT_BRANCH_NAME', Utils.getGitBranch(script), 'Set the Git branch to test')
 
-            booleanParam('SKIP_TESTS', false, 'Skip tests')
-            booleanParam('SKIP_INTEGRATION_TESTS', false, 'Skip IT tests')
+            booleanParam('SKIP_TESTS', jobParams.parametersValues?.SKIP_TESTS ?: false, 'Skip tests')
+            booleanParam('SKIP_INTEGRATION_TESTS', jobParams.parametersValues?.SKIP_INTEGRATION_TESTS ?: false, 'Skip IT tests')
         })
         jobParams.env.putAll([
             JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
