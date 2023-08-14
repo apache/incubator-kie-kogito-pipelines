@@ -202,8 +202,7 @@ void setupNightlyCloudJob() {
 }
 
 void setupQuarkus3NightlyJob() {
-    // TODO Tests would be done on 9.x/2.x branch => Create 2.x branch on Kogito
-
+    // Tests are done on 9.x/2.x branch => Create 2.x branch on Kogito
     // Need to split as Drools and Kogito end up in different integration branches
     KogitoJobUtils.createNightlyBuildChainIntegrationJob(this, 'quarkus-3', 'drools', true) { script ->
         def jobParams = JobParamsUtils.getDefaultJobParams(script, 'drools')

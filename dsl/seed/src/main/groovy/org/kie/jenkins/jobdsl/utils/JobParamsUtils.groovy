@@ -29,6 +29,7 @@ class JobParamsUtils {
             parametersValues: [:],
             env: [
                 REPO_NAME: repository,
+                STREAM: Utils.getStream(script),
             ],
             pr: [
                 target_repository: repository,
