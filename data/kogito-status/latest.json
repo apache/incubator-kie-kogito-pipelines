@@ -2,9 +2,9 @@
   "metadata": {
     "title": "Kogito Status",
     "subtitle": "Kiegroup Kogito organization repositories CI status",
-    "date": "2023-08-14T20:17:13.983Z",
+    "date": "2023-08-14T21:14:10.130Z",
     "createdBy": "GitHub Action",
-    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5860247321"
+    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5860737301"
   },
   "projects": [
     {
@@ -2034,7 +2034,7 @@
             }
           ],
           "created_at": "2023-08-11T14:15:49Z",
-          "updated_at": "2023-08-14T18:10:18Z",
+          "updated_at": "2023-08-14T21:11:12Z",
           "closed_at": null,
           "merged_at": null,
           "base": {
@@ -2171,12 +2171,12 @@
               "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
             },
             {
-              "id": 24575877300,
+              "id": 24579319176,
               "name": "(build) kogito-runtimes",
               "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.kogito-runtimes/3018/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-08-14T18:08:20Z",
-              "completed_at": "2023-08-14T18:08:20Z",
+              "conclusion": "failure",
+              "started_at": "2023-08-14T21:11:28Z",
+              "completed_at": "2023-08-14T21:11:28Z",
               "slug": true,
               "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
             }
@@ -14684,6 +14684,91 @@
       "repo_url": "https://github.com/kiegroup/kogito-serverless-operator",
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-serverless-operator/pulls{/number}",
       "pullRequests": [
+        {
+          "number": 229,
+          "title": "[KOGITO-8794] - Making deployment handler profile independent",
+          "url": "https://api.github.com/repos/kiegroup/kogito-serverless-operator/pulls/229",
+          "html_url": "https://github.com/kiegroup/kogito-serverless-operator/pull/229",
+          "state": "open",
+          "labels": [],
+          "draft": true,
+          "requested_reviewers": [],
+          "created_at": "2023-08-14T21:13:34Z",
+          "updated_at": "2023-08-14T21:13:34Z",
+          "closed_at": null,
+          "merged_at": null,
+          "base": {
+            "ref": "main",
+            "sha": "9d40c36fba5adbf9c8eeb1da0c20aa07db897f7c",
+            "label": "kiegroup:main"
+          },
+          "head": {
+            "ref": "kogito-8794",
+            "sha": "ef81d7b06df54dacf4b624037e2639d0c6a752e2",
+            "label": "ricardozanini:kogito-8794"
+          },
+          "user": {
+            "login": "ricardozanini",
+            "avatar_url": "https://avatars.githubusercontent.com/u/1538000?v=4",
+            "html_url": "https://github.com/ricardozanini"
+          },
+          "checks": [
+            {
+              "id": 15889413380,
+              "name": "Unit tests And Coverage",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5860735321/job/15889413380",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-08-14T21:13:47Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 15889413173,
+              "name": "Check headers",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5860735321/job/15889413173",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-08-14T21:13:46Z",
+              "completed_at": "2023-08-14T21:13:56Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 15889412948,
+              "name": "End-to-end tests (Minikube)",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5860735322/job/15889412948",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-08-14T21:13:48Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 15889412861,
+              "name": "Check files generation",
+              "html_url": "https://github.com/kiegroup/kogito-serverless-operator/actions/runs/5860735321/job/15889412861",
+              "status": "in_progress",
+              "conclusion": null,
+              "started_at": "2023-08-14T21:13:48Z",
+              "completed_at": null,
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 24579358977,
+              "name": "Openshift tests",
+              "html_url": "https://jenkins-kogito-tools.kogito-cluster-0ad6762cc85bcef5745bb684498c2436-0000.us-south.containers.appdomain.cloud/job/kogito/job/kogito-serverless-operator-PR-check/419/display/redirect",
+              "conclusion": "pending",
+              "started_at": "2023-08-14T21:13:44Z",
+              "completed_at": "2023-08-14T21:13:44Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            }
+          ]
+        },
         {
           "number": 228,
           "title": "fix: issues with kaniko build",
