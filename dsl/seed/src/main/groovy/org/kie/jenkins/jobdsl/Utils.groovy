@@ -75,6 +75,15 @@ class Utils {
         return getBindingValue(script, 'GIT_MAIN_BRANCH')
     }
 
+    static String getStream(def script) {
+        String gitMainBranch = Utils.getGitMainBranch(script)
+        if (gitMainBranch == 'main') {
+            return 'main'
+        } else {
+            return gitMainBranch.split("\\.")[0]
+        }
+    }
+
     static boolean hasGitAuthor(def script) {
         return hasBindingValue(script, 'GIT_AUTHOR_NAME')
     }

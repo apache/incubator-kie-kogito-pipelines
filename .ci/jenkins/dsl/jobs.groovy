@@ -7,37 +7,50 @@ import org.kie.jenkins.jobdsl.Utils
 
 JENKINSFILE_PATH = '.ci/jenkins'
 
+boolean isMainStream() {
+    return Utils.getStream(this) == 'main'
+}
+
 // PRs
 setupKogitoRuntimesBDDPrJob()
 
 // Tools
 setupUpdateJenkinsDependenciesJob()
-setupCreateIssueToolsJob()
-setupCleanOldNamespacesToolsJob()
-setupCleanOldNightlyImagesToolsJob()
-KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'kogito')
-KogitoJobUtils.createMainQuarkusUpdateToolsJob(this,
+if (isMainStream()) {
+    setupCreateIssueToolsJob()
+    setupCleanOldNamespacesToolsJob()
+    setupCleanOldNightlyImagesToolsJob()
+
+    KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'kogito')
+    if (Utils.isMainBranch(this)) {
+        setupBuildOperatorNode()
+    }
+
+    KogitoJobUtils.createMainQuarkusUpdateToolsJob(this,
         [ 'kogito-runtimes', 'kogito-examples', 'kogito-docs', 'kogito-images' ],
         [ 'radtriste', 'cristianonicolai' ]
-)
-if (Utils.isMainBranch(this)) {
-    setupBuildOperatorNode()
+    )
 }
 
 // Setup branch branch
 createSetupBranchJob()
-createSetupBranchCloudJob()
+if (isMainStream()) {
+    createSetupBranchCloudJob()
+}
 
 // Nightly
 setupNightlyJob()
-setupNightlyCloudJob()
-setupQuarkusPlatformJob(JobType.NIGHTLY)
-setupQuarkus3NightlyJob()
+if (isMainStream()) {
+    setupNightlyCloudJob()
+    setupQuarkusPlatformJob(JobType.NIGHTLY)
+    setupQuarkus3NightlyJob()
+}
 
 KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-main')
 KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-lts')
 KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-branch')
 KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'native-lts')
+KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-3')
 
 // Release
 setupReleaseArtifactsJob()
@@ -142,7 +155,7 @@ void createSetupBranchCloudJob() {
 
 void setupNightlyJob() {
     def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-nightly', JobType.NIGHTLY, "${JENKINSFILE_PATH}/Jenkinsfile.nightly", 'Kogito Nightly')
-    jobParams.triggers = [cron : '@midnight']
+    jobParams.triggers = [cron : isMainStream () ? '@midnight' : 'H 4 * * *']
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
