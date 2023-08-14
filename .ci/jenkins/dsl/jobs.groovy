@@ -201,7 +201,6 @@ void setupQuarkus3NightlyJob() {
         jobParams.env.put('LAUNCH_DOWNSTREAM_JOBS', 'kogito-runtimes.integration')
         jobParams.parametersValues.put('SKIP_TESTS', true)
         jobParams.parametersValues.put('SKIP_INTEGRATION_TESTS', true)
-        JobParamsUtils.setupJobParamsDeployConfiguration(script, jobParams)
         return jobParams
     }
     KogitoJobUtils.createBuildChainIntegrationJob(this, 'quarkus-3', 'kogito-runtimes', true) { script ->
@@ -213,7 +212,6 @@ void setupQuarkus3NightlyJob() {
         jobParams.env.put('NODE_OPTIONS', '--max_old_space_size=4096')
         jobParams.parametersValues.put('SKIP_TESTS', true)
         jobParams.parametersValues.put('SKIP_INTEGRATION_TESTS', true)
-        JobParamsUtils.setupJobParamsDeployConfiguration(script, jobParams)
         return jobParams
     }
 }
