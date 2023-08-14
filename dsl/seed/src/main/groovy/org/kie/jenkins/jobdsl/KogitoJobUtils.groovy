@@ -274,6 +274,7 @@ class KogitoJobUtils {
         return createBuildChainIntegrationJob(script, envName, repository, enableNotification) { jenkinsScript ->
             def jobParams = defaultJobParamsGetter(jenkinsScript)
             jobParams.triggers = jobParams.triggers ?: [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
+            return jobParams
         }
     }
 
