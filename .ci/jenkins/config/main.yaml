@@ -1,0 +1,27 @@
+ecosystem:
+  main_project: kogito
+  dependencies:
+  - name: drools
+  projects:
+  - name: kogito
+    default_main_version: 3.0.0-SNAPSHOT
+    regexs:
+    - kogito.*
+git:
+  branches:
+  - name: 2.x
+    main_branch: true
+    seed:
+      branch: main
+seed:
+  config_file:
+    git:
+      repository: kogito-pipelines
+      author:
+        name: kiegroup
+        credentials_id: kie-ci3
+      branch: 2.x-dsl-config
+    path: .ci/jenkins/config/branch.yaml
+  jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
+jenkins:
+  email_creds_id: KOGITO_CI_EMAIL_TO

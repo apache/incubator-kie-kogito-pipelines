@@ -1,15 +1,43 @@
 environments:
+  default:
+    env_vars:
+      BUILD_MVN_OPTS: -Denforcer.skip
   native:
     env_vars:
+      BUILD_MVN_OPTS: -Denforcer.skip
       NATIVE: true
       BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
       ADDITIONAL_TIMEOUT: 720
     ids:
     - native
+  quarkus-main:
+    enabled: false
+    env_vars:
+      QUARKUS_BRANCH: main
+      BUILD_MVN_OPTS: -Denforcer.skip
+    ids:
+    - quarkus
+  quarkus-branch:
+    env_vars:
+      QUARKUS_BRANCH: '3.0'
+      BUILD_MVN_OPTS: -Denforcer.skip
+    ids:
+    - quarkus
+  quarkus-lts:
+    enabled: false
+    pull_request_default_check: false
+    env_vars:
+      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral -Denforcer.skip
+      QUARKUS_BRANCH: '3.2'
+    ids:
+    - quarkus
+    - lts
+    - prod
   native-lts:
+    enabled: false
     env_vars:
       NATIVE: true
-      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
+      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral -Denforcer.skip
       BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
       QUARKUS_BRANCH: '2.13'
       ADDITIONAL_TIMEOUT: 720
@@ -18,43 +46,12 @@ environments:
     - native
     - prod
     - lts
-  quarkus-main:
-    enabled: false
-    env_vars:
-      QUARKUS_BRANCH: main
-    ids:
-    - quarkus
-  quarkus-branch:
-    env_vars:
-      QUARKUS_BRANCH: '2.16'
-    ids:
-    - quarkus
-  quarkus-3:
-    pull_request_default_check: false
-    env_vars:
-      BUILD_MAVEN_TOOL: kie-maven-3.9.1
-      BUILD_JDK_TOOL: kie-jdk17
-      BUILD_MVN_OPTS: -Denforcer.skip
-    ids:
-    - quarkus
-    - quarkus3
-  quarkus-lts:
-    pull_request_default_check: false
-    env_vars:
-      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
-      QUARKUS_BRANCH: '2.13'
-    ids:
-    - quarkus
-    - lts
-    - prod
-  kogito-bdd:
-    auto_generation: false
-    ids:
-    - cloud
   sonarcloud:
+    enabled: false
     auto_generation: false
     env_vars:
       ENABLE_SONARCLOUD: true
+      BUILD_MVN_OPTS: -Denforcer.skip
     ids:
     - sonarcloud
     - coverage
@@ -62,30 +59,31 @@ environments:
     auto_generation: false
     ids:
     - ecosystem
-productized_branch: true
+productized_branch: false
 disable:
   triggers: false
 repositories:
 - name: kogito-pipelines
+  branch: 2.x
 - name: kogito-runtimes
+  branch: 2.x
 - name: kogito-apps
+  branch: 2.x
 - name: kogito-examples
-- name: kogito-images
-- name: kogito-operator
-- name: kogito-serverless-operator
-- name: kie-tools
-- name: kogito-docs
-- name: kie-docs
-  branch: main-kogito
-productized_repositories:
-- name: kogito-pipelines
-- name: kogito-runtimes
-- name: kogito-apps
-- name: kogito-examples
-- name: kogito-images
-- name: kogito-serverless-operator
-- name: kogito-operator
-- name: kogito-docs
+  branch: 2.x
+# - name: kogito-images
+# - name: kogito-operator
+# - name: kogito-serverless-operator
+# - name: kogito-docs
+# productized_repositories:
+# - name: kogito-pipelines
+# - name: kogito-runtimes
+# - name: kogito-apps
+# - name: kogito-examples
+# - name: kogito-images
+# - name: kogito-serverless-operator
+# - name: kogito-operator
+# - name: kogito-docs
 git:
   author:
     name: kiegroup
@@ -103,6 +101,7 @@ git:
 buildchain_config:
   git:
     repository: kogito-pipelines
+    branch: main
     file_path: .ci/pull-request-config.yaml
 maven:
   settings_file_id: kogito_release_settings
@@ -133,6 +132,6 @@ cloud:
 jenkins:
   email_creds_id: KOGITO_CI_EMAIL_TO
   default_tools:
-    jdk: kie-jdk11
+    jdk: kie-jdk17
     maven: kie-maven-3.8.7
   jobs_definition_file: .ci/jenkins/dsl/jobs.groovy
