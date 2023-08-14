@@ -52,7 +52,7 @@ This is a set of cleanup utils jobs.
 
 The jenkinsfile run in those environments can be found in each repository, at path `.ci/jenkins/Jenkinsfile.specific_nightly`.
 
-The different environments can also be found into the [dsl branch config](./dsl/config/branch.yaml) file.  
+The different environments can also be found into the [dsl branch config](.ci/jenkins/config/branch.yaml) file.  
 Here is some explanation:
 
 - `native`  
