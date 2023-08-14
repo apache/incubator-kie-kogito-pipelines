@@ -189,15 +189,29 @@ void setupNightlyCloudJob() {
 }
 
 void setupQuarkus3NightlyJob() {
+    // TODO Tests would be done on 9.x/2.x branch => Create 2.x branch on Kogito
+
+    // Need to split as Drools and Kogito end up in different integration branches
     KogitoJobUtils.createNightlyBuildChainIntegrationJob(this, 'quarkus-3', 'drools', true) { script ->
         def jobParams = JobParamsUtils.getDefaultJobParams(script, 'drools')
         jobParams.git.branch = VersionUtils.getProjectTargetBranch('drools', Utils.getGitBranch(this), Utils.getRepoName(this))
-        jobParams.env.put('ADDITIONAL_TIMEOUT', '720')
+        jobParams.env.put('ADDITIONAL_TIMEOUT', '180')
         jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
         jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
+        jobParams.env.put('LAUNCH_DOWNSTREAM_JOBS', 'kogito-runtimes.integration')
+        jobParams.parametersValues.put('SKIP_TESTS', true)
+        jobParams.parametersValues.put('SKIP_INTEGRATION_TESTS', true)
+        return jobParams
+    }
+    KogitoJobUtils.createBuildChainIntegrationJob(this, 'quarkus-3', 'kogito-runtimes', true) { script ->
+        def jobParams = JobParamsUtils.getDefaultJobParams(script, 'kogito-runtimes')
+        jobParams.env.put('ADDITIONAL_TIMEOUT', '720')
+        jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
+        jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '2.x')
         jobParams.env.put('BUILDCHAIN_FULL_BRANCH_DOWNSTREAM_BUILD', 'true')
         jobParams.env.put('NODE_OPTIONS', '--max_old_space_size=4096')
-        JobParamsUtils.setupJobParamsDeployConfiguration(script, jobParams)
+        jobParams.parametersValues.put('SKIP_TESTS', true)
+        jobParams.parametersValues.put('SKIP_INTEGRATION_TESTS', true)
         return jobParams
     }
 }
