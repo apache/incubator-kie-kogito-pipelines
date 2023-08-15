@@ -2,9 +2,9 @@
   "metadata": {
     "title": "Kogito Status",
     "subtitle": "Kiegroup Kogito organization repositories CI status",
-    "date": "2023-08-15T06:21:13.679Z",
+    "date": "2023-08-15T07:15:05.751Z",
     "createdBy": "GitHub Action",
-    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5864250227"
+    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5864607900"
   },
   "projects": [
     {
@@ -19,6 +19,70 @@
       "repo_url": "https://github.com/kiegroup/kogito-pipelines",
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-pipelines/pulls{/number}",
       "pullRequests": [
+        {
+          "number": 1037,
+          "title": "BXMSPROD-2104: Sonarcloud execution needs to be moved to Java 17 as m…",
+          "url": "https://api.github.com/repos/kiegroup/kogito-pipelines/pulls/1037",
+          "html_url": "https://github.com/kiegroup/kogito-pipelines/pull/1037",
+          "state": "open",
+          "labels": [],
+          "draft": false,
+          "requested_reviewers": [
+            {
+              "login": "mareknovotny",
+              "avatar_url": "https://avatars.githubusercontent.com/u/177257?v=4",
+              "html_url": "https://github.com/mareknovotny"
+            },
+            {
+              "login": "radtriste",
+              "avatar_url": "https://avatars.githubusercontent.com/u/17157711?v=4",
+              "html_url": "https://github.com/radtriste"
+            }
+          ],
+          "created_at": "2023-08-15T07:06:09Z",
+          "updated_at": "2023-08-15T07:06:09Z",
+          "closed_at": null,
+          "merged_at": null,
+          "base": {
+            "ref": "main",
+            "sha": "05827e08b14a594939a1de37366d5a1e6ac645f0",
+            "label": "kiegroup:main"
+          },
+          "head": {
+            "ref": "sonarCloudJava",
+            "sha": "a315479e1c2791c759eefea2dbcfc084ed78cfed",
+            "label": "mbiarnes:sonarCloudJava"
+          },
+          "user": {
+            "login": "mbiarnes",
+            "avatar_url": "https://avatars.githubusercontent.com/u/3669059?v=4",
+            "html_url": "https://github.com/mbiarnes"
+          },
+          "checks": [
+            {
+              "id": 15899785118,
+              "name": "Jenkinsfiles",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5864541345/job/15899785118",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-08-15T07:06:21Z",
+              "completed_at": "2023-08-15T07:07:11Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            },
+            {
+              "id": 15899784934,
+              "name": "dsl-tests",
+              "html_url": "https://github.com/kiegroup/kogito-pipelines/actions/runs/5864541345/job/15899784934",
+              "status": "completed",
+              "conclusion": "success",
+              "started_at": "2023-08-15T07:06:20Z",
+              "completed_at": "2023-08-15T07:08:11Z",
+              "slug": "github-actions",
+              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
+            }
+          ]
+        },
         {
           "number": 1036,
           "title": "[1.43.x] Update Jenkins dependencies to DSL/Jenkins files",
