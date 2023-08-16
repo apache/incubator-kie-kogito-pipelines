@@ -123,6 +123,7 @@ class JobParamsUtils {
     static def setupJobParamsDefaultJDKConfiguration(def script, def jobParams) {
         jobParams.env = jobParams.env ?: [:]
         addJobParamsEnvIfNotExisting(script, jobParams, 'BUILD_JDK_TOOL', Utils.getJenkinsDefaultJDKTools(script))
+        addJobParamsEnvIfNotExisting(script, jobParams, 'SONAR_JDK_TOOL', Utils.getJenkinsDefaultSonarJDKTools(script))
     }
 
     static def setupJobParamsDefaultMavenConfiguration(def script, def jobParams) {

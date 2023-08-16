@@ -6,6 +6,7 @@ import org.kie.jenkins.MavenSettingsUtils
 agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'kie-rhel8 && docker && kie-mem16g'} && !built-in"
 timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: '180'
 jdkTool = env.BUILD_JDK_TOOL
+sonarJdkTool = env.SONAR_JDK_TOOL
 mavenTool = env.BUILD_MAVEN_TOOL
 
 mavenDeployArtifacts = env.ENABLE_DEPLOY
@@ -115,7 +116,7 @@ pipeline {
                 script {
                     env.LD_LIBRARY_PATH = "${env.LD_LIBRARY_PATH ? "${env.LD_LIBRARY_PATH}:": ''}${GRAALVM_HOME}/lib/server"
                     echo "LD_LIBRARY_PATH = ${LD_LIBRARY_PATH}"
-                    
+
                     env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
                     echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
                     if (mavenDeployArtifacts) {
@@ -156,7 +157,7 @@ pipeline {
                 expression { return enableSonarCloudAnalysis }
             }
             tools {
-                jdk jdkTool
+                jdk sonarJdkTool
                 maven mavenTool
             }
             steps {
