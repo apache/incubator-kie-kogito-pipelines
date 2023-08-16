@@ -162,6 +162,10 @@ class Utils {
         return getJenkinsDefaultTools(script, 'maven')
     }
 
+    static String getJenkinsDefaultSonarJDKTools(def script) {
+        return getJenkinsDefaultTools(script, 'sonar_jdk')
+    }
+
     static String getSeedRepo(def script) {
         return getBindingValue(script, 'SEED_REPO')
     }
