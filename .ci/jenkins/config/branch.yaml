@@ -16,54 +16,54 @@ job_types:
     disabled: true
 
 environments:
-  native:
-    env_vars:
-      NATIVE: true
-      BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
-      ADDITIONAL_TIMEOUT: 720
-    ids:
-    - native
-  native-lts:
-    env_vars:
-      NATIVE: true
-      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
-      BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
-      QUARKUS_BRANCH: '2.13'
-      ADDITIONAL_TIMEOUT: 720
-      BUILD_ENVIRONMENT: quarkus-lts
-    ids:
-    - native
-    - prod
-    - lts
-  quarkus-main:
-    enabled: false
-    env_vars:
-      QUARKUS_BRANCH: main
-    ids:
-    - quarkus
+  # native:
+  #   env_vars:
+  #     NATIVE: true
+  #     BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
+  #     ADDITIONAL_TIMEOUT: 720
+  #   ids:
+  #   - native
+  # native-lts:
+  #   env_vars:
+  #     NATIVE: true
+  #     BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
+  #     BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
+  #     QUARKUS_BRANCH: '2.13'
+  #     ADDITIONAL_TIMEOUT: 720
+  #     BUILD_ENVIRONMENT: quarkus-lts
+  #   ids:
+  #   - native
+  #   - prod
+  #   - lts
+  # quarkus-main:
+  #   enabled: false
+  #   env_vars:
+  #     QUARKUS_BRANCH: main
+  #   ids:
+  #   - quarkus
   quarkus-branch:
     env_vars:
       QUARKUS_BRANCH: '2.16'
     ids:
     - quarkus
-  quarkus-3:
-    pull_request_default_check: false
-    env_vars:
-      BUILD_MAVEN_TOOL: kie-maven-3.9.1
-      BUILD_JDK_TOOL: kie-jdk17
-      BUILD_MVN_OPTS: -Denforcer.skip
-    ids:
-    - quarkus
-    - quarkus3
-  quarkus-lts:
-    pull_request_default_check: false
-    env_vars:
-      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
-      QUARKUS_BRANCH: '2.13'
-    ids:
-    - quarkus
-    - lts
-    - prod
+  # quarkus-3:
+  #   pull_request_default_check: false
+  #   env_vars:
+  #     BUILD_MAVEN_TOOL: maven_3.9.3
+  #     BUILD_JDK_TOOL: jdk_17_latest
+  #     BUILD_MVN_OPTS: -Denforcer.skip
+  #   ids:
+  #   - quarkus
+  #   - quarkus3
+  # quarkus-lts:
+  #   pull_request_default_check: false
+  #   env_vars:
+  #     BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
+  #     QUARKUS_BRANCH: '2.13'
+  #   ids:
+  #   - quarkus
+  #   - lts
+  #   - prod
   sonarcloud:
     auto_generation: false
     env_vars:
@@ -81,16 +81,16 @@ disable:
 
 repositories:
 - name: kogito-pipelines
-- name: kogito-runtimes
-- name: kogito-apps
-- name: kogito-examples
-- name: kogito-images
-- name: kogito-operator
-- name: kogito-serverless-operator
-- name: kie-tools
-- name: kogito-docs
-- name: kie-docs
-  branch: main-kogito
+# - name: kogito-runtimes
+# - name: kogito-apps
+# - name: kogito-examples
+# - name: kogito-images
+# - name: kogito-operator
+# - name: kogito-serverless-operator
+# - name: kie-tools
+# - name: kogito-docs
+# - name: kie-docs
+#   branch: main-kogito
 productized_repositories:
 - name: kogito-pipelines
 - name: kogito-runtimes
@@ -121,18 +121,18 @@ buildchain_config:
 maven:
   settings_file_id: 2bd418aa-56fa-4403-9232-8c77a50fc528
   nexus:
-    release_url: https://repository.stage.jboss.org/nexus
-    release_repository: jboss-releases-repository
-    staging_profile_url: https://repository.stage.jboss.org/nexus/content/groups/kogito-public/
-    staging_profile_id: 2161b7b8da0080
-    build_promotion_profile_id: 1966c60aff37d
-  artifacts_repository: http://nexus3-tradisso-nexus.apps.kogito-cloud.hosted.psi.rdu2.redhat.com/repository/kogito-test/
+    release_url: TO_DEFINE
+    release_repository: TO_DEFINE
+    staging_profile_url: TO_DEFINE
+    staging_profile_id: TO_DEFINE
+    build_promotion_profile_id: TO_DEFINE
+  artifacts_repository: TO_DEFINE
   artifacts_upload_repository:
-    url: http://nexus3-tradisso-nexus.apps.kogito-cloud.hosted.psi.rdu2.redhat.com/nexus/content/repositories/snapshots/
-    creds_id: radtriste-nexus
+    url: TO_DEFINE
+    creds_id: TO_DEFINE
   quarkus_platform_repository:
-    url: http://nexus3-tradisso-nexus.apps.kogito-cloud.hosted.psi.rdu2.redhat.com/nexus/content/repositories/snapshots/
-    creds_id: radtriste-nexus
+    url: TO_DEFINE
+    creds_id: TO_DEFINE
 cloud:
   image:
     registry_credentials_nightly: tradisso_registry_token
@@ -143,7 +143,7 @@ cloud:
 jenkins:
   email_creds_id: KOGITO_CI_EMAIL_TO_PERSO
   default_tools:
-    jdk: kie-jdk11
-    maven: kie-maven-3.8.7
-    sonar_jdk: kie-jdk17
+    jdk: jdk_11_latest
+    maven: maven_3.8.6
+    sonar_jdk: jdk_17_latest
   jobs_definition_file: .ci/jenkins/dsl/jobs.groovy

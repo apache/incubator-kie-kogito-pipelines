@@ -19,7 +19,7 @@ ecosystem:
     - kie-docs.*
 git:
   branches:
-  - name: test-config
+  - name: apache-test-config
     main_branch: true
 seed:
   config_file:
@@ -28,7 +28,7 @@ seed:
       author:
         name: radtriste
         credentials_id: radtriste
-      branch: test-config
+      branch: apache-test-config
     path: .ci/jenkins/config/branch.yaml
   jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
 jenkins:

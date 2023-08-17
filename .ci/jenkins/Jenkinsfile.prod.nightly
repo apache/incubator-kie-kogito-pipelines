@@ -4,11 +4,11 @@ import org.kie.jenkins.MavenCommand
 
 pipeline {
     agent {
-        label 'kie-rhel8 && docker && kie-mem24g && !built-in'
+        label 'ubuntu'
     }
     tools {
-        maven 'kie-maven-3.8.7'
-        jdk 'kie-jdk11'
+        maven 'maven_3.8.6'
+        jdk 'jdk_11_latest'
         nodejs 'nodejs-16.2.0'
     }
     parameters {
