@@ -7,8 +7,10 @@ class EnvUtils {
     static String DEFAULT_ENVIRONMENT_NAME = 'default'
 
     static List<String> getAllEnvironments(def script) {
-        List<String> environments = Utils.getBindingValue(script, 'ENVIRONMENTS').split(',').collect { it != DEFAULT_ENVIRONMENT_NAME }
-        PrintUtils.debug(script, "getAllEnvironments => ${environments}")
+        String envsStr = Utils.getBindingValue(script, 'ENVIRONMENTS')
+        PrintUtils.debug(script, "getAllEnvironments => from ${envsStr}")
+        List<String> environments = envsStr.split(',').findAll { it != DEFAULT_ENVIRONMENT_NAME }
+        PrintUtils.debug(script, "getAllEnvironments => to ${environments}")
         return environments
     }
 
