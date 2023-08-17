@@ -4,9 +4,14 @@ import org.kie.jenkins.jobdsl.Utils
 
 class EnvUtils {
 
+    static String DEFAULT_ENVIRONMENT_NAME = 'default'
+
     static List<String> getAllEnvironments(def script) {
-        PrintUtils.debug(script, "getAllEnvironments => ${Utils.getBindingValue(script, 'ENVIRONMENTS')}")
-        return Utils.getBindingValue(script, 'ENVIRONMENTS').split(',')
+        String envsStr = Utils.getBindingValue(script, 'ENVIRONMENTS')
+        PrintUtils.debug(script, "getAllEnvironments => from ${envsStr}")
+        List<String> environments = envsStr.split(',').findAll { it != DEFAULT_ENVIRONMENT_NAME }
+        PrintUtils.debug(script, "getAllEnvironments => to ${environments}")
+        return environments
     }
 
     static boolean isEnvironmentEnabled(def script, String envName) {
@@ -111,7 +116,7 @@ class EnvUtils {
     }
 
     private static String createEnvironmentsKeyPrefix(def script, String envName) {
-        String envId = isDefaultEnvironment(script, envName) ? 'default' : envName
+        String envId = isDefaultEnvironment(script, envName) ? DEFAULT_ENVIRONMENT_NAME : envName
         return "ENVIRONMENTS_${envId.toUpperCase()}_"
     }
 }
