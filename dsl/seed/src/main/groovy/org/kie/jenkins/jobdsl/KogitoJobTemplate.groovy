@@ -308,7 +308,7 @@ class KogitoJobTemplate {
     }
 
     /**
-    * Should be merged with `createPerRepoPRJobs(def script, def prFolder, Closure jobsRepoConfigGetter, Closure defaultParamsGetter)`
+    * Should be merged with `createPerRepoPRJobs(def script, def prFolder, Closure jobsRepoConfigGetter, Closure defaultJobParamsGetter)`
     * once https://issues.redhat.com/browse/PLANNER-2870 is implemented
     */
     static def createPerRepoPRJobs(def script, String envName, Closure jobsRepoConfigGetter, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
