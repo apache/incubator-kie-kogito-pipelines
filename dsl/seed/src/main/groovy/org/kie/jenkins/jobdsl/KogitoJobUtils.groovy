@@ -177,8 +177,8 @@ class KogitoJobUtils {
     *   - scriptCalls: Any command to call before performing the integration branch update
     *
     */
-    static def createEnvironmentIntegrationBranchNightlyJob(def script, String envName, def scriptCalls = []) {
-        def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${Utils.getRepoName(script)}.integration", JobType.NIGHTLY, envName, 'Jenkinsfile.environment.integration-branch', "Generic Integration branch job for specific environment")
+    static def createEnvironmentIntegrationBranchNightlyJob(def script, String envName, def scriptCalls = [], Closure defaultParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+        def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${Utils.getRepoName(script)}.integration", JobType.NIGHTLY, envName, 'Jenkinsfile.environment.integration-branch', "Generic Integration branch job for specific environment", defaultJobParamsGetter)
         jobParams.triggers = jobParams.triggers ?: [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
         if (!envName) {
             throw new RuntimeException('Please provide a non-empty environment to generate an integration branch job...')
