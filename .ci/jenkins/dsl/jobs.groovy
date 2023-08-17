@@ -40,9 +40,9 @@ if (isMainStream()) {
 
 // Nightly
 setupNightlyJob()
+setupQuarkusPlatformJob(JobType.NIGHTLY)
 if (isMainStream()) {
     setupNightlyCloudJob()
-    setupQuarkusPlatformJob(JobType.NIGHTLY)
     setupQuarkus3NightlyJob()
 }
 
@@ -135,7 +135,7 @@ void createSetupBranchJob() {
             stringParam('KOGITO_VERSION', '', 'Kogito version')
             stringParam('DROOLS_VERSION', '', 'Drools version')
             booleanParam('DEPLOY', true, 'Should be deployed after setup ?')
-            booleanParam('SKIP_CLOUD_SETUP_BRANCH', false, 'Skip Cloud setup branch call')
+            booleanParam('SKIP_CLOUD_SETUP_BRANCH', !isMainStream(), 'Skip Cloud setup branch call')
         }
     }
 }
@@ -170,7 +170,7 @@ void setupNightlyJob() {
     KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         parameters {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
-            booleanParam('SKIP_CLOUD_NIGHTLY', false, 'Skip cloud nightly execution')
+            booleanParam('SKIP_CLOUD_NIGHTLY', !isMainStream(), 'Skip cloud nightly execution')
         }
     }
 }
@@ -268,7 +268,7 @@ void setupReleaseArtifactsJob() {
 
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
-            booleanParam('SKIP_CLOUD_RELEASE', false, 'To skip Cloud release. To use whenever you have specific parameters to set for the Cloud release')
+            booleanParam('SKIP_CLOUD_RELEASE', !isMainStream(), 'To skip Cloud release. To use whenever you have specific parameters to set for the Cloud release')
         }
     }
 }
