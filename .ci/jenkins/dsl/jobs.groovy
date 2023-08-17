@@ -11,9 +11,6 @@ boolean isMainStream() {
     return Utils.getStream(this) == 'main'
 }
 
-// PRs
-setupKogitoRuntimesBDDPrJob()
-
 // Tools
 setupUpdateJenkinsDependenciesJob()
 if (isMainStream()) {
@@ -63,21 +60,6 @@ setupReleaseCloudJob()
 /////////////////////////////////////////////////////////////////
 // Methods
 /////////////////////////////////////////////////////////////////
-
-void setupKogitoRuntimesBDDPrJob() {
-    def jobParams = JobParamsUtils.getBasicJobParamsWithEnv(this, '0-runtimes-bdd-testing', JobType.PULL_REQUEST, 'kogito-bdd', "${JENKINSFILE_PATH}/Jenkinsfile.pr.bdd-tests", 'Run on demand BDD tests from runtimes repository')
-    jobParams.git.project_url = "https://github.com/${GIT_AUTHOR_NAME}/kogito-runtimes/"
-    jobParams.git.repo_url = "https://github.com/${GIT_AUTHOR_NAME}/${jobParams.git.repository}/"
-    jobParams.pr = [
-        run_only_for_branches: [ jobParams.git.branch ],
-        checkout_branch : '${ghprbTargetBranch}',
-        trigger_phrase : '.*[j|J]enkins,? run BDD[ tests]?.*',
-        trigger_phrase_only: true,
-        commitContext: 'BDD'
-    ]
-    jobParams.disable_concurrent = true
-    KogitoJobTemplate.createPRJob(this, jobParams)
-}
 
 void setupCleanOldNamespacesToolsJob() {
     def jobParams = JobParamsUtils.getBasicJobParams(this, 'kogito-clean-old-namespaces', JobType.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.clean-old-namespaces")
