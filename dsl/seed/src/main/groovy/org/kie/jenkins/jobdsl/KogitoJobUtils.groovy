@@ -42,7 +42,7 @@ class KogitoJobUtils {
     *
     */
     static def createVersionUpdateToolsJob(def script, String repository, String dependencyName, def mavenUpdate = [:], def gradleUpdate = [:], def filepathReplaceRegex = [], def scriptCalls = []) {
-        def jobParams = JobParamsUtils.getSeedJobParams(script, "update-${dependencyName.toLowerCase()}-${repository}", JobType.TOOLS, 'Jenkinsfile.tools.update-dependency-version', "Update ${dependencyName} version for ${repository}")
+        def jobParams = JobParamsUtils.getSeedJobParams(script, "update-${dependencyName.toLowerCase()}-${repository}", JobType.TOOLS, 'Jenkinsfile.update-dependency-version', "Update ${dependencyName} version for ${repository}")
         JobParamsUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
         // Setup correct checkout branch for pipelines
         jobParams.env.putAll([
@@ -101,7 +101,7 @@ class KogitoJobUtils {
     * and will call the different projects `update-quarkus-{project}` jobs. Those should be best created with method `createQuarkusUpdateToolsJob`.
     */
     static def createMainQuarkusUpdateToolsJob(def script, List projectsToUpdate, List reviewers = []) {
-        def jobParams = JobParamsUtils.getSeedJobParams(script, 'update-quarkus-all', JobType.TOOLS, 'Jenkinsfile.ecosystem.update-quarkus-all', 'Update Quarkus version for the whole ecosystem')
+        def jobParams = JobParamsUtils.getSeedJobParams(script, 'update-quarkus-all', JobType.TOOLS, 'Jenkinsfile.update-quarkus-version', 'Update Quarkus version for the whole ecosystem')
         jobParams.env.putAll([
             JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
 
