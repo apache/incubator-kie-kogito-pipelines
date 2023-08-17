@@ -40,21 +40,33 @@ git:
   - name: 1.29.x
     seed:
       branch: seed-kogito-1.29.x
+      config_file:
+        path: dsl/config/branch.yaml
   - name: 1.38.x-prod
     seed:
       branch: seed-kogito-1.38.x
+      config_file:
+        path: dsl/config/branch.yaml
   - name: 1.40.x
     seed:
       branch: seed-kogito-1.40.x
+      config_file:
+        path: dsl/config/branch.yaml
   - name: 1.40.x-prod
     seed:
       branch: seed-kogito-1.40.x
+      config_file:
+        path: dsl/config/branch.yaml
   - name: 1.42.x
     seed:
       branch: seed-kogito-1.42.x
+      config_file:
+        path: dsl/config/branch.yaml
   - name: 1.43.x
     seed:
       branch: seed-kogito-1.43.x
+      config_file:
+        path: dsl/config/branch.yaml
 seed:
   config_file:
     git:
@@ -63,7 +75,7 @@ seed:
         name: kiegroup
         credentials_id: kie-ci3
       branch: main
-    path: dsl/config/branch.yaml
+    path: .ci/jenkins/config/branch.yaml
   jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
 jenkins:
   email_creds_id: KOGITO_CI_EMAIL_TO

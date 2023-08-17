@@ -39,7 +39,7 @@ String getSeedConfigFileGitBranch() {
 }
 
 String getSeedConfigFilePath() {
-    return SEED_CONFIG_FILE_PATH ?: 'dsl/config/main.yaml'
+    return SEED_CONFIG_FILE_PATH ?: '.ci/jenkins/config/main.yaml'
 }
 
 SeedJobUtils.createSeedJobTrigger(

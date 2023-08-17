@@ -44,7 +44,7 @@ jobs:
       - name: Retrieve branch config file information
         working-directory: main_config_repo
         run: |
-          if [ -f 'dsl/config/main.yaml' ]; then main_config_path='dsl/config/main.yaml'; else main_config_path='dsl/seed/config/main.yaml'; fi
+          if [ -f '.ci/jenkins/config/main.yaml' ]; then main_config_path='.ci/jenkins/config/main.yaml'; else main_config_path='dsl/config/main.yaml'; fi # temporary  for the main config change
           branch_config_name=${{ github.base_ref }}
           
           set +e
@@ -157,7 +157,7 @@ jobs:
           project: kogito
           repository: ${{ matrix.repository }}
           main-config-file-repo: kiegroup/kogito-pipelines
-          main-config-file-path: dsl/config/main.yaml
+          main-config-file-path: .ci/jenkins/config/main.yaml
           branch-config-file-repo: kiegroup/kogito-pipelines
           base-branch: ${{ env.BASE_BRANCH }}
 

@@ -79,7 +79,7 @@ Once the seed job has run, you should be able to see the new release branch in t
 
 In case a release branch is no more maintained, you may want to delete the corresponding jobs.
 
-In that case, you just need to go to the [main branch configuration](../dsl/config/main.yaml) and remove the corresponding branch.  
+In that case, you just need to go to the [main branch configuration](../.ci/jenkins/config/main.yaml) and remove the corresponding branch.  
 Jobs should be automatically deleted on push of the change.
 
 ### Performing a release

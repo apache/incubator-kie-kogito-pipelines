@@ -23,7 +23,7 @@ usage() {
     echo '  Main config file configuration:'
     echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_REPO             Main config file repository (owner/repo)'
     echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_REF              Main config file reference'
-    echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_PATH             Main config file path. Default is `dsl/config/main.yaml`'
+    echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_PATH             Main config file path. Default is `.ci/jenkins/config/main.yaml`'
     echo '    DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REPO    Fallback main config repository (owner/repo). Default is `kiegroup/kogito-pipelines`'
     echo '    DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REF     Fallback main config reference. Default is `main`'
     echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_LOCAL_PATH       Main config file local path. If set, the other `DSL_DEFAULT_MAIN_CONFIG_FILE_*` envs will be ignored'
@@ -170,7 +170,7 @@ echo "--------- Main / Branch config files ---------"
 
 main_config_file_repo=${DSL_DEFAULT_MAIN_CONFIG_FILE_REPO}
 main_config_file_ref=${DSL_DEFAULT_MAIN_CONFIG_FILE_REF}
-main_config_file_path=${DSL_DEFAULT_MAIN_CONFIG_FILE_PATH:-'dsl/config/main.yaml'}
+main_config_file_path=${DSL_DEFAULT_MAIN_CONFIG_FILE_PATH:-'.ci/jenkins/config/main.yaml'}
 main_config_file_local_path=${DSL_DEFAULT_MAIN_CONFIG_FILE_LOCAL_PATH}
 
 branch_config_name=${DSL_DEFAULT_BRANCH_CONFIG_NAME}
