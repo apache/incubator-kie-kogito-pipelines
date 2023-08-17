@@ -4,8 +4,8 @@ environments:
       BUILD_MVN_OPTS: -Denforcer.skip
   native:
     env_vars:
-      BUILD_MVN_OPTS: -Denforcer.skip
       NATIVE: true
+      BUILD_MVN_OPTS: -Denforcer.skip
       BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
       ADDITIONAL_TIMEOUT: 720
     ids:
@@ -50,7 +50,7 @@ environments:
     enabled: false
     auto_generation: false
     env_vars:
-      ENABLE_SONARCLOUD: true
+      ENABLE_SONARCLOUD: false
       BUILD_MVN_OPTS: -Denforcer.skip
     ids:
     - sonarcloud
