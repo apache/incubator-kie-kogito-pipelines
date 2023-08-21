@@ -323,7 +323,7 @@ pipeline{
                             }
 
                             if (job.result != 'SUCCESS') {
-                                unstable("Update projects version on repositories was not successful")
+                                unstable("Downgrade quarkus version on repositories was not successful")
                             } else {
                                 def prodRepositories = getProdRepositoriesToBranch()
                                 prodRepositories.each { repoConfig ->
