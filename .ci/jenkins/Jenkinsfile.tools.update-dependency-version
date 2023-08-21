@@ -213,6 +213,10 @@ String getRepoName() {
     return "${REPO_NAME}"
 }
 
+String getJiraNumber() {
+    return params.JIRA_NUMBER
+}
+
 List getMavenModules() {
     return env.MAVEN_MODULES ? readJSON(text: env.MAVEN_MODULES) : []
 }
