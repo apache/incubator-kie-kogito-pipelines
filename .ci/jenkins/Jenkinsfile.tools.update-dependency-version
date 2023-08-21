@@ -148,7 +148,7 @@ pipeline {
                 script {
                     dir(getRepoName()) {
                         if (githubscm.isThereAnyChanges()) {
-                            String commitMsg = "[${getBuildBranch()}] Bump ${getDependencyName()} version to ${getNewVersion()}"
+                            String commitMsg = "[${getBuildBranch()}] ${getJiraNumber() ? "[${getJiraNumber()}] " : ''}Bump ${getDependencyName()} version to ${getNewVersion()}"
                             githubscm.commitChanges(commitMsg)
                             githubscm.pushObject('origin', getPRBranch(), getGitAuthorCredsId())
 
@@ -211,6 +211,10 @@ String getNewVersion() {
 
 String getRepoName() {
     return "${REPO_NAME}"
+}
+
+String getJiraNumber() {
+    return params.JIRA_NUMBER
 }
 
 List getMavenModules() {
