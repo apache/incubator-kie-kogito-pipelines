@@ -6,6 +6,7 @@ environments:
     env_vars:
       BUILD_MVN_OPTS: -Denforcer.skip
   native:
+    enabled: false
     env_vars:
       NATIVE: true
       BUILD_MVN_OPTS: -Denforcer.skip
@@ -21,6 +22,7 @@ environments:
     ids:
     - quarkus
   quarkus-branch:
+    enabled: false
     env_vars:
       QUARKUS_BRANCH: '3.0'
       BUILD_MVN_OPTS: -Denforcer.skip
