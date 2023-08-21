@@ -313,37 +313,52 @@ pipeline{
 
                     echo "Build ./${jobName} with parameters ${jobParams}"
                     if (!isDryRun()) {
-                        def job = build(job: "./${jobName}", parameters: jobParams, wait: true, propagate: false)
+                        def job = [:]
+                        try {
+                            // Retry 20 times every 5 min in order to assure seed job ran
+                            retry(20) {
+                                sleep 300
+                                echo "Build ./${jobName} with parameters ${jobParams}"
+                                job = build(job: "./${jobName}", parameters: jobParams, wait: true, propagate: false)
+                            }
 
-                        if (job.result == 'SUCCESS') {
-                            def prodRepositories = getProdRepositoriesToBranch()
-                            prodRepositories.each { repoConfig ->
-                                String repoAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
-                                String repoCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
-                                String repository = repoConfig.name
-                                String baseBranch = repoConfig.branch ?: 'main'
+                            if (job.result != 'SUCCESS') {
+                                unstable("Update projects version on repositories was not successful")
+                            } else {
+                                def prodRepositories = getProdRepositoriesToBranch()
+                                prodRepositories.each { repoConfig ->
+                                    String repoAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
+                                    String repoCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
+                                    String repository = repoConfig.name
+                                    String baseBranch = repoConfig.branch ?: 'main'
 
-                                dir(repository) {
-                                    deleteDir()
-                                    checkout(githubscm.resolveRepository(repository, repoAuthor, baseBranch, false, repoCredsId))
+                                    dir(repository) {
+                                        deleteDir()
+                                        checkout(githubscm.resolveRepository(repository, repoAuthor, baseBranch, false, repoCredsId))
 
-                                    // if quarkusDowngradePrBranch has been created by update-quarkus-all job, checkout it
-                                    if (checkoutGitBranchIfExists(quarkusDowngradePrBranch, repoCredsId)) {
-                                        // thefollowing script takes care of applying all patches needed when downgrading to Quarkus LTS
-                                        // i.e., it will apply all patches found under .ci/environments/quarkus-lts/patches
-                                        def updateQuarkusLtsScriptPath = '.ci/environments/update.sh'
-                                        if (fileExists(updateQuarkusLtsScriptPath)) {
-                                            sh "${updateQuarkusLtsScriptPath} quarkus-lts"
-                                        } else {
-                                            echo "[WARN] Unable to find '${updateQuarkusLtsScriptPath}' for '${repository}'"
+                                        // if quarkusDowngradePrBranch has been created by update-quarkus-all job, checkout it
+                                        if (checkoutGitBranchIfExists(quarkusDowngradePrBranch, repoCredsId)) {
+                                            // thefollowing script takes care of applying all patches needed when downgrading to Quarkus LTS
+                                            // i.e., it will apply all patches found under .ci/environments/quarkus-lts/patches
+                                            def updateQuarkusLtsScriptPath = '.ci/environments/update.sh'
+                                            if (fileExists(updateQuarkusLtsScriptPath)) {
+                                                sh "${updateQuarkusLtsScriptPath} quarkus-lts"
+                                            } else {
+                                                echo "[WARN] Unable to find '${updateQuarkusLtsScriptPath}' for '${repository}'"
+                                            }
+
+                                            pushIfChanged(quarkusDowngradePrBranch, repoCredsId, "Applied patches after Quarkus downgrade to ${getQuarkusVersion()}", "Quarkus LTS patches on ${quarkusDowngradePrBranch} have been applied")
                                         }
-
-                                        pushIfChanged(quarkusDowngradePrBranch, repoCredsId, "Applied patches after Quarkus downgrade to ${getQuarkusVersion()}", "Quarkus LTS patches on ${quarkusDowngradePrBranch} have been applied")
                                     }
                                 }
                             }
-                        } else {
-                            unstable("Update Quarkus on repositories was not successful")
+                        } catch (err) {
+                            unstable("Error executing update quarkus all...")
+                            String msg = "ERROR: Update quarkus all job on newly created prod branch was unsuccessful."
+                            if(job) {
+                                msg += "\nPlease review job ${job.absoluteUrl}..."
+                            }
+                            sendNotification(msg)
                         }
                     }
                 }
