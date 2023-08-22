@@ -44,7 +44,7 @@ pipeline {
                 script {
                     dir('drools') {
                         deleteDir()
-                        checkout(githubscm.resolveRepository('drools', getGitAuthor(), util.calculateTargetReleaseBranch(getGitBranch(), 7), false))
+                        checkout(githubscm.resolveRepository('drools', getGitAuthor(), getTargetBranch(7), false))
                     }
                     dir('kogito-runtimes') {
                         deleteDir()
@@ -57,7 +57,7 @@ pipeline {
                     dir('optaplanner') {
                         deleteDir()
                         // Get current corresponding branch and if not working, latest tag
-                        String opBranch = util.calculateTargetReleaseBranch(getGitBranch(), 7)
+                        String opBranch = getTargetBranch(7)
                         try {
                             checkout(githubscm.resolveRepository('optaplanner', getGitAuthor(), opBranch, false))
                         } catch(err) {
@@ -135,6 +135,8 @@ pipeline {
                         dir(directory) {
                             new MavenCommand(this, ['-fae', '-ntp'])
                                 .withSettingsXmlFile(env.SETTINGS_FILE)
+                                .withOptions(env.BUILD_MVN_OPTS ? [ env.BUILD_MVN_OPTS ] : [])
+                                .withOptions(env.BUILD_MVN_OPTS_UPSTREAM ? [ env.BUILD_MVN_OPTS_UPSTREAM ] : [])
                                 .withProperty('quickly')
                                 .run('install')
                         }
@@ -209,4 +211,16 @@ void sendErrorNotification() {
 
 String getMavenDeployLocalDir() {
     return "${WORKSPACE}/maven_deploy_dir"
+}
+
+String getTargetBranch(Integer addToMajor) {
+    String targetBranch = getGitBranch()
+    List versionSplit = targetBranch.split("\\.") as List
+
+    if (versionSplit[0].isNumber()) {
+        targetBranch = "${Integer.parseInt(versionSplit[0]) + addToMajor}.${versionSplit.tail().join('.')}"
+    } else {
+        echo "Cannot parse targetBranch as release branch so going further with current value: ${targetBranch}"
+    }
+    return targetBranch
 }
