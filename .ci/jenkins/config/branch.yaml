@@ -5,6 +5,8 @@ environments:
   default:
     env_vars:
       BUILD_MVN_OPTS: -Denforcer.skip
+  ids:
+  - default
   native:
     enabled: false
     env_vars:
@@ -62,6 +64,8 @@ environments:
     - coverage
   ecosystem:
     auto_generation: false
+    env_vars:
+      BUILD_MVN_OPTS: -Denforcer.skip
     ids:
     - ecosystem
 productized_branch: false
