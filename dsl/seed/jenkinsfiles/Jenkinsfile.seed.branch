@@ -32,7 +32,7 @@ pipeline {
     }
 
     tools {
-        jdk 'kie-jdk11'
+        jdk 'jdk_11_latest'
     }
 
     options {
@@ -309,7 +309,7 @@ void fillEnvProperties(Map envProperties, String envKeyPrefix, Map propsMap) {
         }
         if (value instanceof Map) {
             fillEnvProperties(envProperties, newKey, value as Map)
-        } else if ([List, net.sf.json.JSONArray].any { it.isAssignableFrom(value.getClass()) }) {
+        } else if (value instanceof List || value instanceof net.sf.json.JSONArray) {
             envProperties.put(newKey, (value as List).collect { it }.join(','))
         } else {
             envProperties.put(newKey, value)
