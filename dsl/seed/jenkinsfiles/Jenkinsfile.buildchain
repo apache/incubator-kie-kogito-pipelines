@@ -3,7 +3,7 @@
 import org.kie.jenkins.MavenCommand
 import org.kie.jenkins.MavenSettingsUtils
 
-agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'kie-rhel8 && docker && kie-mem16g'} && !built-in"
+agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'ubuntu'} && !built-in"
 timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: '180'
 jdkTool = env.BUILD_JDK_TOOL
 sonarJdkTool = env.SONAR_JDK_TOOL
@@ -16,7 +16,7 @@ mavenDeployLocalDir = env.MAVEN_DEPLOY_LOCAL_DIR ?: ''
 
 buildChainType = env.BUILDCHAIN_TYPE?.trim() ?: 'cross_pr'
 buildChainProject = env.BUILDCHAIN_PROJECT?.trim()
-defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kogito_pr_settings' : 'kogito_release_settings'
+defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kie-pr-settings' : 'kie-release-settings'
 settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
 
 enableSonarCloudAnalysis = env.ENABLE_SONARCLOUD ? env.ENABLE_SONARCLOUD.toBoolean() : false
