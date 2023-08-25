@@ -201,6 +201,15 @@ void setupQuarkus3NightlyJob() {
         jobParams.parametersValues.put('SKIP_INTEGRATION_TESTS', true)
         return jobParams
     }
+    KogitoJobUtils.createBuildChainIntegrationJob(this, 'quarkus-3', 'kie-jpmml-integration', true) { script ->
+        def jobParams = JobParamsUtils.getDefaultJobParams(script, 'kie-jpmml-integration')
+        jobParams.env.put('ADDITIONAL_TIMEOUT', '180')
+        jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
+        jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
+        jobParams.parametersValues.put('SKIP_TESTS', true)
+        jobParams.parametersValues.put('SKIP_INTEGRATION_TESTS', true)
+        return jobParams
+    }
     KogitoJobUtils.createBuildChainIntegrationJob(this, 'quarkus-3', 'kogito-runtimes', true) { script ->
         def jobParams = JobParamsUtils.getDefaultJobParams(script, 'kogito-runtimes')
         jobParams.env.put('ADDITIONAL_TIMEOUT', '720')
