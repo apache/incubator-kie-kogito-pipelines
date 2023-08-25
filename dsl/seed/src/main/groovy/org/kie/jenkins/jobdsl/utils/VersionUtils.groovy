@@ -18,12 +18,9 @@ class VersionUtils {
 
     static String getTargetBranch(String branch, Integer addToMajor) {
         String targetBranch = branch
-        String [] versionSplit = targetBranch.split("\\.")
-        if (versionSplit.length == 3
-            && versionSplit[0].isNumber()
-            && versionSplit[1].isNumber()
-            && versionSplit[2] == 'x') {
-            targetBranch = "${Integer.parseInt(versionSplit[0]) + addToMajor}.${versionSplit[1]}.x"
+        List versionSplit = targetBranch.split("\\.") as List
+        if (versionSplit[0].isNumber()) {
+            targetBranch = "${Integer.parseInt(versionSplit[0]) + addToMajor}.${versionSplit.tail().join('.')}"
         } else {
             println "Cannot parse branch as release branch so going further with current value: ${branch}"
         }
