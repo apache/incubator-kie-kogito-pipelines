@@ -1,3 +1,6 @@
+generation_config:
+  missing_environment: ignore
+
 environments:
   native:
     env_vars:
@@ -32,8 +35,8 @@ environments:
   quarkus-3:
     pull_request_default_check: false
     env_vars:
-      BUILD_MAVEN_TOOL: kie-maven-3.9.1
-      BUILD_JDK_TOOL: kie-jdk17
+      BUILD_MAVEN_TOOL: maven_3.9.3
+      BUILD_JDK_TOOL: jdk_17_latest
       BUILD_MVN_OPTS: -Denforcer.skip
     ids:
     - quarkus
@@ -101,20 +104,20 @@ buildchain_config:
     repository: kogito-pipelines
     file_path: .ci/pull-request-config.yaml
 maven:
-  settings_file_id: kogito_release_settings
+  settings_file_id: TO_DEFINE
   nexus:
-    release_url: https://repository.jboss.org/nexus
-    release_repository: jboss-releases-repository
-    staging_profile_url: https://repository.jboss.org/nexus/content/groups/kogito-public/
-    staging_profile_id: 1976dd1c18392a
-    build_promotion_profile_id: ea49ccd6f174
+    release_url: TO_DEFINE
+    release_repository: TO_DEFINE
+    staging_profile_url: TO_DEFINE
+    staging_profile_id: TO_DEFINE
+    build_promotion_profile_id: TO_DEFINE
   artifacts_repository: ''
   artifacts_upload_repository:
-    url: https://repository.jboss.org/nexus/content/repositories/snapshots/
-    creds_id: kogito-snapshots-upload
+    url: TO_DEFINE
+    creds_id: TO_DEFINE
   quarkus_platform_repository:
-    url: https://repository.jboss.org/nexus/content/repositories/kogito-internal-repository/
-    creds_id: kogito-internal-nexus-creds
+    url: TO_DEFINE
+    creds_id: TO_DEFINE
 cloud:
   image:
     registry_credentials_nightly: nightly_kogito
@@ -125,7 +128,7 @@ cloud:
 jenkins:
   email_creds_id: KOGITO_CI_EMAIL_TO
   default_tools:
-    jdk: kie-jdk11
-    maven: kie-maven-3.8.7
-    sonar_jdk: kie-jdk17
+    jdk: jdk_11_latest
+    maven: maven_3.8.6
+    sonar_jdk: jdk_17_latest
   jobs_definition_file: .ci/jenkins/dsl/jobs.groovy

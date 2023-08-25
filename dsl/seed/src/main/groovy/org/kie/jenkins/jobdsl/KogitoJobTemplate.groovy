@@ -44,7 +44,7 @@ class KogitoJobTemplate {
         String jobFolderName = ''
         def jobFolder = jobParams.job.folder
         if (jobFolder) {
-            if (![JenkinsFolder].any { it.isAssignableFrom(jobFolder.getClass()) }) {
+            if (!jobFolder instanceof JenkinsFolder) {
                 throw new RuntimeException('Folder is not of type org.kie.jenkins.jobdsl.model.JenkinsFolder')
             }
 
