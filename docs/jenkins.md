@@ -142,8 +142,6 @@ environments:
     ids:
     - List of ids identifying the environment
 
-productized_branch: true
-
 # Used to force the disabling of triggers
 # Useful when a branch is no more maintained but you still want to keep job history
 disable:
@@ -199,8 +197,8 @@ cloud:
 jenkins:
   email_creds_id: KOGITO_CI_EMAIL_TO_PERSO
   default_tools:
-    jdk: kie-jdk11
-    maven: kie-maven-3.8.7
+    jdk: jdk_11_latest
+    maven: maven_3.8.6
 
 ```
 

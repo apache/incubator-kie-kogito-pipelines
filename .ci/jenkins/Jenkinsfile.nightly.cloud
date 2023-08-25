@@ -25,7 +25,7 @@ promoteImageParamsPrefix = 'PROMOTE_IMAGE'
 // Should be multibranch pipeline
 pipeline {
     agent {
-        label 'kie-rhel8 && !built-in'
+        label 'ubuntu'
     }
 
     options {
