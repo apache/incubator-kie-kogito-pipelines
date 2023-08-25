@@ -134,10 +134,9 @@ maven:
     creds_id: TO_DEFINE
 cloud:
   image:
-    registry_credentials_nightly: tradisso_registry_token # to set back
-    registry_credentials_release: tradisso_registry_token # to set back
+    registry_credentials: tradisso_registry_token # set to `kogito-quay-token`
     registry: quay.io
-    namespace: tradisso # to set back
+    namespace: tradisso # set to `kiegroup` after testing
     latest_git_branch: main
 jenkins:
   email_creds_id: KOGITO_CI_NOTIFICATION_EMAILS
