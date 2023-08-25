@@ -118,7 +118,7 @@ buildchain_config:
     repository: kogito-pipelines
     file_path: .ci/pull-request-config.yaml
 maven:
-  settings_file_id: kogito_release_settings
+  settings_file_id: kie-release-settings
   nexus:
     release_url: TO_DEFINE
     release_repository: TO_DEFINE
@@ -140,7 +140,7 @@ cloud:
     namespace: tradisso # to set back
     latest_git_branch: main
 jenkins:
-  email_creds_id: KOGITO_CI_EMAIL_TO
+  email_creds_id: KOGITO_CI_NOTIFICATION_EMAILS
   default_tools:
     jdk: jdk_11_latest
     maven: maven_3.8.6

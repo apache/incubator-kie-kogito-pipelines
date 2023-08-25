@@ -16,7 +16,7 @@ mavenDeployLocalDir = env.MAVEN_DEPLOY_LOCAL_DIR ?: ''
 
 buildChainType = env.BUILDCHAIN_TYPE?.trim() ?: 'cross_pr'
 buildChainProject = env.BUILDCHAIN_PROJECT?.trim()
-defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kogito_pr_settings' : 'kogito_release_settings'
+defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kie-pr-settings' : 'kie-release-settings'
 settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
 
 enableSonarCloudAnalysis = env.ENABLE_SONARCLOUD ? env.ENABLE_SONARCLOUD.toBoolean() : false
