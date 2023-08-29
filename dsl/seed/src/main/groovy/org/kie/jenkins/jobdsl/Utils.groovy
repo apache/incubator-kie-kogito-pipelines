@@ -48,10 +48,6 @@ class Utils {
     static boolean hasBindingValuesStartingWith(def script, String keyPrefix) {
         return getBindingValuesStartingWith(script, keyPrefix).size() > 0
     }
-    
-    static boolean isProductizedBranch(def script) {
-        return getBindingValue(script, 'PRODUCTIZED_BRANCH').toBoolean()
-    }
 
     static String getGenerationBranch(def script) {
         return getBindingValue(script, 'GENERATION_BRANCH')

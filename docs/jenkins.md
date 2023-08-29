@@ -142,8 +142,6 @@ environments:
     ids:
     - List of ids identifying the environment
 
-productized_branch: true
-
 # Used to force the disabling of triggers
 # Useful when a branch is no more maintained but you still want to keep job history
 disable:

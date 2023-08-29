@@ -23,18 +23,6 @@ environments:
   #     ADDITIONAL_TIMEOUT: 720
   #   ids:
   #   - native
-  # native-lts:
-  #   env_vars:
-  #     NATIVE: true
-  #     BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
-  #     BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
-  #     QUARKUS_BRANCH: '2.13'
-  #     ADDITIONAL_TIMEOUT: 720
-  #     BUILD_ENVIRONMENT: quarkus-lts
-  #   ids:
-  #   - native
-  #   - prod
-  #   - lts
   # quarkus-main:
   #   enabled: false
   #   env_vars:
@@ -55,15 +43,6 @@ environments:
   #   ids:
   #   - quarkus
   #   - quarkus3
-  # quarkus-lts:
-  #   pull_request_default_check: false
-  #   env_vars:
-  #     BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
-  #     QUARKUS_BRANCH: '2.13'
-  #   ids:
-  #   - quarkus
-  #   - lts
-  #   - prod
   sonarcloud:
     auto_generation: false
     env_vars:
@@ -75,7 +54,6 @@ environments:
     auto_generation: false
     ids:
     - ecosystem
-productized_branch: true
 disable:
   triggers: false
 repositories:
@@ -89,16 +67,6 @@ repositories:
 # - name: kie-tools
 # - name: kogito-docs
 # - name: kie-docs
-#   branch: main-kogito
-productized_repositories:
-- name: kogito-pipelines
-- name: kogito-runtimes
-- name: kogito-apps
-- name: kogito-examples
-- name: kogito-images
-- name: kogito-serverless-operator
-- name: kogito-operator
-- name: kogito-docs
 git:
   author:
     name: kiegroup
