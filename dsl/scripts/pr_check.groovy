@@ -3,6 +3,10 @@ import org.kie.jenkins.MavenSettingsUtils
 
 void launch() {
     docker.image('quay.io/jan_stastny/kogito-ci-build:0.0.0-test2').inside {
+        // TODO temporary solution until image is rebuilt
+        sh 'sudo alternatives --install /usr/local/bin/npm npm /home/nonrootuser/.nvm/versions/node/v16.20.0/bin/npm 1'
+        sh 'npm --version'
+
         try {
             launchStages()
         } finally {
