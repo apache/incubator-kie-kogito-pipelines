@@ -66,7 +66,7 @@ void launch() {
 
 String getBuildChainCommandline() {
     // TODO those should be parametrized
-    String buildChainProject = 'kogito-pipelines'
+    String buildChainProject = env.BUILDCHAIN_PROJECT ?: CHANGE_REPO
     String buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
     String buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
     String buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:kiegroup}'
