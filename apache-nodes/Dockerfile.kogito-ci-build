@@ -1,0 +1,64 @@
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.2
+
+SHELL ["/bin/bash", "-c"]
+
+ARG SDKMAN_JAVA="17.0.8-tem"
+ARG SDKMAN_MAVEN="3.8.7"
+
+RUN microdnf -y update && microdnf install -y \
+# skdman deps (BEGIN)
+findutils \
+tar \
+gzip \
+unzip \
+zip \
+# skdman deps (END)
+# python3 (BEGIN)
+python3.11 \
+python3.11-devel \
+python3.11-pip \
+python3-gssapi \
+krb5-devel \
+gcc \
+# python3 (END)
+# system (BEGIN)
+shadow-utils \
+sudo \
+wget \
+which \
+# system (END)
+&& microdnf clean all
+
+RUN groupadd -g 910 nonrootuser && useradd -u 910 -g 910 nonrootuser && \
+  echo "nonrootuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+USER nonrootuser
+
+RUN curl -s "https://get.sdkman.io" | bash && \
+  source "$HOME/.sdkman/bin/sdkman-init.sh" && \
+  sdk install java ${SDKMAN_JAVA} && \
+  sudo alternatives --install /usr/local/bin/java java $(which java) 1 && \
+  sdk install maven ${SDKMAN_MAVEN} && \
+  sudo alternatives --install /usr/local/bin/mvn mvn $(which mvn) 1 && \
+  sdk flush
+  
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash && \
+  source ~/.bashrc && nvm install "v16.20.0" && \
+  sudo alternatives --install /usr/local/bin/node node $(which node) 1 \
+  sudo alternatives --install /usr/local/bin/npm npm $(which npm) 1
+  
+RUN wget https://go.dev/dl/go1.19.10.linux-amd64.tar.gz -P /tmp && \
+  sudo mkdir /opt/golang && \
+  sudo tar -C /opt/golang -xzf /tmp/go*.tar.gz && \
+  sudo chown -R nonrootuser:nonrootuser /opt/golang/go && \
+  sudo chmod -R 755 /opt/golang/go && \
+  echo 'export GOPATH=${HOME}/go' | sudo tee /etc/profile.d/go.sh && \
+  echo "source /etc/profile.d/go.sh" >> $HOME/.bashrc && \
+  rm -rf /tmp/go* && \
+  sudo alternatives --install /usr/local/bin/go go /opt/golang/go/bin/go 1
+  
+RUN pip3.11 install cekit==4.8.0 behave lxml docker docker-squash elementPath pyyaml ruamel.yaml python-dateutil Jinja2 pykwalify colorlog click
+
+ENV NODE_OPTIONS=--max_old_space_size=4096
+ENV HOME=/home/nonrootuser/
+
+WORKDIR /project/directory
