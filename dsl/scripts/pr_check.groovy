@@ -2,6 +2,12 @@ import org.kie.jenkins.MavenCommand
 import org.kie.jenkins.MavenSettingsUtils
 
 void launch() {
+    docker.image('quay.io/jan_stastny/kogito-ci-build:0.0.0-test2').inside {
+        launchStages()
+    }
+}
+
+void launchStages() {
     stage('Initialize') {
         sh 'printenv > env_props'
         archiveArtifacts artifacts: 'env_props'
@@ -31,7 +37,7 @@ void launch() {
         echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
 
         configFileProvider([configFile(fileId: 'kogito_pr_settings', variable: 'MAVEN_SETTINGS_FILE')]) { // TODO as env ?
-            withCredentials([string(credentialsId: "kie-ci3-token", variable: 'GITHUB_TOKEN')]) { // TODO as env ?
+            withCredentials([string(credentialsId: 'kie-ci3-token', variable: 'GITHUB_TOKEN')]) { // TODO as env ?
                 env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
                 echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
 
