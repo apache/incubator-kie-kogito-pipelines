@@ -1,6 +1,3 @@
-import org.kie.jenkins.MavenCommand
-import org.kie.jenkins.MavenSettingsUtils
-
 void launch() {
     docker.image('quay.io/jan_stastny/kogito-ci-build:0.0.0-test2').inside {
         // TODO temporary solution until image is rebuilt
