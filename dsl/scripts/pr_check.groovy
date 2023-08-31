@@ -3,7 +3,14 @@ import org.kie.jenkins.MavenSettingsUtils
 
 void launch() {
     docker.image('quay.io/jan_stastny/kogito-ci-build:0.0.0-test2').inside {
-        launchStages()
+        try {
+            launchStages()
+        } finally {
+            if (currentBuild.currentResult != 'SUCCESS') {
+                // TODO ci token as env ?
+                pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, getReproducer(true), "${BUILD_URL}", 'GITHUB'), "kie-ci3-token")
+            }
+        }
     }
 }
 
@@ -11,6 +18,9 @@ void launchStages() {
     stage('Initialize') {
         sh 'printenv > env_props'
         archiveArtifacts artifacts: 'env_props'
+
+        // TODO temporary solution to install npm
+
     }
     stage('check space before build') {
         try {
@@ -93,6 +103,31 @@ String getBuildMavenOptsCurrent() {
 
 boolean isEnableSonarCloudAnalysis() {
     return env.ENABLE_SONARCLOUD ? env.ENABLE_SONARCLOUD.toBoolean() : false
+}
+
+String getReproducer(boolean isGH = false) {
+    String reproducer = """
+${env.QUARKUS_BRANCH ? "export QUARKUS_BRANCH=${env.QUARKUS_BRANCH}" : ''}
+${env.BUILD_MVN_OPTS_CURRENT ? "export BUILD_MVN_OPTS_CURRENT=${env.BUILD_MVN_OPTS_CURRENT}" : ''}
+${getBuildChainCommandline()}
+
+NOTE: To install the build-chain tool, please refer to https://github.com/kiegroup/github-action-build-chain#local-execution
+"""
+
+    if(isGH) {
+        return """
+<details>
+<summary><b>Reproducer</b></summary>
+${reproducer}
+</details>
+"""
+    } else {
+        return """
+```spoiler Reproducer
+${reproducer}
+```
+"""
+    }
 }
 
 return this
