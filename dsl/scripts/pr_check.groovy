@@ -40,6 +40,7 @@ void launch() {
                 } catch (err) {
                     echo 'Error running the build-chain ...'
                     util.archiveConsoleLog('', 300)
+                    throw err
                 } finally {
                     // Remove `node_modules` to avoid heap space issues with junit command thereafter
                     // Related to https://github.com/jenkinsci/junit-plugin/issues/478 and https://github.com/jenkinsci/junit-plugin/issues/467
