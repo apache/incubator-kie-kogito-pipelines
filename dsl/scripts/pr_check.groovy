@@ -19,16 +19,6 @@ void launchStages() {
     stage('Initialize') {
         sh 'printenv > env_props'
         archiveArtifacts artifacts: 'env_props'
-
-        // TODO temporary solution to install npm
-
-    }
-    stage('check space before build') {
-        try {
-            util.spaceLeft()
-        } catch (err) {
-            echo "Error when checking the space on node ... ${err}"
-        }
     }
     stage('Install build-chain tool') {
         println '[INFO] Getting build-chain version from composite action file'
@@ -76,13 +66,10 @@ void launchStages() {
             }
         }
     }
-    stage('check space after build') {
-        util.spaceLeft()
-    }
 }
 
 String getBuildChainCommandline() {
-    // TODO those should be parametrized
+    // Those can be overriden in Jenkinsfiles
     String buildChainProject = env.BUILDCHAIN_PROJECT ?: CHANGE_REPO
     String buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
     String buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
