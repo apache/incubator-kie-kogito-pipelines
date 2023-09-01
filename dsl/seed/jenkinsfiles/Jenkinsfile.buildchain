@@ -47,7 +47,9 @@ notificationJobName = env.NOTIFICATION_JOB_NAME ?: 'PR'
 
 pipeline {
     agent {
-        label agentLabel
+        docker { 
+            image 'quay.io/tradisso/kogito-ci-build:0.0.0-test3'  // TODO to set in branch config
+        }
     }
     options {
         timestamps()
@@ -72,12 +74,7 @@ pipeline {
                 }
             }
         }
-        stage("Perform build steps") {
-            agent {
-                docker { 
-                    image 'quay.io/tradisso/kogito-ci-build:0.0.0-test3'  // TODO to set in branch config
-                }
-            }
+        stage('Perform build steps') {
             stages {
                 stage('Install build-chain tool') {
                     steps {
@@ -93,14 +90,16 @@ pipeline {
                             sh "npm install -g @kie/build-chain-action@${buildChainVersion}${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
 
                             sh "npm list -g | grep build-chain"
+                            sh 'sudo alternatives --install /usr/local/bin/build-chain build-chain /home/nonrootuser/.nvm/versions/node/v16.20.0/bin/build-chain 1'
+                            sh 'build-chain || true'
                         }
                     }
                 }
                 stage('Build projects') {
                     steps {
                         script {
-                            env.LD_LIBRARY_PATH = "${env.LD_LIBRARY_PATH ? "${env.LD_LIBRARY_PATH}:": ''}${GRAALVM_HOME}/lib/server"
-                            echo "LD_LIBRARY_PATH = ${LD_LIBRARY_PATH}"
+                            // env.LD_LIBRARY_PATH = "${env.LD_LIBRARY_PATH ? "${env.LD_LIBRARY_PATH}:": ''}${GRAALVM_HOME}/lib/server"
+                            // echo "LD_LIBRARY_PATH = ${LD_LIBRARY_PATH}"
 
                             env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
                             echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
@@ -114,7 +113,7 @@ pipeline {
                                     env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
                                     echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
 
-                                    util.runWithPythonVirtualEnv("${getBuildChainCommandline(true)}", 'swf')
+                                    sh getBuildChainCommandline(true)
                                 }
                             }
                         }
@@ -170,17 +169,6 @@ pipeline {
                     }
                 }
             }
-            unsuccessful {
-                script {
-                    if (isPRBuildChainType()) {
-                        pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, getReproducer(true), "${BUILD_URL}", 'GITHUB'), "${GIT_AUTHOR_TOKEN_CREDENTIALS_ID}")
-                    } else if (shouldNotify()) {
-                        withCredentials([string(credentialsId: "${JENKINS_EMAIL_CREDS_ID}", variable: 'KOGITO_CI_EMAIL_TO')]) {
-                            mailer.sendMarkdownTestSummaryNotification(env.NOTIFICATION_JOB_NAME ?: '', "[${env.GIT_BRANCH_NAME}] ${getRepoNameCamelCase(env.REPO_NAME)}", [env.KOGITO_CI_EMAIL_TO], getReproducer())
-                        }
-                    }
-                }
-            }
         }
         stage('Trigger downstream jobs') {
             when {
@@ -197,13 +185,24 @@ pipeline {
         }
     }
     post {
-        cleanup {
+        unsuccessful {
             script {
-                // Clean also docker in case of usage of testcontainers lib
-                util.cleanNode('docker')
-                sh 'rm -rf /tmp/quarkus'
+                if (isPRBuildChainType()) {
+                    pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, getReproducer(true), "${BUILD_URL}", 'GITHUB'), "${GIT_AUTHOR_TOKEN_CREDENTIALS_ID}")
+                } else if (shouldNotify()) {
+                    withCredentials([string(credentialsId: "${JENKINS_EMAIL_CREDS_ID}", variable: 'KOGITO_CI_EMAIL_TO')]) {
+                        mailer.sendMarkdownTestSummaryNotification(env.NOTIFICATION_JOB_NAME ?: '', "[${env.GIT_BRANCH_NAME}] ${getRepoNameCamelCase(env.REPO_NAME)}", [env.KOGITO_CI_EMAIL_TO], getReproducer())
+                    }
+                }
             }
         }
+        // cleanup {
+        //     script {
+        //         // Clean also docker in case of usage of testcontainers lib
+        //         util.cleanNode('docker')
+        //         sh 'rm -rf /tmp/quarkus'
+        //     }
+        // }
     }
 }
 
