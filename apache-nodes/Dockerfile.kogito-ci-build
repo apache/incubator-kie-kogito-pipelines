@@ -7,6 +7,7 @@ ARG SDKMAN_MAVEN="3.8.7"
 
 RUN microdnf -y update && microdnf install -y \
 # skdman deps (BEGIN)
+git \
 findutils \
 tar \
 gzip \
@@ -43,7 +44,7 @@ RUN curl -s "https://get.sdkman.io" | bash && \
   
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash && \
   source ~/.bashrc && nvm install "v16.20.0" && \
-  sudo alternatives --install /usr/local/bin/node node $(which node) 1 \
+  sudo alternatives --install /usr/local/bin/node node $(which node) 1 && \
   sudo alternatives --install /usr/local/bin/npm npm $(which npm) 1
   
 RUN wget https://go.dev/dl/go1.19.10.linux-amd64.tar.gz -P /tmp && \

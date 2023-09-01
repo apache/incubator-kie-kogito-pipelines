@@ -1,9 +1,5 @@
 void launch() {
-    docker.image('quay.io/jan_stastny/kogito-ci-build:0.0.0-test2').inside {
-        // TODO temporary solution until image is rebuilt
-        sh 'sudo alternatives --install /usr/local/bin/npm npm /home/nonrootuser/.nvm/versions/node/v16.20.0/bin/npm 1'
-        sh 'npm --version'
-
+    docker.image('quay.io/tradisso/kogito-ci-build:0.0.0-test3').inside {
         try {
             launchStages()
         } finally {
@@ -33,6 +29,9 @@ void launchStages() {
         sh "npm install -g @kie/build-chain-action@${buildChainVersion}${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
 
         sh 'npm list -g | grep build-chain'
+
+        sh 'sudo alternatives --install /usr/local/bin/build-chain build-chain /home/nonrootuser/.nvm/versions/node/v16.20.0/bin/build-chain 1'
+        sh 'build-chain || true'
     }
     stage('Build projects') {
         env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
