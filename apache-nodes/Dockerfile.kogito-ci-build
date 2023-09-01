@@ -1,11 +1,11 @@
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.2
+FROM registry.access.redhat.com/ubi9/ubi:9.2
 
 SHELL ["/bin/bash", "-c"]
 
 ARG SDKMAN_JAVA="17.0.8-tem"
 ARG SDKMAN_MAVEN="3.8.7"
 
-RUN microdnf -y update && microdnf install -y \
+RUN dnf -y update && dnf install -y \
 # skdman deps (BEGIN)
 git \
 findutils \
@@ -28,10 +28,18 @@ sudo \
 wget \
 which \
 # system (END)
-&& microdnf clean all
+&& dnf clean all
 
 RUN groupadd -g 910 nonrootuser && useradd -u 910 -g 910 nonrootuser && \
   echo "nonrootuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Docker
+RUN  dnf -y update && dnf install -y yum-utils device-mapper-persistent-data lvm2 && \
+  dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
+  dnf install -y docker-ce --nobest && \
+  # systemctl enable --now docker && \
+  usermod -aG docker nonrootuser
+
 USER nonrootuser
 
 RUN curl -s "https://get.sdkman.io" | bash && \
