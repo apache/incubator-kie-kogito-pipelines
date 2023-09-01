@@ -1,5 +1,5 @@
 void launch() {
-    docker.image('quay.io/tradisso/kogito-ci-build:0.0.0-test3').inside {
+    docker.image('quay.io/kiegroup/kogito-ci-build:0.0.0-test4').inside {
         try {
             launchStages()
         } finally {
