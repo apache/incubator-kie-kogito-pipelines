@@ -44,7 +44,7 @@ void launchStages() {
                 echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
 
                 try {
-                    util.runWithPythonVirtualEnv("${getBuildChainCommandline()}", 'swf')
+                    sh getBuildChainCommandline()
                 } catch (err) {
                     echo 'Error running the build-chain ...'
                     util.archiveConsoleLog('', 300)
