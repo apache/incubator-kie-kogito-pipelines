@@ -7,6 +7,7 @@ void launch() {
         try {
             launchStages()
         } finally {
+            echo "Got build result ${currentBuild.currentResult}"
             if (currentBuild.currentResult != 'SUCCESS') {
                 // TODO ci token as env ?
                 pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, getReproducer(true), "${BUILD_URL}", 'GITHUB'), "kie-ci3-token")
@@ -37,7 +38,7 @@ void launchStages() {
         env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
         echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
 
-        configFileProvider([configFile(fileId: 'kogito_pr_settings', variable: 'MAVEN_SETTINGS_FILE')]) { // TODO as env ?
+        configFileProvider([configFile(fileId: 'kogito-pr-settings', variable: 'MAVEN_SETTINGS_FILE')]) { // TODO as env ?
             withCredentials([string(credentialsId: 'kie-ci3-token', variable: 'GITHUB_TOKEN')]) { // TODO as env ?
                 env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
                 echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
