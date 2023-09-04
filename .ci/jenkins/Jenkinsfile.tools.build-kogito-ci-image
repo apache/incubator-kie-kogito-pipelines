@@ -20,7 +20,7 @@ pipeline {
             steps {
                 script {
                     String imageName = 'quay.io/kiegroup/kogito-ci-build'
-                    String imageTag = '0.0.0-build-${BUILD_NUMBER}'
+                    String imageTag = "0.0.0-build-${BUILD_NUMBER}"
                     String imageNameTag = "${imageName}:${imageTag}"
                     String commitImageNameTag = "${imageName}:${GIT_COMMIT}"
                     String latestImageNameTag = "${imageName}:latest"
@@ -49,7 +49,7 @@ pipeline {
                 always {
                     script {
                         sh "rm -rf ${DOCKER_CONFIG}"
-                        sh 'docker logout quay.}
+                        sh 'docker logout quay.io'
 io'
                     }
                 }
