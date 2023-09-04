@@ -5,6 +5,9 @@ SHELL ["/bin/bash", "-c"]
 ARG SDKMAN_JAVA="17.0.8-tem"
 ARG SDKMAN_MAVEN="3.8.8"
 
+# set locale to C.UTF-8
+ENV LANG='C.UTF-8'
+
 RUN dnf -y update && dnf install -y \
 # skdman deps (BEGIN)
 git \
