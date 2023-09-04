@@ -10,6 +10,7 @@ void launch() {
             }
         }
     }
+    sh 'docker rmi quay.io/kiegroup/kogito-ci-build:latest'
 }
 
 void launchStages() {
