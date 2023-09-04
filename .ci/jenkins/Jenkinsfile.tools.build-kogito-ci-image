@@ -29,7 +29,8 @@ pipeline {
 
                     dir('kogito-pipelines') {
                         deleteDir()
-                        checkout(githubscm.resolveRepository('kogito-pipelines', 'radtriste', 'apache_migration_pr_checks', false)) // TODO to set back
+
+                        checkout scm
 
                         sh """
                             docker build --build-arg SDKMAN_JAVA=11.0.20-tem -t ${imageNameTag} -f apache-nodes/Dockerfile.kogito-ci-build .
