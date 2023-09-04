@@ -1,6 +1,17 @@
+// TODO Docker image and args could be passed as env or anything ?
+dockerGroups = [ 
+    'docker',
+    'input',
+    'render',
+]
+dockerArgs = [
+    '-v /var/run/docker.sock:/var/run/docker.sock',
+] + dockerGroups.collect { group -> "--group-add ${group}" }
+
 void launch() {
     String builderImage = 'quay.io/kiegroup/kogito-ci-build:latest'
-    sh "docker rmi -f ${builderImage} || true"
+    sh "docker rmi -f ${builderImage} || true" // Remove before launching
+
     try {
         launchInDocker(builderImage)
     } finally {
@@ -9,15 +20,17 @@ void launch() {
 }
 
 void launchInDocker(String builderImage) {
-    docker.image(builderImage).inside {
-        env.JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
+    docker.image(builderImage).inside(dockerArgs.join(' ')) {
+        // Debug. To be removed in the future
+        sh "printenv"
+        sh 'ls -last /var/run/docker.sock'
         try {
             launchStages()
         } finally {
             echo "Got build result ${currentBuild.currentResult}"
             if (currentBuild.currentResult != 'SUCCESS') {
                 // TODO ci token as env ?
-                pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, getReproducer(true), "${BUILD_URL}", 'GITHUB'), "kie-ci3-token")
+                pullrequest.postComment(util.getMarkdownTestSummary('PR', getReproducer(true), "${BUILD_URL}", 'GITHUB'), "kie-ci3-token")
             }
         }
     }

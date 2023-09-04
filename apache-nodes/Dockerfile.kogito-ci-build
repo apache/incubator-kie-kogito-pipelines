@@ -4,6 +4,8 @@ SHELL ["/bin/bash", "-c"]
 
 ARG SDKMAN_JAVA="17.0.8-tem"
 ARG SDKMAN_MAVEN="3.8.8"
+ARG PYTHON_MAJOR_VERSION="3"
+ARG PYTHON_MAJOR_MINOR_VERSION="3.11"
 
 # set locale to C.UTF-8
 ENV LANG='C.UTF-8'
@@ -18,10 +20,10 @@ unzip \
 zip \
 # skdman deps (END)
 # python3 (BEGIN)
-python3.11 \
-python3.11-devel \
-python3.11-pip \
-python3-gssapi \
+python${PYTHON_MAJOR_MINOR_VERSION} \
+python${PYTHON_MAJOR_MINOR_VERSION}-devel \
+python${PYTHON_MAJOR_MINOR_VERSION}-pip \
+python${PYTHON_MAJOR_VERSION}-gssapi \
 krb5-devel \
 gcc \
 # python3 (END)
@@ -33,15 +35,18 @@ which \
 # system (END)
 && dnf clean all
 
+RUN sudo alternatives --install /usr/local/bin/python python $(which python${PYTHON_MAJOR_MINOR_VERSION}) 1 && \
+  sudo alternatives --install /usr/local/bin/pip pip $(which pip${PYTHON_MAJOR_MINOR_VERSION}) 1
+
 RUN groupadd -g 910 nonrootuser && useradd -u 910 -g 910 nonrootuser && \
   echo "nonrootuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Docker
 RUN  dnf -y update && dnf install -y yum-utils device-mapper-persistent-data lvm2 && \
   dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
-  dnf install -y docker-ce --nobest && \
-  # systemctl enable --now docker && \
-  usermod -aG docker nonrootuser
+  dnf remove podman buildah && \
+  dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin --nobest && \
+  dnf clean all
 
 USER nonrootuser
 
@@ -70,7 +75,13 @@ RUN wget https://go.dev/dl/go1.19.10.linux-amd64.tar.gz -P /tmp && \
   
 RUN pip3.11 install cekit==4.8.0 behave lxml docker docker-squash elementPath pyyaml ruamel.yaml python-dateutil Jinja2 pykwalify colorlog click
 
-ENV NODE_OPTIONS=--max_old_space_size=4096
-ENV HOME=/home/nonrootuser/
+ENV HOME="/home/nonrootuser/"
+
+ENV JAVA_HOME="/home/nonrootuser/.sdkman/candidates/java/current/"
+ENV MAVEN_HOME="/home/nonrootuser/.sdkman/candidates/maven/current/"
+ENV MAVEN_OPTS="-Xms1024m -Xmx12g"
+ENV NODE_OPTIONS="--max_old_space_size=4096"
+ENV GOPATH="/home/nonrootuser/go"
+ENV GOROOT="/opt/golang/go"
 
 WORKDIR /project/directory
