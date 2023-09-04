@@ -1,9 +1,16 @@
 void launch() {
-    docker.image('quay.io/jan_stastny/kogito-ci-build:0.0.0-test2').inside {
-        // TODO temporary solution until image is rebuilt
-        sh 'sudo alternatives --install /usr/local/bin/npm npm /home/nonrootuser/.nvm/versions/node/v16.20.0/bin/npm 1'
-        sh 'npm --version'
+    String builderImage = 'quay.io/kiegroup/kogito-ci-build:latest'
+    sh "docker rmi -f ${builderImage} || true"
+    try {
+        launchInDocker(builderImage)
+    } finally {
+        sh "docker rmi -f ${builderImage} || true"
+    }
+}
 
+void launchInDocker(String builderImage) {
+    docker.image(builderImage).inside {
+        env.JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
         try {
             launchStages()
         } finally {
@@ -33,6 +40,9 @@ void launchStages() {
         sh "npm install -g @kie/build-chain-action@${buildChainVersion}${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
 
         sh 'npm list -g | grep build-chain'
+
+        sh 'sudo alternatives --install /usr/local/bin/build-chain build-chain /home/nonrootuser/.nvm/versions/node/v16.20.0/bin/build-chain 1'
+        sh 'build-chain || true'
     }
     stage('Build projects') {
         env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
@@ -81,7 +91,8 @@ String getBuildChainCommandline() {
         "-p ${buildChainProject}",
         "-u ${CHANGE_URL}", // Provided by source branch plugin
     ]
-    return "build-chain build cross_pr --token ${GITHUB_TOKEN} -f 'https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -o 'bc' ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout"
+    // TODO remove debug option
+    return "build-chain build cross_pr --token ${GITHUB_TOKEN} -f 'https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -o 'bc' ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout --debug"
 }
 
 String getBuildMavenOptsCurrent() {
