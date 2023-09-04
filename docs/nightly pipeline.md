@@ -9,26 +9,10 @@
     - [Nightly pipeline is failing](#nightly-pipeline-is-failing)
     - [Nightly pipeline is unstable](#nightly-pipeline-is-unstable)
     - [Build \& Deploy job is failing](#build--deploy-job-is-failing)
-    - [Promote job is failing](#promote-job-is-failing)
   - [Testing the Nightly Pipeline](#testing-the-nightly-pipeline)
 
 In order to perform, Nightly and Release pipelines need to call some deploy and promote jobs for runtimes, examples, images and operator.  
 Those jobs should be present at the same level as the nightly and/or release job, so they can be found when called.
-
-Here is the list of jobs and link to Jenkinsfiles:
-
-* [kogito-runtimes-deploy](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.deploy)
-* [kogito-runtimes-promote](https://github.com/kiegroup/kogito-runtimes/blob/main/Jenkinsfile.promote)
-* [kogito-apps-deploy](https://github.com/kiegroup/kogito-apps/blob/main/Jenkinsfile.deploy)
-* [kogito-apps-promote](https://github.com/kiegroup/kogito-apps/blob/main/Jenkinsfile.promote)
-* [kogito-examples-deploy](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.deploy)
-* [kogito-examples-promote](https://github.com/kiegroup/kogito-examples/blob/main/Jenkinsfile.promote)
-* [kogito-images-deploy](https://github.com/kiegroup/kogito-images/blob/main/Jenkinsfile.deploy)
-* [kogito-images-promote](https://github.com/kiegroup/kogito-images/blob/main/Jenkinsfile.promote)
-* [kogito-examples-images-deploy](https://github.com/kiegroup/kogito-operator/blob/main/Jenkinsfile.examples-images.deploy)
-* [kogito-examples-images-promote](https://github.com/kiegroup/kogito-operator/blob/main/Jenkinsfile.examples-images.promote)
-* [kogito-operator-deploy](https://github.com/kiegroup/kogito-operator/blob/main/Jenkinsfile.deploy)
-* [kogito-operator-promote](https://github.com/kiegroup/kogito-operator/blob/main/Jenkinsfile.promote)
 
 ## Nightly pipeline Architecture
 
@@ -94,15 +78,6 @@ Here are some problems which can occur on a `Build & Deploy` job:
 * Groovy script error (Jenkinsfile.deploy has some problems)
 * Compilation
 * Test errors
-* Deployment problem (credentials)
-
-### Promote job is failing
-
-In that case, identify the error (Groovy script error or test problem), correct it and rebuild the failing job.
-
-Here are some problems which can occur on a `Promote` job:
-
-* Groovy script error (Jenkinsfile.deploy has some problems)
 * Deployment problem (credentials)
 
 ## Testing the Nightly Pipeline

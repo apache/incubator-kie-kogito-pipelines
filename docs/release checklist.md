@@ -2,11 +2,7 @@
 
 ## Cut-off
 
-- Prepare release branch
-- Retrieve PR created from the job
-- Once PR is merged, execute `0-seed-job` (automation not yet fully available ...)
-
-Jobs should then be created for the branch and nightly are automatically activated.
+Call the `0-prepare-release-branch` and wait for all the preparation.
 
 ## Before Release day
 
