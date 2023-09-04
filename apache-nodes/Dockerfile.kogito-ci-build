@@ -3,7 +3,7 @@ FROM registry.access.redhat.com/ubi9/ubi:9.2
 SHELL ["/bin/bash", "-c"]
 
 ARG SDKMAN_JAVA="17.0.8-tem"
-ARG SDKMAN_MAVEN="3.8.7"
+ARG SDKMAN_MAVEN="3.8.8"
 
 RUN dnf -y update && dnf install -y \
 # skdman deps (BEGIN)
