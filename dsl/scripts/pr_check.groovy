@@ -1,9 +1,10 @@
 void launch() {
     String builderImage = 'quay.io/kiegroup/kogito-ci-build:latest'
+    sh "docker rmi -f ${builderImage} || true"
     try {
         launchInDocker(builderImage)
     } finally {
-        sh "docker rmi -f ${builderImage}"
+        sh "docker rmi -f ${builderImage} || true"
     }
 }
 
