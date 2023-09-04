@@ -48,7 +48,7 @@ notificationJobName = env.NOTIFICATION_JOB_NAME ?: 'PR'
 pipeline {
     agent {
         docker { 
-            image 'quay.io/kiegroup/kogito-ci-build:0.0.0-test4'  // TODO to set in branch config
+            image 'quay.io/kiegroup/kogito-ci-build:latest'  // TODO to set in branch config
         }
     }
     options {
