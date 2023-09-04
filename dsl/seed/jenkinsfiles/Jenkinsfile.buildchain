@@ -75,7 +75,7 @@ pipeline {
                     currentBuild.displayName = params.DISPLAY_NAME ?: env.GIT_BRANCH_NAME ?: currentBuild.displayName
 
                     // Needed by Kogito Apps
-                    setupCypressEnv('9.7.0')
+                    setupCypressEnv('12.17.0')
                 }
             }
         }
