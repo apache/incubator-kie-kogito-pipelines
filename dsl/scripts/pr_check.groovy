@@ -1,5 +1,14 @@
 void launch() {
-    docker.image('quay.io/kiegroup/kogito-ci-build:latest').inside {
+    String builderImage = 'quay.io/kiegroup/kogito-ci-build:latest'
+    try {
+        launchInDocker(builderImage)
+    } finally {
+        sh "docker rmi -f ${builderImage}"
+    }
+}
+
+void launchInDocker(String builderImage) {
+    docker.image(builderImage).inside {
         env.JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
         try {
             launchStages()
@@ -11,7 +20,6 @@ void launch() {
             }
         }
     }
-    sh 'docker rmi quay.io/kiegroup/kogito-ci-build:latest'
 }
 
 void launchStages() {
