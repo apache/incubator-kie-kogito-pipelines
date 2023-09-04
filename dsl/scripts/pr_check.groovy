@@ -1,5 +1,6 @@
 void launch() {
     docker.image('quay.io/kiegroup/kogito-ci-build:latest').inside {
+        env.JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
         try {
             launchStages()
         } finally {
