@@ -211,3 +211,9 @@ See the different workflows. They mostly use the build-chain for artifacts's rep
 4) Review the changes.
    **Make sure there is no downgrade of dependency version !!!!**
 
+## Apache migration
+
+With IBM, we are working on porting the pipelines on [Apache Jenkins](https://ci-builds.apache.org/job/KIE/).  
+For that, each impacted repository contains a `apache_migration` branch where the needed changes are.
+
+Once the migration is done, we should be able to merge this branch on main and generate the final pipelines on Apache Jenkins.
