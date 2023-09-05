@@ -180,7 +180,6 @@ Main Config file for Quarkus 3 are can be found on separate from code:
 - https://github.com/kiegroup/optaplanner/tree/9.x-dsl-config
 
 And jobs can be found in different Jenkins folders:
-https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/optaplanner-9.x/
 - https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/drools-9.x/
 - https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito-2.x/
 - https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/optaplanner-9.x/
