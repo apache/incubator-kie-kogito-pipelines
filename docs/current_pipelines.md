@@ -43,9 +43,12 @@ Kogito contains both Artifacts and Cloud repositories. Those are "decoupled", wh
 
 ## Jenkins 
 
+All current Jenkins pipelines can be found in https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/
+
+Each project has there its own folder (`drools`, `kogito`, `optaplanner`) and in there its own main seed job (see after).
 ### Seed generation
 
-For more information on the see generation, please look at the [jenkins](./jenkins.md) documentation.
+For more information on the seed generation, please look at the [jenkins](./jenkins.md) documentation.
 
 Main information to remember:
 
@@ -182,7 +185,7 @@ https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/
 - https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito-2.x/
 - https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/optaplanner-9.x/
 
-We keep separate configurations between the 2 streams because it is easier to manage. Jobs configuration can then be read. Compare to "Stream 8/1", some environments are disabled for now.
+NOTE: We keep separate configurations between the 2 streams because it is easier to manage. Jobs configuration can then be read. Compare to "Stream 8/1", some environments are disabled for now.
 
 ## GitHub Actions
 
