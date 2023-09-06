@@ -2,9 +2,9 @@
   "metadata": {
     "title": "Kogito Status",
     "subtitle": "Kiegroup Kogito organization repositories CI status",
-    "date": "2023-09-06T20:17:40.970Z",
+    "date": "2023-09-06T21:14:49.267Z",
     "createdBy": "GitHub Action",
-    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/6101997600"
+    "createdUrl": "https://github.com/kiegroup/kogito-pipelines/actions/runs/6102488032"
   },
   "projects": [
     {
@@ -2127,10 +2127,10 @@
               "id": 16557171368,
               "name": "kogito-quarkus-examples (ubuntu-latest / Java-11 / Maven-3.8.7)",
               "html_url": "https://github.com/kiegroup/kogito-runtimes/actions/runs/6101238162/job/16557171368",
-              "status": "in_progress",
-              "conclusion": null,
+              "status": "completed",
+              "conclusion": "success",
               "started_at": "2023-09-06T18:53:59Z",
-              "completed_at": null,
+              "completed_at": "2023-09-06T20:34:14Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
             },
@@ -2155,16 +2155,6 @@
               "completed_at": "2023-09-06T19:33:30Z",
               "slug": "github-actions",
               "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 24952917714,
-              "name": "(build) kogito-apps",
-              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-apps/3117/display/redirect",
-              "conclusion": "pending",
-              "started_at": "2023-09-06T18:54:03Z",
-              "completed_at": "2023-09-06T18:54:03Z",
-              "slug": true,
-              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
             },
             {
               "id": 24953555220,
@@ -2203,6 +2193,16 @@
               "conclusion": "failure",
               "started_at": "2023-09-06T19:36:33Z",
               "completed_at": "2023-09-06T19:36:33Z",
+              "slug": true,
+              "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
+            },
+            {
+              "id": 24954777597,
+              "name": "(build) kogito-apps",
+              "html_url": "https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/pullrequest/job/kogito-runtimes.tests.downstream.kogito-apps/3117/display/redirect",
+              "conclusion": "success",
+              "started_at": "2023-09-06T20:35:23Z",
+              "completed_at": "2023-09-06T20:35:23Z",
               "slug": true,
               "avatar_url": "https://avatars.githubusercontent.com/u/11995863?v=4"
             }
@@ -14156,59 +14156,6 @@
       "pulls_url": "https://api.github.com/repos/kiegroup/kogito-operator/pulls{/number}",
       "pullRequests": [
         {
-          "number": 1525,
-          "title": "1.13.x blue merge",
-          "url": "https://api.github.com/repos/kiegroup/kogito-operator/pulls/1525",
-          "html_url": "https://github.com/kiegroup/kogito-operator/pull/1525",
-          "state": "open",
-          "labels": [],
-          "draft": false,
-          "requested_reviewers": [],
-          "created_at": "2023-09-06T14:40:29Z",
-          "updated_at": "2023-09-06T20:11:29Z",
-          "closed_at": null,
-          "merged_at": null,
-          "base": {
-            "ref": "1.13.x-blue",
-            "sha": "56352a94f6cd416dbe3eeff31d490405f26353a5",
-            "label": "kiegroup:1.13.x-blue"
-          },
-          "head": {
-            "ref": "1.13.x-blue_merge",
-            "sha": "27cfc007b7c90d7854de4ccfa3a4d10b97a4e928",
-            "label": "rgdoliveira:1.13.x-blue_merge"
-          },
-          "user": {
-            "login": "rgdoliveira",
-            "avatar_url": "https://avatars.githubusercontent.com/u/25102037?v=4",
-            "html_url": "https://github.com/rgdoliveira"
-          },
-          "checks": [
-            {
-              "id": 16559338489,
-              "name": "Lint",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/6101941970/job/16559338489",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-09-06T20:11:34Z",
-              "completed_at": "2023-09-06T20:16:01Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            },
-            {
-              "id": 16559338131,
-              "name": "Bats Test",
-              "html_url": "https://github.com/kiegroup/kogito-operator/actions/runs/6101941970/job/16559338131",
-              "status": "completed",
-              "conclusion": "success",
-              "started_at": "2023-09-06T20:11:34Z",
-              "completed_at": "2023-09-06T20:12:19Z",
-              "slug": "github-actions",
-              "avatar_url": "https://avatars.githubusercontent.com/u/9919?v=4"
-            }
-          ]
-        },
-        {
           "number": 1510,
           "title": "KOGITO-9681 CI: Use cloud shared libraries",
           "url": "https://api.github.com/repos/kiegroup/kogito-operator/pulls/1510",
@@ -14599,6 +14546,9 @@
               "sha": "98c5c32fcaea590ddae9d562f00ae386ca7f2bf7"
             },
             {
+              "sha": "1dfad70cd15739da2a2c65f7cce5b7476ed7be86"
+            },
+            {
               "sha": "0fe1d4dc1bd76d6c6019042fb93e3b72732b522c"
             },
             {
@@ -14606,6 +14556,9 @@
             },
             {
               "sha": "7ff370079e77b61ad64ca2e6d50d56a69bcce596"
+            },
+            {
+              "sha": "33d97121e4488e7c4a9bee299857e45dc9228af6"
             },
             {
               "sha": "8b434e68763cd83e942af26cd189099342670413"
@@ -14632,16 +14585,16 @@
               "sha": "c1e3673ddad49bee909bdf91d5dba973d758caf4"
             },
             {
-              "sha": "a445ac59176be202a53974c16db9831e10416563"
+              "sha": "ee3b0f29489847cb72d8849f51a8ab6437626eb0"
             },
             {
-              "sha": "5740633559833b6b828985e08f4b627cb6e63108"
+              "sha": "c74ebb47f4126dc0b78e9e7346d021d8baf89654"
             },
             {
-              "sha": "f31b2a48b0ea8c8c8fe280d36e9d8724f78aade9"
+              "sha": "c1dade17d15cbd685a405928ae96b0ee4d09220c"
             },
             {
-              "sha": "abfca78459e94b459fcdbdeb734e385dfb11cf4f"
+              "sha": "1c59df3092ad41c23a42327fd9cd64f3df54662d"
             },
             {
               "sha": "db3dc50d9a8e6d9e4c622639aeaa39e8e6e52680"
@@ -14674,7 +14627,7 @@
               "sha": "1d2c4de7393db1566560e55247b99d3f8b8717c8"
             },
             {
-              "sha": "7ab63006dbc7c2ce89912e733b31d87de7b2e4ff"
+              "sha": "f5c164d070554dab089c0fb2899a5a1ab824cd12"
             },
             {
               "sha": "cdee8219164e10be2ca031f7b7095f8258036c4d"
@@ -14767,13 +14720,13 @@
               "sha": "7d0aaa15f073bef1b5fdcfe8b1c0e8be7a089266"
             },
             {
-              "sha": "b00510ba4d4180d38d9067b1bfb37f480f7fc761"
+              "sha": "d2b78c9b89c31125ac2db1caefd5a6bfbdacadc0"
             },
             {
               "sha": "a688a9f716ef752a0f156dd98ada2f645771e828"
             },
             {
-              "sha": "f8f5abc2693397e8f9e698b171952fb6092d6578"
+              "sha": "4cc3467d4a65438754162e9561dfe4a8d60d0f00"
             },
             {
               "sha": "d58663390aa6127c8d2463e3d1b5b677bb5c17cf"
@@ -14926,13 +14879,13 @@
               "sha": "9cdcded002705400fd863e12528e803acc992730"
             },
             {
-              "sha": "ae2e885705e5ebca6223d8433ea4bea2d79de595"
+              "sha": "64bbd0dd8e9db77585b04981ee73b1ddaa3823cf"
             },
             {
               "sha": "f3568217ef6c5440b2041e09728e3701079c46b0"
             },
             {
-              "sha": "1bdab034f9221a0e76de5226de4cb590c29e10cf"
+              "sha": "f21019fcac56796ef84546cc3addbd9e98e7ae3e"
             },
             {
               "sha": "42cecf71d06b679af3b1a38c6446e4ff1952d0dd"
@@ -15028,7 +14981,7 @@
               "sha": "4a34676541d44c7a6e3ac715d68586e0d1e514ad"
             },
             {
-              "sha": "5efad03ddb2e6f4cece3c87a36528747ef7b20e5"
+              "sha": "a63881fc13ebb63f4d98f27ca42938382bfac407"
             }
           ]
         },
