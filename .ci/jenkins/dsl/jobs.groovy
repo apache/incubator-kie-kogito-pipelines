@@ -166,7 +166,7 @@ void setupNightlyCloudJob() {
         GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
         GIT_AUTHOR_CREDS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
 
-        IMAGE_REGISTRY_CREDENTIALS: "${CLOUD_IMAGE_REGISTRY_CREDENTIALS_NIGHTLY}",
+        IMAGE_REGISTRY_CREDENTIALS: "${CLOUD_IMAGE_REGISTRY_CREDENTIALS}",
         IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
         IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
         BRANCH_FOR_LATEST: "${CLOUD_IMAGE_LATEST_GIT_BRANCH}",
@@ -196,7 +196,7 @@ void setupQuarkus3NightlyJob() {
         jobParams.env.put('ADDITIONAL_TIMEOUT', '180')
         jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
         jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
-        jobParams.env.put('LAUNCH_DOWNSTREAM_JOBS', 'kogito-runtimes.integration')
+        jobParams.env.put('LAUNCH_DOWNSTREAM_JOBS', 'kie-jpmml-integration.integration,kogito-runtimes.integration')
         jobParams.parametersValues.put('SKIP_TESTS', true)
         jobParams.parametersValues.put('SKIP_INTEGRATION_TESTS', true)
         return jobParams
