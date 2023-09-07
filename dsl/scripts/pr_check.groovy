@@ -58,9 +58,6 @@ void launchStages() {
         sh 'build-chain || true'
     }
     stage('Build projects') {
-        env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
-        echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
-
         configFileProvider([configFile(fileId: 'kie-pr-settings', variable: 'MAVEN_SETTINGS_FILE')]) { // TODO as env ?
             withCredentials([string(credentialsId: 'kie-ci3-token', variable: 'GITHUB_TOKEN')]) { // TODO as env ?
                 env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
@@ -105,13 +102,7 @@ String getBuildChainCommandline() {
         "-u ${CHANGE_URL}", // Provided by source branch plugin
     ]
     // TODO remove debug option
-    return "build-chain build cross_pr ${env.GITHUB_TOKEN ? "--token ${GITHUB_TOKEN} " : ''} -f 'https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -o 'bc' ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout --debug"
-}
-
-String getBuildMavenOptsCurrent() {
-    List opts_current = []
-    isEnableSonarCloudAnalysis() ? opts_current.add('-Prun-code-coverage') : null
-    return opts_current.join(' ')
+    return "build-chain build cross_pr ${env.GITHUB_TOKEN ? "--token ${GITHUB_TOKEN} " : ''} -f 'https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -o 'bc' ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout --fullProjectDependencyTree"
 }
 
 boolean isEnableSonarCloudAnalysis() {
