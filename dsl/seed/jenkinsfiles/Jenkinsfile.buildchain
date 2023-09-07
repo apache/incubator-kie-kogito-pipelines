@@ -49,14 +49,12 @@ pipeline {
     agent {
         docker { 
             image 'quay.io/kiegroup/kogito-ci-build:latest'  // TODO to set in branch config
+            args '-v /var/run/docker.sock:/var/run/docker.sock --group-add docker --group-add input --group-add render'
         }
     }
     options {
         timestamps()
         timeout(time: timeoutValue, unit: 'MINUTES')
-    }
-    environment {
-        MAVEN_OPTS = '-Xms1024m -Xmx12g'
     }
     stages {
         stage('Initialize') {
@@ -64,6 +62,7 @@ pipeline {
                 script {
                     sh 'printenv > env_props'
                     archiveArtifacts artifacts: 'env_props'
+                    sh 'ls -last /var/run/docker.sock'
 
                     if (mavenDeployArtifacts) {
                         assert mavenDeployRepository : 'Please provide the maven deploy repository'
@@ -140,10 +139,6 @@ pipeline {
                     when {
                         expression { return enableSonarCloudAnalysis }
                     }
-                    tools {
-                        jdk sonarJdkTool
-                        maven mavenTool
-                    }
                     steps {
                         script {
                             dir(getProjectFolder()) {
@@ -155,10 +150,6 @@ pipeline {
                 stage('Upload artifacts to repository') {
                     when {
                         expression { return mavenDeployArtifacts }
-                    }
-                    tools {
-                        jdk jdkTool
-                        maven mavenTool
                     }
                     steps {
                         script {
