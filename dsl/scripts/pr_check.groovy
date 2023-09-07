@@ -105,7 +105,7 @@ String getBuildChainCommandline() {
         "-u ${CHANGE_URL}", // Provided by source branch plugin
     ]
     // TODO remove debug option
-    return "build-chain build cross_pr --token ${GITHUB_TOKEN} -f 'https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -o 'bc' ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout --debug"
+    return "build-chain build cross_pr ${env.GITHUB_TOKEN ? "--token ${GITHUB_TOKEN} " : ''} -f 'https://raw.githubusercontent.com/${buildChainConfigGitAuthor}/${buildChainConfigRepo}/${buildChainConfigBranch}/${buildChainConfigDefinitionFilePath}' -o 'bc' ${buildChainAdditionalArguments.join(' ')} --skipParallelCheckout --debug"
 }
 
 String getBuildMavenOptsCurrent() {
