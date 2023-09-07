@@ -29,6 +29,8 @@ pipeline {
         stage('Initialize') {
             steps{
                 script{
+                    currentBuild.displayName = getRemoveBranch()
+
                     dir(getRepo()){
                         checkoutRepo(getRepo(), getGitAuthor(), getBuildBranch(), getGitAuthorCredsId())
                     }
