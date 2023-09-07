@@ -6,17 +6,15 @@ import org.kie.jenkins.MavenSettingsUtils
 
 pipeline {
     agent {
-        label 'ubuntu'
+        docker { 
+            image 'quay.io/kiegroup/kogito-ci-build:latest'  // TODO to set in branch config
+            args '-v /var/run/docker.sock:/var/run/docker.sock --group-add docker --group-add input --group-add render'
+        }
     }
 
     options {
         timestamps()
         timeout(time: 240, unit: 'MINUTES')
-    }
-
-    tools {
-        maven "${BUILD_MAVEN_TOOL}"
-        jdk "${BUILD_JDK_TOOL}"
     }
 
     environment {
