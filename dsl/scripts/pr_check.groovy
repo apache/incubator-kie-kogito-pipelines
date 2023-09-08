@@ -51,10 +51,8 @@ void launchStages() {
         }
         println "[INFO] build-chain version recovered '${buildChainVersion}'"
         sh "npm install -g @kie/build-chain-action@${buildChainVersion}${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
-
         sh 'npm list -g | grep build-chain'
-
-        sh 'sudo alternatives --install /usr/local/bin/build-chain build-chain /home/nonrootuser/.nvm/versions/node/v16.20.0/bin/build-chain 1'
+        sh 'sudo alternatives --install /usr/local/bin/build-chain build-chain ${NODE_HOME}/bin/build-chain 1'
         sh 'build-chain || true'
     }
     stage('Build projects') {
