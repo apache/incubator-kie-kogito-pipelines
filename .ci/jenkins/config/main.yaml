@@ -17,7 +17,7 @@ ecosystem:
     - kie-docs.*
 git:
   branches:
-  - name: apache_migration
+  - name: main
     main_branch: true
 seed:
   config_file:
@@ -26,7 +26,7 @@ seed:
       author:
         name: apache
         credentials_id: kie-ci3
-      branch: apache_migration
+      branch: main
     path: .ci/jenkins/config/branch.yaml
   jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
 jenkins:
