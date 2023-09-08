@@ -45,7 +45,7 @@ SeedJobUtils.createSeedJobTrigger(
 
 // Configuration of the seed and generated jobs is done via `dsl/seed/config.yaml`
 pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
-    description("This job creates all needed Jenkins jobs on branch ${GENERATION_BRANCH}. DO NOT USE FOR TESTING !!!! See https://github.com/kiegroup/kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs")
+    description("This job creates all needed Jenkins jobs on branch ${GENERATION_BRANCH}. DO NOT USE FOR TESTING !!!! See https://github.com/apache/kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs")
 
     logRotator {
         numToKeep(5)

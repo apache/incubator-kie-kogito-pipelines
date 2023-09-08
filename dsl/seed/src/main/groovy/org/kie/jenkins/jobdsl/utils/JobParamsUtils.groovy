@@ -137,7 +137,7 @@ class JobParamsUtils {
         setupJobParamsSeedPipelineConfiguration(script, jobParams, KogitoConstants.BUILD_CHAIN_JENKINSFILE)
         jobParams.env = jobParams.env ?: [:]
         jobParams.env.putAll([
-            BUILDCHAIN_PROJECT: "kiegroup/${repository}",
+            BUILDCHAIN_PROJECT: "apache/${repository}",
             BUILDCHAIN_TYPE: buildchainType,
             BUILDCHAIN_CONFIG_REPO: Utils.getBuildChainConfigRepo(script) ?: Utils.getSeedRepo(script),
             BUILDCHAIN_CONFIG_AUTHOR: Utils.getBuildChainConfigAuthor(script) ?: Utils.getSeedAuthor(script),

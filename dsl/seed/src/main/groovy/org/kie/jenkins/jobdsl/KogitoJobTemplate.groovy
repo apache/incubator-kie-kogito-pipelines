@@ -183,13 +183,13 @@ class KogitoJobTemplate {
             jobParams.pr.putAll ([
                 run_only_for_labels: (jobParams.pr.run_only_for_labels ?: []) + [KogitoConstants.LABEL_DSL_TEST],
                 run_only_for_branches: [ jobParams.git.repository == 'optaplanner-quickstarts' ? 'development' : 'main' ],
-                authorized_users: [ 'kiegroup' ],
-                authorized_groups: [ 'kiegroup' ],
+                authorized_users: [ 'apache' ],
+                authorized_groups: [ 'apache' ],
             ])
 
             // Enable PR test only if main branch
             if (Utils.isMainBranch(script)) {
-                jobParams.git.project_url = "https://github.com/kiegroup/${jobParams.pr.target_repository ?: jobParams.git.repository}/"
+                jobParams.git.project_url = "https://github.com/apache/${jobParams.pr.target_repository ?: jobParams.git.repository}/"
             }
         }
 
