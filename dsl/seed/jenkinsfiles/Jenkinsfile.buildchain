@@ -4,7 +4,7 @@ import org.kie.jenkins.MavenCommand
 import org.kie.jenkins.MavenSettingsUtils
 
 agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'ubuntu'} && !built-in"
-timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: '180'
+timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: '360'
 jdkTool = env.BUILD_JDK_TOOL
 sonarJdkTool = env.SONAR_JDK_TOOL
 mavenTool = env.BUILD_MAVEN_TOOL
