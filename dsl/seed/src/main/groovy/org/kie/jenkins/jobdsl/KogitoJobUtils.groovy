@@ -43,7 +43,6 @@ class KogitoJobUtils {
     */
     static def createVersionUpdateToolsJob(def script, String repository, String dependencyName, def mavenUpdate = [:], def gradleUpdate = [:], def filepathReplaceRegex = [], def scriptCalls = []) {
         def jobParams = JobParamsUtils.getSeedJobParams(script, "update-${dependencyName.toLowerCase()}-${repository}", JobType.TOOLS, 'Jenkinsfile.update-dependency-version', "Update ${dependencyName} version for ${repository}")
-        JobParamsUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
         JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(script, jobParams)
         // Setup correct checkout branch for pipelines
         jobParams.env.putAll([
@@ -141,7 +140,6 @@ class KogitoJobUtils {
     */
     static def createQuarkusPlatformUpdateToolsJob(def script, String project) {
         def jobParams = JobParamsUtils.getSeedJobParams(script, "update-quarkus-platform-${project}", JobType.TOOLS, 'Jenkinsfile.update-quarkus-platform', "Update Quarkus platform with new version of ${project}")
-        JobParamsUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
         JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(script, jobParams)
         jobParams.env.putAll([
             JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
@@ -305,7 +303,6 @@ class KogitoJobUtils {
     *   - notificationJobName: Identifier for the notification stream
     */
     static def createBranchBuildChainJob(def script, def jobParams, String repository, boolean enableNotification = false, String notificationJobName = '') {
-        JobParamsUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
         JobParamsUtils.setupJobParamsBuildChainConfiguration(script, jobParams, repository, 'branch', notificationJobName)
 
         jobParams.parametersClosures.add({

@@ -360,7 +360,7 @@ class KogitoJobTemplate {
             jobParams.job.folder = prFolder
             jobParams.env = jobParams.env ?: [:]
             jobParams.pr = jobParams.pr ?: [:]
-            JobParamsUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
+            JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(script, jobParams)
 
             // Kept for backward compatibility
             jobParams.job.name += testTypeId ? ".${testTypeId}" : ''
