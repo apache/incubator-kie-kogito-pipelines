@@ -92,7 +92,7 @@ RUN wget https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.t
   sudo mv /tmp/kubectl /usr/local/bin/kubectl
 
 # Install oc client
-RUN wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-4.13/openshift-client-linux-arm64.tar.gz -P /tmp && \
+RUN wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-4.13/openshift-client-linux-4.13.11.tar.gz -P /tmp && \
   tmp_dir=$(mktemp -d) && \
   tar -C ${tmp_dir} -xvf /tmp/openshift-client-linux-arm64.tar.gz && \
   sudo mv ${tmp_dir}/oc /usr/local/bin && \
