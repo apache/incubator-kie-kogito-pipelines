@@ -72,8 +72,31 @@ RUN wget https://go.dev/dl/go1.19.10.linux-amd64.tar.gz -P /tmp && \
   echo "source /etc/profile.d/go.sh" >> $HOME/.bashrc && \
   rm -rf /tmp/go* && \
   sudo alternatives --install /usr/local/bin/go go /opt/golang/go/bin/go 1
-  
+
+# Cekit
 RUN pip3.11 install cekit==4.8.0 behave lxml docker docker-squash elementPath pyyaml ruamel.yaml python-dateutil Jinja2 pykwalify colorlog click
+RUN wget https://github.com/openshift/source-to-image/releases/download/v1.3.8/source-to-image-v1.3.8-980ca195-linux-amd64.tar.gz -P /tmp && \
+  tmp_dir=$(mktemp -d) && \
+  tar -C ${tmp_dir} -xzvf /tmp/source-to-image-v1.3.8-980ca195-linux-amd64.tar.gz && \
+  ls ${tmp_dir} && \
+  sudo mv ${tmp_dir}/s2i /usr/local/bin/ && \
+  rm -rf ${tmp_dir} /tmp/source-to-image/*
+
+# gh cli
+RUN sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo && \
+  sudo dnf install -y gh
+
+# Install kubectl
+RUN wget https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl -P /tmp && \
+  chmod +x /tmp/kubectl && \
+  sudo mv /tmp/kubectl /usr/local/bin/kubectl
+
+# Install oc client
+RUN wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-4.13/openshift-client-linux-arm64.tar.gz -P /tmp && \
+  tmp_dir=$(mktemp -d) && \
+  tar -C ${tmp_dir} -xvf /tmp/openshift-client-linux-arm64.tar.gz && \
+  sudo mv ${tmp_dir}/oc /usr/local/bin && \
+  rm -rf ${tmp_dir} /tmp/openshift-client*
 
 ENV HOME="/home/nonrootuser/"
 

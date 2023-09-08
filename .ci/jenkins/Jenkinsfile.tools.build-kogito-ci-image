@@ -81,6 +81,10 @@ pipeline {
                     node --version
                     npm --version
                     go version
+                    s2i version
+                    gh version
+                    kubectl version --client
+                    oc version --client
                 '''
 
                 echo 'Test docker'
