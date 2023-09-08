@@ -1,48 +1,31 @@
-generation_config:
-  missing_environment: ignore
-
-job_types:
-  setup-branch:
-    disabled: true
-  nightly:
-    disabled: false
-  other:
-    disabled: true
-  pullrequest:
-    disabled: false
-  release:
-    disabled: true
-  tools:
-    disabled: true
-
 environments:
-  # native:
-  #   env_vars:
-  #     NATIVE: true
-  #     BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
-  #     ADDITIONAL_TIMEOUT: 720
-  #   ids:
-  #   - native
-  # quarkus-main:
-  #   enabled: false
-  #   env_vars:
-  #     QUARKUS_BRANCH: main
-  #   ids:
-  #   - quarkus
+  native:
+    env_vars:
+      NATIVE: true
+      BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
+      ADDITIONAL_TIMEOUT: 720
+    ids:
+    - native
+  quarkus-main:
+    enabled: false
+    env_vars:
+      QUARKUS_BRANCH: main
+    ids:
+    - quarkus
   quarkus-branch:
     env_vars:
       QUARKUS_BRANCH: '2.16'
     ids:
     - quarkus
-  # quarkus-3:
-  #   pull_request_default_check: false
-  #   env_vars:
-  #     BUILD_MAVEN_TOOL: maven_3.9.3
-  #     BUILD_JDK_TOOL: jdk_17_latest
-  #     BUILD_MVN_OPTS: -Denforcer.skip
-  #   ids:
-  #   - quarkus
-  #   - quarkus3
+  quarkus-3:
+    pull_request_default_check: false
+    env_vars:
+      BUILD_MAVEN_TOOL: maven_3.9.3
+      BUILD_JDK_TOOL: jdk_17_latest
+      BUILD_MVN_OPTS: -Denforcer.skip
+    ids:
+    - quarkus
+    - quarkus3
   sonarcloud:
     auto_generation: false
     env_vars:
@@ -67,10 +50,9 @@ repositories:
 - name: kogito-docs
 - name: kie-tools
   author:
-    name: radtriste # Could not push to kiegroup
+    name: radtriste # TODO set back. Could not push to kiegroup
 - name: kie-docs
-  author:
-    name: radtriste # Could not push to kiegroup
+  # branch: main-kogito # TODO kie-docs PR should be against `main-kogito`
 git:
   author:
     name: kiegroup
@@ -106,9 +88,9 @@ maven:
     creds_id: TO_DEFINE
 cloud:
   image:
-    registry_credentials: tradisso_registry_token # set to `kogito-quay-token`
+    registry_credentials: tradisso_registry_token # TODO set to `kogito-quay-token`
     registry: quay.io
-    namespace: tradisso # set to `kiegroup` after testing
+    namespace: tradisso # TODO set to `kiegroup` after testing
     latest_git_branch: main
 jenkins:
   email_creds_id: KOGITO_CI_NOTIFICATION_EMAILS
