@@ -7,8 +7,8 @@ import org.kie.jenkins.MavenSettingsUtils
 pipeline {
     agent {
         docker { 
-            image 'quay.io/kiegroup/kogito-ci-build:latest'  // TODO to set in branch config
-            args '-v /var/run/docker.sock:/var/run/docker.sock --group-add docker --group-add input --group-add render'
+            image env.AGENT_DOCKER_BUILDER_IMAGE
+            args env.AGENT_DOCKER_BUILDER_ARGS
         }
     }
 
@@ -154,8 +154,9 @@ pipeline {
                             .run('deploy')
 
                         // Upload to specific repository with credentials
-                        String mavenDeployRepositoryZipUrl = "${QUARKUS_PLATFORM_NEXUS_URL.replaceAll('/content/', '/service/local/').replaceFirst('/*$', '')}/content-compressed"
-                        maven.uploadLocalArtifacts("${QUARKUS_PLATFORM_NEXUS_CREDS}", getMavenDeployLocalDir(), mavenDeployRepositoryZipUrl)
+                        // Removed deployment to reposiory as no repository defined for now ...
+                        // String mavenDeployRepositoryZipUrl = "${QUARKUS_PLATFORM_NEXUS_URL.replaceAll('/content/', '/service/local/').replaceFirst('/*$', '')}/content-compressed"
+                        // maven.uploadLocalArtifacts("${QUARKUS_PLATFORM_NEXUS_CREDS}", getMavenDeployLocalDir(), mavenDeployRepositoryZipUrl)
                     }
                 }
             }

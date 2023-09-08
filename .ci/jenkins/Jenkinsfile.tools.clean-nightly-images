@@ -1,8 +1,8 @@
 pipeline {
     agent {
         docker { 
-            image 'quay.io/kiegroup/kogito-ci-build:latest'  // TODO to set in branch config
-            args '-v /var/run/docker.sock:/var/run/docker.sock --group-add docker --group-add input --group-add render'
+            image env.AGENT_DOCKER_BUILDER_IMAGE
+            args env.AGENT_DOCKER_BUILDER_ARGS
         }
     }
     options {

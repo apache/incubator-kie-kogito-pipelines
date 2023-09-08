@@ -70,6 +70,7 @@ void setupCleanOldNamespacesToolsJob() {
 void setupCleanOldNightlyImagesToolsJob() {
     jobParams = JobParamsUtils.getBasicJobParams(this, 'kogito-clean-old-nightly-images', JobType.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.clean-nightly-images")
     jobParams.triggers = [ cron : 'H 8 * * *' ]
+    JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(this, jobParams)
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
@@ -78,6 +79,7 @@ void setupCreateIssueToolsJob() {
     jobParams.env.putAll([
         GITHUB_CLI_PATH: '/opt/tools/gh-cli/bin/gh',
     ])
+    JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(this, jobParams)
     KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         parameters {
             stringParam('AUTHOR', '', 'Git author')
@@ -226,6 +228,7 @@ void setupQuarkus3NightlyJob() {
 void setupQuarkusPlatformJob(JobType jobType) {
     def jobParams = JobParamsUtils.getBasicJobParams(this, 'quarkus-platform.deploy', jobType, "${JENKINSFILE_PATH}/Jenkinsfile.nightly.quarkus-platform", 'Kogito Quarkus platform job')
     JobParamsUtils.setupJobParamsDefaultMavenConfiguration(this, jobParams)
+    JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(this, jobParams)
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 

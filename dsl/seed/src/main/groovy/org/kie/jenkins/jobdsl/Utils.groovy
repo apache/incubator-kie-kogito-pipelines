@@ -219,6 +219,14 @@ class Utils {
         return getBindingValue(script, 'MAVEN_QUARKUS_PLATFORM_REPOSITORY_CREDS_ID')
     }
 
+    static String getJenkinsAgentDockerImage(def script, String imageId) {
+        return getBindingValue(script, 'JENKINS_AGENT_DOCKER_${imageId.toUpperCase()}_IMAGE')
+    }
+
+    static String getJenkinsAgentDockerArgs(def script, String imageId) {
+        return getBindingValue(script, 'JENKINS_AGENT_DOCKER_${imageId.toUpperCase()}_ARGS')
+    }
+
     static String getSeedJenkinsfilePath(def script, String jenkinsfileName) {
         return "${KogitoConstants.SEED_JENKINSFILES_PATH}/${jenkinsfileName}"
     }

@@ -135,6 +135,7 @@ class JobParamsUtils {
 
     static def setupJobParamsBuildChainConfiguration(def script, def jobParams, String repository, String buildchainType, String notificationJobName) {
         setupJobParamsSeedPipelineConfiguration(script, jobParams, KogitoConstants.BUILD_CHAIN_JENKINSFILE)
+        setupJobParamsAgentDockerBuilderImageConfiguration(script, jobParams)
         jobParams.env = jobParams.env ?: [:]
         jobParams.env.putAll([
             BUILDCHAIN_PROJECT: "kiegroup/${repository}",
@@ -171,5 +172,11 @@ class JobParamsUtils {
         jobParams.env.put('ENABLE_DEPLOY', 'true')
         addJobParamsEnvIfNotExisting(script, jobParams, 'MAVEN_DEPLOY_REPOSITORY', Utils.getMavenArtifactsUploadRepositoryUrl(script))
         addJobParamsEnvIfNotExisting(script, jobParams, 'MAVEN_DEPLOY_REPOSITORY_CREDS_ID', Utils.getMavenArtifactsUploadRepositoryCredentialsId(script))
+    }
+
+    static def setupJobParamsAgentDockerBuilderImageConfiguration(def script, def jobParams) {
+        jobParams.env = jobParams.env ?: [:]
+        addJobParamsEnvIfNotExisting(script, jobParams, 'AGENT_DOCKER_BUILDER_IMAGE', Utils.getJenkinsAgentDockerImage(script, 'builder'))
+        addJobParamsEnvIfNotExisting(script, jobParams, 'AGENT_DOCKER_BUILDER_ARGS', Utils.getJenkinsAgentDockerArgs(script, 'builder'))
     }
 }
