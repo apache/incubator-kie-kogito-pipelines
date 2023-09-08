@@ -6,7 +6,7 @@
 # #!/bin/bash -e
 # file=$(mktemp)
 # # For more usage of the script, use ./test.sh -h
-# curl -o ${file} https://raw.githubusercontent.com/kiegroup/kogito-pipelines/main/dsl/seed/scripts/seed_test.sh
+# curl -o ${file} https://raw.githubusercontent.com/apache/kogito-pipelines/main/dsl/seed/scripts/seed_test.sh
 # chmod u+x ${file}
 # ${file} $@
 
@@ -24,7 +24,7 @@ usage() {
     echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_REPO             Main config file repository (owner/repo)'
     echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_REF              Main config file reference'
     echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_PATH             Main config file path. Default is `.ci/jenkins/config/main.yaml`'
-    echo '    DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REPO    Fallback main config repository (owner/repo). Default is `kiegroup/kogito-pipelines`'
+    echo '    DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REPO    Fallback main config repository (owner/repo). Default is `apache/kogito-pipelines`'
     echo '    DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REF     Fallback main config reference. Default is `main`'
     echo '    DSL_DEFAULT_MAIN_CONFIG_FILE_LOCAL_PATH       Main config file local path. If set, the other `DSL_DEFAULT_MAIN_CONFIG_FILE_*` envs will be ignored'
     echo
@@ -39,7 +39,7 @@ usage() {
     echo '    DSL_DEFAULT_SEED_REPO                         DSL seed repository (owner/repo). Else it will be calculated from the test repository.'
     echo '    DSL_DEFAULT_SEED_REF                          DSL seed reference. Else it will be calculated from the branch config'
     echo '    DSL_DEFAULT_SEED_REPO_LOCAL_PATH              DSL seed repository local path. If set, the other `DSL_DEFAULT_SEED_*` envs will be ignored'
-    echo '    DSL_DEFAULT_FALLBACK_SEED_REPO                Fallback seed repository (owner/repo). Default is `kiegroup/kogito-pipelines`'
+    echo '    DSL_DEFAULT_FALLBACK_SEED_REPO                Fallback seed repository (owner/repo). Default is `apache/kogito-pipelines`'
     echo '    DSL_DEFAULT_FALLBACK_SEED_REF                 Fallback seed reference. Default is `main`'
     echo
     echo '   Test repository configuration:'
@@ -179,9 +179,9 @@ branch_config_file_ref=${DSL_DEFAULT_BRANCH_CONFIG_FILE_REF}
 branch_config_file_path=${DSL_DEFAULT_BRANCH_CONFIG_FILE_PATH}
 branch_config_file_local_path=${DSL_DEFAULT_BRANCH_CONFIG_FILE_LOCAL_PATH:-''}
 
-fallback_main_config_file_repo=${DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REPO:-'kiegroup/kogito-pipelines'}
+fallback_main_config_file_repo=${DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REPO:-'apache/kogito-pipelines'}
 fallback_main_config_file_ref=${DSL_DEFAULT_FALLBACK_MAIN_CONFIG_FILE_REF:-'main'}
-fallback_branch_config_file_repo=${DSL_DEFAULT_FALLBACK_BRANCH_CONFIG_FILE_REPO:-'kiegroup/kogito-pipelines'}
+fallback_branch_config_file_repo=${DSL_DEFAULT_FALLBACK_BRANCH_CONFIG_FILE_REPO:-'apache/kogito-pipelines'}
 fallback_branch_config_file_ref=${DSL_DEFAULT_FALLBACK_BRANCH_CONFIG_FILE_REF:-'main'}
 fallback_branch_config_name="${fallback_main_config_file_ref}"
 
@@ -315,7 +315,7 @@ seed_repo=${DSL_DEFAULT_SEED_REPO}
 seed_ref=${DSL_DEFAULT_SEED_REF}
 seed_local_path=${DSL_DEFAULT_SEED_REPO_LOCAL_PATH}
 
-fallback_seed_repo=${DSL_DEFAULT_FALLBACK_SEED_REPO:-'kiegroup/kogito-pipelines'}
+fallback_seed_repo=${DSL_DEFAULT_FALLBACK_SEED_REPO:-'apache/kogito-pipelines'}
 fallback_seed_ref=${DSL_DEFAULT_FALLBACK_SEED_REF}
 if [ -z ${fallback_seed_ref} ]; then
   fallback_seed_ref="$(yq -e ".git.branches[] | select(.name == \"${branch_config_name}\") | .seed.branch" ${main_config_file_path} 2> /dev/null)"
