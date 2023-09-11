@@ -37,7 +37,7 @@ jobs:
       - name: Checkout Main Config repo from main branch
         uses: actions/checkout@v3
         with:
-          repository: apache/kogito-pipelines
+          repository: apache/incubator-kie-kogito-pipelines
           ref: main
           path: main_config_repo
 
@@ -156,9 +156,9 @@ jobs:
         with:
           project: kogito
           repository: ${{ matrix.repository }}
-          main-config-file-repo: apache/kogito-pipelines
+          main-config-file-repo: apache/incubator-kie-kogito-pipelines
           main-config-file-path: .ci/jenkins/config/main.yaml
-          branch-config-file-repo: apache/kogito-pipelines
+          branch-config-file-repo: apache/incubator-kie-kogito-pipelines
           base-branch: ${{ env.BASE_BRANCH }}
 
   #############################################################################
@@ -193,7 +193,7 @@ jobs:
       - name: Checkout Main Config repo from main branch
         uses: actions/checkout@v3
         with:
-          repository: apache/optaplanner
+          repository: apache/incubator-kie-optaplanner
           ref: main
           path: main_config_repo
 
@@ -320,9 +320,9 @@ jobs:
         with:
           project: optaplanner
           repository: ${{ matrix.repository }}
-          main-config-file-repo: apache/optaplanner
+          main-config-file-repo: apache/incubator-kie-optaplanner
           main-config-file-path: .ci/jenkins/config/main.yaml
-          branch-config-file-repo: apache/optaplanner
+          branch-config-file-repo: apache/incubator-kie-optaplanner
           base-branch: ${{ env.BASE_BRANCH }}
 
   #############################################################################
@@ -357,7 +357,7 @@ jobs:
       - name: Checkout Main Config repo from main branch
         uses: actions/checkout@v3
         with:
-          repository: apache/drools
+          repository: apache/incubator-kie-drools
           ref: main
           path: main_config_repo
 
@@ -479,7 +479,7 @@ jobs:
         with:
           project: drools
           repository: ${{ matrix.repository }}
-          main-config-file-repo: apache/drools
+          main-config-file-repo: apache/incubator-kie-drools
           main-config-file-path: .ci/jenkins/config/main.yaml
-          branch-config-file-repo: apache/drools
+          branch-config-file-repo: apache/incubator-kie-drools
           base-branch: ${{ env.BASE_BRANCH }}

@@ -183,6 +183,6 @@ if [ "$DRY_RUN" = "false" ]; then
    git push -u ${GITHUB_URL}${PR_FORK} ${PR_BRANCH}
    
    # Open a PR to kogito-runtimes using the commit as a title
-   # e.g. see https://github.com/apache/kogito-runtimes/pull/1200
+   # e.g. see https://github.com/apache/incubator-kie-kogito-runtimes/pull/1200
    gh pr create --fill --base $BRANCH -R $ORIGIN
 fi

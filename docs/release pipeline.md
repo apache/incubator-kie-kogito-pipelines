@@ -38,18 +38,18 @@ Those jobs should be present at the same level as the nightly and/or release job
 
 Here is the list of jobs and link to Jenkinsfiles:
 
-* [kogito-runtimes-deploy](https://github.com/apache/kogito-runtimes/blob/main/Jenkinsfile.deploy)
-* [kogito-runtimes-promote](https://github.com/apache/kogito-runtimes/blob/main/Jenkinsfile.promote)
-* [kogito-apps-deploy](https://github.com/apache/kogito-apps/blob/main/Jenkinsfile.deploy)
-* [kogito-apps-promote](https://github.com/apache/kogito-apps/blob/main/Jenkinsfile.promote)
-* [kogito-examples-deploy](https://github.com/apache/kogito-examples/blob/main/Jenkinsfile.deploy)
-* [kogito-examples-promote](https://github.com/apache/kogito-examples/blob/main/Jenkinsfile.promote)
-* [kogito-images-deploy](https://github.com/apache/kogito-images/blob/main/Jenkinsfile.deploy)
-* [kogito-images-promote](https://github.com/apache/kogito-images/blob/main/Jenkinsfile.promote)
-* [kogito-examples-images-deploy](https://github.com/apache/kogito-operator/blob/main/Jenkinsfile.examples-images.deploy)
-* [kogito-examples-images-promote](https://github.com/apache/kogito-operator/blob/main/Jenkinsfile.examples-images.promote)
-* [kogito-operator-deploy](https://github.com/apache/kogito-operator/blob/main/Jenkinsfile.deploy)
-* [kogito-operator-promote](https://github.com/apache/kogito-operator/blob/main/Jenkinsfile.promote)
+* [kogito-runtimes-deploy](https://github.com/apache/incubator-kie-kogito-runtimes/blob/main/Jenkinsfile.deploy)
+* [kogito-runtimes-promote](https://github.com/apache/incubator-kie-kogito-runtimes/blob/main/Jenkinsfile.promote)
+* [kogito-apps-deploy](https://github.com/apache/incubator-kie-kogito-apps/blob/main/Jenkinsfile.deploy)
+* [kogito-apps-promote](https://github.com/apache/incubator-kie-kogito-apps/blob/main/Jenkinsfile.promote)
+* [kogito-examples-deploy](https://github.com/apache/incubator-kie-kogito-examples/blob/main/Jenkinsfile.deploy)
+* [kogito-examples-promote](https://github.com/apache/incubator-kie-kogito-examples/blob/main/Jenkinsfile.promote)
+* [kogito-images-deploy](https://github.com/apache/incubator-kie-kogito-images/blob/main/Jenkinsfile.deploy)
+* [kogito-images-promote](https://github.com/apache/incubator-kie-kogito-images/blob/main/Jenkinsfile.promote)
+* [kogito-examples-images-deploy](https://github.com/apache/incubator-kie-kogito-operator/blob/main/Jenkinsfile.examples-images.deploy)
+* [kogito-examples-images-promote](https://github.com/apache/incubator-kie-kogito-operator/blob/main/Jenkinsfile.examples-images.promote)
+* [kogito-operator-deploy](https://github.com/apache/incubator-kie-kogito-operator/blob/main/Jenkinsfile.deploy)
+* [kogito-operator-promote](https://github.com/apache/incubator-kie-kogito-operator/blob/main/Jenkinsfile.promote)
 
 ## Release process
 
@@ -159,7 +159,7 @@ Once the Release Pipeline is finished, there are some actions to be done:
 
 ##### Operator Crd/Csv files
 
-Once the operator's release has been done, it created new csv and crd files under `deploy/olm-catalog/kogito-operator/{VERSION}` on the release branch in [kogito-operator](https://github.com/apache/kogito-operator).
+Once the operator's release has been done, it created new csv and crd files under `deploy/olm-catalog/kogito-operator/{VERSION}` on the release branch in [kogito-operator](https://github.com/apache/incubator-kie-kogito-operator).
 You will need to create, with those files, new OperatorHub PRs (one for Openshift and one for Kubernetes) or asked someone from Cloud part to do it.
 
 If there is any change to be done due to PRs, do it on the release branch.
@@ -189,7 +189,7 @@ To deploy only artifacts (without Cloud part), you should start the release pipe
 
 To deploy only the Cloud part, you should start the release pipeline with those parameters:
 
-* EXAMPLES_URI => point to `kogito-examples` repository (https://github.com/apache/kogito-examples)
+* EXAMPLES_URI => point to `kogito-examples` repository (https://github.com/apache/incubator-kie-kogito-examples)
 * EXAMPLES_REF => point to current release branch
 * SKIP_ARTIFACTS_DEPLOY => checked
 * SKIP_ARTIFACTS_PROMOTE => checked

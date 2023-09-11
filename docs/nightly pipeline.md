@@ -17,18 +17,18 @@ Those jobs should be present at the same level as the nightly and/or release job
 
 Here is the list of jobs and link to Jenkinsfiles:
 
-* [kogito-runtimes-deploy](https://github.com/apache/kogito-runtimes/blob/main/Jenkinsfile.deploy)
-* [kogito-runtimes-promote](https://github.com/apache/kogito-runtimes/blob/main/Jenkinsfile.promote)
-* [kogito-apps-deploy](https://github.com/apache/kogito-apps/blob/main/Jenkinsfile.deploy)
-* [kogito-apps-promote](https://github.com/apache/kogito-apps/blob/main/Jenkinsfile.promote)
-* [kogito-examples-deploy](https://github.com/apache/kogito-examples/blob/main/Jenkinsfile.deploy)
-* [kogito-examples-promote](https://github.com/apache/kogito-examples/blob/main/Jenkinsfile.promote)
-* [kogito-images-deploy](https://github.com/apache/kogito-images/blob/main/Jenkinsfile.deploy)
-* [kogito-images-promote](https://github.com/apache/kogito-images/blob/main/Jenkinsfile.promote)
-* [kogito-examples-images-deploy](https://github.com/apache/kogito-operator/blob/main/Jenkinsfile.examples-images.deploy)
-* [kogito-examples-images-promote](https://github.com/apache/kogito-operator/blob/main/Jenkinsfile.examples-images.promote)
-* [kogito-operator-deploy](https://github.com/apache/kogito-operator/blob/main/Jenkinsfile.deploy)
-* [kogito-operator-promote](https://github.com/apache/kogito-operator/blob/main/Jenkinsfile.promote)
+* [kogito-runtimes-deploy](https://github.com/apache/incubator-kie-kogito-runtimes/blob/main/Jenkinsfile.deploy)
+* [kogito-runtimes-promote](https://github.com/apache/incubator-kie-kogito-runtimes/blob/main/Jenkinsfile.promote)
+* [kogito-apps-deploy](https://github.com/apache/incubator-kie-kogito-apps/blob/main/Jenkinsfile.deploy)
+* [kogito-apps-promote](https://github.com/apache/incubator-kie-kogito-apps/blob/main/Jenkinsfile.promote)
+* [kogito-examples-deploy](https://github.com/apache/incubator-kie-kogito-examples/blob/main/Jenkinsfile.deploy)
+* [kogito-examples-promote](https://github.com/apache/incubator-kie-kogito-examples/blob/main/Jenkinsfile.promote)
+* [kogito-images-deploy](https://github.com/apache/incubator-kie-kogito-images/blob/main/Jenkinsfile.deploy)
+* [kogito-images-promote](https://github.com/apache/incubator-kie-kogito-images/blob/main/Jenkinsfile.promote)
+* [kogito-examples-images-deploy](https://github.com/apache/incubator-kie-kogito-operator/blob/main/Jenkinsfile.examples-images.deploy)
+* [kogito-examples-images-promote](https://github.com/apache/incubator-kie-kogito-operator/blob/main/Jenkinsfile.examples-images.promote)
+* [kogito-operator-deploy](https://github.com/apache/incubator-kie-kogito-operator/blob/main/Jenkinsfile.deploy)
+* [kogito-operator-promote](https://github.com/apache/incubator-kie-kogito-operator/blob/main/Jenkinsfile.promote)
 
 ## Nightly pipeline Architecture
 
