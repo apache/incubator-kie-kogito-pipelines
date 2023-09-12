@@ -198,20 +198,21 @@ void setupQuarkus3NightlyJob() {
         jobParams.env.put('ADDITIONAL_TIMEOUT', '180')
         jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
         jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
-        jobParams.env.put('LAUNCH_DOWNSTREAM_JOBS', 'kie-jpmml-integration.integration,kogito-runtimes.integration')
+        // jobParams.env.put('LAUNCH_DOWNSTREAM_JOBS', 'kie-jpmml-integration.integration,kogito-runtimes.integration')
+        jobParams.env.put('LAUNCH_DOWNSTREAM_JOBS', 'kogito-runtimes.integration')
         jobParams.parametersValues.put('SKIP_TESTS', true)
         jobParams.parametersValues.put('SKIP_INTEGRATION_TESTS', true)
         return jobParams
     }
-    KogitoJobUtils.createBuildChainIntegrationJob(this, 'quarkus-3', 'kie-jpmml-integration', true) { script ->
-        def jobParams = JobParamsUtils.getDefaultJobParams(script, 'kie-jpmml-integration')
-        jobParams.env.put('ADDITIONAL_TIMEOUT', '180')
-        jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
-        jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
-        jobParams.parametersValues.put('SKIP_TESTS', true)
-        jobParams.parametersValues.put('SKIP_INTEGRATION_TESTS', true)
-        return jobParams
-    }
+    // KogitoJobUtils.createBuildChainIntegrationJob(this, 'quarkus-3', 'kie-jpmml-integration', true) { script ->
+    //     def jobParams = JobParamsUtils.getDefaultJobParams(script, 'kie-jpmml-integration')
+    //     jobParams.env.put('ADDITIONAL_TIMEOUT', '180')
+    //     jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
+    //     jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
+    //     jobParams.parametersValues.put('SKIP_TESTS', true)
+    //     jobParams.parametersValues.put('SKIP_INTEGRATION_TESTS', true)
+    //     return jobParams
+    // }
     KogitoJobUtils.createBuildChainIntegrationJob(this, 'quarkus-3', 'kogito-runtimes', true) { script ->
         def jobParams = JobParamsUtils.getDefaultJobParams(script, 'kogito-runtimes')
         jobParams.env.put('ADDITIONAL_TIMEOUT', '720')
