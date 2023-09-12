@@ -16,7 +16,7 @@ class JobParamsUtils {
         repository = repository ?: Utils.getRepoName(script)
         def jobParams = [
             job: [
-                name: repository,
+                name: Utils.getRepositoryJobDisplayName(script, repository),
             ],
             git: [
                 author: Utils.getGitAuthor(script),

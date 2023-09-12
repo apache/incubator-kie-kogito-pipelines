@@ -63,6 +63,14 @@ class Utils {
         return getBindingValue(script, 'REPO_NAME')
     }
 
+    static String getRepositoryJobDisplayName(def script, String repository) {
+        return getBindingValue(script, "${repository.toUpperCase()}_JOB_DISPLAY_NAME") ?: repository
+    }
+
+    static String getJobDisplayName(def script) {
+        return getRepositoryJobDisplayName(script, getRepoName(script))
+    }
+
     static String getGitBranch(def script) {
         return getBindingValue(script, 'GIT_BRANCH')
     }
