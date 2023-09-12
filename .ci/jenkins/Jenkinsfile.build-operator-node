@@ -20,7 +20,7 @@ pipeline {
             steps {
                 script {
                     deleteDir()
-                    checkout(githubscm.resolveRepository('kogito-pipelines', 'apache', 'main', false))
+                    checkout(githubscm.resolveRepository('incubator-kogito-pipelines', 'apache', 'main', false))
                 }
             }
         }

@@ -3,7 +3,7 @@
 import org.kie.jenkins.jobdsl.utils.SeedJobUtils
 import org.kie.jenkins.jobdsl.Utils
 
-KOGITO_PIPELINES_REPOSITORY = 'kogito-pipelines'
+KOGITO_PIPELINES_REPOSITORY = 'incubator-kie-kogito-pipelines'
 DEFAULT_CREDENTIALS_ID = 'kie-ci'
 
 String getSeedRepo() {

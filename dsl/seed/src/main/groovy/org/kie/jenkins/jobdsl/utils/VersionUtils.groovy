@@ -28,15 +28,15 @@ class VersionUtils {
     }
     
     static boolean isKogitoProject(String project) {
-        return project.startsWith('kogito')
+        return project.startsWith('kogito') || project.startsWith('incubator-kie-kogito')
     }
 
     static boolean isOptaplannerProject(String project) {
-        return project.startsWith('opta')
+        return project.startsWith('opta') || project.startsWith('incubator-kie-opta')
     }
 
     static boolean isDroolsProject(String project) {
-        return project.startsWith('drools')
+        return project.startsWith('drools') || project.startsWith('incubator-kie-drools')
     }
 
     static boolean isDroolsOrOptaPlannerProject(String project) {
@@ -44,7 +44,7 @@ class VersionUtils {
     }
 
     static boolean isOptaplannerQuickstartsProject(String project) {
-        return project == 'optaplanner-quickstarts'
+        return project == 'optaplanner-quickstarts' || project == 'incubator-kie-optaplanner-quickstarts'
     }
 
 }

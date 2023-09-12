@@ -95,7 +95,6 @@ void setupUpdateJenkinsDependenciesJob() {
     jobParams = JobParamsUtils.getBasicJobParams(this, 'jenkins-update-framework-deps', JobType.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.update-jenkins-dependencies", 'Nightly check of Jenkins dependencies from framework against current version of Jenkins')
     jobParams.triggers = [cron : '@midnight']
     jobParams.env.putAll([
-        REPO_NAME: 'kogito-pipelines',
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
         BUILD_BRANCH_NAME: "${GIT_BRANCH}",
