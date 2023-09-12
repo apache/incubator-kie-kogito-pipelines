@@ -62,7 +62,7 @@ pipeline {
                             echo "Error checking out ${opBranch}. Fallback to latest tag."
                             String latestTag = githubscm.getLatestTag("${opBranch.split("\\.")[0]}\\.")
                             echo "Got latest tag = ${latestTag}"
-                            checkout(githubscm.resolveRepository('optaplanner', getGitAuthor(), latestTag, false))
+                            checkout(githubscm.resolveRepository('incubator-kie-optaplanner', getGitAuthor(), latestTag, false))
                         }
                     }
                 }

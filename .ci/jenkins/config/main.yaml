@@ -7,14 +7,17 @@ ecosystem:
     default_main_version: 2.0.0-SNAPSHOT
     regexs:
     - kogito.*
+    - incubator-kie-kogito.*
   - name: kie-tools
     ignore_release: true
     regexs:
     - kie-tools.*
+    - incubator-kie-kie-tools.*
   - name: kie-docs
     ignore_release: true
     regexs:
     - kie-docs.*
+    - incubator-kie-kie-docs.*
 git:
   branches:
   - name: main
@@ -22,7 +25,7 @@ git:
 seed:
   config_file:
     git:
-      repository: kogito-pipelines
+      repository: incubator-kie-kogito-pipelines
       author:
         name: apache
         credentials_id: kie-ci3

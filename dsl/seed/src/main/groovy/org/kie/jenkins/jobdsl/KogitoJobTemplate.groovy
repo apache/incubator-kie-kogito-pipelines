@@ -182,7 +182,7 @@ class KogitoJobTemplate {
             jobParams.pr = jobParams.pr ?: [:]
             jobParams.pr.putAll ([
                 run_only_for_labels: (jobParams.pr.run_only_for_labels ?: []) + [KogitoConstants.LABEL_DSL_TEST],
-                run_only_for_branches: [ jobParams.git.repository == 'optaplanner-quickstarts' ? 'development' : 'main' ],
+                run_only_for_branches: [ VersionUtils.isOptaplannerQuickstartsProject(jobParams.git.repository) ? 'development' : 'main' ],
                 authorized_users: [ 'apache' ],
                 authorized_groups: [ 'apache' ],
             ])

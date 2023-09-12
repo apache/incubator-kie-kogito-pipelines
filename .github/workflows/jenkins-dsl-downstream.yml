@@ -311,7 +311,7 @@ jobs:
           echo 'BASE_BRANCH=${{ github.base_ref }}' >> $GITHUB_ENV
 
       - name: Setup correct base branch for optaplanner-quickstarts
-        if: github.base_ref == 'main' && matrix.repository == 'optaplanner-quickstarts'
+        if: github.base_ref == 'main' && matrix.repository == 'incubator-kie-optaplanner-quickstarts'
         run: |
           echo 'BASE_BRANCH=development' >> $GITHUB_ENV
       
