@@ -467,23 +467,23 @@ class KogitoJobTemplate {
     }
 
     static def createPullRequestMultibranchPipelineJob(def script, String jenkinsFilePath = '.ci/jenkins/Jenkinsfile') {
-        script.folder("pullrequest_jobs")
+        script.folder('pullrequest_jobs')
         return script.multibranchPipelineJob("pullrequest_jobs/${Utils.getRepoName(script)}-pr")?.with {
             triggers {
-                cron("*/5 * * * *")
+                cron('H/5 * * * *')
             }
             factory {
                 workflowBranchProjectFactory {
-                    scriptPath("${jenkinsFilePath}")
+                    scriptPath(jenkinsFilePath)
                 }
             }
             branchSources {
                 github {
-                    id("${Utils.getRepoName(script)}") // IMPORTANT: use a constant and unique identifier
-                    repoOwner("${Utils.getGitAuthor(script)}")
-                    repository("${Utils.getRepoName(script)}")
-                    checkoutCredentialsId("${Utils.getGitAuthorCredsId(script)}")
-                    scanCredentialsId("${Utils.getGitAuthorCredsId(script)}")
+                    id(Utils.getRepoName(script)) // IMPORTANT: use a constant and unique identifier
+                    repoOwner(Utils.getGitAuthor(script))
+                    repository(Utils.getRepoName(script))
+                    checkoutCredentialsId(Utils.getGitAuthorCredsId(script))
+                    scanCredentialsId(Utils.getGitAuthorCredsId(script))
                     // Build fork PRs (unmerged head).
                     buildForkPRHead(false)
                     // Build fork PRs (merged with base branch).
