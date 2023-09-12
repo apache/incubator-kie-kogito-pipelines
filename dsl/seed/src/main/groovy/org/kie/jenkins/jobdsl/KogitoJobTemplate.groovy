@@ -467,6 +467,7 @@ class KogitoJobTemplate {
     }
 
     static def createPullRequestMultibranchPipelineJob(def script, String jenkinsFilePath = '.ci/jenkins/Jenkinsfile') {
+        PrintUtils.debug(script, "Create pull request job ${Utils.getJobDisplayName(script)}-pr")
         script.folder('pullrequest_jobs')
         return script.multibranchPipelineJob("pullrequest_jobs/${Utils.getJobDisplayName(script)}-pr")?.with {
             triggers {
