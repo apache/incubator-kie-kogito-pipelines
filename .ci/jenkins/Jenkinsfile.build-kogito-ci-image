@@ -13,8 +13,6 @@ pipeline {
         IMAGE_NAME = 'quay.io/kiegroup/kogito-ci-build'
         IMAGE_TAG = "${BRANCH_NAME}-build-${BUILD_NUMBER}"
         IMAGE_NAME_TAG = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
-        COMMIT_IMAGE_NAME_TAG = "${env.IMAGE_NAME}:${GIT_COMMIT}"
-        LATEST_IMAGE_NAME_TAG = "${env.IMAGE_NAME}:${BRANCH_NAME}-latest"
     }
 
     options {
@@ -38,14 +36,14 @@ pipeline {
 
                         sh """
                             docker build --build-arg SDKMAN_JAVA=11.0.20-tem -t ${env.IMAGE_NAME_TAG} -f apache-nodes/Dockerfile.kogito-ci-build .
-                            docker tag ${env.IMAGE_NAME_TAG} ${env.COMMIT_IMAGE_NAME_TAG}
-                            docker tag ${env.IMAGE_NAME_TAG} ${env.LATEST_IMAGE_NAME_TAG}
+                            docker tag ${env.IMAGE_NAME_TAG} ${env.IMAGE_NAME}:${GIT_COMMIT}
+                            docker tag ${env.IMAGE_NAME_TAG} ${env.IMAGE_NAME}:${BRANCH_NAME}-latest
                         """
 
                         sh """
                             docker --config ${DOCKER_CONFIG} push ${env.IMAGE_NAME_TAG}
-                            docker --config ${DOCKER_CONFIG} push ${env.COMMIT_IMAGE_NAME_TAG}
-                            docker --config ${DOCKER_CONFIG} push ${env.LATEST_IMAGE_NAME_TAG}
+                            docker --config ${DOCKER_CONFIG} push ${env.IMAGE_NAME}:${GIT_COMMIT}
+                            docker --config ${DOCKER_CONFIG} push ${env.IMAGE_NAME}:${BRANCH_NAME}-latest
                         """
                     }
                 }

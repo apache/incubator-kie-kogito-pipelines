@@ -95,7 +95,9 @@ jenkins:
   agent:
     docker:
       builder:
-        image: quay.io/kiegroup/kogito-ci-build:latest
+        # At some point, this image will need to be changed when a release branch is created 
+        # but we need to make sure the image exists first ... simple tag before setting up the branch ?
+        image: quay.io/kiegroup/kogito-ci-build:main-latest 
         args: -v /var/run/docker.sock:/var/run/docker.sock --group-add docker --group-add input --group-add render
   default_tools:
     jdk: jdk_11_latest

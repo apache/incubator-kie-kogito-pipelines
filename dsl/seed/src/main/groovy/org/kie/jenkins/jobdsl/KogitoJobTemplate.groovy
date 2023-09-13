@@ -467,7 +467,8 @@ class KogitoJobTemplate {
     }
 
     static def createPullRequestMultibranchPipelineJob(def script, String jenkinsFilePath = '.ci/jenkins/Jenkinsfile') {
-        PrintUtils.debug(script, "Create pull request job ${Utils.getJobDisplayName(script)}-pr")
+        String jobName = "${Utils.getJobDisplayName(script)}-pr"
+        PrintUtils.debug(script, "Create pull request multibranch job ${jobName}")
         script.folder('pullrequest_jobs')
         return script.multibranchPipelineJob("pullrequest_jobs/${Utils.getJobDisplayName(script)}-pr")?.with {
             triggers {
@@ -500,6 +501,51 @@ class KogitoJobTemplate {
                     buildOriginPRHead(false)
                     // Build origin PRs (merged with base branch).
                     buildOriginPRMerge(true)
+                }
+            }
+            orphanedItemStrategy {
+                discardOldItems {
+                    daysToKeep(10)
+                }
+            }
+        }
+    }
+
+    static def createBranchMultibranchPipelineJob(def script, String jobName = '', String jenkinsFilePath = '.ci/jenkins/Jenkinsfile') {
+        jobName = jobName ?: Utils.getJobDisplayName(script)
+        PrintUtils.debug(script, "Create branch multibranch job ${jobName}")
+        script.folder('branch_jobs')
+        return script.multibranchPipelineJob("branch_jobs/${jobName}")?.with {
+            triggers {
+                periodicFolderTrigger {
+                    // The maximum amount of time since the last indexing that is allowed to elapse before an indexing is triggered.
+                    interval('5m')
+                }
+            }
+            factory {
+                workflowBranchProjectFactory {
+                    scriptPath(jenkinsFilePath)
+                }
+            }
+            branchSources {
+                github {
+                    id(Utils.getRepoName(script)) // IMPORTANT: use a constant and unique identifier
+                    repoOwner(Utils.getGitAuthor(script))
+                    repository(Utils.getRepoName(script))
+                    checkoutCredentialsId(Utils.getGitAuthorCredsId(script))
+                    scanCredentialsId(Utils.getGitAuthorCredsId(script))
+                    // Build fork PRs (unmerged head).
+                    buildForkPRHead(false)
+                    // Build fork PRs (merged with base branch).
+                    buildForkPRMerge(false)
+                    // Build origin branches.
+                    buildOriginBranch(true)
+                    // Build origin branches also filed as PRs.
+                    buildOriginBranchWithPR(false)
+                    // Build origin PRs (unmerged head).
+                    buildOriginPRHead(false)
+                    // Build origin PRs (merged with base branch).
+                    buildOriginPRMerge(false)
                 }
             }
             orphanedItemStrategy {
