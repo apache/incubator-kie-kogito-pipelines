@@ -11,10 +11,10 @@ pipeline {
         DOCKER_CONFIG = "${WORKSPACE}/.docker"
 
         IMAGE_NAME = 'quay.io/kiegroup/kogito-ci-build'
-        IMAGE_TAG = "0.0.0-build-${BUILD_NUMBER}"
+        IMAGE_TAG = "${BRANCH_NAME}-build-${BUILD_NUMBER}"
         IMAGE_NAME_TAG = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
         COMMIT_IMAGE_NAME_TAG = "${env.IMAGE_NAME}:${GIT_COMMIT}"
-        LATEST_IMAGE_NAME_TAG = "${env.IMAGE_NAME}:latest"
+        LATEST_IMAGE_NAME_TAG = "${env.IMAGE_NAME}:${BRANCH_NAME}-latest"
     }
 
     options {
