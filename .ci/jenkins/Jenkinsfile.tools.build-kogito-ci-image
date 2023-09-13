@@ -25,6 +25,7 @@ pipeline {
         stage('Build image') {
             steps {
                 script {
+                    sh 'printenv'
 
                     currentBuild.displayName = env.IMAGE_TAG
 
