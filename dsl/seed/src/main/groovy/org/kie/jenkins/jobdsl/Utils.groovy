@@ -228,11 +228,11 @@ class Utils {
     }
 
     static String getJenkinsAgentDockerImage(def script, String imageId) {
-        return getBindingValue(script, 'JENKINS_AGENT_DOCKER_${imageId.toUpperCase()}_IMAGE')
+        return getBindingValue(script, "JENKINS_AGENT_DOCKER_${imageId.toUpperCase()}_IMAGE")
     }
 
     static String getJenkinsAgentDockerArgs(def script, String imageId) {
-        return getBindingValue(script, 'JENKINS_AGENT_DOCKER_${imageId.toUpperCase()}_ARGS')
+        return getBindingValue(script, "JENKINS_AGENT_DOCKER_${imageId.toUpperCase()}_ARGS")
     }
 
     static String getSeedJenkinsfilePath(def script, String jenkinsfileName) {
