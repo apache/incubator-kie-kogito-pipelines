@@ -471,7 +471,10 @@ class KogitoJobTemplate {
         script.folder('pullrequest_jobs')
         return script.multibranchPipelineJob("pullrequest_jobs/${Utils.getJobDisplayName(script)}-pr")?.with {
             triggers {
-                cron('H/5 * * * *')
+                periodicFolderTrigger {
+                    // The maximum amount of time since the last indexing that is allowed to elapse before an indexing is triggered.
+                    interval('5m')
+                }
             }
             factory {
                 workflowBranchProjectFactory {
