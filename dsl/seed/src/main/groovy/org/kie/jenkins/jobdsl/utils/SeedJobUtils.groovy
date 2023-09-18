@@ -15,7 +15,7 @@ class SeedJobUtils {
             throw new RuntimeException('pathsToListen cannot be empty, else it would end up in an infinite loop ...');
         }
         def job = jenkinsScript.pipelineJob(jobName) {
-            description('This job listens to pipelines repo and launch the seed job if needed. DO NOT USE FOR TESTING !!!! See https://github.com/kiegroup/kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs')
+            description('This job listens to pipelines repo and launch the seed job if needed. DO NOT USE FOR TESTING !!!! See https://github.com/apache/incubator-kie-kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs')
 
             logRotator {
                 numToKeep(5)

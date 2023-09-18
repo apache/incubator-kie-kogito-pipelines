@@ -22,9 +22,9 @@ settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
 enableSonarCloudAnalysis = env.ENABLE_SONARCLOUD ? env.ENABLE_SONARCLOUD.toBoolean() : false
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
 
-buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
+buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'incubator-kie-kogito-pipelines'
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
-buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:kiegroup}'
+buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:apache}'
 buildChainConfigDefinitionFilePath = env.BUILDCHAIN_CONFIG_FILE_PATH ?: '.ci/pull-request-config.yaml'
 buildChainAction = isFDBBuildChainType() ? 'full_downstream' : buildChainType
 buildChainAdditionalArguments = buildChainProject ? [ "-p ${buildChainProject}" ] : []
@@ -228,9 +228,9 @@ String getProjectFolder() {
 
     // First guessing whether there is a clone defined into the buildchain config
     // If not, fallback to simple folder structure
-    String projectFolder = "bc/kiegroup_${project}/${project}"
+    String projectFolder = "bc/apache_${project}/${project}"
     if (!fileExists(projectFolder)) {
-        projectFolder = "bc/kiegroup_${project}"
+        projectFolder = "bc/apache_${project}"
     }
 
     return projectFolder

@@ -183,10 +183,6 @@ maven:
     build_promotion_profile_id: 1966c60aff37d
   artifacts_repository: http://nexus3-tradisso-nexus.apps.kogito-cloud.hosted.psi.rdu2.redhat.com/repository/kogito-test/
   #artifacts_repository: ''
-  pr_checks:
-    repository:
-      url: https://bxms-qe.rhev-ci-vms.eng.rdu2.redhat.com:8443/nexus/content/repositories/kogito-runtimes-pr-full-testing/
-      creds_id: unpacks-zip-on-qa-nexus
 cloud:
   image:
     registry_credentials_nightly: tradisso_registry_token
@@ -257,7 +253,7 @@ Then, you can also add a small `.ci/jenkins/dsl/test.sh` to test your groovy scr
 
 file=$(mktemp)
 # For more usage of the script, use ./test.sh -h
-curl -o ${file} https://raw.githubusercontent.com/kiegroup/kogito-pipelines/main/dsl/seed/scripts/seed_test.sh
+curl -o ${file} https://raw.githubusercontent.com/apache/incubator-kie-kogito-pipelines/main/dsl/seed/scripts/seed_test.sh
 chmod u+x ${file}
 ${file} $@
 ```
@@ -290,7 +286,7 @@ If you don't have access to the Kogito `0-seed-job`, you can also create one bas
 3) Copy the create the `0-seed-job` and point the parameters of the job to the main config file you created.  
    Depending on what you changed and need to test, you may have different parameters to update:
    * Setup `SEED_CONFIG_FILE_*` parameters correctly to the author/branch you pushed your test modifications. This is always required.
-   * Change the `SEED_*` parameters only if you did some changes in the Kogito Pipelines `dsl/seed` folder. Else you can use the default, aka `kiegroup/main`.
+   * Change the `SEED_*` parameters only if you did some changes in the Kogito Pipelines `dsl/seed` folder. Else you can use the default, aka `apache/incubator-kie-main`.
 4) Launch the `0-seed-job` and it should create all the needed jobs
 
 **Again, please make sure that you setup your own configuration !**

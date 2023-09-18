@@ -40,22 +40,34 @@ environments:
 disable:
   triggers: true # TODO to set back
 repositories:
-- name: kogito-pipelines
-- name: kogito-runtimes
-- name: kogito-apps
-- name: kogito-examples
-- name: kogito-images
-- name: kogito-operator
-- name: kogito-serverless-operator
-- name: kogito-docs
-# - name: kie-tools // Commented as this one will be treated at another time
-- name: kie-docs
-  # branch: main-kogito # TODO kie-docs PR should be against `main-kogito`
+- name: incubator-kie-kogito-pipelines
+  job_display_name: kogito-pipelines
+- name: incubator-kie-kogito-runtimes
+  job_display_name: kogito-runtimes
+- name: incubator-kie-kogito-apps
+  job_display_name: kogito-apps
+- name: incubator-kie-kogito-examples
+  job_display_name: kogito-examples
+- name: incubator-kie-kogito-images
+  job_display_name: kogito-images
+- name: incubator-kie-kogito-operator
+  job_display_name: kogito-operator
+- name: incubator-kie-kogito-serverless-operator
+  job_display_name: kogito-serverless-operator
+- name: incubator-kie-kogito-docs
+  job_display_name: kogito-docs
+# - name: incubator-kie-kie-tools // Commented as this one will be treated at another time
+#   job_display_name: kie-tools
+- name: incubator-kie-kie-docs
+  job_display_name: kie-docs
+  branch: main-kogito
 git:
   author:
-    name: kiegroup
-    credentials_id: kie-ci3
-    token_credentials_id: kie-ci3-token
+    name: apache
+    # Taken from https://ci-builds.apache.org/credentials/
+    # Need to be verified
+    credentials_id: 399061d0-5ab5-4142-a186-a52081fef742
+    token_credentials_id: ci-builds
   fork_author:
     name: kie-ci
     credentials_id: kie-ci
@@ -67,7 +79,7 @@ git:
   jenkins_config_path: .ci/jenkins
 buildchain_config:
   git:
-    repository: kogito-pipelines
+    repository: incubator-kie-kogito-pipelines
     file_path: .ci/pull-request-config.yaml
 maven:
   settings_file_id: kie-release-settings

@@ -42,27 +42,27 @@ pipeline {
                 script {
                     dir('drools') {
                         deleteDir()
-                        checkout(githubscm.resolveRepository('drools', getGitAuthor(), getTargetBranch(7), false))
+                        checkout(githubscm.resolveRepository('incubator-kie-drools', getGitAuthor(), getTargetBranch(7), false))
                     }
                     dir('kogito-runtimes') {
                         deleteDir()
-                        checkout(githubscm.resolveRepository('kogito-runtimes', getGitAuthor(), getGitBranch(), false))
+                        checkout(githubscm.resolveRepository('incubator-kie-kogito-runtimes', getGitAuthor(), getGitBranch(), false))
                     }
                     dir('kogito-apps') {
                         deleteDir()
-                        checkout(githubscm.resolveRepository('kogito-apps', getGitAuthor(), getGitBranch(), false))
+                        checkout(githubscm.resolveRepository('incubator-kie-kogito-apps', getGitAuthor(), getGitBranch(), false))
                     }
                     dir('optaplanner') {
                         deleteDir()
                         // Get current corresponding branch and if not working, latest tag
                         String opBranch = getTargetBranch(7)
                         try {
-                            checkout(githubscm.resolveRepository('optaplanner', getGitAuthor(), opBranch, false))
+                            checkout(githubscm.resolveRepository('incubator-kie-optaplanner', getGitAuthor(), opBranch, false))
                         } catch(err) {
                             echo "Error checking out ${opBranch}. Fallback to latest tag."
                             String latestTag = githubscm.getLatestTag("${opBranch.split("\\.")[0]}\\.")
                             echo "Got latest tag = ${latestTag}"
-                            checkout(githubscm.resolveRepository('optaplanner', getGitAuthor(), latestTag, false))
+                            checkout(githubscm.resolveRepository('incubator-kie-optaplanner', getGitAuthor(), latestTag, false))
                         }
                     }
                 }

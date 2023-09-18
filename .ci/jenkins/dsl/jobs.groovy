@@ -95,7 +95,6 @@ void setupUpdateJenkinsDependenciesJob() {
     jobParams = JobParamsUtils.getBasicJobParams(this, 'jenkins-update-framework-deps', JobType.TOOLS, "${JENKINSFILE_PATH}/Jenkinsfile.tools.update-jenkins-dependencies", 'Nightly check of Jenkins dependencies from framework against current version of Jenkins')
     jobParams.triggers = [cron : '@midnight']
     jobParams.env.putAll([
-        REPO_NAME: 'kogito-pipelines',
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
         BUILD_BRANCH_NAME: "${GIT_BRANCH}",
@@ -193,7 +192,7 @@ void setupQuarkus3NightlyJob() {
     // Tests are done on 9.x/2.x branch => Create 2.x branch on Kogito
     // Need to split as Drools and Kogito end up in different integration branches
     KogitoJobUtils.createNightlyBuildChainIntegrationJob(this, 'quarkus-3', 'drools', true) { script ->
-        def jobParams = JobParamsUtils.getDefaultJobParams(script, 'drools')
+        def jobParams = JobParamsUtils.getDefaultJobParams(script, 'incubator-kie-drools')
         jobParams.git.branch = VersionUtils.getProjectTargetBranch('drools', Utils.getGitBranch(this), Utils.getRepoName(this))
         jobParams.env.put('ADDITIONAL_TIMEOUT', '180')
         jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
@@ -204,8 +203,9 @@ void setupQuarkus3NightlyJob() {
         jobParams.parametersValues.put('SKIP_INTEGRATION_TESTS', true)
         return jobParams
     }
+    // Commented as not migrated to Apache
     // KogitoJobUtils.createBuildChainIntegrationJob(this, 'quarkus-3', 'kie-jpmml-integration', true) { script ->
-    //     def jobParams = JobParamsUtils.getDefaultJobParams(script, 'kie-jpmml-integration')
+    //     def jobParams = JobParamsUtils.getDefaultJobParams(script, 'incubator-kie-kie-jpmml-integration')
     //     jobParams.env.put('ADDITIONAL_TIMEOUT', '180')
     //     jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
     //     jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
@@ -214,7 +214,7 @@ void setupQuarkus3NightlyJob() {
     //     return jobParams
     // }
     KogitoJobUtils.createBuildChainIntegrationJob(this, 'quarkus-3', 'kogito-runtimes', true) { script ->
-        def jobParams = JobParamsUtils.getDefaultJobParams(script, 'kogito-runtimes')
+        def jobParams = JobParamsUtils.getDefaultJobParams(script, 'incubator-kie-kogito-runtimes')
         jobParams.env.put('ADDITIONAL_TIMEOUT', '720')
         jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
         jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '2.x')
