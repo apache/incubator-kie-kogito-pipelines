@@ -29,7 +29,7 @@ Apart from this repository, pipelines are also concerning those repositories:
 * [kogito-examples](https://github.com/apache/incubator-kie-kogito-examples)
 * [kogito-images](https://github.com/apache/incubator-kie-kogito-images)
 * [kogito-operator](https://github.com/apache/incubator-kie-kogito-operator)
-* [kie-tools](https://github.com/apache/incubator-kie-kie-tools)
+* [kie-tools](https://github.com/apache/incubator-kie-tools)
 
 # The different Kogito pipelines
 
