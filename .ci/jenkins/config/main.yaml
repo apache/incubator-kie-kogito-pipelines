@@ -20,7 +20,7 @@ ecosystem:
     - incubator-kie-kie-docs.*
 git:
   branches:
-  - name: main
+  - name: apache_migration
     main_branch: true
 seed:
   config_file:
@@ -28,8 +28,8 @@ seed:
       repository: incubator-kie-kogito-pipelines
       author:
         name: apache
-        credentials_id: kie-ci3
-      branch: main
+        credentials_id: ASF_Cloudbees_Jenkins_ci-builds
+      branch: apache_migration
     path: .ci/jenkins/config/branch.yaml
   jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
 jenkins:
