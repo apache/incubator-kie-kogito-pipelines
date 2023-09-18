@@ -169,7 +169,7 @@ class JobParamsUtils {
 
     static def setupJobParamsDeployConfiguration(def script, def jobParams) {
         jobParams.env = jobParams.env ?: [:]
-        jobParams.env.put('ENABLE_DEPLOY', 'true')
+        jobParams.env.put('ENABLE_DEPLOY', String.valueOf(!Utils.isDeployDisabled(script)))
         addJobParamsEnvIfNotExisting(script, jobParams, 'MAVEN_DEPLOY_REPOSITORY', Utils.getMavenArtifactsUploadRepositoryUrl(script))
         addJobParamsEnvIfNotExisting(script, jobParams, 'MAVEN_DEPLOY_REPOSITORY_CREDS_ID', Utils.getMavenArtifactsUploadRepositoryCredentialsId(script))
     }

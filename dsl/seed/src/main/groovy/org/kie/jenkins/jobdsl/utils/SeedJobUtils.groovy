@@ -44,6 +44,7 @@ class SeedJobUtils {
             definition {
                 cps {
                     script(jenkinsScript.readFileFromWorkspace('jenkinsfiles/Jenkinsfile.seed.trigger'))
+                    sandbox()
                 }
             }
 

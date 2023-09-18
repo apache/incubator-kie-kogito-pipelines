@@ -275,4 +275,8 @@ class Utils {
         return words.collect { it.isEmpty() ? it : it.substring(0, 1).toUpperCase() + it.substring(1).toLowerCase() }.join(' ')
     }
 
+    static boolean isDeployDisabled(def script) {
+        return getBindingValue(script, 'DISABLE_DEPLOY').toBoolean() || isTestEnvironment(script)
+    }
+
 }
