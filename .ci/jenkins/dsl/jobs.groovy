@@ -205,7 +205,7 @@ void setupQuarkus3NightlyJob() {
     }
     // Commented as not migrated to Apache
     // KogitoJobUtils.createBuildChainIntegrationJob(this, 'quarkus-3', 'kie-jpmml-integration', true) { script ->
-    //     def jobParams = JobParamsUtils.getDefaultJobParams(script, 'incubator-kie-kie-jpmml-integration')
+    //     def jobParams = JobParamsUtils.getDefaultJobParams(script, 'incubator-kie-jpmml-integration')
     //     jobParams.env.put('ADDITIONAL_TIMEOUT', '180')
     //     jobParams.env.put('BUILD_ENVIRONMENT_OPTIONS_CURRENT', 'rewrite push_changes')
     //     jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '9.x')
