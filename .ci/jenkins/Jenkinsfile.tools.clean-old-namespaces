@@ -1,5 +1,10 @@
 pipeline {
-    agent { label 'kogito-cloud && !built-in' }
+    agent {
+        docker { 
+            image 'quay.io/kiegroup/kogito-ci-build:latest'  // TODO to set in branch config
+            args '-v /var/run/docker.sock:/var/run/docker.sock --group-add docker --group-add input --group-add render'
+        }
+    }
     options {
         timeout(time: 120, unit: 'MINUTES')
     }

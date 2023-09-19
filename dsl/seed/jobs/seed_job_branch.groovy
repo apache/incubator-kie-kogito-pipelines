@@ -45,7 +45,7 @@ SeedJobUtils.createSeedJobTrigger(
 
 // Configuration of the seed and generated jobs is done via `dsl/seed/config.yaml`
 pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
-    description("This job creates all needed Jenkins jobs on branch ${GENERATION_BRANCH}. DO NOT USE FOR TESTING !!!! See https://github.com/kiegroup/kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs")
+    description("This job creates all needed Jenkins jobs on branch ${GENERATION_BRANCH}. DO NOT USE FOR TESTING !!!! See https://github.com/apache/incubator-kie-kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs")
 
     logRotator {
         numToKeep(5)
@@ -76,7 +76,7 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
         env('SEED_AUTHOR_CREDS_ID', Utils.getSeedAuthorCredsId(this))
         env('SEED_BRANCH', Utils.getSeedBranch(this))
 
-        env('AGENT_LABEL', Utils.isProdEnvironment(this) ? 'kie-rhel8 && !built-in' : 'kie-rhel8-priority')
+        env('AGENT_LABEL', 'ubuntu')
         env('JENKINS_EMAIL_CREDS_ID', Utils.getJenkinsEmailCredsId(this))
     }
 

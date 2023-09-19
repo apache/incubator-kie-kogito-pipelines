@@ -16,7 +16,7 @@ class JobParamsUtils {
         repository = repository ?: Utils.getRepoName(script)
         def jobParams = [
             job: [
-                name: repository,
+                name: Utils.getRepositoryJobDisplayName(script, repository),
             ],
             git: [
                 author: Utils.getGitAuthor(script),
@@ -135,9 +135,10 @@ class JobParamsUtils {
 
     static def setupJobParamsBuildChainConfiguration(def script, def jobParams, String repository, String buildchainType, String notificationJobName) {
         setupJobParamsSeedPipelineConfiguration(script, jobParams, KogitoConstants.BUILD_CHAIN_JENKINSFILE)
+        setupJobParamsAgentDockerBuilderImageConfiguration(script, jobParams)
         jobParams.env = jobParams.env ?: [:]
         jobParams.env.putAll([
-            BUILDCHAIN_PROJECT: "kiegroup/${repository}",
+            BUILDCHAIN_PROJECT: "apache/${repository}",
             BUILDCHAIN_TYPE: buildchainType,
             BUILDCHAIN_CONFIG_REPO: Utils.getBuildChainConfigRepo(script) ?: Utils.getSeedRepo(script),
             BUILDCHAIN_CONFIG_AUTHOR: Utils.getBuildChainConfigAuthor(script) ?: Utils.getSeedAuthor(script),
@@ -168,8 +169,14 @@ class JobParamsUtils {
 
     static def setupJobParamsDeployConfiguration(def script, def jobParams) {
         jobParams.env = jobParams.env ?: [:]
-        jobParams.env.put('ENABLE_DEPLOY', 'true')
+        jobParams.env.put('ENABLE_DEPLOY', String.valueOf(!Utils.isDeployDisabled(script)))
         addJobParamsEnvIfNotExisting(script, jobParams, 'MAVEN_DEPLOY_REPOSITORY', Utils.getMavenArtifactsUploadRepositoryUrl(script))
         addJobParamsEnvIfNotExisting(script, jobParams, 'MAVEN_DEPLOY_REPOSITORY_CREDS_ID', Utils.getMavenArtifactsUploadRepositoryCredentialsId(script))
+    }
+
+    static def setupJobParamsAgentDockerBuilderImageConfiguration(def script, def jobParams) {
+        jobParams.env = jobParams.env ?: [:]
+        addJobParamsEnvIfNotExisting(script, jobParams, 'AGENT_DOCKER_BUILDER_IMAGE', Utils.getJenkinsAgentDockerImage(script, 'builder'))
+        addJobParamsEnvIfNotExisting(script, jobParams, 'AGENT_DOCKER_BUILDER_ARGS', Utils.getJenkinsAgentDockerArgs(script, 'builder'))
     }
 }

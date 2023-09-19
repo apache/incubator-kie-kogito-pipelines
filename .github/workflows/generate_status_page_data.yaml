@@ -7,7 +7,7 @@ on:
 
 jobs:
   generate-status-page-data:
-    if: github.repository_owner == 'kiegroup'
+    if: github.repository_owner == 'apache'
     concurrency:
       group: generate-status-page-data
       cancel-in-progress: true
@@ -32,7 +32,7 @@ jobs:
         with:
           projects: "${{ steps.retrieve_active_repos.outputs.result }}"
           title: Kogito Status
-          subtitle: Kiegroup Kogito organization repositories CI status
+          subtitle: Apache Kogito organization repositories CI status
           base-branch-filter: "${{ steps.retrieve_active_branches.outputs.result }}"
           branches: 1.13.x,1.13.x-blue
           created-by: GitHub Action

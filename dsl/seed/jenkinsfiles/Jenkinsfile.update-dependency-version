@@ -7,25 +7,17 @@ pipelineProperties = [:]
 
 pipeline {
     agent {
-        label 'rhel8 && !built-in'
-    }
-
-    tools {
-        maven env.BUILD_MAVEN_TOOL
-        jdk env.BUILD_JDK_TOOL
+        docker { 
+            image env.AGENT_DOCKER_BUILDER_IMAGE
+            args env.AGENT_DOCKER_BUILDER_ARGS
+        }
     }
 
     options {
         timeout(time: 30, unit: 'MINUTES')
     }
 
-    // parameters {
-    // For parameters, check into .jenkins/dsl/jobs.groovy file
-    // }
-
     environment {
-        // Static env is defined into .jenkins/dsl/jobs.groovy file
-
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
     }
 

@@ -1,5 +1,10 @@
 pipeline {
-    agent { label 'kogito-cloud && !built-in' }
+    agent {
+        docker { 
+            image env.AGENT_DOCKER_BUILDER_IMAGE
+            args env.AGENT_DOCKER_BUILDER_ARGS
+        }
+    }
     options {
         timeout(time: 120, unit: 'MINUTES')
     }

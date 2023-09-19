@@ -1,0 +1,114 @@
+FROM registry.access.redhat.com/ubi9/ubi:9.2
+
+SHELL ["/bin/bash", "-c"]
+
+ARG SDKMAN_JAVA="17.0.8-tem"
+ARG SDKMAN_MAVEN="3.8.8"
+ARG PYTHON_MAJOR_VERSION="3"
+ARG PYTHON_MAJOR_MINOR_VERSION="3.11"
+
+# set locale to C.UTF-8
+ENV LANG='C.UTF-8'
+
+RUN dnf -y update && dnf install -y \
+# skdman deps (BEGIN)
+git \
+findutils \
+tar \
+gzip \
+unzip \
+zip \
+# skdman deps (END)
+# python3 (BEGIN)
+python${PYTHON_MAJOR_MINOR_VERSION} \
+python${PYTHON_MAJOR_MINOR_VERSION}-devel \
+python${PYTHON_MAJOR_MINOR_VERSION}-pip \
+python${PYTHON_MAJOR_VERSION}-gssapi \
+krb5-devel \
+gcc \
+# python3 (END)
+# system (BEGIN)
+shadow-utils \
+sudo \
+wget \
+which \
+# system (END)
+&& dnf clean all
+
+RUN sudo alternatives --install /usr/local/bin/python python $(which python${PYTHON_MAJOR_MINOR_VERSION}) 1 && \
+  sudo alternatives --install /usr/local/bin/pip pip $(which pip${PYTHON_MAJOR_MINOR_VERSION}) 1
+
+RUN groupadd -g 910 nonrootuser && useradd -u 910 -g 910 nonrootuser && \
+  echo "nonrootuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Docker
+RUN  dnf -y update && dnf install -y yum-utils device-mapper-persistent-data lvm2 && \
+  dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
+  dnf remove podman buildah && \
+  dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin --nobest && \
+  dnf clean all
+
+USER nonrootuser
+
+RUN curl -s "https://get.sdkman.io" | bash && \
+  source "$HOME/.sdkman/bin/sdkman-init.sh" && \
+  sdk install java ${SDKMAN_JAVA} && \
+  sudo alternatives --install /usr/local/bin/java java $(which java) 1 && \
+  sdk install maven ${SDKMAN_MAVEN} && \
+  sudo alternatives --install /usr/local/bin/mvn mvn $(which mvn) 1 && \
+  sdk flush
+  
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash && \
+  source ~/.bashrc && nvm install "v16.20.0" && \
+  sudo alternatives --install /usr/local/bin/node node $(which node) 1 && \
+  sudo alternatives --install /usr/local/bin/npm npm $(which npm) 1
+  
+RUN wget https://go.dev/dl/go1.19.10.linux-amd64.tar.gz -P /tmp && \
+  sudo mkdir /opt/golang && \
+  sudo tar -C /opt/golang -xzf /tmp/go*.tar.gz && \
+  sudo chown -R nonrootuser:nonrootuser /opt/golang/go && \
+  sudo chmod -R 755 /opt/golang/go && \
+  echo 'export GOPATH=${HOME}/go' | sudo tee /etc/profile.d/go.sh && \
+  echo "source /etc/profile.d/go.sh" >> $HOME/.bashrc && \
+  rm -rf /tmp/go* && \
+  sudo alternatives --install /usr/local/bin/go go /opt/golang/go/bin/go 1
+
+# Cekit
+RUN pip3.11 install cekit==4.8.0 behave lxml docker docker-squash elementPath pyyaml ruamel.yaml python-dateutil Jinja2 pykwalify colorlog click
+RUN wget https://github.com/openshift/source-to-image/releases/download/v1.3.8/source-to-image-v1.3.8-980ca195-linux-amd64.tar.gz -P /tmp && \
+  tmp_dir=$(mktemp -d) && \
+  tar -C ${tmp_dir} -xzvf /tmp/source-to-image-v1.3.8-980ca195-linux-amd64.tar.gz && \
+  ls ${tmp_dir} && \
+  sudo mv ${tmp_dir}/s2i /usr/local/bin/ && \
+  rm -rf ${tmp_dir} /tmp/source-to-image/*
+
+# gh cli
+RUN sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo && \
+  sudo dnf install -y gh
+
+# Install kubectl
+RUN wget https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl -P /tmp && \
+  chmod +x /tmp/kubectl && \
+  sudo mv /tmp/kubectl /usr/local/bin/kubectl
+
+# Install oc client
+RUN wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-4.13/openshift-client-linux.tar.gz -P /tmp && \
+  tmp_dir=$(mktemp -d) && \
+  tar -C ${tmp_dir} -xvf /tmp/openshift-client-linux.tar.gz && \
+  sudo mv ${tmp_dir}/oc /usr/local/bin && \
+  rm -rf ${tmp_dir} /tmp/openshift-client*
+
+ENV HOME="/home/nonrootuser/"
+
+ENV JAVA_HOME="/home/nonrootuser/.sdkman/candidates/java/current/"
+ENV MAVEN_HOME="/home/nonrootuser/.sdkman/candidates/maven/current/"
+ENV MAVEN_OPTS="-Xms1024m -Xmx12g"
+ENV NODE_HOME="/home/nonrootuser/.nvm/versions/node/v16.20.0"
+ENV NODE_OPTIONS="--max_old_space_size=4096"
+ENV GOPATH="/home/nonrootuser/go"
+ENV GOROOT="/opt/golang/go"
+
+ENV CONTAINER_ENGINE="docker"
+ENV CONTAINER_ENGINE_TLS_OPTIONS=""
+
+WORKDIR /project/directory

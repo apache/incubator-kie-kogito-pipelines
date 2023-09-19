@@ -19,7 +19,7 @@ UNSTABLE_STAGES = [:]
 // Should be multibranch pipeline
 pipeline {
     agent {
-        label 'kie-rhel8 && !built-in'
+        label 'ubuntu'
     }
 
     options {
@@ -118,7 +118,7 @@ pipeline {
                                 // Update examples nightly branch
                                 dir('kogito-examples') {
                                     deleteDir()
-                                    checkout(githubscm.resolveRepository('kogito-examples', getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsID()))
+                                    checkout(githubscm.resolveRepository('incubator-kie-kogito-examples', getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsID()))
                                     String nightlyBranch = "nightly-${getBuildBranch()}"
                                     githubscm.createBranch(nightlyBranch)
                                     githubscm.pushObject('origin', nightlyBranch, getGitAuthorCredsID())

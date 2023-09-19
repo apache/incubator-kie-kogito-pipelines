@@ -3,7 +3,7 @@
 import org.kie.jenkins.jobdsl.utils.SeedJobUtils
 import org.kie.jenkins.jobdsl.Utils
 
-KOGITO_PIPELINES_REPOSITORY = 'kogito-pipelines'
+KOGITO_PIPELINES_REPOSITORY = 'incubator-kie-kogito-pipelines'
 DEFAULT_CREDENTIALS_ID = 'kie-ci'
 
 String getSeedRepo() {
@@ -11,7 +11,7 @@ String getSeedRepo() {
 }
 
 String getSeedAuthor() {
-    return Utils.getSeedAuthor(this) ?: 'kiegroup'
+    return Utils.getSeedAuthor(this) ?: 'apache'
 }
 
 String getSeedAuthorCredsId() {
@@ -27,7 +27,7 @@ String getSeedConfigFileGitRepository() {
 }
 
 String getSeedConfigFileGitAuthorName() {
-    return SEED_CONFIG_FILE_GIT_AUTHOR_NAME ?: 'kiegroup'
+    return SEED_CONFIG_FILE_GIT_AUTHOR_NAME ?: 'apache'
 }
 
 String getSeedConfigFileGitAuthorCredsId() {
@@ -72,7 +72,7 @@ SeedJobUtils.createSeedJobTrigger(
 
 // Configuration of the seed and generated jobs is done via `dsl/seed/config.yaml`
 pipelineJob('0-seed-job') {
-    description('This job creates all needed Jenkins jobs. DO NOT USE FOR TESTING !!!! See https://github.com/kiegroup/kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs')
+    description('This job creates all needed Jenkins jobs. DO NOT USE FOR TESTING !!!! See https://github.com/apache/incubator-kie-kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs')
 
     logRotator {
         numToKeep(5)
@@ -83,7 +83,7 @@ pipelineJob('0-seed-job') {
     }
 
     environmentVariables {
-        env('AGENT_LABEL', Utils.isProdEnvironment(this) ? 'kie-rhel8 && !built-in' : 'kie-rhel8-priority')
+        env('AGENT_LABEL', 'ubuntu')
         env('JENKINS_EMAIL_CREDS_ID', Utils.getJenkinsEmailCredsId(this))
     }
 
