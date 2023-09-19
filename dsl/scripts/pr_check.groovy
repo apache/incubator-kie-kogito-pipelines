@@ -91,7 +91,7 @@ String getBuildChainCommandline() {
     // Those can be overriden in Jenkinsfiles
     String buildChainProject = env.BUILDCHAIN_PROJECT ?: CHANGE_REPO
     String buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'incubator-kie-kogito-pipelines'
-    String buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${GENERATION_BRANCH:main}'
+    String buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
     String buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:apache}'
     String buildChainConfigDefinitionFilePath = env.BUILDCHAIN_CONFIG_FILE_PATH ?: '.ci/pull-request-config.yaml'
 
