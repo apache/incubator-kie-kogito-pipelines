@@ -25,7 +25,7 @@ promoteImageParamsPrefix = 'PROMOTE_IMAGE'
 // Should be multibranch pipeline
 pipeline {
     agent {
-        label 'kie-rhel8 && !built-in'
+        label 'ubuntu'
     }
 
     options {
@@ -266,11 +266,11 @@ void addSkipIntegrationTestsParam(buildParams) {
 
 void addAppsParam(buildParams) {
     addStringParam(buildParams, 'APPS_REF', "${getBuildBranch()}")
-    addStringParam(buildParams, 'APPS_URI', "https://github.com/${getGitAuthor()}/kogito-apps")
+    addStringParam(buildParams, 'APPS_URI', "https://github.com/${getGitAuthor()}/incubator-kie-kogito-apps")
 }
 
 void addExamplesParam(buildParams) {
-    addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/kogito-examples")
+    addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/incubator-kie-kogito-examples")
     addStringParam(buildParams, 'EXAMPLES_REF', "nightly-${getBuildBranch()}")
 }
 

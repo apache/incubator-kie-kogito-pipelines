@@ -15,7 +15,7 @@ class SeedJobUtils {
             throw new RuntimeException('pathsToListen cannot be empty, else it would end up in an infinite loop ...');
         }
         def job = jenkinsScript.pipelineJob(jobName) {
-            description('This job listens to pipelines repo and launch the seed job if needed. DO NOT USE FOR TESTING !!!! See https://github.com/kiegroup/kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs')
+            description('This job listens to pipelines repo and launch the seed job if needed. DO NOT USE FOR TESTING !!!! See https://github.com/apache/incubator-kie-kogito-pipelines/blob/main/docs/jenkins.md#test-specific-jobs')
 
             logRotator {
                 numToKeep(5)
@@ -38,12 +38,13 @@ class SeedJobUtils {
                 env('JOB_RELATIVE_PATH_TO_TRIGGER', jobRelativePathToTrigger)
                 env('LISTEN_TO_MODIFIED_PATHS', new groovy.json.JsonBuilder(pathsToListen).toString())
 
-                env('AGENT_LABEL', Utils.isProdEnvironment(jenkinsScript) ? 'rhel8 && !built-in' : 'kie-rhel8-priority')
+                env('AGENT_LABEL', 'ubuntu')
             }
 
             definition {
                 cps {
                     script(jenkinsScript.readFileFromWorkspace('jenkinsfiles/Jenkinsfile.seed.trigger'))
+                    sandbox()
                 }
             }
 

@@ -48,10 +48,6 @@ class Utils {
     static boolean hasBindingValuesStartingWith(def script, String keyPrefix) {
         return getBindingValuesStartingWith(script, keyPrefix).size() > 0
     }
-    
-    static boolean isProductizedBranch(def script) {
-        return getBindingValue(script, 'PRODUCTIZED_BRANCH').toBoolean()
-    }
 
     static String getGenerationBranch(def script) {
         return getBindingValue(script, 'GENERATION_BRANCH')
@@ -65,6 +61,14 @@ class Utils {
 
     static String getRepoName(def script) {
         return getBindingValue(script, 'REPO_NAME')
+    }
+
+    static String getRepositoryJobDisplayName(def script, String repository) {
+        return getBindingValue(script, "${repository.toUpperCase()}_JOB_DISPLAY_NAME") ?: repository
+    }
+
+    static String getJobDisplayName(def script) {
+        return getRepositoryJobDisplayName(script, getRepoName(script))
     }
 
     static String getGitBranch(def script) {
@@ -102,9 +106,9 @@ class Utils {
 
     static boolean isProdEnvironment(def script) {
         // Check for all possible `GIT_AUTHOR_NAME` variables
-        return getSeedAuthor(script) == 'kiegroup' &&
-            (hasGitAuthor(script) ? getGitAuthor(script) == 'kiegroup' : true) &&
-            (hasSeedConfigFileGitAuthor(script) ? getSeedConfigFileGitAuthor(script) == 'kiegroup' : true)
+        return getSeedAuthor(script) == 'kieapachegroup' &&
+            (hasGitAuthor(script) ? getGitAuthor(script) == 'apache' : true) &&
+            (hasSeedConfigFileGitAuthor(script) ? getSeedConfigFileGitAuthor(script) == 'apache' : true)
     }
 
     static boolean isTestEnvironment(def script) {
@@ -223,6 +227,14 @@ class Utils {
         return getBindingValue(script, 'MAVEN_QUARKUS_PLATFORM_REPOSITORY_CREDS_ID')
     }
 
+    static String getJenkinsAgentDockerImage(def script, String imageId) {
+        return getBindingValue(script, "JENKINS_AGENT_DOCKER_${imageId.toUpperCase()}_IMAGE")
+    }
+
+    static String getJenkinsAgentDockerArgs(def script, String imageId) {
+        return getBindingValue(script, "JENKINS_AGENT_DOCKER_${imageId.toUpperCase()}_ARGS")
+    }
+
     static String getSeedJenkinsfilePath(def script, String jenkinsfileName) {
         return "${KogitoConstants.SEED_JENKINSFILES_PATH}/${jenkinsfileName}"
     }
@@ -261,6 +273,10 @@ class Utils {
     static String getRepoNameCamelCase(String repo) {
         List words = repo.split('-') as List
         return words.collect { it.isEmpty() ? it : it.substring(0, 1).toUpperCase() + it.substring(1).toLowerCase() }.join(' ')
+    }
+
+    static boolean isDeployDisabled(def script) {
+        return getBindingValue(script, 'DISABLE_DEPLOY').toBoolean() || isTestEnvironment(script)
     }
 
 }

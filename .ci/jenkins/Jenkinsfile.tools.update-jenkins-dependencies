@@ -2,11 +2,15 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 @Library('jenkins-pipeline-shared-libraries')_
 
+// This Jenkinsfile has not been tested on Apache Jenkins yet
+// and will likely fail due to restrictions on Groovy sandbox methods
+// See `findPlugin` and `getJenkinsVersion` methods
+
 branchCreated = false
 
 pipeline {
     agent {
-        label 'kie-rhel8 && !built-in'
+        label 'ubuntu'
     }
 
     options {

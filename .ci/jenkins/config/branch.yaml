@@ -6,18 +6,6 @@ environments:
       ADDITIONAL_TIMEOUT: 720
     ids:
     - native
-  native-lts:
-    env_vars:
-      NATIVE: true
-      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
-      BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
-      QUARKUS_BRANCH: '2.13'
-      ADDITIONAL_TIMEOUT: 720
-      BUILD_ENVIRONMENT: quarkus-lts
-    ids:
-    - native
-    - prod
-    - lts
   quarkus-main:
     enabled: false
     env_vars:
@@ -32,21 +20,12 @@ environments:
   quarkus-3:
     pull_request_default_check: false
     env_vars:
-      BUILD_MAVEN_TOOL: kie-maven-3.9.1
-      BUILD_JDK_TOOL: kie-jdk17
+      BUILD_MAVEN_TOOL: maven_3.9.3
+      BUILD_JDK_TOOL: jdk_17_latest
       BUILD_MVN_OPTS: -Denforcer.skip
     ids:
     - quarkus
     - quarkus3
-  quarkus-lts:
-    pull_request_default_check: false
-    env_vars:
-      BUILD_MVN_OPTS: -Dproductized -Ddata-index-ephemeral.image=quay.io/kiegroup/kogito-data-index-ephemeral
-      QUARKUS_BRANCH: '2.13'
-    ids:
-    - quarkus
-    - lts
-    - prod
   sonarcloud:
     auto_generation: false
     env_vars:
@@ -58,35 +37,38 @@ environments:
     auto_generation: false
     ids:
     - ecosystem
-productized_branch: true
 disable:
-  triggers: false
+  triggers: true # TODO to set back
+  deploy: true 
 repositories:
-- name: kogito-pipelines
-- name: kogito-runtimes
-- name: kogito-apps
-- name: kogito-examples
-- name: kogito-images
-- name: kogito-operator
-- name: kogito-serverless-operator
-- name: kie-tools
-- name: kogito-docs
-- name: kie-docs
+- name: incubator-kie-kogito-pipelines
+  job_display_name: kogito-pipelines
+- name: incubator-kie-kogito-runtimes
+  job_display_name: kogito-runtimes
+- name: incubator-kie-kogito-apps
+  job_display_name: kogito-apps
+- name: incubator-kie-kogito-examples
+  job_display_name: kogito-examples
+- name: incubator-kie-kogito-images
+  job_display_name: kogito-images
+- name: incubator-kie-kogito-operator
+  job_display_name: kogito-operator
+- name: incubator-kie-kogito-serverless-operator
+  job_display_name: kogito-serverless-operator
+- name: incubator-kie-kogito-docs
+  job_display_name: kogito-docs
+# - name: incubator-kie-tools // Commented as this one will be treated at another time
+#   job_display_name: kie-tools
+- name: incubator-kie-docs
+  job_display_name: kie-docs
   branch: main-kogito
-productized_repositories:
-- name: kogito-pipelines
-- name: kogito-runtimes
-- name: kogito-apps
-- name: kogito-examples
-- name: kogito-images
-- name: kogito-serverless-operator
-- name: kogito-operator
-- name: kogito-docs
 git:
   author:
-    name: kiegroup
-    credentials_id: kie-ci3
-    token_credentials_id: kie-ci3-token
+    name: apache
+    # Taken from https://ci-builds.apache.org/credentials/
+    # Need to be verified
+    credentials_id: 399061d0-5ab5-4142-a186-a52081fef742
+    token_credentials_id: ci-builds
   fork_author:
     name: kie-ci
     credentials_id: kie-ci
@@ -98,34 +80,41 @@ git:
   jenkins_config_path: .ci/jenkins
 buildchain_config:
   git:
-    repository: kogito-pipelines
+    repository: incubator-kie-kogito-pipelines
     file_path: .ci/pull-request-config.yaml
 maven:
-  settings_file_id: kogito_release_settings
+  settings_file_id: kie-release-settings
   nexus:
-    release_url: https://repository.jboss.org/nexus
-    release_repository: jboss-releases-repository
-    staging_profile_url: https://repository.jboss.org/nexus/content/groups/kogito-public/
-    staging_profile_id: 1976dd1c18392a
-    build_promotion_profile_id: ea49ccd6f174
+    release_url: TO_DEFINE
+    release_repository: TO_DEFINE
+    staging_profile_url: TO_DEFINE
+    staging_profile_id: TO_DEFINE
+    build_promotion_profile_id: TO_DEFINE
   artifacts_repository: ''
   artifacts_upload_repository:
-    url: https://repository.jboss.org/nexus/content/repositories/snapshots/
-    creds_id: kogito-snapshots-upload
+    url: TO_DEFINE
+    creds_id: TO_DEFINE
   quarkus_platform_repository:
-    url: https://repository.jboss.org/nexus/content/repositories/kogito-internal-repository/
-    creds_id: kogito-internal-nexus-creds
+    url: TO_DEFINE
+    creds_id: TO_DEFINE
 cloud:
   image:
-    registry_credentials_nightly: nightly_kogito
-    registry_credentials_release: release_kogito
+    registry_credentials: tradisso_registry_token # TODO set to `kogito-quay-token`
     registry: quay.io
-    namespace: kiegroup
+    namespace: tradisso # TODO set to `kiegroup` after testing
     latest_git_branch: main
 jenkins:
-  email_creds_id: KOGITO_CI_EMAIL_TO
+  email_creds_id: KOGITO_CI_NOTIFICATION_EMAILS
+  agent:
+    docker:
+      builder:
+        # At some point, this image will need to be changed when a release branch is created 
+        # but we need to make sure the image exists first ... simple tag before setting up the branch ?
+        # See https://github.com/kiegroup/kie-issues/issues/551
+        image: quay.io/kiegroup/kogito-ci-build:main-latest 
+        args: -v /var/run/docker.sock:/var/run/docker.sock --group-add docker --group-add input --group-add render
   default_tools:
-    jdk: kie-jdk11
-    maven: kie-maven-3.8.7
-    sonar_jdk: kie-jdk17
+    jdk: jdk_11_latest
+    maven: maven_3.8.6
+    sonar_jdk: jdk_17_latest
   jobs_definition_file: .ci/jenkins/dsl/jobs.groovy

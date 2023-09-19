@@ -7,7 +7,7 @@ inputs:
   definition-file:
     description: 'The `definition-file` input for the build-chain'
     required: false
-    default: 'https://raw.githubusercontent.com/${GROUP:kiegroup}/kogito-pipelines/${BRANCH:main}/.ci/pull-request-config.yaml'
+    default: 'https://raw.githubusercontent.com/${GROUP:apache}/incubator-kie-kogito-pipelines/${BRANCH:main}/.ci/pull-request-config.yaml'
   flow-type:
     description: "the flow to execute, it can be 'cross_pr' (or 'pull-request' which is deprecated), 'full_downstream' (or 'full-downstream' which is deprecated), 'single_pr' (or 'single' which is deprecated) or 'branch'"
     default: "cross_pr"

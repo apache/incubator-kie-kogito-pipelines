@@ -4,7 +4,7 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 pipeline {
     agent {
-        label 'kie-rhel8-priority && !built-in'
+        label 'ubuntu'
     }
 
     options {
@@ -20,7 +20,7 @@ pipeline {
             steps {
                 script {
                     deleteDir()
-                    checkout(githubscm.resolveRepository('kogito-pipelines', 'kiegroup', 'main', false))
+                    checkout(githubscm.resolveRepository('incubator-kogito-pipelines', 'apache', 'main', false))
                 }
             }
         }
@@ -28,7 +28,7 @@ pipeline {
             steps {
                 script {
                     dir('kogito-operator-jenkins-node') {
-                        sh 'cekit -v build podman'
+                        sh 'cekit -v build docker'
                     }
                 }
             }
@@ -43,17 +43,17 @@ pipeline {
                     echo "Got version for tagging -> ${version}"
 
                     sh """
-                        podman tag kogito-operator-jenkins-node:latest quay.io/kiegroup/kogito-operator-jenkins-node:${version}
-                        podman tag kogito-operator-jenkins-node:latest quay.io/kiegroup/kogito-operator-jenkins-node:latest
+                        docker tag kogito-operator-jenkins-node:latest quay.io/kiegroup/kogito-operator-jenkins-node:${version}
+                        docker tag kogito-operator-jenkins-node:latest quay.io/kiegroup/kogito-operator-jenkins-node:latest
                     """
 
                     withCredentials([usernamePassword(credentialsId: 'nightly_kogito', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PWD')]) {
-                        sh "podman login --tls-verify=false -u ${REGISTRY_USER} -p ${REGISTRY_PWD} quay.io"
+                        sh "docker login -u ${REGISTRY_USER} -p ${REGISTRY_PWD} quay.io"
                     }
 
                     sh """
-                        podman push quay.io/kiegroup/kogito-operator-jenkins-node:${version}
-                        podman push quay.io/kiegroup/kogito-operator-jenkins-node:latest
+                        docker push quay.io/kiegroup/kogito-operator-jenkins-node:${version}
+                        docker push quay.io/kiegroup/kogito-operator-jenkins-node:latest
                     """
                 }
             }

@@ -9,7 +9,7 @@ repositoriesToBranch = []
 
 pipeline {
     agent {
-        label 'rhel8 && !built-in'
+        label 'ubuntu'
     }
 
     environment {
@@ -54,7 +54,6 @@ pipeline {
                         // Update branch config
                         def branchConfig = readYaml file: branchConfigFile
                         branchConfig.repositories = repositories
-                        branchConfig.productized_branch = params.PRODUCTIZED_BRANCH
 
                         // Disable some environments when branching as they make no sense by default
                         branchConfig.environments.each { envName, envData ->
@@ -62,9 +61,6 @@ pipeline {
                                 if (envName != 'quarkus-branch') {
                                     envData.enabled = false // Keep only quarkus-branch
                                 }
-                            }
-                            if (envData.ids.find { it == 'lts' }) {
-                                envData.enabled = params.PRODUCTIZED_BRANCH // LTS envs depend on param
                             }
                         }
 
