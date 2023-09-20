@@ -86,7 +86,7 @@ class KogitoJobUtils {
     * Create a Quarkus update job which allow to update the quarkus version into current repository, via Maven or Gradle
     */
     static def createQuarkusVersionUpdateToolsJobForCurrentRepo(def script, def mavenUpdate = [:], def gradleUpdate = [:], def filepathReplaceRegex = [:]) {
-        return createQuarkusUpdateToolsJob(script, Utils.getRepoName(script), 'Quarkus', mavenUpdate, gradleUpdate, filepathReplaceRegex)
+        return createQuarkusUpdateToolsJob(script, Utils.getRepoName(script), mavenUpdate, gradleUpdate, filepathReplaceRegex)
     }
 
     /**
