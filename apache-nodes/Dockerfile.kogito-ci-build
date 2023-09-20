@@ -34,7 +34,10 @@ wget \
 which \
 # system (END)
 # drools (BEGIN)
+fontconfig \
 freetype \
+# couldn't get it for pre-defined repositories
+https://mirror.stream.centos.org/9-stream/AppStream/aarch64/os/Packages/overpass-fonts-3.0.4-8.el9.noarch.rpm \
 # drools (END)
 && dnf clean all
 
