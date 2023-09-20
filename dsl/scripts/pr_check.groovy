@@ -6,10 +6,11 @@ dockerGroups = [
 ]
 dockerArgs = [
     '-v /var/run/docker.sock:/var/run/docker.sock',
+    '--network host',
 ] + dockerGroups.collect { group -> "--group-add ${group}" }
 
 void launch() {
-    String builderImage = 'quay.io/kiegroup/kogito-ci-build:latest'
+    String builderImage = 'quay.io/kiegroup/kogito-ci-build:main-latest'
     sh "docker rmi -f ${builderImage} || true" // Remove before launching
 
     try {
