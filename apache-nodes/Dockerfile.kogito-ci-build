@@ -52,7 +52,8 @@ RUN  dnf -y update && dnf install -y yum-utils device-mapper-persistent-data lvm
   dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
   dnf remove podman buildah && \
   dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin --nobest && \
-  dnf clean all
+  dnf clean all && \
+  alternatives --install /usr/local/bin/docker-compose docker-compose /usr/libexec/docker/cli-plugins/docker-compose 1
 
 USER nonrootuser
 
