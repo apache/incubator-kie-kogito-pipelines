@@ -9,7 +9,7 @@ jdkTool = env.BUILD_JDK_TOOL
 sonarJdkTool = env.SONAR_JDK_TOOL
 mavenTool = env.BUILD_MAVEN_TOOL
 
-mavenDeployArtifacts = Boolean.valueof(env.ENABLE_DEPLOY)
+mavenDeployArtifacts = Boolean.valueOf(env.ENABLE_DEPLOY)
 mavenDeployRepository = env.MAVEN_DEPLOY_REPOSITORY ?: ''
 mavenDeployRepositoryCredsId = env.MAVEN_DEPLOY_REPOSITORY_CREDS_ID ?: ''
 mavenDeployLocalDir = env.MAVEN_DEPLOY_LOCAL_DIR ?: ''
