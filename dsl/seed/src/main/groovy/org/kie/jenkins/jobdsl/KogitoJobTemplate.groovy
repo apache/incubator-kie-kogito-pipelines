@@ -490,17 +490,17 @@ class KogitoJobTemplate {
                     checkoutCredentialsId(Utils.getGitAuthorCredsId(script))
                     scanCredentialsId(Utils.getGitAuthorCredsId(script))
                     // Build fork PRs (unmerged head).
-                    buildForkPRHead(false)
+                    buildForkPRHead(true)
                     // Build fork PRs (merged with base branch).
-                    buildForkPRMerge(true)
+                    buildForkPRMerge(false)
                     // Build origin branches.
                     buildOriginBranch(false)
                     // Build origin branches also filed as PRs.
-                    buildOriginBranchWithPR(false)
+                    buildOriginBranchWithPR(true)
                     // Build origin PRs (unmerged head).
                     buildOriginPRHead(false)
                     // Build origin PRs (merged with base branch).
-                    buildOriginPRMerge(true)
+                    buildOriginPRMerge(false)
                 }
             }
             orphanedItemStrategy {
