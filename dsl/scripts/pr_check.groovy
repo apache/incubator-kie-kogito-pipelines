@@ -97,7 +97,7 @@ String getBuildChainCommandline() {
     String buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'incubator-kie-kogito-pipelines'
     String buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
     String buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:apache}'
-    String buildChainConfigDefinitionFilePath = env.BUILDCHAIN_CONFIG_FILE_PATH ?: '.ci/pull-request-config.yaml'
+    String buildChainConfigDefinitionFilePath = env.BUILDCHAIN_CONFIG_FILE_PATH ?: '.ci/buildchain-config-pr-cdb.yaml'
 
     List buildChainAdditionalArguments = [
         "-p ${buildChainProject}",
