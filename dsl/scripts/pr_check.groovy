@@ -31,7 +31,10 @@ void launchInDocker(String builderImage) {
             echo "Got build result ${currentBuild.currentResult}"
             if (currentBuild.currentResult != 'SUCCESS') {
                 // TODO ci token as env ?
-                pullrequest.postComment(util.getMarkdownTestSummary('PR', getReproducer(true), "${BUILD_URL}", 'GITHUB'), "kie-ci3-token")
+                postComment(
+                    util.getMarkdownTestSummary('PR', getReproducer(true), "${BUILD_URL}", 'GITHUB'),
+                    'kie-ci3-token'
+                )
             }
         }
     }
@@ -131,6 +134,25 @@ ${reproducer}
 ```
 """
     }
+}
+
+/**
+* This method add a comment to current PR (for Github Branch Source plugin)
+*/
+void postComment(String commentText, String githubTokenCredsId = "kie-ci1-token") {
+    if (!CHANGE_ID) {
+        error "Pull Request Id variable (CHANGE_ID) is not set. Are you sure you are running with Github Branch Source plugin ?"
+    }
+    String filename = "${util.generateHash(10)}.build.summary"
+    def jsonComment = [
+        body : commentText
+    ]
+    writeJSON(json: jsonComment, file: filename)
+    sh "cat ${filename}"
+    withCredentials([string(credentialsId: githubTokenCredsId, variable: 'GITHUB_TOKEN')]) {
+        sh "curl -s -H \"Authorization: token ${GITHUB_TOKEN}\" -X POST -d '@${filename}' \"https://api.github.com/repos/${BUILDCHAIN_PROJECT}/issues/${CHANGE_ID}/comments\""
+    }
+    sh "rm ${filename}"
 }
 
 return this
