@@ -105,7 +105,7 @@ pipeline {
                             }
 
                             configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
-                                withCredentials([string(credentialsId: "${GIT_AUTHOR_TOKEN_CREDENTIALS_ID}", variable: 'GITHUB_TOKEN')]) {
+                                withCredentials([string(credentialsId: "${BUILDCHAIN_CONFIG_GIT_TOKEN_CREDENTIALS_ID}", variable: 'GITHUB_TOKEN')]) {
                                     env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
                                     echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
 
@@ -176,13 +176,16 @@ pipeline {
         unsuccessful {
             script {
                 if (isPRBuildChainType()) {
-                    pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, getReproducer(true), "${BUILD_URL}", 'GITHUB'), "${GIT_AUTHOR_TOKEN_CREDENTIALS_ID}")
+                    pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, getReproducer(true), "${BUILD_URL}", 'GITHUB'), "${BUILDCHAIN_CONFIG_GIT_TOKEN_CREDENTIALS_ID}")
                 } else if (shouldNotify()) {
                     withCredentials([string(credentialsId: "${JENKINS_EMAIL_CREDS_ID}", variable: 'KOGITO_CI_EMAIL_TO')]) {
                         mailer.sendMarkdownTestSummaryNotification(env.NOTIFICATION_JOB_NAME ?: '', "[${env.GIT_BRANCH_NAME}] ${getRepoNameCamelCase(env.REPO_NAME)}", [env.KOGITO_CI_EMAIL_TO], getReproducer())
                     }
                 }
             }
+        }
+        cleanup {
+            cleanWs()
         }
         // cleanup {
         //     script {
