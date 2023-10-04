@@ -30,6 +30,6 @@ fi
 echo "---> Ensuring maven installation at ${install_path}"
 
 mkdir -p "${install_path}"
-tar -f "${download_path}/${maven_file}" -zx --strip-components=1 -C ${install_path}
+tar -xf "${download_path}/${maven_file}" --strip-components=1 -C ${install_path}
 
 sh "${install_path}/bin/mvn" --version
