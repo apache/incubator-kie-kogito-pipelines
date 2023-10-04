@@ -33,8 +33,10 @@ runs:
     # We have to download the required scripts to our local workspace
     - name: Checkout Scripts
       uses: actions/checkout@v4
+      # For testing only, we will revert to apache once we test it
       with:
-        repository: apache/incubator-kie-kogito-pipelines
+        repository: ricardozanini/kogito-pipelines
+        ref: fix-migration-modules
         sparse-checkout: |
           .ci/actions/maven
         path: maven-tools
