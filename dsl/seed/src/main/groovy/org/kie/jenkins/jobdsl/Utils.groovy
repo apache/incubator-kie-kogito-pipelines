@@ -211,6 +211,10 @@ class Utils {
         return getBindingValue(script, 'BUILDCHAIN_CONFIG_GIT_FILE_PATH')
     }
 
+    static String getBuildChainConfigTokenCredentialsId(def script) {
+        return getBindingValue(script, 'BUILDCHAIN_CONFIG_GIT_TOKEN_CREDENTIALS_ID')
+    }
+
     static String getMavenArtifactsUploadRepositoryUrl(def script) {
         return getBindingValue(script, 'MAVEN_ARTIFACTS_UPLOAD_REPOSITORY_URL')
     }

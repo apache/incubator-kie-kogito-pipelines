@@ -144,8 +144,8 @@ class JobParamsUtils {
             BUILDCHAIN_CONFIG_AUTHOR: Utils.getBuildChainConfigAuthor(script) ?: Utils.getSeedAuthor(script),
             BUILDCHAIN_CONFIG_BRANCH: Utils.getBuildChainConfigBranch(script) ?: Utils.getSeedBranch(script),
             BUILDCHAIN_CONFIG_FILE_PATH: Utils.getBuildChainConfigFilePath(script),
+            BUILDCHAIN_CONFIG_GIT_TOKEN_CREDENTIALS_ID: Utils.getBuildChainConfigTokenCredentialsId(script) ?: Utils.getGitAuthorTokenCredsId(script),
             NOTIFICATION_JOB_NAME: notificationJobName,
-            GIT_AUTHOR_TOKEN_CREDENTIALS_ID: Utils.getGitAuthorTokenCredsId(script),
         ])
         addJobParamsEnvIfNotExisting(script, jobParams, 'BUILD_ENVIRONMENT', jobParams.job.folder.getEnvironmentName())
     }
