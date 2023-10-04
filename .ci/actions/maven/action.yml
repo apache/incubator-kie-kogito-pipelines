@@ -48,7 +48,7 @@ runs:
     - name: Set up Maven
       shell: bash
       run: |
-        ./maven-tools/.ci/actions/maven/install-maven.sh "$HOME/.local/mvn"
+        ./maven-tools/.ci/actions/maven/install-maven.sh "$HOME/.local/mvn" ${{ inputs.maven-version }}
         echo "$HOME/.local/mvn/bin" >> $GITHUB_PATH
         
     - name: Cache Maven packages
