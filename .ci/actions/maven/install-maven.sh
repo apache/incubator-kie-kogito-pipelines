@@ -8,7 +8,7 @@ if [[ -z ${maven_version} ]]; then
   maven_version=$(curl https://maven.apache.org/download.cgi --silent | grep "Downloading Apache Maven " | grep -oE '[0-9].[0-9]+.[0-9]+')
 fi
 maven_file="apache-maven-${maven_version}-bin.tar.gz"
-download_url="http://www.mirrorservice.org/sites/ftp.apache.org/maven/maven-3/${maven_version}/binaries/${maven_file}"
+download_url="https://archive.apache.org/dist/maven/maven-3/${maven_version}/binaries/${maven_file}"
 download_path="${HOME}/.maven/download/"
 
 echo "---> Maven version to install is ${maven_version}"
