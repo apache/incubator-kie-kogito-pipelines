@@ -30,10 +30,27 @@ runs:
         distribution: 'temurin'
         java-version: ${{ inputs.java-version }}
         check-latest: true
-    - name: Set up Maven
-      uses: stCarolas/setup-maven@v4.2
+    # We have to download the required scripts to our local workspace
+    - name: Checkout Scripts
+      uses: actions/checkout@v4
       with:
-        maven-version: ${{ inputs.maven-version }}
+        repository: apache/incubator-kie-kogito-pipelines
+        sparse-checkout: |
+          .ci/actions/maven
+        path: maven-tools
+    - name: Cache Maven Download
+      id: cache-maven-download
+      uses: actions/cache@v3
+      with:
+        key: ${{ runner.os }}-maven-${{ inputs.maven-version }}
+        path: |
+          ~/.maven/download/
+    - name: Set up Maven
+      shell: bash
+      run: |
+        ./maven-tools/.ci/actions/maven/install-maven.sh "$HOME/.local/mvn"
+        echo "$HOME/.local/mvn/bin" >> $GITHUB_PATH
+        
     - name: Cache Maven packages
       uses: actions/cache@v3
       with:
@@ -48,70 +65,11 @@ runs:
         key: ${{ inputs.cache-key-prefix }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys:  ${{ inputs.cache-key-prefix }}-m2
     - name: Setup Maven Settings
-      uses: whelk-io/maven-settings-xml-action@v21
-      with:
-        repositories: >
-          [
-            {
-              "id": "jboss-public-repository-group",
-              "name": "JBoss Public Repository Group",
-              "url": "https://repository.jboss.org/nexus/content/groups/public",
-              "releases": {
-                "enabled": "true",
-                "updatePolicy": "never"
-              },
-              "snapshots": {
-                "enabled": "${{ inputs.allow-snapshots }}",
-                "updatePolicy": "never"
-              }
-            },
-            {
-              "id": "kogito-staging-repository-group",
-              "name": "Kogito Staging Repositories",
-              "url": "https://repository.jboss.org/nexus/content/groups/kogito-public",
-              "releases": {
-                "enabled": "true",
-                "updatePolicy": "never"
-              },
-              "snapshots": {
-                "enabled": "${{ inputs.allow-snapshots }}",
-                "updatePolicy": "never"
-              }
-            }
-          ]
-        plugin_repositories: >
-          [
-            {
-              "id": "jboss-public-repository-group",
-              "name": "JBoss Public Repository Group",
-              "url": "https://repository.jboss.org/nexus/content/groups/public",
-              "releases": {
-                "enabled": "true",
-                "updatePolicy": "never"
-              },
-              "snapshots": {
-                "enabled": "${{ inputs.allow-snapshots }}",
-                "updatePolicy": "never"
-              }
-            },
-            {
-              "id": "kogito-staging-repository-group",
-              "name": "Kogito Staging Repositories",
-              "url": "https://repository.jboss.org/nexus/content/groups/kogito-public",
-              "releases": {
-                "enabled": "true",
-                "updatePolicy": "never"
-              },
-              "snapshots": {
-                "enabled": "${{ inputs.allow-snapshots }}",
-                "updatePolicy": "never"
-              }
-            }
-          ]
-        plugin_groups: >
-          [
-            "org.zanata"
-          ]
+      shell: bash
+      run: |
+        cp maven-tools/.ci/actions/maven/settings-template.xml ${HOME}/.m2/settings.xml
+        sed -i 's/{allow-snapshots}/${{ inputs.allow-snapshots }}/g' ${HOME}/.m2/settings.xml
+
     - name: Debug settings.xml
       if: ${{ inputs.debug }}
       shell: bash
