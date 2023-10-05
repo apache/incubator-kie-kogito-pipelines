@@ -38,7 +38,6 @@ environments:
     ids:
     - ecosystem
 disable:
-  triggers: true # TODO to set back
   deploy: true 
 repositories:
 - name: incubator-kie-kogito-pipelines
@@ -113,7 +112,7 @@ jenkins:
         # but we need to make sure the image exists first ... simple tag before setting up the branch ?
         # See https://github.com/kiegroup/kie-issues/issues/551
         image: quay.io/kiegroup/kogito-ci-build:main-latest 
-        args: -v /var/run/docker.sock:/var/run/docker.sock --group-add docker --group-add input --group-add render
+        args: -v /var/run/docker.sock:/var/run/docker.sock --network host --group-add docker --group-add input --group-add render
   default_tools:
     jdk: jdk_11_latest
     maven: maven_3.8.6
