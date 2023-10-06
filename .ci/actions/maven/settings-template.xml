@@ -18,75 +18,8 @@
   <profiles>
     <!-- ### extra maven repositories ### -->
 
-    <profile>
-      <id>maven-action</id>
-      <repositories>
-        <repository>
-          <id>jboss-public-repository-group</id>
-          <name>JBoss Public Repository Group</name>
-          <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-          <layout>default</layout>
-          <releases>
-            <enabled>true</enabled>
-            <updatePolicy>never</updatePolicy>
-          </releases>
-          <snapshots>
-            <enabled>{allow-snapshots}</enabled>
-            <updatePolicy>never</updatePolicy>
-          </snapshots>
-        </repository>
-        <repository>
-          <id>kogito-staging-repository-group</id>
-          <name>Kogito Staging Repositories</name>
-          <url>https://repository.jboss.org/nexus/content/groups/kogito-public</url>
-          <layout>default</layout>
-          <releases>
-            <enabled>true</enabled>
-            <updatePolicy>never</updatePolicy>
-          </releases>
-          <snapshots>
-            <enabled>{allow-snapshots}</enabled>
-            <updatePolicy>never</updatePolicy>
-          </snapshots>
-        </repository>
-        <!-- ### configured repositories ### -->
-      </repositories>
-
-      <pluginRepositories>
-        <pluginRepository>
-          <id>jboss-public-repository-group</id>
-          <name>JBoss Public Repository Group</name>
-          <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-          <layout>default</layout>
-          <releases>
-            <enabled>true</enabled>
-            <updatePolicy>never</updatePolicy>
-          </releases>
-          <snapshots>
-            <enabled>{allow-snapshots}</enabled>
-            <updatePolicy>never</updatePolicy>
-          </snapshots>
-        </pluginRepository>
-        <pluginRepository>
-          <id>kogito-staging-repository-group</id>
-          <name>Kogito Staging Repositories</name>
-          <url>https://repository.jboss.org/nexus/content/groups/kogito-public</url>
-          <layout>default</layout>
-          <releases>
-            <enabled>true</enabled>
-            <updatePolicy>never</updatePolicy>
-          </releases>
-          <snapshots>
-            <enabled>{allow-snapshots}</enabled>
-            <updatePolicy>never</updatePolicy>
-          </snapshots>
-        </pluginRepository>
-        <!-- ### configured plugin repositories ### -->
-      </pluginRepositories>
-    </profile>
   </profiles>
   <activeProfiles>
     <!-- ### extra maven profile ### -->
-    <activeProfile>maven-action</activeProfile>
   </activeProfiles>
 </settings>

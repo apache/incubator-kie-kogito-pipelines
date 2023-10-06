@@ -68,7 +68,6 @@ runs:
       shell: bash
       run: |
         cp maven-tools/.ci/actions/maven/settings-template.xml ${HOME}/.m2/settings.xml
-        sed -i 's/{allow-snapshots}/${{ inputs.allow-snapshots }}/g' ${HOME}/.m2/settings.xml
 
     - name: Debug settings.xml
       if: ${{ inputs.debug }}
