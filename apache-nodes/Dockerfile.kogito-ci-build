@@ -28,7 +28,7 @@ krb5-devel \
 gcc \
 # python3 (END)
 # system (BEGIN)
-gcc-c++ \
+nc \
 shadow-utils \
 sudo \
 wget \
@@ -40,6 +40,10 @@ freetype \
 # couldn't get it for pre-defined repositories
 https://mirror.stream.centos.org/9-stream/AppStream/aarch64/os/Packages/overpass-fonts-3.0.4-8.el9.noarch.rpm \
 # drools (END)
+# kogito python integration (BEGIN)
+gcc-c++ \
+libglvnd-glx \
+# kogito python integration (END)
 && dnf clean all
 
 RUN sudo alternatives --install /usr/local/bin/python python $(which python${PYTHON_MAJOR_MINOR_VERSION}) 1 && \
