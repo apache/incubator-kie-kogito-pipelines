@@ -498,7 +498,7 @@ class KogitoJobTemplate {
                     // Build origin branches also filed as PRs.
                     buildOriginBranchWithPR(false)
                     // Build origin PRs (unmerged head).
-                    buildOriginPRHead(false)
+                    buildOriginPRHead(true)
                     // Build origin PRs (merged with base branch).
                     buildOriginPRMerge(false)
                 }
