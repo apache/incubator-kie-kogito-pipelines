@@ -105,8 +105,8 @@ pipeline {
 
                         // Update platform mvn settings file
                         // We use platform settings file to be sure to get all needed artifacts
-                        MavenSettingsUtils.setRepositoryInSettings(this, env.SETTINGS_FILE, 'kogito-staging', 'https://repository.jboss.org/nexus/content/groups/kogito-public/')
-                        MavenSettingsUtils.setRepositoryInSettings(this, env.SETTINGS_FILE, 'kogito-public', 'https://repository.jboss.org/nexus/content/groups/public/')
+                        MavenSettingsUtils.setRepositoryInSettings(this, env.SETTINGS_FILE, 'kogito-staging', 'https://repository.apache.org/service/local/staging/deploy/maven2/')
+                        MavenSettingsUtils.setRepositoryInSettings(this, env.SETTINGS_FILE, 'kogito-public', 'https://repository.apache.org/content/groups/public/')
 
                         String localQuarkusPlatformVersion = sh(script: 'mvn org.apache.maven.plugins:maven-help-plugin:3.2.0:evaluate -Dexpression=project.version -q -DforceStdout', returnStdout: true).trim()
                         echo "Platform Quarkus version ${localQuarkusPlatformVersion}"
