@@ -5,24 +5,24 @@ Here is a small overview of current pipelines existing around Kogito project.
 ## Which projects ?
 
 - Drools
-  - https://github.com/kiegroup/drools
+  - https://github.com/apache/incubator-kie-drools
   - https://github.com/kiegroup/drools-website
-  - https://github.com/kiegroup/kie-benchmarks
+  - https://github.com/apache/incubator-kie-benchmarks
   - https://github.com/kiegroup/kie-pmml-integration
 - Kogito
-  - https://github.com/kiegroup/kogito-pipelines
-  - https://github.com/kiegroup/kogito-runtimes
-  - https://github.com/kiegroup/kogito-apps
-  - https://github.com/kiegroup/kogito-examples
-  - https://github.com/kiegroup/kogito-images
-  - https://github.com/kiegroup/kogito-operator
-  - https://github.com/kiegroup/kogito-docs
-  - https://github.com/kiegroup/kogito-serverless-operator
-  - https://github.com/kiegroup/kie-docs
+  - https://github.com/apache/incubator-kie-kogito-pipelines
+  - https://github.com/apache/incubator-kie-kogito-runtimes
+  - https://github.com/apache/incubator-kie-kogito-apps
+  - https://github.com/apache/incubator-kie-kogito-examples
+  - https://github.com/apache/incubator-kie-kogito-images
+  - https://github.com/apache/incubator-kie-kogito-operator
+  - https://github.com/apache/incubator-kie-kogito-docs
+  - https://github.com/apache/incubator-kie-kogito-serverless-operator
+  - https://github.com/apache/incubator-kie-kie-docs
   - https://github.com/kiegroup/kie-tools
 - OptaPlanner
-  - https://github.com/kiegroup/optaplanner
-  - https://github.com/kiegroup/optaplanner-quickstarts
+  - https://github.com/apache/incubator-kie-optaplanner
+  - https://github.com/apache/incubator-kie-optaplanner-quickstarts
   - https://github.com/kiegroup/optaplanner-website
 
 ### Projects' dependencies
@@ -43,7 +43,7 @@ Kogito contains both Artifacts and Cloud repositories. Those are "decoupled", wh
 
 ## Jenkins 
 
-All current Jenkins pipelines can be found in https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/
+All current Jenkins pipelines can be found in https://ci-builds.apache.org/job/KIE
 
 Each project has there its own folder (`drools`, `kogito`, `optaplanner`) and in there its own main seed job (see after).
 ### Seed generation
@@ -175,14 +175,14 @@ The nightlies are creating specific branches:
 **DSL config files**
 
 Main Config file for Quarkus 3 are can be found on separate from code:
-- https://github.com/kiegroup/drools/tree/9.x-dsl-config
-- https://github.com/kiegroup/kogito-pipelines/tree/2.x-dsl-config
-- https://github.com/kiegroup/optaplanner/tree/9.x-dsl-config
+- https://github.com/apache/incubator-kie-drools/tree/9.x-dsl-config
+- https://github.com/apache/incubator-kie-kogito-pipelines/tree/2.x-dsl-config
+- https://github.com/apache/incubator-kie-optaplanner/tree/9.x-dsl-config
 
-And jobs can be found in different Jenkins folders:
-- https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/drools-9.x/
-- https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito-2.x/
-- https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/optaplanner-9.x/
+And jobs would be found in different Jenkins folders:
+- https://ci-builds.apache.org/job/KIE/job/drools-9.x/
+- https://ci-builds.apache.org/job/KIE/job/kogito-2.x/
+- https://ci-builds.apache.org/job/KIE/job/optaplanner-9.x/
 
 NOTE: We keep separate configurations between the 2 streams because it is easier to manage. Jobs configuration can then be read. Compare to "Stream 8/1", some environments are disabled for now.
 
@@ -204,18 +204,12 @@ See the different workflows. They mostly use the build-chain for artifacts's rep
 
 ### Update Quarkus version
 
-1) Create an issue on [kie-issues](https://github.com/kiegroup/kie-issues)
+1) Create an issue on [kie-issues](https://github.com/apache/incubator-kie-issues)
 2) Launch `main/tools/update-quarkus-all` job with 
-   * [Drools](https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/drools/job/main/job/tools/job/update-quarkus-all/)
-   * [Kogito](https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/kogito/job/main/job/tools/job/update-quarkus-all/)
-   * [OptaPlanner](https://eng-jenkins-csb-business-automation.apps.ocp-c1.prod.psi.redhat.com/job/KIE/job/optaplanner/job/main/job/tools/job/update-quarkus-all/)
+   * [Drools](https://ci-builds.apache.org/job/KIE/job/drools/job/main/job/tools/job/update-quarkus-all/)
+   * [Kogito](https://ci-builds.apache.org/job/KIE/job/kogito/job/main/job/tools/job/update-quarkus-all/)
+   * [OptaPlanner](https://ci-builds.apache.org/job/KIE/job/optaplanner/job/main/job/tools/job/update-quarkus-all/)
 3) Wait for the PRs to arrive on [kogito-ci](https://kie.zulipchat.com/#narrow/stream/236603-kogito-ci) and [optaplanner-ci](https://kie.zulipchat.com/#narrow/stream/354864-optaplanner-ci) streams
 4) Review the changes.
    **Make sure there is no downgrade of dependency version !!!!**
 
-## Apache migration
-
-With IBM, we are working on porting the pipelines on [Apache Jenkins](https://ci-builds.apache.org/job/KIE/).  
-For that, each impacted repository contains a `apache_migration` branch where the needed changes are.
-
-Once the migration is done, we should be able to merge this branch on main and generate the final pipelines on Apache Jenkins.
