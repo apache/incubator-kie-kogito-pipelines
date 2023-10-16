@@ -9,7 +9,7 @@ pipeline {
 
     options {
         timestamps()
-        timeout(time: 20, unit: 'MINUTES')
+        timeout(time: 180, unit: 'MINUTES')
     }
 
     stages {

@@ -5,7 +5,7 @@ on: workflow_dispatch
 
 jobs:
   generate-status-page:
-    if: github.repository_owner == 'kiegroup'
+    if: github.repository_owner == 'apache'
     concurrency:
       group: generate-status-page
       cancel-in-progress: true
@@ -15,5 +15,5 @@ jobs:
       - name: Generate status page
         uses: kiegroup/chain-status/.ci/actions/generate-app@main
         with:
-          info-md-url: "https://raw.githubusercontent.com/kiegroup/kogito-pipelines/main/.ci/chain-status-info.md"
+          info-md-url: "https://raw.githubusercontent.com/apache/incubator-kie-kogito-pipelines/main/.ci/chain-status-info.md"
           github-token: "${{ secrets.GITHUB_TOKEN }}"

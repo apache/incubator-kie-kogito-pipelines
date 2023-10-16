@@ -44,7 +44,7 @@ class KogitoJobTemplate {
         String jobFolderName = ''
         def jobFolder = jobParams.job.folder
         if (jobFolder) {
-            if (![JenkinsFolder].any { it.isAssignableFrom(jobFolder.getClass()) }) {
+            if (!jobFolder instanceof JenkinsFolder) {
                 throw new RuntimeException('Folder is not of type org.kie.jenkins.jobdsl.model.JenkinsFolder')
             }
 
@@ -182,14 +182,14 @@ class KogitoJobTemplate {
             jobParams.pr = jobParams.pr ?: [:]
             jobParams.pr.putAll ([
                 run_only_for_labels: (jobParams.pr.run_only_for_labels ?: []) + [KogitoConstants.LABEL_DSL_TEST],
-                run_only_for_branches: [ jobParams.git.repository == 'optaplanner-quickstarts' ? 'development' : 'main' ],
-                authorized_users: [ 'kiegroup' ],
-                authorized_groups: [ 'kiegroup' ],
+                run_only_for_branches: [ VersionUtils.isOptaplannerQuickstartsProject(jobParams.git.repository) ? 'development' : 'main' ],
+                authorized_users: [ 'apache' ],
+                authorized_groups: [ 'apache' ],
             ])
 
             // Enable PR test only if main branch
             if (Utils.isMainBranch(script)) {
-                jobParams.git.project_url = "https://github.com/kiegroup/${jobParams.pr.target_repository ?: jobParams.git.repository}/"
+                jobParams.git.project_url = "https://github.com/apache/${jobParams.pr.target_repository ?: jobParams.git.repository}/"
             }
         }
 
@@ -360,7 +360,7 @@ class KogitoJobTemplate {
             jobParams.job.folder = prFolder
             jobParams.env = jobParams.env ?: [:]
             jobParams.pr = jobParams.pr ?: [:]
-            JobParamsUtils.setupJobParamsDefaultMavenConfiguration(script, jobParams)
+            JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(script, jobParams)
 
             // Kept for backward compatibility
             jobParams.job.name += testTypeId ? ".${testTypeId}" : ''
@@ -464,6 +464,96 @@ class KogitoJobTemplate {
     static String generateMultiJobTriggerPhrasePattern(String testType, String id = '') {
         String idStr = id ? id + ' ' : ''
         return "(.*${RegexUtils.getRegexFirstLetterCase('jenkins')},?.*(rerun|run) ${idStr}${testType}.*)"
+    }
+
+    static def createPullRequestMultibranchPipelineJob(def script, String jenkinsFilePath = '.ci/jenkins/Jenkinsfile') {
+        String jobName = "${Utils.getJobDisplayName(script)}-pr"
+        PrintUtils.debug(script, "Create pull request multibranch job ${jobName}")
+        script.folder('pullrequest_jobs')
+        return script.multibranchPipelineJob("pullrequest_jobs/${Utils.getJobDisplayName(script)}-pr")?.with {
+            triggers {
+                periodicFolderTrigger {
+                    // The maximum amount of time since the last indexing that is allowed to elapse before an indexing is triggered.
+                    interval('5m')
+                }
+            }
+            factory {
+                workflowBranchProjectFactory {
+                    scriptPath(jenkinsFilePath)
+                }
+            }
+            branchSources {
+                github {
+                    id(Utils.getRepoName(script)) // IMPORTANT: use a constant and unique identifier
+                    repoOwner(Utils.getGitAuthor(script))
+                    repository(Utils.getRepoName(script))
+                    checkoutCredentialsId(Utils.getGitAuthorCredsId(script))
+                    scanCredentialsId(Utils.getGitAuthorCredsId(script))
+                    // Build fork PRs (unmerged head).
+                    buildForkPRHead(true)
+                    // Build fork PRs (merged with base branch).
+                    buildForkPRMerge(false)
+                    // Build origin branches.
+                    buildOriginBranch(false)
+                    // Build origin branches also filed as PRs.
+                    buildOriginBranchWithPR(false)
+                    // Build origin PRs (unmerged head).
+                    buildOriginPRHead(true)
+                    // Build origin PRs (merged with base branch).
+                    buildOriginPRMerge(false)
+                }
+            }
+            orphanedItemStrategy {
+                discardOldItems {
+                    daysToKeep(10)
+                }
+            }
+        }
+    }
+
+    static def createBranchMultibranchPipelineJob(def script, String jobName = '', String jenkinsFilePath = '.ci/jenkins/Jenkinsfile') {
+        jobName = jobName ?: Utils.getJobDisplayName(script)
+        PrintUtils.debug(script, "Create branch multibranch job ${jobName}")
+        script.folder('branch_jobs')
+        return script.multibranchPipelineJob("branch_jobs/${jobName}")?.with {
+            triggers {
+                periodicFolderTrigger {
+                    // The maximum amount of time since the last indexing that is allowed to elapse before an indexing is triggered.
+                    interval('5m')
+                }
+            }
+            factory {
+                workflowBranchProjectFactory {
+                    scriptPath(jenkinsFilePath)
+                }
+            }
+            branchSources {
+                github {
+                    id(Utils.getRepoName(script)) // IMPORTANT: use a constant and unique identifier
+                    repoOwner(Utils.getGitAuthor(script))
+                    repository(Utils.getRepoName(script))
+                    checkoutCredentialsId(Utils.getGitAuthorCredsId(script))
+                    scanCredentialsId(Utils.getGitAuthorCredsId(script))
+                    // Build fork PRs (unmerged head).
+                    buildForkPRHead(false)
+                    // Build fork PRs (merged with base branch).
+                    buildForkPRMerge(false)
+                    // Build origin branches.
+                    buildOriginBranch(true)
+                    // Build origin branches also filed as PRs.
+                    buildOriginBranchWithPR(false)
+                    // Build origin PRs (unmerged head).
+                    buildOriginPRHead(false)
+                    // Build origin PRs (merged with base branch).
+                    buildOriginPRMerge(false)
+                }
+            }
+            orphanedItemStrategy {
+                discardOldItems {
+                    daysToKeep(10)
+                }
+            }
+        }
     }
 
 }

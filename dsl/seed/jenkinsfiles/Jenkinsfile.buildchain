@@ -3,28 +3,28 @@
 import org.kie.jenkins.MavenCommand
 import org.kie.jenkins.MavenSettingsUtils
 
-agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'kie-rhel8 && docker && kie-mem16g'} && !built-in"
-timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: '180'
+agentLabel = "${env.ADDITIONAL_LABEL?.trim() ?: 'ubuntu'} && !built-in"
+timeoutValue = env.ADDITIONAL_TIMEOUT?.trim() ?: '360'
 jdkTool = env.BUILD_JDK_TOOL
 sonarJdkTool = env.SONAR_JDK_TOOL
 mavenTool = env.BUILD_MAVEN_TOOL
 
-mavenDeployArtifacts = env.ENABLE_DEPLOY
+mavenDeployArtifacts = Boolean.valueOf(env.ENABLE_DEPLOY)
 mavenDeployRepository = env.MAVEN_DEPLOY_REPOSITORY ?: ''
 mavenDeployRepositoryCredsId = env.MAVEN_DEPLOY_REPOSITORY_CREDS_ID ?: ''
 mavenDeployLocalDir = env.MAVEN_DEPLOY_LOCAL_DIR ?: ''
 
 buildChainType = env.BUILDCHAIN_TYPE?.trim() ?: 'cross_pr'
 buildChainProject = env.BUILDCHAIN_PROJECT?.trim()
-defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kogito_pr_settings' : 'kogito_release_settings'
+defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kie-pr-settings' : 'kie-release-settings'
 settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
 
 enableSonarCloudAnalysis = env.ENABLE_SONARCLOUD ? env.ENABLE_SONARCLOUD.toBoolean() : false
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
 
-buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'kogito-pipelines'
+buildChainConfigRepo = env.BUILDCHAIN_CONFIG_REPO ?: 'incubator-kie-kogito-pipelines'
 buildChainConfigBranch = env.BUILDCHAIN_CONFIG_BRANCH ?: '\${BRANCH:main}'
-buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:kiegroup}'
+buildChainConfigGitAuthor = env.BUILDCHAIN_CONFIG_AUTHOR ?: '\${AUTHOR:apache}'
 buildChainConfigDefinitionFilePath = env.BUILDCHAIN_CONFIG_FILE_PATH ?: '.ci/pull-request-config.yaml'
 buildChainAction = isFDBBuildChainType() ? 'full_downstream' : buildChainType
 buildChainAdditionalArguments = buildChainProject ? [ "-p ${buildChainProject}" ] : []
@@ -47,18 +47,14 @@ notificationJobName = env.NOTIFICATION_JOB_NAME ?: 'PR'
 
 pipeline {
     agent {
-        label agentLabel
-    }
-    tools {
-        nodejs 'nodejs-16.2.0'
+        docker { 
+            image env.AGENT_DOCKER_BUILDER_IMAGE
+            args env.AGENT_DOCKER_BUILDER_ARGS
+        }
     }
     options {
         timestamps()
         timeout(time: timeoutValue, unit: 'MINUTES')
-    }
-    environment {
-        FIREFOX_FOLDER = '/opt/tools/firefox-60esr'
-        MAVEN_OPTS = '-Xms1024m -Xmx12g'
     }
     stages {
         stage('Initialize') {
@@ -66,6 +62,7 @@ pipeline {
                 script {
                     sh 'printenv > env_props'
                     archiveArtifacts artifacts: 'env_props'
+                    sh 'ls -last /var/run/docker.sock'
 
                     if (mavenDeployArtifacts) {
                         assert mavenDeployRepository : 'Please provide the maven deploy repository'
@@ -73,114 +70,91 @@ pipeline {
                     }
 
                     currentBuild.displayName = params.DISPLAY_NAME ?: env.GIT_BRANCH_NAME ?: currentBuild.displayName
-
-                    // Needed by Kogito Apps
-                    setupCypressEnv('9.7.0')
                 }
             }
         }
-        stage('check space before build') {
-            steps {
-                script {
-                    try {
-                        util.spaceLeft()
-                    } catch (err) {
-                        echo "Error when checking the space on node ... ${err}"
-                    }
-                }
-            }
-        }
-        stage('Install build-chain tool') {
-            steps {
-                script {
-                    println '[INFO] Getting build-chain version from composite action file'
-                    def buildChainVersion = buildChain.getBuildChainVersionFromCompositeActionFile()
-                    if ([null, 'null'].contains(buildChainVersion)) {
-                        def errorMessage = "[ERROR] The build-chain version can't be recovered. Please contact administrator"
-                        println errorMessage
-                        error(errorMessage)
-                    }
-                    println "[INFO] build-chain version recovered '${buildChainVersion}'"
-                    sh "npm install -g @kie/build-chain-action@${buildChainVersion}${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
+        stage('Perform build steps') {
+            stages {
+                stage('Install build-chain tool') {
+                    steps {
+                        script {
+                            println '[INFO] Getting build-chain version from composite action file'
+                            def buildChainVersion = buildChain.getBuildChainVersionFromCompositeActionFile()
+                            if ([null, 'null'].contains(buildChainVersion)) {
+                                def errorMessage = "[ERROR] The build-chain version can't be recovered. Please contact administrator"
+                                println errorMessage
+                                error(errorMessage)
+                            }
+                            println "[INFO] build-chain version recovered '${buildChainVersion}'"
+                            sh "npm install -g @kie/build-chain-action@${buildChainVersion}${env.NPM_REGISTRY_URL ? " -registry=${NPM_REGISTRY_URL}" : ''}"
 
-                    sh "npm list -g | grep build-chain"
-                }
-            }
-        }
-        stage('Build projects') {
-            tools {
-                jdk jdkTool
-                maven mavenTool
-            }
-            steps {
-                script {
-                    env.LD_LIBRARY_PATH = "${env.LD_LIBRARY_PATH ? "${env.LD_LIBRARY_PATH}:": ''}${GRAALVM_HOME}/lib/server"
-                    echo "LD_LIBRARY_PATH = ${LD_LIBRARY_PATH}"
-
-                    env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
-                    echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
-                    if (mavenDeployArtifacts) {
-                        env.DEPLOY_MVN_OPTS = "${env.DEPLOY_MVN_OPTS ?: ''} -DaltDeploymentRepository=local::default::file://${getMavenDeployLocalDir()}"
-                        echo "DEPLOY_MVN_OPTS = ${DEPLOY_MVN_OPTS}"
-                    }
-
-                    configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
-                        withCredentials([string(credentialsId: "${GIT_AUTHOR_TOKEN_CREDENTIALS_ID}", variable: 'GITHUB_TOKEN')]) {
-                            env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
-                            echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
-
-                            util.runWithPythonVirtualEnv("${getBuildChainCommandline(true)}", 'swf')
+                            sh "npm list -g | grep build-chain"
+                            sh 'sudo alternatives --install /usr/local/bin/build-chain build-chain ${NODE_HOME}/bin/build-chain 1'
+                            sh 'build-chain || true'
                         }
                     }
                 }
-            }
-            post {
-                always {
-                    script {
-                        // Remove `node_modules` to avoid heap space issues with junit command thereafter
-                        // Related to https://github.com/jenkinsci/junit-plugin/issues/478 and https://github.com/jenkinsci/junit-plugin/issues/467
-                        sh 'find . -type d -name node_modules -exec rm -rf {} \\; || true'
+                stage('Build projects') {
+                    steps {
+                        script {
+                            env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
+                            echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
+                            if (mavenDeployArtifacts) {
+                                env.DEPLOY_MVN_OPTS = "${env.DEPLOY_MVN_OPTS ?: ''} -DaltDeploymentRepository=local::default::file://${getMavenDeployLocalDir()}"
+                                echo "DEPLOY_MVN_OPTS = ${DEPLOY_MVN_OPTS}"
+                            }
 
-                        junit(testResults: '**/junit.xml, **/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml, **/target/invoker-reports/**/*.xml', allowEmptyResults: true)
-                        archiveArtifacts(artifacts: '**/cypress/screenshots/**,**/cypress/videos/**', fingerprint: false, allowEmptyArchive: true)
+                            configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
+                                withCredentials([string(credentialsId: "${BUILDCHAIN_CONFIG_GIT_TOKEN_CREDENTIALS_ID}", variable: 'GITHUB_TOKEN')]) {
+                                    env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
+                                    echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
+
+                                    sh getBuildChainCommandline(true)
+                                }
+                            }
+                        }
+                    }
+                    post {
+                        always {
+                            script {
+                                // Remove `node_modules` to avoid heap space issues with junit command thereafter
+                                // Related to https://github.com/jenkinsci/junit-plugin/issues/478 and https://github.com/jenkinsci/junit-plugin/issues/467
+                                sh 'find . -type d -name node_modules -exec rm -rf {} \\; || true'
+
+                                junit(testResults: '**/junit.xml, **/target/surefire-reports/**/*.xml, **/target/failsafe-reports/**/*.xml, **/target/invoker-reports/**/*.xml', allowEmptyResults: true)
+                                archiveArtifacts(artifacts: '**/cypress/screenshots/**,**/cypress/videos/**', fingerprint: false, allowEmptyArchive: true)
+                            }
+                        }
+                        unsuccessful {
+                            script {
+                                util.archiveConsoleLog('', 300)
+                            }
+                        }
                     }
                 }
-                unsuccessful {
-                    script {
-                        util.archiveConsoleLog('', 300)
+                stage('Sonar analysis') {
+                    when {
+                        expression { return enableSonarCloudAnalysis }
+                    }
+                    steps {
+                        script {
+                            dir(getProjectFolder()) {
+                                maven.runMavenWithSettingsSonar(settingsXmlId, "-e -nsu validate -Psonarcloud-analysis -Denforcer.skip=true ${env.SONARCLOUD_ANALYSIS_MVN_OPTS ?: ''}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
+                            }
+                        }
                     }
                 }
-            }
-        }
-        stage('Sonar analysis') {
-            when {
-                expression { return enableSonarCloudAnalysis }
-            }
-            tools {
-                jdk sonarJdkTool
-                maven mavenTool
-            }
-            steps {
-                script {
-                    dir(getProjectFolder()) {
-                        maven.runMavenWithSettingsSonar(settingsXmlId, "-e -nsu validate -Psonarcloud-analysis -Denforcer.skip=true ${env.SONARCLOUD_ANALYSIS_MVN_OPTS ?: ''}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
+                stage('Upload artifacts to repository') {
+                    when {
+                        expression { return mavenDeployArtifacts }
                     }
-                }
-            }
-        }
-        stage('Upload artifacts to repository') {
-            when {
-                expression { return mavenDeployArtifacts }
-            }
-            tools {
-                jdk jdkTool
-                maven mavenTool
-            }
-            steps {
-                script {
-                    // Upload to specific repository with credentials
-                    String mavenDeployRepositoryZipUrl = "${mavenDeployRepository.replaceAll('/content/', '/service/local/').replaceFirst('/*$', '')}/content-compressed"
-                    maven.uploadLocalArtifacts(mavenDeployRepositoryCredsId, getMavenDeployLocalDir(), mavenDeployRepositoryZipUrl)
+                    steps {
+                        script {
+                            // Upload to specific repository with credentials
+                            String mavenDeployRepositoryZipUrl = "${mavenDeployRepository.replaceAll('/content/', '/service/local/').replaceFirst('/*$', '')}/content-compressed"
+                            maven.uploadLocalArtifacts(mavenDeployRepositoryCredsId, getMavenDeployLocalDir(), mavenDeployRepositoryZipUrl)
+                        }
+                    }
                 }
             }
         }
@@ -197,19 +171,12 @@ pipeline {
                 }
             }
         }
-        stage('check space after build') {
-            steps {
-                script {
-                    util.spaceLeft()
-                }
-            }
-        }
     }
     post {
         unsuccessful {
             script {
                 if (isPRBuildChainType()) {
-                    pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, getReproducer(true), "${BUILD_URL}", 'GITHUB'), "${GIT_AUTHOR_TOKEN_CREDENTIALS_ID}")
+                    pullrequest.postComment(util.getMarkdownTestSummary(notificationJobName, getReproducer(true), "${BUILD_URL}", 'GITHUB'), "${BUILDCHAIN_CONFIG_GIT_TOKEN_CREDENTIALS_ID}")
                 } else if (shouldNotify()) {
                     withCredentials([string(credentialsId: "${JENKINS_EMAIL_CREDS_ID}", variable: 'KOGITO_CI_EMAIL_TO')]) {
                         mailer.sendMarkdownTestSummaryNotification(env.NOTIFICATION_JOB_NAME ?: '', "[${env.GIT_BRANCH_NAME}] ${getRepoNameCamelCase(env.REPO_NAME)}", [env.KOGITO_CI_EMAIL_TO], getReproducer())
@@ -218,18 +185,15 @@ pipeline {
             }
         }
         cleanup {
-            script {
-                // Clean also docker in case of usage of testcontainers lib
-                util.cleanNode('docker')
-                sh 'rm -rf /tmp/quarkus'
-            }
+            cleanWs()
         }
-    }
-}
-
-void setupCypressEnv(String cypressVersion) {
-    if (env.CYPRESS_BINARY_URL) {
-        env.CYPRESS_INSTALL_BINARY = "${CYPRESS_BINARY_URL}/cypress-${cypressVersion}.zip"
+        // cleanup {
+        //     script {
+        //         // Clean also docker in case of usage of testcontainers lib
+        //         util.cleanNode('docker')
+        //         sh 'rm -rf /tmp/quarkus'
+        //     }
+        // }
     }
 }
 
@@ -267,9 +231,9 @@ String getProjectFolder() {
 
     // First guessing whether there is a clone defined into the buildchain config
     // If not, fallback to simple folder structure
-    String projectFolder = "bc/kiegroup_${project}/${project}"
+    String projectFolder = "bc/apache_${project}/${project}"
     if (!fileExists(projectFolder)) {
-        projectFolder = "bc/kiegroup_${project}"
+        projectFolder = "bc/apache_${project}"
     }
 
     return projectFolder

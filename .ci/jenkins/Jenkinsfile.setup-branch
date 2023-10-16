@@ -12,7 +12,7 @@ UNSTABLE_STAGES = [:]
 
 pipeline {
     agent {
-        label 'kie-rhel8 && !built-in'
+        label 'ubuntu'
     }
 
     options {
@@ -75,7 +75,7 @@ pipeline {
                         // Update examples nightly branch
                         dir('kogito-examples') {
                             deleteDir()
-                            checkout(githubscm.resolveRepository('kogito-examples', getGitAuthor(), getBuildBranch(), false))
+                            checkout(githubscm.resolveRepository('incubator-kie-kogito-examples', getGitAuthor(), getBuildBranch(), false))
                             String nightlyBranch = "nightly-${getBuildBranch()}"
                             githubscm.createBranch(nightlyBranch)
                             githubscm.pushObject('origin', nightlyBranch, getGitAuthorCredsID())
@@ -91,6 +91,9 @@ pipeline {
         }
 
         stage('Init Docs') {
+            when {
+                expression { return isMainStream() }
+            }
             steps {
                 script {
                     def buildParams = getDefaultBuildParams()
@@ -250,4 +253,8 @@ String getVersionFromReleaseBranch(String releaseBranch, int microVersion = 0, S
     } else {
         error 'Cannot parse given branch as a release branch, aka [M].[m].x ...'
     }
+}
+
+boolean isMainStream() {
+    return env.STREAM == 'main'
 }

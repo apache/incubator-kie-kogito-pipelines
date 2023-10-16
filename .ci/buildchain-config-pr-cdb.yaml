@@ -32,6 +32,8 @@ build:
         mvn dependency:tree clean ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.DROOLS_BUILD_MVN_OPTS }}
       upstream: |
         mvn dependency:tree clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.DROOLS_BUILD_MVN_OPTS_UPSTREAM }}
+      downstream: |
+        mvn dependency:tree clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_DOWNSTREAM }} ${{ env.DROOLS_BUILD_MVN_OPTS_DOWNSTREAM }}
   
   - project: apache/incubator-kie-kogito-runtimes
     build-command:
@@ -40,6 +42,8 @@ build:
         mvn dependency:tree clean -Dfull ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS }}
       upstream: |
         mvn dependency:tree clean install -Dquickly -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS_UPSTREAM }}
+      downstream: |
+        mvn dependency:tree clean install -Dquickly -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_DOWNSTREAM }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS_DOWNSTREAM }}
 
   - project: apache/incubator-kie-kogito-apps
     build-command: 
@@ -48,6 +52,8 @@ build:
         mvn dependency:tree clean ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_APPS_BUILD_MVN_OPTS }}
       upstream: |
         mvn dependency:tree clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_APPS_BUILD_MVN_OPTS_UPSTREAM }}
+      downstream: |
+        mvn dependency:tree clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_DOWNSTREAM }} ${{ env.KOGITO_APPS_BUILD_MVN_OPTS_DOWNSTREAM }}
     archive-artifacts:
       path: |
         **/*.log
@@ -64,6 +70,8 @@ build:
         mvn dependency:tree -f ${{ env.KOGITO_EXAMPLES_SUBFOLDER_POM }}pom.xml clean ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
       upstream: |
         mvn dependency:tree clean install -DskipTests -DskipITs ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_UPSTREAM }}
+      downstream: |
+        mvn dependency:tree clean install -DskipTests -DskipITs ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_DOWNSTREAM }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_DOWNSTREAM }}
   
   # - project: kiegroup/kie-jpmml-integration
   #   build-command:

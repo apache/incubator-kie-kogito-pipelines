@@ -3,14 +3,15 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 import org.kie.jenkins.MavenCommand
 
-AGENT_LABEL="kie-rhel8 && docker && kie-mem16g && !built-in"
 quarkusPlatformRepo="quarkus-platform"
 branchCreated = false
 
 pipeline {
-
     agent {
-        label "${AGENT_LABEL}"
+        docker { 
+            image env.AGENT_DOCKER_BUILDER_IMAGE
+            args env.AGENT_DOCKER_BUILDER_ARGS
+        }
     }
 
     options{
@@ -18,14 +19,7 @@ pipeline {
         timeout(time: 60, unit: 'MINUTES')
     }
 
-    tools {
-        maven "${BUILD_MAVEN_TOOL}"
-        jdk "${BUILD_JDK_TOOL}"
-    }
-
     environment {
-        // Static env is defined into .jenkins/dsl/jobs.groovy file
-
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
     }
 

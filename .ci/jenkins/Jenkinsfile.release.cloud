@@ -26,7 +26,7 @@ promoteImageParamsPrefix = 'PROMOTE_IMAGE'
 
 pipeline {
     agent {
-        label 'kie-rhel8 && !built-in'
+        label 'ubuntu'
     }
 
     // parameters {
@@ -72,9 +72,9 @@ pipeline {
         stage('Setup configuration for testing') {
             steps {
                 script {
-                    env.EXAMPLES_URI = params.EXAMPLES_URI ?: (getReleaseProperty('examples.uri') ?: "https://github.com/${getGitAuthor()}/kogito-examples")
+                    env.EXAMPLES_URI = params.EXAMPLES_URI ?: (getReleaseProperty('examples.uri') ?: "https://github.com/${getGitAuthor()}/incubator-kie-kogito-examples")
                     env.EXAMPLES_REF = params.EXAMPLES_REF ?: (getReleaseProperty('examples.ref') ?: getKogitoVersion())
-                    env.APPS_URI = params.APPS_URI ?: (getReleaseProperty('apps.uri') ?: "https://github.com/${getGitAuthor()}/kogito-apps")
+                    env.APPS_URI = params.APPS_URI ?: (getReleaseProperty('apps.uri') ?: "https://github.com/${getGitAuthor()}/incubator-kie-kogito-apps")
                     env.APPS_REF = params.APPS_REF ?: (getReleaseProperty('apps.ref') ?: getKogitoVersion())
 
                     echo "Got examples uri ${env.EXAMPLES_URI}"
