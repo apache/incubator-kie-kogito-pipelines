@@ -18,7 +18,7 @@ Here is a small overview of current pipelines existing around Kogito project.
   - https://github.com/apache/incubator-kie-kogito-operator
   - https://github.com/apache/incubator-kie-kogito-docs
   - https://github.com/apache/incubator-kie-kogito-serverless-operator
-  - https://github.com/apache/incubator-kie-kie-docs
+  - https://github.com/apache/incubator-kie-docs
   - https://github.com/kiegroup/kie-tools
 - OptaPlanner
   - https://github.com/apache/incubator-kie-optaplanner
