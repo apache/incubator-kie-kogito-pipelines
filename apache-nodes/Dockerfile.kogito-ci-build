@@ -29,6 +29,7 @@ gcc \
 # python3 (END)
 # system (BEGIN)
 nc \
+procps-ng \
 shadow-utils \
 sudo \
 wget \
@@ -45,6 +46,33 @@ gcc-c++ \
 libglvnd-glx \
 # kogito python integration (END)
 && dnf clean all
+
+# Cypress dependencies install (BEGIN)
+# almalinux repo to provide UI dev libraries
+RUN echo -e '\
+[almalinux-appstream]\n\
+name=AlmaLinux $releasever - AppStream\n\
+mirrorlist=https://mirrors.almalinux.org/mirrorlist/$releasever/appstream\n\
+# baseurl=https://repo.almalinux.org/almalinux/$releasever/AppStream/$basearch/os/\n\
+gpgcheck=1\n\
+gpgkey=https://repo.almalinux.org/almalinux/9.2/AppStream/x86_64/os/RPM-GPG-KEY-AlmaLinux-9\n\
+enabled=1\n\
+countme=1\n\
+metadata_expire=86400\n\
+enabled_metadata=1\
+' > /etc/yum.repos.d/almalinux-appstream.repo && \
+dnf config-manager --add-repo /etc/yum.repos.d/almalinux-appstream.repo && \
+dnf install -y \
+xorg-x11-server-Xvfb \
+gtk2-devel \
+gtk3-devel \
+libnotify-devel \
+nss \
+libXScrnSaver \
+alsa-lib \
+&& dnf clean all \
+&& dnf config-manager --set-disabled almalinux-appstream
+# Cypress dependencies install (END)
 
 RUN sudo alternatives --install /usr/local/bin/python python $(which python${PYTHON_MAJOR_MINOR_VERSION}) 1 && \
   sudo alternatives --install /usr/local/bin/python3 python3 $(which python${PYTHON_MAJOR_MINOR_VERSION}) 1 && \
