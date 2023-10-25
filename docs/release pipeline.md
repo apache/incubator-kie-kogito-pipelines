@@ -131,7 +131,7 @@ One other specificity of the Release Pipeline are the manual interventions.
 They are currently 2 of them:
 
 * **Release staging repository to Maven Central** (happens in main release pipeline)
-  When asked, Staging repositories can be retrieved from [JBoss Nexus repository](https://repository.jboss.org/nexus/). You need the rights to release the artifacts.  
+  When asked, Staging repositories can be retrieved from [Apache Nexus repository](https://repository.apache.org/). You need the rights to release the artifacts.  
   You should see some repositories named `kogito-public-XXX`. Select them all and click on `Release`.  
   Once artifacts are released, just confirm it on Jenkins.
 

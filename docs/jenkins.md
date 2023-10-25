@@ -176,9 +176,9 @@ git:
 maven:
   settings_file_id: 2bd418aa-56fa-4403-9232-8c77a50fc528
   nexus:
-    release_url: https://repository.stage.jboss.org/nexus
-    release_repository: jboss-releases-repository
-    staging_profile_url: https://repository.stage.jboss.org/nexus/content/groups/kogito-public/
+    release_url: https://repository.apache.org/
+    release_repository: apache-releases-repository
+    staging_profile_url: https://repository.apache.org/service/local/staging/deploy/maven2/
     staging_profile_id: 2161b7b8da0080
     build_promotion_profile_id: 1966c60aff37d
   artifacts_repository: http://nexus3-tradisso-nexus.apps.kogito-cloud.hosted.psi.rdu2.redhat.com/repository/kogito-test/
