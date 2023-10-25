@@ -283,4 +283,8 @@ class Utils {
         return getBindingValue(script, 'DISABLE_DEPLOY').toBoolean() || isTestEnvironment(script)
     }
 
+    static boolean isPrCheckDisabled(def script) {
+        return getBindingValue(script, 'DISABLE_PR_CHECK').toBoolean() || isTestEnvironment(script)
+    }
+
 }

@@ -482,6 +482,9 @@ class KogitoJobTemplate {
                     scriptPath(jenkinsFilePath)
                 }
             }
+            configure {
+                it / disabled << Utils.isPrCheckDisabled(script)
+            }
             branchSources {
                 github {
                     id(Utils.getRepoName(script)) // IMPORTANT: use a constant and unique identifier
