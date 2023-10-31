@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi:9.2
+FROM ubuntu:latest
 
 SHELL ["/bin/bash", "-c"]
 
@@ -10,7 +10,7 @@ ARG PYTHON_MAJOR_MINOR_VERSION="3.11"
 # set locale to C.UTF-8
 ENV LANG='C.UTF-8'
 
-RUN dnf -y update && dnf install -y \
+RUN apt update && apt upgrade -y && apt install -y \
 # skdman deps (BEGIN)
 git \
 findutils \
@@ -21,88 +21,75 @@ zip \
 # skdman deps (END)
 # python3 (BEGIN)
 python${PYTHON_MAJOR_MINOR_VERSION} \
-python${PYTHON_MAJOR_MINOR_VERSION}-devel \
+python${PYTHON_MAJOR_MINOR_VERSION}-dev \
 python${PYTHON_MAJOR_MINOR_VERSION}-pip \
 python${PYTHON_MAJOR_VERSION}-gssapi \
-krb5-devel \
-gcc \
+krb5-multidev \
 # python3 (END)
 # system (BEGIN)
-nc \
-procps-ng \
-shadow-utils \
+netcat \
+libvshadow-utils \
 sudo \
 wget \
-which \
 # system (END)
 # drools (BEGIN)
 fontconfig \
-freetype \
-# couldn't get it for pre-defined repositories
-https://mirror.stream.centos.org/9-stream/AppStream/aarch64/os/Packages/overpass-fonts-3.0.4-8.el9.noarch.rpm \
 # drools (END)
 # kogito python integration (BEGIN)
-gcc-c++ \
-libglvnd-glx \
+libglvnd0 \
 # kogito python integration (END)
-&& dnf clean all
+&& apt clean
 
 # Cypress dependencies install (BEGIN)
-# almalinux repo to provide UI dev libraries
-RUN echo -e '\
-[almalinux-appstream]\n\
-name=AlmaLinux $releasever - AppStream\n\
-mirrorlist=https://mirrors.almalinux.org/mirrorlist/$releasever/appstream\n\
-# baseurl=https://repo.almalinux.org/almalinux/$releasever/AppStream/$basearch/os/\n\
-gpgcheck=1\n\
-gpgkey=https://repo.almalinux.org/almalinux/9.2/AppStream/x86_64/os/RPM-GPG-KEY-AlmaLinux-9\n\
-enabled=1\n\
-countme=1\n\
-metadata_expire=86400\n\
-enabled_metadata=1\
-' > /etc/yum.repos.d/almalinux-appstream.repo && \
-dnf config-manager --add-repo /etc/yum.repos.d/almalinux-appstream.repo && \
-dnf install -y \
-xorg-x11-server-Xvfb \
-gtk2-devel \
-gtk3-devel \
-libnotify-devel \
-nss \
-libXScrnSaver \
-alsa-lib \
-&& dnf clean all \
-&& dnf config-manager --set-disabled almalinux-appstream
+RUN apt install -y \
+xvfb \
+libgtk2.0-dev \
+libgtk-3-dev \
+libnotify-dev \
+libnss3-tools \
+libxss1 \
+libasound2 \
+&& apt clean
 # Cypress dependencies install (END)
 
-RUN sudo alternatives --install /usr/local/bin/python python $(which python${PYTHON_MAJOR_MINOR_VERSION}) 1 && \
-  sudo alternatives --install /usr/local/bin/python3 python3 $(which python${PYTHON_MAJOR_MINOR_VERSION}) 1 && \
-  sudo alternatives --install /usr/local/bin/pip pip $(which pip${PYTHON_MAJOR_MINOR_VERSION}) 1
+RUN sudo update-alternatives --install /usr/local/bin/python python $(which python${PYTHON_MAJOR_MINOR_VERSION}) 1 && \
+  sudo update-alternatives --install /usr/local/bin/python3 python3 $(which python${PYTHON_MAJOR_MINOR_VERSION}) 1 && \
+  sudo update-alternatives --install /usr/local/bin/pip pip $(which pip${PYTHON_MAJOR_VERSION}) 1
 
-RUN groupadd -g 910 nonrootuser && useradd -u 910 -g 910 nonrootuser && \
+RUN groupadd -g 910 nonrootuser && useradd -u 910 -g 910 -s /bin/bash -m nonrootuser && \
   echo "nonrootuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Docker
-RUN  dnf -y update && dnf install -y yum-utils device-mapper-persistent-data lvm2 && \
-  dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
-  dnf remove podman buildah && \
-  dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin --nobest && \
-  dnf clean all && \
-  alternatives --install /usr/local/bin/docker-compose docker-compose /usr/libexec/docker/cli-plugins/docker-compose 1
+RUN apt install -y ca-certificates curl gnupg lvm2 && \
+  install -m 0755 -d /etc/apt/keyrings && \
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+  chmod a+r /etc/apt/keyrings/docker.gpg && \
+  echo \
+    "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+  apt update && \
+  apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin && \
+  apt clean all && \
+  update-alternatives --install /usr/local/bin/docker-compose docker-compose /usr/libexec/docker/cli-plugins/docker-compose 1
 
 USER nonrootuser
 
 RUN curl -s "https://get.sdkman.io" | bash && \
   source "$HOME/.sdkman/bin/sdkman-init.sh" && \
   sdk install java ${SDKMAN_JAVA} && \
-  sudo alternatives --install /usr/local/bin/java java $(which java) 1 && \
+  sudo update-alternatives --install /usr/local/bin/java java $(which java) 1 && \
   sdk install maven ${SDKMAN_MAVEN} && \
-  sudo alternatives --install /usr/local/bin/mvn mvn $(which mvn) 1 && \
+  sudo update-alternatives --install /usr/local/bin/mvn mvn $(which mvn) 1 && \
   sdk flush
   
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash && \
+  export NVM_DIR="$HOME/.nvm" && \
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && \
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && \
   source ~/.bashrc && nvm install "v16.20.0" && \
-  sudo alternatives --install /usr/local/bin/node node $(which node) 1 && \
-  sudo alternatives --install /usr/local/bin/npm npm $(which npm) 1
+  sudo update-alternatives --install /usr/local/bin/node node $(which node) 1 && \
+  sudo update-alternatives --install /usr/local/bin/npm npm $(which npm) 1
   
 RUN wget https://go.dev/dl/go1.19.10.linux-amd64.tar.gz -P /tmp && \
   sudo mkdir /opt/golang && \
@@ -112,7 +99,7 @@ RUN wget https://go.dev/dl/go1.19.10.linux-amd64.tar.gz -P /tmp && \
   echo 'export GOPATH=${HOME}/go' | sudo tee /etc/profile.d/go.sh && \
   echo "source /etc/profile.d/go.sh" >> $HOME/.bashrc && \
   rm -rf /tmp/go* && \
-  sudo alternatives --install /usr/local/bin/go go /opt/golang/go/bin/go 1
+  sudo update-alternatives --install /usr/local/bin/go go /opt/golang/go/bin/go 1
 
 # Install hub CLI (used for GitHub api operations)
 RUN wget https://github.com/mislav/hub/releases/download/v2.14.2/hub-linux-amd64-2.14.2.tgz -O /tmp/hub.tgz && \
@@ -121,11 +108,11 @@ RUN wget https://github.com/mislav/hub/releases/download/v2.14.2/hub-linux-amd64
   sudo chown -R nonrootuser:nonrootuser /opt/hub/bin/hub && \
   sudo chmod -R 755 /opt/hub/bin/hub && \
   rm -rf /tmp/hub.tgz && \
-  sudo alternatives --install /usr/local/bin/hub hub /opt/hub/bin/hub 1
+  sudo update-alternatives --install /usr/local/bin/hub hub /opt/hub/bin/hub 1
 
 # Cekit
-RUN pip3.11 install cekit==4.8.0 behave lxml docker docker-squash elementPath pyyaml ruamel.yaml python-dateutil Jinja2 pykwalify colorlog click && \
-  sudo alternatives --install /usr/local/bin/cekit cekit ~/.local/bin/cekit 1
+RUN pip${PYTHON_MAJOR_MINOR_VERSION} install cekit==4.8.0 behave lxml docker docker-squash elementPath pyyaml ruamel.yaml python-dateutil Jinja2 pykwalify colorlog click
+  sudo update-alternatives --install /usr/local/bin/cekit cekit ~/.local/bin/cekit 1
 RUN wget https://github.com/openshift/source-to-image/releases/download/v1.3.8/source-to-image-v1.3.8-980ca195-linux-amd64.tar.gz -P /tmp && \
   tmp_dir=$(mktemp -d) && \
   tar -C ${tmp_dir} -xzvf /tmp/source-to-image-v1.3.8-980ca195-linux-amd64.tar.gz && \
@@ -134,8 +121,11 @@ RUN wget https://github.com/openshift/source-to-image/releases/download/v1.3.8/s
   rm -rf ${tmp_dir} /tmp/source-to-image/*
 
 # gh cli
-RUN sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo && \
-  sudo dnf install -y gh
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+  && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+  && sudo apt update \
+  && sudo apt install gh -y
 
 # Install kubectl
 RUN wget https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl -P /tmp && \
