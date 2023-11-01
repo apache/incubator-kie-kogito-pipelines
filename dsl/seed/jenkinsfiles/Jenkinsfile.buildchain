@@ -187,13 +187,6 @@ pipeline {
         cleanup {
             cleanWs()
         }
-        // cleanup {
-        //     script {
-        //         // Clean also docker in case of usage of testcontainers lib
-        //         util.cleanNode('docker')
-        //         sh 'rm -rf /tmp/quarkus'
-        //     }
-        // }
     }
 }
 

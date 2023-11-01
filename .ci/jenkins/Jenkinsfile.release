@@ -206,6 +206,8 @@ pipeline {
             script {
                 saveReleaseProperties()
             }
+        }
+        cleanup {
             cleanWs()
         }
         success {

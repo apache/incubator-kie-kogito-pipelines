@@ -85,7 +85,15 @@ void launchStages() {
     stage('Sonar analysis') {
         if (isEnableSonarCloudAnalysis()) {
             dir(getProjectFolder()) {
-                    maven.runMavenWithSettingsSonar(settingsXmlId, "-e -nsu validate -Psonarcloud-analysis -Denforcer.skip=true ${env.SONARCLOUD_ANALYSIS_MVN_OPTS ?: ''}", 'SONARCLOUD_TOKEN', 'sonar_analysis.maven.log')
+                configFileProvider([configFile(fileId: 'kie-pr-settings', variable: 'MAVEN_SETTINGS_FILE')]) {
+                    withCredentials([string(credentialsId: 'SONARCLOUD_TOKEN', variable: 'TOKEN')]) {
+                        new MavenCommand(this)
+                                .withProperty('sonar.login', "${TOKEN}")
+                                .withLogFileName('sonar_analysis.maven.log')
+                                .withSettingsXmlFile(MAVEN_SETTINGS_FILE)
+                                .run("-e -nsu validate -Psonarcloud-analysis -Denforcer.skip=true ${env.SONARCLOUD_ANALYSIS_MVN_OPTS ?: ''}")
+                    }
+                }
             }
         }
     }
