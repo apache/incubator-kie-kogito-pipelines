@@ -20,7 +20,7 @@ ecosystem:
     - incubator-kie-docs.*
 git:
   branches:
-  - name: main
+  - name: radtriste-fix-pipelines
     main_branch: true
 seed:
   config_file:
@@ -29,7 +29,7 @@ seed:
       author:
         name: apache
         credentials_id: ASF_Cloudbees_Jenkins_ci-builds
-      branch: main
+      branch: radtriste-fix-pipelines
     path: .ci/jenkins/config/branch.yaml
   jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
 jenkins:
