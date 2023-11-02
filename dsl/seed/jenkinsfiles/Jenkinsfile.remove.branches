@@ -23,7 +23,7 @@ pipeline {
     stages{
         stage('CleanWorkspace') {
             steps {
-                cleanWs()
+                cleanWs(disableDeferredWipeout: true)
             }
         }
         stage('Initialize') {

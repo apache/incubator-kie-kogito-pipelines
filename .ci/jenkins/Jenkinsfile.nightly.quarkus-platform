@@ -28,7 +28,7 @@ pipeline {
         stage('Initialize') {
             steps {
                 script {
-                    cleanWs()
+                    cleanWs(disableDeferredWipeout: true)
                     sh 'printenv'
 
                     if (params.DISPLAY_NAME) {
@@ -175,7 +175,7 @@ pipeline {
     // Tests of platform should be done in a separate job
     }
     post {
-        always {
+        cleanup {
             cleanWs()
         }
         unsuccessful {
