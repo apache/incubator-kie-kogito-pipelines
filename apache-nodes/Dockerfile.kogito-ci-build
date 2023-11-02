@@ -131,6 +131,9 @@ RUN wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-4.13/o
   sudo mv ${tmp_dir}/oc /usr/local/bin && \
   rm -rf ${tmp_dir} /tmp/openshift-client*
 
+# Bash aliases
+RUN echo -e "\nalias alternatives='update-alternatives'" >> .bashrc
+
 ENV HOME="/home/nonrootuser/"
 
 ENV JAVA_HOME="/home/nonrootuser/.sdkman/candidates/java/current/"
