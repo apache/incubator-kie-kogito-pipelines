@@ -114,6 +114,15 @@ RUN wget https://go.dev/dl/go1.19.10.linux-amd64.tar.gz -P /tmp && \
   rm -rf /tmp/go* && \
   sudo alternatives --install /usr/local/bin/go go /opt/golang/go/bin/go 1
 
+# Install hub CLI (used for GitHub api operations)
+RUN wget https://github.com/mislav/hub/releases/download/v2.14.2/hub-linux-amd64-2.14.2.tgz -O /tmp/hub.tgz && \
+  (if ([ ! -d /opt/hub ]);then sudo mkdir /opt/hub;else rm -rf /opt/hub/*; fi;) && \
+  sudo tar -C /opt/hub -xzf /tmp/hub.tgz --strip-components=1 && \
+  sudo chown -R nonrootuser:nonrootuser /opt/hub/bin/hub && \
+  sudo chmod -R 755 /opt/hub/bin/hub && \
+  rm -rf /tmp/hub.tgz && \
+  sudo alternatives --install /usr/local/bin/hub hub /opt/hub/bin/hub 1
+
 # Cekit
 RUN pip3.11 install cekit==4.8.0 behave lxml docker docker-squash elementPath pyyaml ruamel.yaml python-dateutil Jinja2 pykwalify colorlog click
 RUN wget https://github.com/openshift/source-to-image/releases/download/v1.3.8/source-to-image-v1.3.8-980ca195-linux-amd64.tar.gz -P /tmp && \
