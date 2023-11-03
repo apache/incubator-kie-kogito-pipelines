@@ -1,3 +1,5 @@
+import org.kie.jenkins.MavenCommand
+
 // TODO Docker image and args could be passed as env or anything ?
 dockerGroups = [ 
     'docker',
