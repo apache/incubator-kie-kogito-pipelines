@@ -4,7 +4,7 @@ set -e
 install_path=$1
 maven_version=$2
 
-if [[ -z ${maven_version} ]]; then
+if [ -z "${maven_version}" ]; then
   maven_version=$(curl https://maven.apache.org/download.cgi --silent | grep "Downloading Apache Maven " | grep -oE '[0-9].[0-9]+.[0-9]+')
 fi
 maven_file="apache-maven-${maven_version}-bin.tar.gz"
