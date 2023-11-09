@@ -132,6 +132,7 @@ RUN wget https://github.com/openshift/source-to-image/releases/download/v1.3.8/s
   ls ${tmp_dir} && \
   sudo mv ${tmp_dir}/s2i /usr/local/bin/ && \
   rm -rf ${tmp_dir} /tmp/source-to-image/*
+
 # gh cli
 RUN sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo && \
   sudo dnf install -y gh
