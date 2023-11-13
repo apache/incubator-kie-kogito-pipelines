@@ -11,7 +11,7 @@ pipeline {
         DOCKER_CONFIG = "${WORKSPACE}/.docker"
 
         IMAGE_NAME = 'quay.io/kiegroup/kogito-ci-build'
-        IMAGE_TAG = "${BRANCH_NAME}-latest"
+        IMAGE_TAG = "${BRANCH_NAME}-build-${BUILD_NUMBER}"
         IMAGE_NAME_TAG = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
     }
 
@@ -20,43 +20,43 @@ pipeline {
     }
 
     stages {
-        // stage('Build image') {
-        //     steps {
-        //         script {
-        //             sh 'printenv'
+        stage('Build image') {
+            steps {
+                script {
+                    sh 'printenv'
 
-        //             currentBuild.displayName = env.IMAGE_TAG
+                    currentBuild.displayName = env.IMAGE_TAG
 
-        //             cloud.loginContainerRegistry('quay.io', 'quay_kiegroup_registry_token')
+                    cloud.loginContainerRegistry('quay.io', 'quay_kiegroup_registry_token')
 
-        //             dir('kogito-pipelines') {
-        //                 deleteDir()
+                    dir('kogito-pipelines') {
+                        deleteDir()
 
-        //                 checkout scm
+                        checkout scm
 
-        //                 sh """
-        //                     docker build --build-arg SDKMAN_JAVA=11.0.20-tem -t ${env.IMAGE_NAME_TAG} -f apache-nodes/Dockerfile.kogito-ci-build ./apache-nodes
-        //                     docker tag ${env.IMAGE_NAME_TAG} ${env.IMAGE_NAME}:${GIT_COMMIT}
-        //                     docker tag ${env.IMAGE_NAME_TAG} ${env.IMAGE_NAME}:${BRANCH_NAME}-latest
-        //                 """
+                        sh """
+                            docker build --build-arg SDKMAN_JAVA=11.0.20-tem -t ${env.IMAGE_NAME_TAG} -f apache-nodes/Dockerfile.kogito-ci-build ./apache-nodes
+                            docker tag ${env.IMAGE_NAME_TAG} ${env.IMAGE_NAME}:${GIT_COMMIT}
+                            docker tag ${env.IMAGE_NAME_TAG} ${env.IMAGE_NAME}:${BRANCH_NAME}-latest
+                        """
 
-        //                 sh """
-        //                     docker --config ${DOCKER_CONFIG} push ${env.IMAGE_NAME_TAG}
-        //                     docker --config ${DOCKER_CONFIG} push ${env.IMAGE_NAME}:${GIT_COMMIT}
-        //                     docker --config ${DOCKER_CONFIG} push ${env.IMAGE_NAME}:${BRANCH_NAME}-latest
-        //                 """
-        //             }
-        //         }
-        //     }
-        //     post {
-        //         always {
-        //             script {
-        //                 sh "rm -rf ${DOCKER_CONFIG}"
-        //                 sh 'docker logout quay.io'
-        //             }
-        //         }
-        //     }
-        // }
+                        sh """
+                            docker --config ${DOCKER_CONFIG} push ${env.IMAGE_NAME_TAG}
+                            docker --config ${DOCKER_CONFIG} push ${env.IMAGE_NAME}:${GIT_COMMIT}
+                            docker --config ${DOCKER_CONFIG} push ${env.IMAGE_NAME}:${BRANCH_NAME}-latest
+                        """
+                    }
+                }
+            }
+            post {
+                always {
+                    script {
+                        sh "rm -rf ${DOCKER_CONFIG}"
+                        sh 'docker logout quay.io'
+                    }
+                }
+            }
+        }
         stage('Test built image') {
             agent {
                 docker {
