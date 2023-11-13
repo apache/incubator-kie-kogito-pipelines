@@ -11,7 +11,7 @@ pipeline {
         DOCKER_CONFIG = "${WORKSPACE}/.docker"
 
         IMAGE_NAME = 'quay.io/kiegroup/kogito-ci-build'
-        IMAGE_TAG = "${BRANCH_NAME}-build-${BUILD_NUMBER}"
+        IMAGE_TAG = "${BRANCH_NAME}-latest"
         IMAGE_NAME_TAG = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
     }
 
