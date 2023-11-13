@@ -22,7 +22,7 @@ zip \
 # python3 (BEGIN)
 python${PYTHON_MAJOR_MINOR_VERSION} \
 python${PYTHON_MAJOR_MINOR_VERSION}-dev \
-python${PYTHON_MAJOR_MINOR_VERSION}-pip \
+python${PYTHON_MAJOR_VERSION}-pip \
 python${PYTHON_MAJOR_VERSION}-gssapi \
 krb5-multidev \
 # python3 (END)
@@ -104,7 +104,7 @@ RUN wget https://github.com/mislav/hub/releases/download/v2.14.2/hub-linux-amd64
   sudo update-alternatives --install /usr/local/bin/hub hub /opt/hub/bin/hub 1
 
 # Cekit
-RUN pip${PYTHON_MAJOR_MINOR_VERSION} install cekit==4.8.0 behave lxml docker docker-squash elementPath pyyaml ruamel.yaml python-dateutil Jinja2 pykwalify colorlog click
+RUN pip${PYTHON_MAJOR_VERSION} install cekit==4.8.0 behave lxml docker docker-squash elementPath pyyaml ruamel.yaml python-dateutil Jinja2 pykwalify colorlog click && \
   sudo update-alternatives --install /usr/local/bin/cekit cekit ~/.local/bin/cekit 1
 RUN wget https://github.com/openshift/source-to-image/releases/download/v1.3.8/source-to-image-v1.3.8-980ca195-linux-amd64.tar.gz -P /tmp && \
   tmp_dir=$(mktemp -d) && \
