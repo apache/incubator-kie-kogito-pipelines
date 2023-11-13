@@ -131,8 +131,9 @@ RUN wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-4.13/o
   sudo mv ${tmp_dir}/oc /usr/local/bin && \
   rm -rf ${tmp_dir} /tmp/openshift-client*
 
-# Bash aliases
-RUN echo -e "\nalias alternatives='update-alternatives'" >> .bashrc
+# Convenience script to account for using 'alternatives' in some places
+RUN sudo bash -c 'echo -e "#!/bin/bash\nupdate-alternatives \"\$@\"" > /usr/local/bin/alternatives' \
+  && sudo chmod +x /usr/local/bin/alternatives
 
 ENV HOME="/home/nonrootuser/"
 
