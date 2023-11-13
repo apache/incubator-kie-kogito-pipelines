@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM cruizba/ubuntu-dind:latest
 
 SHELL ["/bin/bash", "-c"]
 
@@ -62,18 +62,9 @@ RUN groupadd -g 910 nonrootuser && useradd -u 910 -g 910 -s /bin/bash -m nonroot
   echo "nonrootuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Docker
-RUN apt install -y ca-certificates curl gnupg lvm2 && \
-  install -m 0755 -d /etc/apt/keyrings && \
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
-  chmod a+r /etc/apt/keyrings/docker.gpg && \
-  echo \
-    "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-    "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-  apt update && \
-  apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin && \
-  apt clean all && \
-  update-alternatives --install /usr/local/bin/docker-compose docker-compose /usr/libexec/docker/cli-plugins/docker-compose 1
+RUN groupadd docker && \
+  usermod -aG docker nonrootuser && \
+  newgrp docker
 
 USER nonrootuser
 
@@ -159,3 +150,12 @@ ENV CONTAINER_ENGINE="docker"
 ENV CONTAINER_ENGINE_TLS_OPTIONS=""
 
 WORKDIR /project/directory
+
+USER root
+COPY start-docker.sh entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/start-docker.sh \
+	/usr/local/bin/entrypoint.sh
+USER nonrootuser
+
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["bash"]
