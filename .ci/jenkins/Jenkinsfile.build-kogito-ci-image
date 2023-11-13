@@ -61,7 +61,7 @@ pipeline {
             agent {
                 docker {
                     image env.IMAGE_NAME_TAG
-                    args '-v /var/run/docker.sock:/var/run/docker.sock --group-add docker --group-add input --group-add render'
+                    args '--privileged'
                 }
             }
             steps {
