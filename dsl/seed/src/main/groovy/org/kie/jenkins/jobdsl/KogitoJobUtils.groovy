@@ -277,7 +277,7 @@ class KogitoJobUtils {
     * See also `createBranchBuildChainJob` method
     */
     static def createNightlyBuildChainBuildAndDeployJob(def script, String envName = '', String repository, Map extraEnv = [:], boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
-        def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${Utils.getRepositoryJobDisplayName(script, repository)}.build-and-deploy", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
+        def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${Utils.getRepositoryJobDisplayName(script, repository)}.build-and-deploy", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Deploy for ${repository} using the build-chain", defaultJobParamsGetter)
         JobParamsUtils.setupJobParamsDeployConfiguration(script, jobParams)
         jobParams.env.putAll(extraEnv)
         return createBranchBuildChainJob(script, jobParams, repository, enableNotification, envName)

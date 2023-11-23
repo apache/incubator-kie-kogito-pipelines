@@ -5,7 +5,7 @@ import org.jenkinsci.plugins.workflow.libs.Library
 // Deploy jobs
 RUNTIMES_DEPLOY = 'kogito-runtimes.build-and-deploy'
 APPS_DEPLOY = 'kogito-apps.build-and-deploy'
-EXAMPLES_DEPLOY = 'kogito-examples.build-and-deploy'
+EXAMPLES_DEPLOY = 'kogito-examples.build-and-test'
 QUARKUS_PLATFORM_DEPLOY = 'quarkus-platform.deploy'
 
 // Map of executed jobs
@@ -54,55 +54,55 @@ pipeline {
 
         stage('Build & Deploy artifacts') {
             parallel {
-                stage('Build & Deploy Kogito Runtimes') {
-                    steps {
-                        script {
-                            def buildParams = getDefaultBuildParams()
-                            addSkipTestsParam(buildParams)
-                            addSkipIntegrationTestsParam(buildParams)
+                // stage('Build & Deploy Kogito Runtimes') {
+                //     steps {
+                //         script {
+                //             def buildParams = getDefaultBuildParams()
+                //             addSkipTestsParam(buildParams)
+                //             addSkipIntegrationTestsParam(buildParams)
 
-                            // images and operator deploy testing will use older working artifacts if that one fails
-                            buildJob(RUNTIMES_DEPLOY, buildParams)
-                        }
-                    }
-                    post {
-                        failure {
-                            addFailedStage(RUNTIMES_DEPLOY)
-                        }
-                    }
-                }
+                //             // images and operator deploy testing will use older working artifacts if that one fails
+                //             buildJob(RUNTIMES_DEPLOY, buildParams)
+                //         }
+                //     }
+                //     post {
+                //         failure {
+                //             addFailedStage(RUNTIMES_DEPLOY)
+                //         }
+                //     }
+                // }
 
-                stage('Build & Deploy Kogito Apps') {
-                    steps {
-                        script {
-                            def buildParams = getDefaultBuildParams()
-                            addSkipTestsParam(buildParams)
-                            addSkipIntegrationTestsParam(buildParams)
+                // stage('Build & Deploy Kogito Apps') {
+                //     steps {
+                //         script {
+                //             def buildParams = getDefaultBuildParams()
+                //             addSkipTestsParam(buildParams)
+                //             addSkipIntegrationTestsParam(buildParams)
 
-                            // images and operator deploy testing will use older working artifacts if that one fails
-                            buildJob(APPS_DEPLOY, buildParams)
-                        }
-                    }
-                    post {
-                        failure {
-                            addFailedStage(APPS_DEPLOY)
-                        }
-                    }
-                }
+                //             // images and operator deploy testing will use older working artifacts if that one fails
+                //             buildJob(APPS_DEPLOY, buildParams)
+                //         }
+                //     }
+                //     post {
+                //         failure {
+                //             addFailedStage(APPS_DEPLOY)
+                //         }
+                //     }
+                // }
 
-                stage('Deploy Quarkus platform') {
-                    steps {
-                        script {
-                            def buildParams = getDefaultBuildParams()
-                            buildJob(QUARKUS_PLATFORM_DEPLOY, buildParams)
-                        }
-                    }
-                    post {
-                        failure {
-                            addFailedStage(QUARKUS_PLATFORM_DEPLOY)
-                        }
-                    }
-                }
+                // stage('Deploy Quarkus platform') {
+                //     steps {
+                //         script {
+                //             def buildParams = getDefaultBuildParams()
+                //             buildJob(QUARKUS_PLATFORM_DEPLOY, buildParams)
+                //         }
+                //     }
+                //     post {
+                //         failure {
+                //             addFailedStage(QUARKUS_PLATFORM_DEPLOY)
+                //         }
+                //     }
+                // }
 
                 stage('Build & Deploy Kogito Examples') {
                     steps {
@@ -121,7 +121,7 @@ pipeline {
                                     checkout(githubscm.resolveRepository('incubator-kie-kogito-examples', getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsID()))
                                     String nightlyBranch = "nightly-${getBuildBranch()}"
                                     githubscm.createBranch(nightlyBranch)
-                                    githubscm.pushObject('origin', nightlyBranch, getGitAuthorCredsID())
+                                    githubscm.pushObject('origin', nightlyBranch, getGitAuthorPushCredsID())
                                 }
                             }
                         }
@@ -135,18 +135,18 @@ pipeline {
             }
         }
 
-        stage('Start Cloud nightly') {
-            when {
-                expression { !params.SKIP_CLOUD_NIGHTLY }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
-                    build(job: './0-kogito-nightly-cloud', wait: false, parameters: buildParams, propagate: false)
-                }
-            }
-        }
+        // stage('Start Cloud nightly') {
+        //     when {
+        //         expression { !params.SKIP_CLOUD_NIGHTLY }
+        //     }
+        //     steps {
+        //         script {
+        //             def buildParams = getDefaultBuildParams()
+        //             addSkipTestsParam(buildParams)
+        //             build(job: './0-kogito-nightly-cloud', wait: false, parameters: buildParams, propagate: false)
+        //         }
+        //     }
+        // }
     }
     post {
         unsuccessful {
@@ -245,4 +245,8 @@ String getGitAuthor() {
 
 String getGitAuthorCredsID() {
     return env.GIT_AUTHOR_CREDS_ID
+}
+
+String getGitAuthorPushCredsID() {
+    return env.GIT_AUTHOR_PUSH_CREDS_ID
 }
