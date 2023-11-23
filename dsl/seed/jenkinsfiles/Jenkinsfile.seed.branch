@@ -135,6 +135,7 @@ pipeline {
                                 (generateEnvKey(it, 'git_branch')): getRepoConfig(it).git.branch,
                                 (generateEnvKey(it, 'git_author')): getRepoConfig(it).git.author.name,
                                 (generateEnvKey(it, 'git_author_credentials_id')): getRepoConfig(it).git.author.credentials_id,
+                                (generateEnvKey(it, 'git_author_push_credentials_id')): getRepoConfig(it).git.author.push.credentials_id,
                             ]
                         }
 
@@ -269,7 +270,9 @@ def getRepoConfig(String repository, String generationBranch = "${GENERATION_BRA
     cfg.git.author = cfg.git.author ?: [:]
     cfg.git.author.name = repoConfig.author?.name ?: cfg.git.author.name
     cfg.git.author.credentials_id = repoConfig.author?.credentials_id ?: cfg.git.author.credentials_id
+    cfg.git.author.push.credentials_id = repoConfig.author?.push?.credentials_id ?: cfg.git.author.push.credentials_id
     cfg.git.author.token_credentials_id = repoConfig.author?.credentials_id ?: cfg.git.author.token_credentials_id
+    cfg.git.author.push.token_credentials_id = repoConfig.author?.push?.token_credentials_id ?: cfg.git.author.push.token_credentials_id
 
     String buildchainRepo = cfg.buildchain_config?.git?.repository
     if (buildchainRepo) {

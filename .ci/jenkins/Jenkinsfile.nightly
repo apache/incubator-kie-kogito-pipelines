@@ -118,10 +118,10 @@ pipeline {
                                 // Update examples nightly branch
                                 dir('kogito-examples') {
                                     deleteDir()
-                                    checkout(githubscm.resolveRepository('incubator-kie-kogito-examples', getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsID()))
+                                    checkout(githubscm.resolveRepository('incubator-kie-kogito-examples', getGitAuthor(), getBuildBranch(), false, getGitAuthorCredsId()))
                                     String nightlyBranch = "nightly-${getBuildBranch()}"
                                     githubscm.createBranch(nightlyBranch)
-                                    githubscm.pushObject('origin', nightlyBranch, getGitAuthorCredsID())
+                                    githubscm.pushObject('origin', nightlyBranch, getGitAuthorPushCredsId())
                                 }
                             }
                         }
@@ -243,6 +243,10 @@ String getGitAuthor() {
     return env.GIT_AUTHOR
 }
 
-String getGitAuthorCredsID() {
+String getGitAuthorCredsId() {
     return env.GIT_AUTHOR_CREDS_ID
+}
+
+String getGitAuthorPushCredsId() {
+    return env.GIT_AUTHOR_PUSH_CREDS_ID
 }

@@ -53,6 +53,10 @@ String getSeedConfigFileGitAuthorCredsId() {
     return SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID ?: DEFAULT_CREDENTIALS_ID
 }
 
+String getSeedConfigFileGitAuthorPushCredsId() {
+    return SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID ?: DEFAULT_CREDENTIALS_ID
+}
+
 String getSeedConfigFileGitBranch() {
     return SEED_CONFIG_FILE_GIT_BRANCH ?: 'main'
 }
