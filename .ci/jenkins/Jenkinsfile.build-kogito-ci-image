@@ -35,7 +35,7 @@ pipeline {
                         checkout scm
 
                         sh """
-                            docker build --build-arg SDKMAN_JAVA=11.0.20-tem -t ${env.IMAGE_NAME_TAG} -f apache-nodes/Dockerfile.kogito-ci-build .
+                            docker build --build-arg SDKMAN_JAVA=11.0.20-tem -t ${env.IMAGE_NAME_TAG} -f apache-nodes/Dockerfile.kogito-ci-build ./apache-nodes
                             docker tag ${env.IMAGE_NAME_TAG} ${env.IMAGE_NAME}:${GIT_COMMIT}
                             docker tag ${env.IMAGE_NAME_TAG} ${env.IMAGE_NAME}:${BRANCH_NAME}-latest
                         """
@@ -61,7 +61,7 @@ pipeline {
             agent {
                 docker {
                     image env.IMAGE_NAME_TAG
-                    args '-v /var/run/docker.sock:/var/run/docker.sock --group-add docker --group-add input --group-add render'
+                    args '--privileged --group-add docker'
                 }
             }
             steps {
