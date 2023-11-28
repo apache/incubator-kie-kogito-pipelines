@@ -22,16 +22,13 @@ import org.kie.jenkins.MavenCommand
 // TODO Docker image and args could be passed as env or anything ?
 dockerGroups = [ 
     'docker',
-    'input',
-    'render',
 ]
 dockerArgs = [
-    '-v /var/run/docker.sock:/var/run/docker.sock',
-    '--network host',
+    '--privileged',
 ] + dockerGroups.collect { group -> "--group-add ${group}" }
 
 void launch() {
-    String builderImage = 'quay.io/kiegroup/kogito-ci-build:19a0b303bc64f473a01f5fa5bacde822f10b4946' // last main-latest based on ubi
+    String builderImage = 'quay.io/kiegroup/kogito-ci-build:main-latest'
     sh "docker rmi -f ${builderImage} || true" // Remove before launching
 
     try {
