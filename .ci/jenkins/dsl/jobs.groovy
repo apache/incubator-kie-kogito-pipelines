@@ -62,15 +62,15 @@ if (isMainStream()) {
     setupQuarkus3NightlyJob()
 }
 
-// KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-main')
-// KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-lts')
-// KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-branch')
-// KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'native-lts')
-// KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-3', []) { script ->
-//     def jobParams = JobParamsUtils.DEFAULT_PARAMS_GETTER(script)
-//     jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '2.x')
-//     return jobParams
-// }
+KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-main')
+KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-lts')
+KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-branch')
+KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'native-lts')
+KogitoJobUtils.createEnvironmentIntegrationBranchNightlyJob(this, 'quarkus-3', []) { script ->
+    def jobParams = JobParamsUtils.DEFAULT_PARAMS_GETTER(script)
+    jobParams.env.put('INTEGRATION_BRANCH_CURRENT', '2.x')
+    return jobParams
+}
 
 // Release
 setupReleaseArtifactsJob()
