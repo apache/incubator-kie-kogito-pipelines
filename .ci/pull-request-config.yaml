@@ -57,14 +57,16 @@ build:
   - project: apache/incubator-kie-kogito-examples
     build-command:
       # First install the main pom
-      # Then build the required submodule pom
+      # Then build the required submodule pom if provided, otherwise build whole
       current: |
-        export MVN_CMD=`bash -c "if [ '${{ env.ENABLE_DEPLOY }}' = 'true' ]; then printf 'deploy ${{ env.DEPLOY_MVN_OPTS }} ${{ env.KOGITO_EXAMPLES_DEPLOY_MVN_OPTS }}'; else printf 'install'; fi"`
-        mvn dependency:tree -pl :kogito-examples clean ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
-        mvn dependency:tree -f ${{ env.KOGITO_EXAMPLES_SUBFOLDER_POM }}pom.xml clean ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
+        mvn dependency:tree -pl :kogito-examples clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
+        mvn dependency:tree -f ${{ env.KOGITO_EXAMPLES_SUBFOLDER_POM }}pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
       upstream: |
         mvn dependency:tree clean install -DskipTests -DskipITs ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_UPSTREAM }}
-  
+      after:
+        # In case of deploy, deploy the parent poms only.
+        current: |
+          bash -c "if [ '${{ env.ENABLE_DEPLOY }}' = 'true' ]; then mvn dependency:tree -DskipTests -DskipITs -pl .,kogito-quarkus-examples,kogito-springboot-examples,serverless-workflow-examples deploy ${{ env.DEPLOY_MVN_OPTS }} ${{ env.KOGITO_EXAMPLES_DEPLOY_MVN_OPTS }}; else echo 'No deploy is scheduled'; fi"
   # - project: kiegroup/kie-jpmml-integration
   #   build-command:
   #     current: |

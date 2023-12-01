@@ -42,7 +42,7 @@ pipeline {
             steps {
                 script {
                     dir(getRepoName()) {
-                        branchCreated = getOrCreateGitBranch(getPRBranch(), getGitAuthorCredsId())
+                        branchCreated = getOrCreateGitBranch(getPRBranch(), getGitAuthorPushCredsId())
                     }
                 }
             }
@@ -142,7 +142,7 @@ pipeline {
                         if (githubscm.isThereAnyChanges()) {
                             String commitMsg = "[${getBuildBranch()}] ${getJiraNumber() ? "[${getJiraNumber()}] " : ''}Bump ${getDependencyName()} version to ${getNewVersion()}"
                             githubscm.commitChanges(commitMsg)
-                            githubscm.pushObject('origin', getPRBranch(), getGitAuthorCredsId())
+                            githubscm.pushObject('origin', getPRBranch(), getGitAuthorPushCredsId())
 
                             if (branchCreated) {
                                 String prLink = githubscm.createPR(commitMsg, 'Please review and merge', getBuildBranch(), getGitAuthorCredsId())
@@ -186,7 +186,11 @@ String getGitAuthor() {
 }
 
 String getGitAuthorCredsId() {
-    return "${AUTHOR_CREDS_ID}"
+    return "${GIT_AUTHOR_CREDS_ID}"
+}
+
+String getGitAuthorPushCredsId() {
+    return "${GIT_AUTHOR_PUSH_CREDS_ID}"
 }
 
 String getPRBranch() {

@@ -142,12 +142,24 @@ class Utils {
         return getBindingValue(script, 'GIT_AUTHOR_TOKEN_CREDENTIALS_ID')
     }
 
+    static String getGitAuthorPushCredsId(def script) {
+        return getBindingValue(script, 'GIT_AUTHOR_PUSH_CREDENTIALS_ID')
+    }
+
+    static String getGitAuthorPushTokenCredsId(def script) {
+        return getBindingValue(script, 'GIT_AUTHOR_PUSH_TOKEN_CREDENTIALS_ID')
+    }
+
     static String getGitForkAuthorName(def script) {
         return getBindingValue(script, 'GIT_FORK_AUTHOR_NAME')
     }
 
     static String getGitForkAuthorCredsId(def script) {
         return getBindingValue(script, 'GIT_FORK_AUTHOR_CREDENTIALS_ID')
+    }
+
+    static String getGitForkAuthorPushCredsId(def script) {
+        return getBindingValue(script, 'GIT_FORK_AUTHOR_PUSH_CREDENTIALS_ID')
     }
 
     static String getGitQuarkusBranch(def script) {
@@ -172,6 +184,14 @@ class Utils {
 
     static String getRepositoryGitAuthorCredentialsId(def script, String repoName) {
         return getBindingValue(script, "${repoName.toUpperCase()}_GIT_AUTHOR_CREDENTIALS_ID")
+    }
+
+    static String getRepositoryGitAuthorPushCredentialsId(def script, String repoName) {
+        return getBindingValue(script, "${repoName.toUpperCase()}_GIT_AUTHOR_PUSH_CREDENTIALS_ID")
+    }
+
+    static String getRepositoryGitAuthorPushTokenCredentialsId(def script, String repoName) {
+        return getBindingValue(script, "${repoName.toUpperCase()}_GIT_AUTHOR_PUSH_TOKEN_CREDENTIALS_ID")
     }
 
     static String getRepositoryJenkinsConfigPath(def script, String repoName) {

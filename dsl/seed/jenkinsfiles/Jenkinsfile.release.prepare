@@ -71,7 +71,7 @@ pipeline {
                         if (githubscm.isThereAnyChanges()) {
                             sh 'git diff'
                             githubscm.commitChanges('Setup DSL branch config after cut-off')
-                            githubscm.pushObject('origin', newBranch, getMainBranchConfigFileGitAuthorCredentialsId())
+                            githubscm.pushObject('origin', newBranch, getMainBranchConfigFileGitAuthorPushCredentialsId())
 
                             sendNotification("Branch config on ${newBranch} has been updated with correct configuration")
                         } else {
@@ -126,7 +126,7 @@ pipeline {
                         if (githubscm.isThereAnyChanges()) {
                             sh 'git diff'
                             githubscm.commitChanges("Add release branch ${getEcosystemReleaseBranch()} after cut-off")
-                            githubscm.pushObject('origin', env.SEED_CONFIG_FILE_GIT_BRANCH, env.SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID)
+                            githubscm.pushObject('origin', env.SEED_CONFIG_FILE_GIT_BRANCH, env.SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID)
 
                             sendNotification("Main config has been updated with release branch ${getEcosystemReleaseBranch()}")
                         } else {
@@ -257,15 +257,15 @@ void createBranches(List repositories) {
         String repoName = repoConfig.name
         String baseBranch = repoConfig.branch
         String releaseBranch = getReleaseBranchFromRepository(repoConfig.name)
-        String gitAuthorCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
-        assert gitAuthorCredsId : "Cannot find any credentials Id for git author ${repoConfig.author.name}. Please check your branch seed config file."
+        String gitAuthorPushCredsId = repoConfig.author?.push?.credentials_id ?: readMainBranchConfig().git.author.push.credentials_id
+        assert gitAuthorPushCredsId : "Cannot find any credentials Id for git author ${repoConfig.author.name}. Please check your branch seed config file."
         String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
 
         echo "Checkout repo ${gitAuthor}/${repoName} on branch ${baseBranch}"
         dir(repoName) {
             deleteDir()
-            checkout(githubscm.resolveRepository(repoName, gitAuthor, baseBranch, false, gitAuthorCredsId))
-            getOrCreateGitBranch(releaseBranch, gitAuthorCredsId)
+            checkout(githubscm.resolveRepository(repoName, gitAuthor, baseBranch, false, gitAuthorPushCredsId))
+            getOrCreateGitBranch(releaseBranch, gitAuthorPushCredsId)
         }
         // Update the branch with the new release branch
         repoConfig.branch = releaseBranch
@@ -401,6 +401,10 @@ String getMainBranchConfigFileGitAuthorName() {
 
 String getMainBranchConfigFileGitAuthorCredentialsId() {
     return readSeedConfig().seed.config_file.git.author.credentials_id
+}
+
+String getMainBranchConfigFileGitAuthorPushCredentialsId() {
+    return readSeedConfig().seed.config_file.git.author.push.credentials_id
 }
 
 String getMainBranchConfigFileGitBranch() {

@@ -74,7 +74,8 @@ class KogitoJobUtils {
 
             BUILD_BRANCH_NAME: Utils.getGitBranch(script),
             GIT_AUTHOR:  Utils.getGitAuthor(script),
-            AUTHOR_CREDS_ID: Utils.getGitAuthorCredsId(script),
+            GIT_AUTHOR_CREDS_ID: Utils.getGitAuthorCredsId(script),
+            GIT_AUTHOR_PUSH_CREDS_ID: Utils.getGitAuthorPushCredsId(script),
         ])
         if (mavenUpdate) {
             mavenUpdate.modules ? jobParams.env.put('MAVEN_MODULES',  JsonOutput.toJson(mavenUpdate.modules)) : null
@@ -131,13 +132,14 @@ class KogitoJobUtils {
 
             PROPERTIES_FILENAME: KogitoConstants.PIPELINE_PROPERTIES_FILENAME,
 
-            GITHUB_TOKEN_CREDS_ID: Utils.getGitAuthorTokenCredsId(script),
+            GIT_AUTHOR_TOKEN_CREDS_ID: Utils.getGitAuthorTokenCredsId(script),
 
-            SEED_BRANCH_CONFIG_FILE_GIT_REPOSITORY: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_REPOSITORY'),
-            SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_NAME: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_AUTHOR_NAME'),
-            SEED_BRANCH_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID'),
-            SEED_BRANCH_CONFIG_FILE_GIT_BRANCH: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_BRANCH'),
-            SEED_BRANCH_CONFIG_FILE_PATH: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_PATH'),
+            SEED_CONFIG_FILE_GIT_REPOSITORY: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_REPOSITORY'),
+            SEED_CONFIG_FILE_GIT_AUTHOR_NAME: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_AUTHOR_NAME'),
+            SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID'),
+            SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID'),
+            SEED_CONFIG_FILE_GIT_BRANCH: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_BRANCH'),
+            SEED_CONFIG_FILE_PATH: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_PATH'),
         ])
         JobParamsUtils.setupJobParamsSeedRepoEnv(script, jobParams)
         def job = KogitoJobTemplate.createPipelineJob(script, jobParams)
@@ -163,15 +165,14 @@ class KogitoJobUtils {
         jobParams.env.putAll([
             JENKINS_EMAIL_CREDS_ID: Utils.getJenkinsEmailCredsId(script),
             BUILD_BRANCH_NAME: Utils.getGitBranch(script),
-            GIT_AUTHOR: Utils.getGitAuthor(script),
-            GIT_AUTHOR_CREDENTIALS_ID: Utils.getGitAuthorCredsId(script),
 
-            QUARKUS_PLATFORM_AUTHOR_NAME: Utils.getGitQuarkusAuthor(script),
-            QUARKUS_PLATFORM_AUTHOR_CREDENTIALS_ID: Utils.getGitQuarkusAuthorCredsId(script),
+            GIT_QUARKUS_AUTHOR: Utils.getGitQuarkusAuthor(script),
+            GIT_QUARKUS_AUTHOR_CREDS_ID: Utils.getGitQuarkusAuthorCredsId(script),
             PROJECT_NAME: project,
 
-            FORK_GIT_AUTHOR: Utils.getGitForkAuthorName(script),
-            FORK_GIT_AUTHOR_CREDS_ID: Utils.getGitForkAuthorCredsId(script),
+            GIT_FORK_AUTHOR: Utils.getGitForkAuthorName(script),
+            GIT_FORK_AUTHOR_CREDS_ID: Utils.getGitForkAuthorCredsId(script),
+            GIT_FORK_AUTHOR_PUSH_CREDS_ID: Utils.getGitForkAuthorPushCredsId(script),
         ])
         def job = KogitoJobTemplate.createPipelineJob(script, jobParams)
         job?.with {
@@ -208,7 +209,7 @@ class KogitoJobUtils {
 
             BUILD_BRANCH_NAME: Utils.getGitBranch(script),
             GIT_AUTHOR:  Utils.getGitAuthor(script),
-            AUTHOR_CREDS_ID: Utils.getGitAuthorCredsId(script),
+            GIT_AUTHOR_CREDS_ID: Utils.getGitAuthorCredsId(script),
             GIT_AUTHOR_TOKEN_CREDENTIALS_ID: Utils.getGitAuthorTokenCredsId(script),
 
             SCRIPTS_CALLS: JsonOutput.toJson(scriptCalls),
@@ -277,7 +278,7 @@ class KogitoJobUtils {
     * See also `createBranchBuildChainJob` method
     */
     static def createNightlyBuildChainBuildAndDeployJob(def script, String envName = '', String repository, Map extraEnv = [:], boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
-        def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${Utils.getRepositoryJobDisplayName(script, repository)}.build-and-deploy", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
+        def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${Utils.getRepositoryJobDisplayName(script, repository)}.build-and-deploy", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Deploy for ${repository} using the build-chain", defaultJobParamsGetter)
         JobParamsUtils.setupJobParamsDeployConfiguration(script, jobParams)
         jobParams.env.putAll(extraEnv)
         return createBranchBuildChainJob(script, jobParams, repository, enableNotification, envName)
