@@ -1178,13 +1178,13 @@
                                 <configScript>config.groovy</configScript>
                                 <sources>
                                     <source>
-                                        <directory>vars</directory>
+                                        <directory>${project.basedir}/vars</directory>
                                         <includes>
                                             <include>**/*.groovy</include>
                                         </includes>
                                     </source>
                                     <source>
-                                        <directory>src</directory>
+                                        <directory>${project.basedir}/src</directory>
                                         <includes>
                                             <include>**/*.groovy</include>
                                         </includes>
@@ -1192,7 +1192,7 @@
                                 </sources>
                                 <testSources>
                                     <testSource>
-                                        <directory>test</directory>
+                                        <directory>${project.basedir}/test</directory>
                                         <includes>
                                             <include>**/*.groovy</include>
                                         </includes>
@@ -1214,8 +1214,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
         </plugins>
-        <sourceDirectory>vars</sourceDirectory>
-        <testSourceDirectory>test/vars</testSourceDirectory>
+        <sourceDirectory>${project.basedir}/vars</sourceDirectory>
+        <testSourceDirectory>${project.basedir}/test/vars</testSourceDirectory>
         <testResources>
             <testResource>
                 <includes>
@@ -1225,10 +1225,10 @@
                 <directory>${project.basedir}</directory>
             </testResource>
             <testResource>
-                <directory>test/resources</directory>
+                <directory>${project.basedir}/test/resources</directory>
             </testResource>
             <testResource>
-                <directory>resources</directory>
+                <directory>${project.basedir}/resources</directory>
             </testResource>
         </testResources>
     </build>
