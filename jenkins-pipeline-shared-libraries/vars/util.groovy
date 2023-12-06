@@ -547,3 +547,11 @@ String displayDurationFromSeconds(int durationInSec) {
     result += "${seconds}s"
     return result
 }
+
+/**
+ * Method to wait for dockerd to be started. Put in initial pipeline stages to make sure all starts in time.
+ */
+void waitForDocker() {
+    sleep(10) // give it some ahead time not to invoke docker exec immediately after container start
+    sh 'wait-for-docker.sh' // script in kogito-ci-build image itself put in /usr/local/bin
+}

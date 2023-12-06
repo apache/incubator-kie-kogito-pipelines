@@ -157,10 +157,19 @@ ENV CONTAINER_ENGINE_TLS_OPTIONS=""
 WORKDIR /project/directory
 
 USER root
-COPY start-docker.sh entrypoint.sh /usr/local/bin/
+COPY start-docker.sh wait-for-docker.sh wait-for-process.sh entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/start-docker.sh \
-	/usr/local/bin/entrypoint.sh
+	/usr/local/bin/entrypoint.sh \
+  /usr/local/bin/wait-for-docker.sh \
+  /usr/local/bin/wait-for-process.sh
 USER nonrootuser
+
+RUN echo "source wait-for-docker.sh" >> ~/.bashrc
+
+# Use bash as default instead of dash (BEGIN)
+RUN sudo bash -c "echo \"dash dash/sh boolean false\" | debconf-set-selections"
+RUN sudo bash -c "DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash"
+# Use bash as default instead of dash (END)
 
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["bash"]

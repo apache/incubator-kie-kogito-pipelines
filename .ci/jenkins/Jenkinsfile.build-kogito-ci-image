@@ -1,12 +1,12 @@
 import org.jenkinsci.plugins.workflow.libs.Library
 
-@Library('jenkins-pipeline-shared-libraries')_
-
 pipeline {
     agent {
         label 'ubuntu'
     }
-
+    libraries {
+        lib("jenkins-pipeline-shared-libraries@${BRANCH_NAME}")
+    }
     environment {
         DOCKER_CONFIG = "${WORKSPACE}/.docker"
 
@@ -65,8 +65,13 @@ pipeline {
                 }
             }
             steps {
+                echo 'Init docker'
+                script {
+                    util.waitForDocker()
+                }
                 echo 'Debug basics'
                 sh '''
+                    sh --version
                     locale
                     printenv
                 '''
