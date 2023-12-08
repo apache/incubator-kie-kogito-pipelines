@@ -485,11 +485,11 @@ class KogitoJobTemplate {
         return "(.*${RegexUtils.getRegexFirstLetterCase('jenkins')},?.*(rerun|run) ${idStr}${testType}.*)"
     }
 
-    static def createPullRequestMultibranchPipelineJob(def script, String jenkinsFilePath = '.ci/jenkins/Jenkinsfile') {
+    static def createPullRequestMultibranchPipelineJob(def script, String jenkinsFilePath = '.ci/jenkins/Jenkinsfile', String folderName='pullrequest_jobs') {
         String jobName = "${Utils.getJobDisplayName(script)}-pr"
         PrintUtils.debug(script, "Create pull request multibranch job ${jobName}")
-        script.folder('pullrequest_jobs')
-        return script.multibranchPipelineJob("pullrequest_jobs/${Utils.getJobDisplayName(script)}-pr")?.with {
+        script.folder(folderName)
+        return script.multibranchPipelineJob("${folderName}/${Utils.getJobDisplayName(script)}-pr")?.with {
             triggers {
                 periodicFolderTrigger {
                     // The maximum amount of time since the last indexing that is allowed to elapse before an indexing is triggered.
