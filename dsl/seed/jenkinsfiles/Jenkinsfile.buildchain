@@ -62,6 +62,7 @@ pipeline {
                 script {
                     sh 'printenv > env_props'
                     archiveArtifacts artifacts: 'env_props'
+                    util.waitForDocker()
                     sh 'ls -last /var/run/docker.sock'
 
                     if (mavenDeployArtifacts) {

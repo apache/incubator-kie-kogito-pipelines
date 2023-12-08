@@ -40,8 +40,9 @@ void launch() {
 
 void launchInDocker(String builderImage) {
     docker.image(builderImage).inside(dockerArgs.join(' ')) {
-        // Debug. To be removed in the future
-        sh "printenv"
+        sh 'printenv > env_props'
+        archiveArtifacts artifacts: 'env_props'
+        util.waitForDocker()
         sh 'ls -last /var/run/docker.sock'
         try {
             launchStages()
