@@ -43,6 +43,7 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
         addEnvVar('GIT_BRANCH_NAME', 'BRANCH')
         addEnvVar('GIT_AUTHOR', 'AUTHOR')
         addEnvVar('GIT_AUTHOR_CREDS_ID', 'AUTHOR_CREDS_ID')
+        addEnvVar('GIT_AUTHOR_PUSH_CREDS_ID', 'AUTHOR_PUSH_CREDS_ID')
         addEnvVar('JENKINS_EMAIL_CREDS_ID', 'KOGITO_CI_EMAIL_TO')
         addEnvVar('STAGE_NAME', 'STAGE_NAME')
         addEnvVar('BUILD_NUMBER', 'BUILD_NUMBER')
@@ -73,9 +74,9 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
             'kogito-apps' : [:],
             'kogito-examples': [:],
         ])
-        assertTestCallstackContains('githubscm.resolveRepository', 'kogito-examples, AUTHOR, BRANCH, false, AUTHOR_CREDS_ID')
+        assertTestCallstackContains('githubscm.resolveRepository', 'incubator-kie-kogito-examples, AUTHOR, BRANCH, false, AUTHOR_CREDS_ID')
         assertTestCallstackContains('githubscm.createBranch', 'nightly-BRANCH')
-        assertTestCallstackContains('githubscm.pushObject', 'origin, nightly-BRANCH, AUTHOR_CREDS_ID')
+        assertTestCallstackContains('githubscm.pushObject', 'origin, nightly-BRANCH, AUTHOR_PUSH_CREDS_ID')
     }
 
     @Test
@@ -94,9 +95,9 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
             'kogito-examples': [:],
         ], true)
 
-        assertTestCallstackContains('githubscm.resolveRepository', 'kogito-examples, AUTHOR, BRANCH, false, AUTHOR_CREDS_ID')
+        assertTestCallstackContains('githubscm.resolveRepository', 'incubator-kie-kogito-examples, AUTHOR, BRANCH, false, AUTHOR_CREDS_ID')
         assertTestCallstackContains('githubscm.createBranch', 'nightly-BRANCH')
-        assertTestCallstackContains('githubscm.pushObject', 'origin, nightly-BRANCH, AUTHOR_CREDS_ID')
+        assertTestCallstackContains('githubscm.pushObject', 'origin, nightly-BRANCH, AUTHOR_PUSH_CREDS_ID')
     }
 
     @Test
@@ -122,9 +123,9 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
             'kogito-examples': [:],
         ])
 
-        assertTestCallstackContains('githubscm.resolveRepository', 'kogito-examples, AUTHOR, BRANCH, false, AUTHOR_CREDS_ID')
+        assertTestCallstackContains('githubscm.resolveRepository', 'incubator-kie-kogito-examples, AUTHOR, BRANCH, false, AUTHOR_CREDS_ID')
         assertTestCallstackContains('githubscm.createBranch', 'nightly-BRANCH')
-        assertTestCallstackContains('githubscm.pushObject', 'origin, nightly-BRANCH, AUTHOR_CREDS_ID')
+        assertTestCallstackContains('githubscm.pushObject', 'origin, nightly-BRANCH, AUTHOR_PUSH_CREDS_ID')
     }
 
     @Test
@@ -150,9 +151,9 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
             'kogito-examples': [:],
         ])
 
-        assertTestCallstackContains('githubscm.resolveRepository', 'kogito-examples, AUTHOR, BRANCH, false, AUTHOR_CREDS_ID')
+        assertTestCallstackContains('githubscm.resolveRepository', 'incubator-kie-kogito-examples, AUTHOR, BRANCH, false, AUTHOR_CREDS_ID')
         assertTestCallstackContains('githubscm.createBranch', 'nightly-BRANCH')
-        assertTestCallstackContains('githubscm.pushObject', 'origin, nightly-BRANCH, AUTHOR_CREDS_ID')
+        assertTestCallstackContains('githubscm.pushObject', 'origin, nightly-BRANCH, AUTHOR_PUSH_CREDS_ID')
     }
 
     @Test
