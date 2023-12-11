@@ -62,6 +62,7 @@ pipeline {
                 docker {
                     image env.IMAGE_NAME_TAG
                     args '--privileged --group-add docker'
+                    reuseNode true
                 }
             }
             steps {
