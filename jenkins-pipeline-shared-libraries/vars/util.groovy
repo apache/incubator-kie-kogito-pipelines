@@ -208,7 +208,7 @@ void executeWithCredentialsMap(Map credentials, Closure closure) {
 
 void cleanNode(String containerEngine = '') {
     println '[INFO] Clean workspace'
-    cleanWs()
+    cleanWs(disableDeferredWipeout: true)
     println '[INFO] Workspace cleaned'
     println '[INFO] Cleanup Maven artifacts'
     maven.cleanRepository()
