@@ -1,6 +1,6 @@
 #!/bin/bash
 source /opt/bash-utils/logger.sh
-set -e
+
 function wait_for_process () {
     local max_time_wait=30
     local process_name="$1"
