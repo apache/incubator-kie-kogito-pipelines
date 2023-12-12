@@ -380,7 +380,7 @@ class UtilSpec extends JenkinsPipelineSpecification {
         then:
         0 * getPipelineMock('cloud.cleanContainersAndImages')(_)
         1 * getPipelineMock('maven.cleanRepository')()
-        1 * getPipelineMock('cleanWs.call')()
+        1 * getPipelineMock('cleanWs.call')(_)
     }
 
     def "[util.groovy] cleanNode with docker"() {
@@ -389,7 +389,7 @@ class UtilSpec extends JenkinsPipelineSpecification {
         then:
         1 * getPipelineMock('cloud.cleanContainersAndImages')('docker')
         1 * getPipelineMock('maven.cleanRepository')()
-        1 * getPipelineMock('cleanWs.call')()
+        1 * getPipelineMock('cleanWs.call')(_)
     }
 
     def "[util.groovy] cleanNode with podman"() {
@@ -398,7 +398,7 @@ class UtilSpec extends JenkinsPipelineSpecification {
         then:
         1 * getPipelineMock('cloud.cleanContainersAndImages')('podman')
         1 * getPipelineMock('maven.cleanRepository')()
-        1 * getPipelineMock('cleanWs.call')()
+        1 * getPipelineMock('cleanWs.call')(_)
     }
 
     def "[util.groovy] replaceInAllFilesRecursive"() {
