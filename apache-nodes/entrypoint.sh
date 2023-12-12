@@ -1,6 +1,4 @@
 #!/bin/bash
-set -e
-
 # cgroup v2: enable nesting
 if [ -f /sys/fs/cgroup/cgroup.controllers ]; then
 	echo "in cgroupv2 branch"
