@@ -65,6 +65,7 @@ KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         env('SEED_AUTHOR', Utils.getSeedAuthor(this))
         env('SEED_BRANCH', Utils.getSeedBranch(this))
         env('SEED_CREDENTIALS_ID', Utils.getSeedAuthorCredsId(this))
+        env('SEED_PUSH_CREDENTIALS_ID', Utils.getSeedAuthorPushCredsId(this))
     }
 }
 
@@ -96,6 +97,7 @@ if (nonMainBranches) {
             env('GIT_REPOSITORY', "${SEED_CONFIG_FILE_GIT_REPOSITORY}")
             env('GIT_AUTHOR', "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}")
             env('GIT_AUTHOR_CREDENTIALS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
+            env('GIT_AUTHOR_PUSH_CREDENTIALS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID}")
             env('GIT_BRANCH_TO_BUILD', "${SEED_CONFIG_FILE_GIT_BRANCH}")
             env('CONFIG_FILE_PATH', "${SEED_CONFIG_FILE_PATH}")
         }
