@@ -55,6 +55,7 @@ pipeline {
                         if (githubscm.isThereAnyChanges()) {
                             String commitMsg = "[${getSeedConfigBranch()}] DSL triggers ${DISABLE_TRIGGERS ? 'disabled' : 'enabled'}"
                             githubscm.createBranch(getPRBranch())
+                            githubscm.setUserConfigFromCreds(getGitAuthorPushCredsId())
                             githubscm.commitChanges(commitMsg)
                             githubscm.pushObject('origin', getPRBranch(), getSeedConfigAuthorPushCredsId())
 

@@ -43,6 +43,7 @@ pipeline {
 
                         if (githubscm.isThereAnyChanges()) {
                             String commitMsg = "[${getSeedConfigFileGitBranch()}] ${getJiraNumber() ? "[${getJiraNumber()}] " : ''}Bump quarkus version to ${getNewVersion()}"
+                            githubscm.setUserConfigFromCreds(getGitAuthorPushCredsId())
                             githubscm.commitChanges(commitMsg)
                             githubscm.pushObject('origin', prBranch, "${getSeedConfigFileGitAuthorPushCredsId()}")
 
