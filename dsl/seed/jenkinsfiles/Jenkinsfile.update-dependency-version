@@ -141,6 +141,7 @@ pipeline {
                     dir(getRepoName()) {
                         if (githubscm.isThereAnyChanges()) {
                             String commitMsg = "[${getBuildBranch()}] ${getJiraNumber() ? "[${getJiraNumber()}] " : ''}Bump ${getDependencyName()} version to ${getNewVersion()}"
+                            githubscm.setUserConfigFromCreds(getGitAuthorPushCredsId())
                             githubscm.commitChanges(commitMsg)
                             githubscm.pushObject('origin', getPRBranch(), getGitAuthorPushCredsId())
 
