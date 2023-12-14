@@ -26,6 +26,7 @@ environments:
     ids:
     - quarkus
     - quarkus3
+    enabled: false
   sonarcloud:
     auto_generation: false
     env_vars:
@@ -40,33 +41,37 @@ environments:
 repositories:
 - name: incubator-kie-kogito-pipelines
   job_display_name: kogito-pipelines
+  branch: 1.45.x
+  is_branch_config_repo: true
 - name: incubator-kie-kogito-runtimes
   job_display_name: kogito-runtimes
+  branch: 1.45.x
 - name: incubator-kie-kogito-apps
   job_display_name: kogito-apps
+  branch: 1.45.x
 - name: incubator-kie-kogito-examples
   job_display_name: kogito-examples
+  branch: 1.45.x
 - name: incubator-kie-kogito-images
   job_display_name: kogito-images
+  branch: 1.45.x
 - name: incubator-kie-kogito-operator
   job_display_name: kogito-operator
+  branch: 1.45.x
 - name: incubator-kie-kogito-serverless-operator
   job_display_name: kogito-serverless-operator
+  branch: 1.45.x
 - name: incubator-kie-kogito-docs
   job_display_name: kogito-docs
-- name: incubator-kie-docs
-  job_display_name: kie-docs
-  branch: main-kogito
+  branch: 1.45.x
 git:
   author:
     name: apache
-    # Taken from https://ci-builds.apache.org/credentials/
-    # Need to be verified
     credentials_id: 399061d0-5ab5-4142-a186-a52081fef742
     token_credentials_id: ci-builds
     push:
-      credentials_id: 84811880-2025-45b6-a44c-2f33bef30ad2 # CI Push Access for KIE
-      token_credentials_id: 41128c14-bb63-4708-9074-d20a318ee630 # GitHub Personal Access Token for KIE
+      credentials_id: 84811880-2025-45b6-a44c-2f33bef30ad2
+      token_credentials_id: 41128c14-bb63-4708-9074-d20a318ee630
   fork_author:
     name: kie-ci
     credentials_id: kie-ci
@@ -109,9 +114,6 @@ jenkins:
   agent:
     docker:
       builder:
-        # At some point, this image will need to be changed when a release branch is created 
-        # but we need to make sure the image exists first ... simple tag before setting up the branch ?
-        # See https://github.com/kiegroup/kie-issues/issues/551
         image: quay.io/kiegroup/kogito-ci-build:main-latest
         args: --privileged --group-add docker
   default_tools:
