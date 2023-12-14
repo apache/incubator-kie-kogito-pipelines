@@ -50,6 +50,7 @@ pipeline {
                         SEED_REPO: "${SEED_REPO}",
                         SEED_AUTHOR: "${SEED_AUTHOR}",
                         SEED_AUTHOR_CREDS_ID: "${SEED_AUTHOR_CREDS_ID}",
+                        SEED_AUTHOR_PUSH_CREDS_ID: readSeedConfig().seed.config_file.git.author.push.credentials_id, // temporary until extra entry in all configs
                         SEED_BRANCH: "${SEED_BRANCH}",
                         SEED_CONFIG_FILE_GIT_REPOSITORY: "${SEED_CONFIG_FILE_GIT_REPOSITORY}",
                         SEED_CONFIG_FILE_GIT_AUTHOR_NAME: "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}",
@@ -94,6 +95,7 @@ pipeline {
                             SEED_REPO: "${SEED_REPO}",
                             SEED_AUTHOR: "${SEED_AUTHOR}",
                             SEED_AUTHOR_CREDS_ID: "${SEED_AUTHOR_CREDS_ID}",
+                            SEED_AUTHOR_PUSH_CREDS_ID: branchConfigFileInfo.push_credentials,
                             SEED_BRANCH: branchInfo.seed?.branch ?: "${SEED_BRANCH}",
                             SEED_JENKINSFILE: branchConfigFileInfo.jenkinsfile,
                             SEED_CONFIG_FILE_GIT_REPOSITORY: branchConfigFileInfo.repository,

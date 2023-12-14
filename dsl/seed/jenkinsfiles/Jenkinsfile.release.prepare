@@ -49,7 +49,7 @@ pipeline {
                     def repositories = getRepositoriesToBranch()
 
                     dir(checkoutMainBranchSeedConfigFileRepo()) {
-                        getOrCreateGitBranch(newBranch, getMainBranchConfigFileGitAuthorCredentialsId())
+                        getOrCreateGitBranch(newBranch, getMainBranchConfigFileGitAuthorPushCredentialsId())
 
                         // Update branch config
                         def branchConfig = readYaml file: branchConfigFile
@@ -87,7 +87,7 @@ pipeline {
                 script {
                     // Create seed branch if not already exist
                     dir(checkoutSeedRepo()) {
-                        getOrCreateGitBranch(getSeedRepoReleaseBranch(), "${SEED_CREDENTIALS_ID}")
+                        getOrCreateGitBranch(getSeedRepoReleaseBranch(), "${SEED_PUSH_CREDENTIALS_ID}")
                     }
                 }
             }
@@ -257,14 +257,16 @@ void createBranches(List repositories) {
         String repoName = repoConfig.name
         String baseBranch = repoConfig.branch
         String releaseBranch = getReleaseBranchFromRepository(repoConfig.name)
+        String gitAuthorCredsId = repoConfig.author?.credentials_id ?: readMainBranchConfig().git.author.credentials_id
+        assert gitAuthorCredsId : "Cannot find any credentials Id for git author ${repoConfig.author.name}. Please check your branch seed config file."
         String gitAuthorPushCredsId = repoConfig.author?.push?.credentials_id ?: readMainBranchConfig().git.author.push.credentials_id
-        assert gitAuthorPushCredsId : "Cannot find any credentials Id for git author ${repoConfig.author.name}. Please check your branch seed config file."
+        assert gitAuthorPushCredsId : "Cannot find any push credentials Id for git author ${repoConfig.author.name}. Please check your branch seed config file."
         String gitAuthor = repoConfig.author?.name ?: readMainBranchConfig().git.author.name
 
         echo "Checkout repo ${gitAuthor}/${repoName} on branch ${baseBranch}"
         dir(repoName) {
             deleteDir()
-            checkout(githubscm.resolveRepository(repoName, gitAuthor, baseBranch, false, gitAuthorPushCredsId))
+            checkout(githubscm.resolveRepository(repoName, gitAuthor, baseBranch, false, gitAuthorCredsId))
             getOrCreateGitBranch(releaseBranch, gitAuthorPushCredsId)
         }
         // Update the branch with the new release branch

@@ -230,6 +230,10 @@ class Utils {
         return getBindingValue(script, 'SEED_AUTHOR_CREDS_ID')
     }
 
+    static String getSeedAuthorPushCredsId(def script) {
+        return getBindingValue(script, 'SEED_AUTHOR_PUSH_CREDS_ID')
+    }
+
     static String getSeedBranch(def script) {
         return getBindingValue(script, 'SEED_BRANCH')
     }
