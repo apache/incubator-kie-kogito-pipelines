@@ -8,11 +8,6 @@ ecosystem:
     regexs:
     - kogito.*
     - incubator-kie-kogito.*
-  # - name: kie-tools
-  #   ignore_release: true
-  #   regexs:
-  #   - kie-tools.*
-  #   - incubator-kie-tools.*
   - name: kie-docs
     ignore_release: true
     regexs:
@@ -23,6 +18,9 @@ git:
   - name: main
     main_branch: true
   - name: quarkus-3.2LTS
+  - name: 1.45.x
+    seed:
+      branch: seed-kogito-1.45.x
 seed:
   config_file:
     git:
@@ -31,7 +29,7 @@ seed:
         name: apache
         credentials_id: ASF_Cloudbees_Jenkins_ci-builds
         push:
-          credentials_id: 84811880-2025-45b6-a44c-2f33bef30ad2 # CI Push Access for KIE
+          credentials_id: 84811880-2025-45b6-a44c-2f33bef30ad2
       branch: main
     path: .ci/jenkins/config/branch.yaml
   jenkinsfile: dsl/seed/jenkinsfiles/Jenkinsfile.seed.branch
