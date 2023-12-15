@@ -23,11 +23,18 @@ String getAuthorAndRepoForPr() {
     if (!env.CHANGE_FORK && !env.CHANGE_URL) {
         error "CHANGE_FORK neither CHANGE_URL variables are set. Are you sure you're running with Github Branch Source plugin?"
     }
+    def group = ''
+    def repository = ''
     if (env.CHANGE_FORK) {
-        return env.CHANGE_FORK
+        def parsedFork = env.CHANGE_FORK.split('/')
+        group = parsedFork[0]
+        if (parsedFork.length==2) {
+            repository = parsedFork[1]
+        }
     }
     String fullUrl = env.CHANGE_URL
     String urlWithoutProtocol = fullUrl.split('://')[1]
     String path = urlWithoutProtocol.substring(urlWithoutProtocol.indexOf('/'))
-    return path.substring(1, path.indexOf('/pull/'))
+    def parsedUrl = path.substring(1, path.indexOf('/pull/')).split('/')
+    return "${group?:parsedUrl[0]}/${repository?:parsedUrl[1]}"
 }
