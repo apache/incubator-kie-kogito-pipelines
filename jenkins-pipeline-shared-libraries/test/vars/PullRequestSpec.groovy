@@ -32,4 +32,16 @@ class PullRequestSpec extends JenkinsPipelineSpecification {
         then:
         result == 'owner/repo'
     }
+
+    def "PR from fork with matching name getAuthorAndRepoForPr" () {
+        setup:
+        def env = [:]
+        env['CHANGE_FORK']='contributor'
+        env['CHANGE_URL']='https://github.com/owner/repo/pull/1'
+        groovyScript.getBinding().setVariable('env', env)
+        when:
+        def result = groovyScript.getAuthorAndRepoForPr()
+        then:
+        result == 'contributor/repo'
+    }
 }
