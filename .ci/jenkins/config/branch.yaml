@@ -6,26 +6,6 @@ environments:
       ADDITIONAL_TIMEOUT: 720
     ids:
     - native
-  quarkus-main:
-    enabled: false
-    env_vars:
-      QUARKUS_BRANCH: main
-    ids:
-    - quarkus
-  quarkus-branch:
-    env_vars:
-      QUARKUS_BRANCH: '2.16'
-    ids:
-    - quarkus
-  quarkus-3:
-    pull_request_default_check: false
-    env_vars:
-      BUILD_MAVEN_TOOL: maven_3.9.3
-      BUILD_JDK_TOOL: jdk_17_latest
-      BUILD_MVN_OPTS: -Denforcer.skip
-    ids:
-    - quarkus
-    - quarkus3
   sonarcloud:
     auto_generation: false
     env_vars:
@@ -115,7 +95,7 @@ jenkins:
         image: quay.io/kiegroup/kogito-ci-build:main-latest
         args: --privileged --group-add docker
   default_tools:
-    jdk: jdk_11_latest
-    maven: maven_3.8.6
+    jdk: jdk_17_latest
+    maven: maven_3.9.3
     sonar_jdk: jdk_17_latest
   jobs_definition_file: .ci/jenkins/dsl/jobs.groovy
