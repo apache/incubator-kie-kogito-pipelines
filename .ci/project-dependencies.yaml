@@ -5,26 +5,15 @@ dependencies:
   - project: apache/incubator-kie-kogito-runtimes
     dependencies:
       - project: apache/incubator-kie-drools
-    mapping:
-      exclude:
-        - apache/incubator-kie-kogito-examples
-        - apache/incubator-kie-kogito-apps
   
   - project: apache/incubator-kie-kogito-apps
     dependencies:
       - project: apache/incubator-kie-kogito-runtimes
-    mapping:
-      exclude:
-        - apache/incubator-kie-kogito-examples
-        - apache/incubator-kie-kogito-runtimes
 
   - project: apache/incubator-kie-kogito-examples
     dependencies:
       - project: apache/incubator-kie-kogito-runtimes
       - project: apache/incubator-kie-kogito-apps
-    mapping:
-        - apache/incubator-kie-kogito-apps
-        - apache/incubator-kie-kogito-runtimes
   # - project: kiegroup/kie-jpmml-integration
   #   dependencies:
   #     - project: apache/incubator-kie-drools
