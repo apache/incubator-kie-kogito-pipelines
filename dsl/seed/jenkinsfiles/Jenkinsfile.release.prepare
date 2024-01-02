@@ -168,45 +168,6 @@ pipeline {
                         }
                     }
                 }
-
-                stage('Call setup job on main branch') {
-                    steps {
-                        script {
-                            String mainBranch = readSeedConfig().git.branches.find { it.main_branch }.name
-                            if (mainBranch) {
-                                sendNotification("Calling setup branch job on main branch.\n**Please wait for the job to be successful before performing any action on the main branch...**")
-
-                                List buildParams = []
-                                for (def project : getEcosystemProjects()) {
-                                    String paramKey = getVersionParameterKey(project.name)
-                                    String version = project.default_main_version ?: util.getNextVersion(getVersionFromProject(project.name), 'minor')
-                                    buildParams.add(string(name: paramKey, value: version))
-                                }
-                                for (def project : getEcosystemDependencyProjects()) {
-                                    String paramKey = getVersionParameterKey(project.name)
-                                    String version = project.default_main_version ?: util.getNextVersion(getVersionFromProject(project.name), 'minor')
-                                    buildParams.add(string(name: paramKey, value: version))
-                                }
-
-                                def job = [:]
-                                echo "Call job './${mainBranch}/setup-branch/0-setup-branch' with buildParams ${buildParams}"
-                                job = build(job: "./${mainBranch}/setup-branch/0-setup-branch", wait: true, parameters: buildParams, propagate: false)
-                                if(job.result != 'SUCCESS') {
-                                    unstable("Error executing the main setup job ...")
-                                    String msg = "ERROR: Setup branch job on main branch was unsuccessful."
-                                    if(job) {
-                                        msg += "\nPlease review job ${job.absoluteUrl}..."
-                                    }
-                                    sendNotification(msg)
-                                } else {
-                                    sendNotification("Setup branch job on main branch finished successfully. ")
-                                }
-                            } else {
-                                echo 'No main branch defined into the configuration ... Cannot init it ...'
-                            }
-                        }
-                    }
-                }
             }
         }
     }
