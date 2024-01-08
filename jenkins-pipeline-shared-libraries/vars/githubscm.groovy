@@ -198,10 +198,10 @@ def approvePR(String pullRequestLink, String credentialID = 'kie-ci') {
             setUserConfig("${GITHUB_USER}")
             sh "gh pr review ${pullRequestLink} --approve"
         } catch (Exception e) {
-            println "[ERROR] Can't merge PR ${pullRequestLink} on repo."
+            println "[ERROR] Can't approve PR ${pullRequestLink} on repo."
             throw e
         }
-        println "[INFO] Merged PR '${pullRequestLink}' on repo."
+        println "[INFO] Approved PR '${pullRequestLink}' on repo."
     }
 }
 
