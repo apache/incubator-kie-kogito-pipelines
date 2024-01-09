@@ -502,7 +502,6 @@ def updateReleaseBody(String tagName, String credsId = 'kie-ci') {
 *
 * Should use `getLatestTag` method instead which is more flexible
 */
-@Deprecated
 def getPreviousTag(String ignoreTag) {
     String latestTag = sh(returnStdout: true, script: 'git tag --sort=-taggerdate | head -n 1').trim()
     if (latestTag == ignoreTag) {

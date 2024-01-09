@@ -364,14 +364,12 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         groovyScript.forkRepo()
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'kie-ci', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
 
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")('git config hub.protocol https')
-        1 * getPipelineMock("sh")('hub fork --remote-name=origin')
+        1 * getPipelineMock("sh")('gh repo fork --remote-name=origin')
         1 * getPipelineMock("sh")('git remote -v')
     }
 
@@ -382,14 +380,12 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         groovyScript.forkRepo('credentialsId')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'credentialsId', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
 
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")('git config hub.protocol https')
-        1 * getPipelineMock("sh")('hub fork --remote-name=origin')
+        1 * getPipelineMock("sh")('gh repo fork --remote-name=origin')
         1 * getPipelineMock("sh")('git remote -v')
     }
 
@@ -400,12 +396,11 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         def result = groovyScript.createPR('PR Title')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'kie-ci', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "hub pull-request -m 'PR Title' -m '' -b 'main'"]) >> 'shResult'
+        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "gh pr create -t 'PR Title' -b '' -B 'main'"]) >> 'shResult'
     }
 
     def "[githubscm.groovy] createPR without Credentials and target branch"() {
@@ -415,12 +410,11 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         def result = groovyScript.createPR('PR Title', 'PR body.')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'kie-ci', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "hub pull-request -m 'PR Title' -m 'PR body.' -b 'main'"]) >> 'shResult'
+        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "gh pr create -t 'PR Title' -b 'PR body.' -B 'main'"]) >> 'shResult'
     }
 
     def "[githubscm.groovy] createPR without Credentials and target branch throwing exception"() {
@@ -430,12 +424,11 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         def result = groovyScript.createPR('PR Title')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'kie-ci', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "hub pull-request -m 'PR Title' -m '' -b 'main'"]) >> { throw new Exception('error') }
+        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "gh pr create -t 'PR Title' -b '' -B 'main'"]) >> { throw new Exception('error') }
         thrown(Exception)
     }
 
@@ -446,12 +439,11 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         def result = groovyScript.createPR('PR Title', 'PR body.', 'targetBranch', 'credentialsId')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'credentialsId', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "hub pull-request -m 'PR Title' -m 'PR body.' -b 'targetBranch'"]) >> 'shResult'
+        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "gh pr create -t 'PR Title' -b 'PR body.' -B 'targetBranch'"]) >> 'shResult'
     }
 
     def "[githubscm.groovy] createPrAsDraft without body, Credentials and target branch"() {
@@ -461,12 +453,11 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         def result = groovyScript.createPrAsDraft('PR Title')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'kie-ci', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "hub pull-request -d -m 'PR Title' -m '' -b 'main'"]) >> 'shResult'
+        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "gh pr create -d -t 'PR Title' -b '' -B 'main'"]) >> 'shResult'
     }
 
     def "[githubscm.groovy] createPrAsDraft without Credentials and target branch"() {
@@ -476,12 +467,11 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         def result = groovyScript.createPrAsDraft('PR Title', 'PR body.')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'kie-ci', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "hub pull-request -d -m 'PR Title' -m 'PR body.' -b 'main'"]) >> 'shResult'
+        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "gh pr create -d -t 'PR Title' -b 'PR body.' -B 'main'"]) >> 'shResult'
     }
 
     def "[githubscm.groovy] createPrAsDraft without Credentials and target branch throwing exception"() {
@@ -491,12 +481,11 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         def result = groovyScript.createPrAsDraft('PR Title')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'kie-ci', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "hub pull-request -d -m 'PR Title' -m '' -b 'main'"]) >> { throw new Exception('draft error') }
+        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "gh pr create -d -t 'PR Title' -b '' -B 'main'"]) >> { throw new Exception('draft error') }
         thrown(Exception)
     }
 
@@ -507,12 +496,11 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         def result = groovyScript.createPrAsDraft('PR Title', 'PR body.', 'targetBranch', 'credentialsId')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'credentialsId', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "hub pull-request -d -m 'PR Title' -m 'PR body.' -b 'targetBranch'"]) >> 'shResult'
+        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "gh pr create -d -t 'PR Title' -b 'PR body.' -B 'targetBranch'"]) >> 'shResult'
     }
 
     def "[githubscm.groovy] createPRWithLabels with body, Credentials and target branch"() {
@@ -522,27 +510,25 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         def result = groovyScript.createPRWithLabels('PR Title', 'PR body.', 'targetBranch', ['label1', 'label2'] as String[], 'credentialsId')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'credentialsId', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "hub pull-request -m 'PR Title' -m 'PR body.' -b 'targetBranch' -l 'label1','label2'"]) >> 'shResult'
+        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "gh pr create -t 'PR Title' -b 'PR body.' -B 'targetBranch' -l 'label1','label2'"]) >> 'shResult'
     }
 
-    def "[githubscm.groovy] executeHub with credentials"() {
+    def "[githubscm.groovy] executeGHCli with credentials"() {
         setup:
         groovyScript.getBinding().setVariable("GITHUB_USER", 'user')
         groovyScript.getBinding().setVariable("GITHUB_TOKEN", 'password')
         when:
-        def result = groovyScript.executeHub('hubCommand', 'credentialsId')
+        def result = groovyScript.executeGHCli('Command', 'credentialsId')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'credentialsId', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "hubCommand"]) >> 'shResult'
+        1 * getPipelineMock("sh")(['returnStdout': true, 'script': "command"]) >> 'shResult'
     }
 
     def "[githubscm.groovy] mergePR without Credentials"() {
@@ -552,12 +538,11 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         groovyScript.mergePR('pullRequestLink')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'kie-ci', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")('hub merge pullRequestLink')
+        1 * getPipelineMock("sh")('gh pr merge --admin --rebase --delete-branch pullRequestLink')
     }
 
     def "[githubscm.groovy] mergePR without Credentials throwing exception"() {
@@ -567,12 +552,11 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         groovyScript.mergePR('pullRequestLink')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'kie-ci', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")('hub merge pullRequestLink') >> { throw new Exception('hub error') }
+        1 * getPipelineMock("sh")('gh pr merge --admin --rebase --delete-branch pullRequestLink') >> { throw new Exception('merge error') }
         thrown(Exception)
     }
 
@@ -583,12 +567,40 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         when:
         groovyScript.mergePR('pullRequestLink', 'credentialsId')
         then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'credentialsId', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")('hub merge pullRequestLink')
+        1 * getPipelineMock("sh")('gh pr merge --admin --rebase --delete-branch pullRequestLink')
+    }
+
+    def "[githubscm.groovy] approvePR without Credentials throwing exception"() {
+        setup:
+        groovyScript.getBinding().setVariable("GITHUB_USER", 'user')
+        groovyScript.getBinding().setVariable("GITHUB_TOKEN", 'password')
+        when:
+        groovyScript.approvePR('pullRequestLink')
+        then:
+        1 * getPipelineMock('usernamePassword.call')([credentialsId: 'kie-ci', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
+        1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
+        1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
+        1 * getPipelineMock("sh")('git config user.name user')
+        1 * getPipelineMock("sh")('gh pr review pullRequestLink --approve') >> { throw new Exception('approve error') }
+        thrown(Exception)
+    }
+
+    def "[githubscm.groovy] approvePR with Credentials"() {
+        setup:
+        groovyScript.getBinding().setVariable("GITHUB_USER", 'user')
+        groovyScript.getBinding().setVariable("GITHUB_TOKEN", 'password')
+        when:
+        groovyScript.approvePR('pullRequestLink', 'credentialsId')
+        then:
+        1 * getPipelineMock('usernamePassword.call')([credentialsId: 'credentialsId', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
+        1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
+        1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
+        1 * getPipelineMock("sh")('git config user.name user')
+        1 * getPipelineMock("sh")('gh pr review pullRequestLink --approve"')
     }
 
     def "[githubscm.groovy] tagRepository with buildTag"() {
@@ -1021,13 +1033,6 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         then:
         1 * getPipelineMock("sh")(['returnStdout': true, 'script': 'git branch --all --contains HEAD']) >> { return '* BXMSPROD-819' }
         result == '* BXMSPROD-819'
-    }
-
-    def "[githubscm.groovy] cleanHubAuth"() {
-        when:
-        groovyScript.cleanHubAuth()
-        then:
-        1 * getPipelineMock("sh")("rm -rf ~/.config/hub")
     }
 
     def "[githubscm.groovy] cleanWorkingTree"() {
