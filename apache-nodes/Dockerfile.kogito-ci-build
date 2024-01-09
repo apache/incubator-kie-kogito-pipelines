@@ -95,9 +95,12 @@ RUN wget https://go.dev/dl/go1.19.10.linux-amd64.tar.gz -P /tmp && \
   sudo chown -R nonrootuser:nonrootuser /opt/golang/go && \
   sudo chmod -R 755 /opt/golang/go && \
   echo 'export GOPATH=${HOME}/go' | sudo tee /etc/profile.d/go.sh && \
+  echo 'export PATH=${PATH}:/opt/golang/go/bin:${GOPATH}/bin' | sudo tee -a /etc/profile.d/go.sh && \
   echo "source /etc/profile.d/go.sh" >> $HOME/.bashrc && \
   rm -rf /tmp/go* && \
-  sudo update-alternatives --install /usr/local/bin/go go /opt/golang/go/bin/go 1
+  sudo update-alternatives --install /usr/local/bin/go go /opt/golang/go/bin/go 1 && \
+  go install golang.org/x/tools/cmd/goimports@latest && \
+  sudo update-alternatives --install /usr/local/bin/goimports goimports ~/go/bin/goimports 1
 
 # Install hub CLI (used for GitHub api operations)
 RUN wget https://github.com/mislav/hub/releases/download/v2.14.2/hub-linux-amd64-2.14.2.tgz -O /tmp/hub.tgz && \
@@ -142,15 +145,16 @@ RUN wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-4.13/o
 RUN sudo bash -c 'echo -e "#!/bin/bash\nupdate-alternatives \"\$@\"" > /usr/local/bin/alternatives' \
   && sudo chmod +x /usr/local/bin/alternatives
 
-ENV HOME="/home/nonrootuser/"
+ENV HOME="/home/nonrootuser"
 
-ENV JAVA_HOME="/home/nonrootuser/.sdkman/candidates/java/current/"
-ENV MAVEN_HOME="/home/nonrootuser/.sdkman/candidates/maven/current/"
+ENV JAVA_HOME="${HOME}/.sdkman/candidates/java/current/"
+ENV MAVEN_HOME="${HOME}/.sdkman/candidates/maven/current/"
 ENV MAVEN_OPTS="-Xms1024m -Xmx12g"
-ENV NODE_HOME="/home/nonrootuser/.nvm/versions/node/v16.20.0"
+ENV NODE_HOME="${HOME}/.nvm/versions/node/v16.20.0"
 ENV NODE_OPTIONS="--max_old_space_size=4096"
-ENV GOPATH="/home/nonrootuser/go"
+ENV GOPATH="${HOME}/go"
 ENV GOROOT="/opt/golang/go"
+ENV PATH="${PATH}:${GOROOT}/bin:${GOPATH}/bin"
 
 ENV CONTAINER_ENGINE="docker"
 ENV CONTAINER_ENGINE_TLS_OPTIONS=""
