@@ -1,51 +1,38 @@
 generation_config:
   missing_environment: ignore
-environments:
-  native:
-    env_vars:
-      NATIVE: true
-      BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
-      ADDITIONAL_TIMEOUT: 720
-    ids:
-    - native
-  sonarcloud:
-    auto_generation: false
-    env_vars:
-      ENABLE_SONARCLOUD: true
-    ids:
-    - sonarcloud
-    - coverage
-  ecosystem:
-    auto_generation: false
-    ids:
-    - ecosystem
+
+job_types:
+  setup-branch:
+    disabled: true
+  nightly:
+    disabled: false
+  other:
+    disabled: true
+  pullrequest:
+    disabled: true
+  release:
+    disabled: true
+  tools:
+    disabled: true
+
+disable:
+  triggers: true
+  deploy: true
+  pr_check: true
 repositories:
 - name: incubator-kie-kogito-pipelines
   job_display_name: kogito-pipelines
-- name: incubator-kie-kogito-runtimes
-  job_display_name: kogito-runtimes
-- name: incubator-kie-kogito-apps
-  job_display_name: kogito-apps
-- name: incubator-kie-kogito-examples
-  job_display_name: kogito-examples
-- name: incubator-kie-kogito-images
-  job_display_name: kogito-images
 - name: incubator-kie-kogito-operator
   job_display_name: kogito-operator
 - name: incubator-kie-kogito-serverless-operator
   job_display_name: kogito-serverless-operator
-- name: incubator-kie-kogito-docs
-  job_display_name: kogito-docs
-- name: incubator-kie-docs
-  job_display_name: kie-docs
-  branch: main-kogito
 git:
   author:
     name: apache
     # Taken from https://ci-builds.apache.org/credentials/
     # Need to be verified
     credentials_id: 399061d0-5ab5-4142-a186-a52081fef742
-    token_credentials_id: kie-ci3-token
+    token_credentials_id: ci-builds
     push:
       credentials_id: 84811880-2025-45b6-a44c-2f33bef30ad2 # CI Push Access for KIE
       token_credentials_id: 41128c14-bb63-4708-9074-d20a318ee630 # GitHub Personal Access Token for KIE
@@ -94,10 +81,10 @@ jenkins:
         # At some point, this image will need to be changed when a release branch is created 
         # but we need to make sure the image exists first ... simple tag before setting up the branch ?
         # See https://github.com/kiegroup/kie-issues/issues/551
-        image: quay.io/kiegroup/kogito-ci-build:main-latest
+        image: quay.io/kiegroup/kogito-ci-build:kie-issues_755-latest
         args: --privileged --group-add docker
   default_tools:
-    jdk: jdk_17_latest
-    maven: maven_3.9.3
+    jdk: jdk_11_latest
+    maven: maven_3.8.6
     sonar_jdk: jdk_17_latest
   jobs_definition_file: .ci/jenkins/dsl/jobs.groovy
