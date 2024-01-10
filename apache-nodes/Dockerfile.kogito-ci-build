@@ -10,6 +10,9 @@ ARG PYTHON_MAJOR_MINOR_VERSION="3.11"
 # set locale to C.UTF-8
 ENV LANG='C.UTF-8'
 
+# set TZ to America/New_York
+ENV TZ='America/New_York'
+
 RUN apt update && apt upgrade -y && apt install -y \
 # skdman deps (BEGIN)
 git \
@@ -31,6 +34,7 @@ netcat \
 libvshadow-utils \
 sudo \
 wget \
+software-properties-common \
 # system (END)
 # drools (BEGIN)
 fontconfig \
@@ -140,6 +144,13 @@ RUN wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-4.13/o
   tar -C ${tmp_dir} -xvf /tmp/openshift-client-linux.tar.gz && \
   sudo mv ${tmp_dir}/oc /usr/local/bin && \
   rm -rf ${tmp_dir} /tmp/openshift-client*
+
+# Install ansible
+RUN sudo ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ | sudo tee /etc/timezone && \
+    sudo add-apt-repository --yes --update ppa:ansible/ansible && \
+    sudo apt update && \
+    sudo apt install -y ansible
 
 # Convenience script to account for using 'alternatives' in some places
 RUN sudo bash -c 'echo -e "#!/bin/bash\nupdate-alternatives \"\$@\"" > /usr/local/bin/alternatives' \
