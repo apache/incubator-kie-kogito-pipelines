@@ -164,7 +164,7 @@ void sendPipelineErrorNotification() {
 List getDefaultBuildParams() {
     List params = []
     addStringParam(params, 'DISPLAY_NAME', env.WEEKLY_TAG)
-    addStringParam(params, 'GIT_CHECKOUT_DATE', getCheckoutDate())
+    addStringParam(params, 'GIT_CHECKOUT_DATETIME', getCheckoutDatetime())
     addBooleanParam(params, 'SEND_NOTIFICATION', true)
 
     return params
