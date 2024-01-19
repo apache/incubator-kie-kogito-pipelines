@@ -61,6 +61,9 @@ if (isMainStream()) {
     setupNightlyCloudJob()
 }
 
+// Weekly
+setupWeeklyJob()
+
 // Release
 setupReleaseArtifactsJob()
 setupReleaseCloudJob()
@@ -167,6 +170,24 @@ void setupNightlyJob() {
         parameters {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
             booleanParam('SKIP_CLOUD_NIGHTLY', !isMainStream(), 'Skip cloud nightly execution')
+        }
+    }
+}
+
+void setupWeeklyJob() {
+    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-weekly', JobType.OTHER, "${jenkins_path}/Jenkinsfile.weekly", 'Kogito Weekly')
+    jobParams.triggers = [cron : '0 4 * * 0']
+    jobParams.env.putAll([
+        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+
+        GIT_BRANCH_NAME: "${GIT_BRANCH}",
+        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
+        GIT_AUTHOR_CREDS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
+        GIT_AUTHOR_PUSH_CREDS_ID: "${GIT_AUTHOR_PUSH_CREDENTIALS_ID}",
+    ])
+    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
+        parameters {
+            booleanParam('SKIP_TESTS', false, 'Skip all tests')
         }
     }
 }
