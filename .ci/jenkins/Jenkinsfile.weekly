@@ -50,55 +50,50 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy artifacts') {
+        stage('Build & Deploy Drools') {
             steps {
-
-                stage('Build & Deploy Drools') {
-                    steps {
-                        script {
-                            def buildParams = getDefaultBuildParams()
-                            addSkipTestsParam(buildParams)
-                            addSkipIntegrationTestsParam(buildParams)
-                            buildJob(DROOLS_DEPLOY, buildParams)
-                        }
-                    }
-                    post {
-                        failure {
-                            addFailedStage(DROOLS_DEPLOY)
-                        }
-                    }
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    addSkipIntegrationTestsParam(buildParams)
+                    buildJob(DROOLS_DEPLOY, buildParams)
                 }
-
-                stage('Build & Deploy Kogito Runtimes') {
-                    steps {
-                        script {
-                            def buildParams = getDefaultBuildParams()
-                            addSkipTestsParam(buildParams)
-                            addSkipIntegrationTestsParam(buildParams)
-                            buildJob(RUNTIMES_DEPLOY, buildParams)
-                        }
-                    }
-                    post {
-                        failure {
-                            addFailedStage(RUNTIMES_DEPLOY)
-                        }
-                    }
+            }
+            post {
+                failure {
+                    addFailedStage(DROOLS_DEPLOY)
                 }
+            }
+        }
 
-                stage('Build & Deploy Kogito Apps') {
-                    steps {
-                        script {
-                            def buildParams = getDefaultBuildParams()
-                            addSkipTestsParam(buildParams)
-                            addSkipIntegrationTestsParam(buildParams)
-                            buildJob(APPS_DEPLOY, buildParams)
-                        }
-                    }
-                    post {
-                        failure {
-                            addFailedStage(APPS_DEPLOY)
-                        }
-                    }
+        stage('Build & Deploy Kogito Runtimes') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    addSkipIntegrationTestsParam(buildParams)
+                    buildJob(RUNTIMES_DEPLOY, buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage(RUNTIMES_DEPLOY)
+                }
+            }
+        }
+
+        stage('Build & Deploy Kogito Apps') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    addSkipIntegrationTestsParam(buildParams)
+                    buildJob(APPS_DEPLOY, buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage(APPS_DEPLOY)
                 }
             }
         }
