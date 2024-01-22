@@ -176,7 +176,7 @@ void setupNightlyJob() {
 
 void setupWeeklyJob() {
     def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-weekly', JobType.OTHER, "${jenkins_path}/Jenkinsfile.weekly", 'Kogito Weekly')
-    jobParams.triggers = [cron : '0 4 * * 0']
+    jobParams.triggers = [cron : '0 5 * * 0']
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 

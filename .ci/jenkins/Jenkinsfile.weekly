@@ -3,7 +3,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 @Library('jenkins-pipeline-shared-libraries')_
 
 // Deploy jobs
-DROOLS_DEPLOY = 'KIE/test/kie-issues_821_drools/kie-issues_821/other/drools.weekly-deploy'
 RUNTIMES_DEPLOY = 'kogito-runtimes.weekly-deploy'
 APPS_DEPLOY = 'kogito-apps.weekly-deploy'
 
@@ -46,22 +45,6 @@ pipeline {
                     echo "weekly tag is ${env.WEEKLY_TAG}"
 
                     currentBuild.displayName = env.WEEKLY_TAG
-                }
-            }
-        }
-
-        stage('Build & Deploy Drools') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
-                    addSkipIntegrationTestsParam(buildParams)
-                    buildJob(DROOLS_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(DROOLS_DEPLOY)
                 }
             }
         }
