@@ -522,7 +522,7 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         groovyScript.getBinding().setVariable("GITHUB_USER", 'user')
         groovyScript.getBinding().setVariable("GITHUB_TOKEN", 'password')
         when:
-        def result = groovyScript.executeGHCli('Command', 'credentialsId')
+        def result = groovyScript.executeGHCli('command', 'credentialsId')
         then:
         1 * getPipelineMock('usernamePassword.call')([credentialsId: 'credentialsId', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN']) >> 'userNamePassword'
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
