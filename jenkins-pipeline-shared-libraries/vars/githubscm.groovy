@@ -142,11 +142,9 @@ def squashCommits(String baseBranch, String newCommitMsg) {
 }
 
 def forkRepo(String credentialID = 'kie-ci') {
-    cleanHubAuth()
     withCredentials([usernamePassword(credentialsId: credentialID, usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')]) {
         setUserConfig("${GITHUB_USER}")
-        sh 'git config hub.protocol https'
-        sh 'hub fork --remote-name=origin'
+        sh 'gh repo fork --remote-name=origin'
         sh 'git remote -v'
     }
 }
@@ -154,7 +152,7 @@ def forkRepo(String credentialID = 'kie-ci') {
 def createPR(String pullRequestTitle, String pullRequestBody = '', String targetBranch = 'main', String credentialID = 'kie-ci') {
     def pullRequestLink
     try {
-        pullRequestLink = executeHub("hub pull-request -m '${pullRequestTitle}' -m '${pullRequestBody}' -b '${targetBranch}'", credentialID)
+        pullRequestLink = executeGHCli("gh pr create -t '${pullRequestTitle}' -b '${pullRequestBody}' -B '${targetBranch}'", credentialID)
     } catch (Exception e) {
         println "[ERROR] Unable to create PR. Please make sure the targetBranch ${targetBranch} is correct."
         throw e
@@ -166,7 +164,7 @@ def createPR(String pullRequestTitle, String pullRequestBody = '', String target
 def createPrAsDraft(String pullRequestTitle, String pullRequestBody = '', String targetBranch = 'main', String credentialID = 'kie-ci') {
     def pullRequestLink
     try {
-        pullRequestLink = executeHub("hub pull-request -d -m '${pullRequestTitle}' -m '${pullRequestBody}' -b '${targetBranch}'", credentialID)
+        pullRequestLink = executeGHCli("gh pr create -d -t '${pullRequestTitle}' -b '${pullRequestBody}' -B '${targetBranch}'", credentialID)
     } catch (Exception e) {
         println "[ERROR] Unable to create Draft PR. Please make sure the targetBranch ${targetBranch} is correct."
         throw e
@@ -178,7 +176,7 @@ def createPrAsDraft(String pullRequestTitle, String pullRequestBody = '', String
 def createPRWithLabels(String pullRequestTitle, String pullRequestBody = '', String targetBranch = 'main', String[] labels, String credentialID = 'kie-ci') {
     def pullRequestLink
     try {
-        pullRequestLink = executeHub("hub pull-request -m '${pullRequestTitle }' -m '${pullRequestBody }' -b '${targetBranch }' -l ${labels.collect { it -> "'${it }'" }.join(',')}", credentialID)
+        pullRequestLink = executeGHCli("gh pr create -t '${pullRequestTitle }' -b '${pullRequestBody }' -B '${targetBranch }' -l ${labels.collect { it -> "'${it }'" }.join(',')}", credentialID)
     } catch (Exception e) {
         println "[ERROR] Unable to create PR. Please make sure the targetBranch ${targetBranch} is correct."
         throw e
@@ -187,20 +185,31 @@ def createPRWithLabels(String pullRequestTitle, String pullRequestBody = '', Str
     return pullRequestLink
 }
 
-def executeHub(String hubCommand, String credentialID = 'kie-ci') {
-    cleanHubAuth()
+def executeGHCli(String command, String credentialID = 'kie-ci') {
     withCredentials([usernamePassword(credentialsId: credentialID, usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')]) {
         setUserConfig("${GITHUB_USER}")
-        return sh(returnStdout: true, script: hubCommand).trim()
+        return sh(returnStdout: true, script: command).trim()
+    }
+}
+
+def approvePR(String pullRequestLink, String credentialID = 'kie-ci') {
+    withCredentials([usernamePassword(credentialsId: credentialID, usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')]) {
+        try {
+            setUserConfig("${GITHUB_USER}")
+            sh "gh pr review ${pullRequestLink} --approve"
+        } catch (Exception e) {
+            println "[ERROR] Can't approve PR ${pullRequestLink} on repo."
+            throw e
+        }
+        println "[INFO] Approved PR '${pullRequestLink}' on repo."
     }
 }
 
 def mergePR(String pullRequestLink, String credentialID = 'kie-ci') {
-    cleanHubAuth()
     withCredentials([usernamePassword(credentialsId: credentialID, usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN')]) {
         try {
             setUserConfig("${GITHUB_USER}")
-            sh "hub merge ${pullRequestLink}"
+            sh "gh pr merge --admin --rebase --delete-branch ${pullRequestLink}"
         } catch (Exception e) {
             println "[ERROR] Can't merge PR ${pullRequestLink} on repo."
             throw e
@@ -445,10 +454,6 @@ def getForkedProjectName(String group, String repository, String owner, String c
     return result
 }
 
-def cleanHubAuth() {
-    sh 'rm -rf ~/.config/hub'
-}
-
 def cleanWorkingTree() {
     sh 'git clean -xdf'
 }
@@ -497,7 +502,6 @@ def updateReleaseBody(String tagName, String credsId = 'kie-ci') {
 *
 * Should use `getLatestTag` method instead which is more flexible
 */
-@Deprecated
 def getPreviousTag(String ignoreTag) {
     String latestTag = sh(returnStdout: true, script: 'git tag --sort=-taggerdate | head -n 1').trim()
     if (latestTag == ignoreTag) {
