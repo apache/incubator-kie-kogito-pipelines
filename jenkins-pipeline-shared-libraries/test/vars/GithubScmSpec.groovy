@@ -600,7 +600,7 @@ class GithubScmSpec extends JenkinsPipelineSpecification {
         1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
         1 * getPipelineMock("sh")('git config user.email user@jenkins.kie.apache.org')
         1 * getPipelineMock("sh")('git config user.name user')
-        1 * getPipelineMock("sh")('gh pr review pullRequestLink --approve"')
+        1 * getPipelineMock("sh")('gh pr review pullRequestLink --approve')
     }
 
     def "[githubscm.groovy] tagRepository with buildTag"() {
