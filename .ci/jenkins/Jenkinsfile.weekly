@@ -32,10 +32,9 @@ pipeline {
         // Some generated env is also defined into ./dsl/jobs.groovy file
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
 
-        WEEKLY_TAG = """${getBuildBranch()}-${sh(
-                returnStdout: true,
-                script: 'date -u "+%Y-%m-%d"'
-            ).trim()}"""
+        CURRENT_DATE = getCurrentDate()
+
+        WEEKLY_TAG = """${getBuildBranch()}-${CURRENT_DATE}"""
     }
 
     stages {
@@ -190,5 +189,5 @@ String getCurrentDate() {
 }
 
 String getCheckoutDatetime() {
-    return getCurrentDate() + ' 02:00' // Cut-off 02:00AM
+    return env.CURRENT_DATE + ' 02:00' // Cut-off 02:00AM
 }
