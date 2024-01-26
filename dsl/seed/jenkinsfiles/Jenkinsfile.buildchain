@@ -49,6 +49,7 @@ pipeline {
     agent {
         docker { 
             image env.AGENT_DOCKER_BUILDER_IMAGE
+            label util.getLabel(agentLabel)
             args env.AGENT_DOCKER_BUILDER_ARGS
         }
     }

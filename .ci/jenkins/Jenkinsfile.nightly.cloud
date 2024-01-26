@@ -25,7 +25,7 @@ promoteImageParamsPrefix = 'PROMOTE_IMAGE'
 // Should be multibranch pipeline
 pipeline {
     agent {
-        label 'ubuntu'
+        label util.getLabel('ubuntu')
     }
 
     options {
