@@ -6,6 +6,7 @@ ARG SDKMAN_JAVA="17.0.8-tem"
 ARG SDKMAN_MAVEN="3.9.3"
 ARG PYTHON_MAJOR_VERSION="3"
 ARG PYTHON_MAJOR_MINOR_VERSION="3.11"
+ARG DOCKER_VERSION="24.0.7"
 
 # set locale to C.UTF-8
 ENV LANG='C.UTF-8'
@@ -61,7 +62,10 @@ RUN groupadd -g 910 nonrootuser && useradd -u 910 -g 910 -s /bin/bash -m nonroot
   echo "nonrootuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Docker
-RUN groupadd docker && \
+RUN wget -O docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz  && \
+  tar --extract --file docker.tgz --strip-components 1 --directory /usr/local/bin/ && \
+  rm -rf docker.tgz && \
+  groupadd docker && \
   usermod -aG docker nonrootuser && \
   newgrp docker
 
