@@ -142,7 +142,7 @@ NOTE: test coverage analysis is executed only by **Jenkins PR simple build&test*
 ### Pipelines
 In this repository two types of pipelines can be found:
 - **Kogito pipelines** (obviously) - located in the [.ci/jenkins](./.ci/jenkins) folder
-- **Seed jobs library** - see [Jenkins documentation](../docs/jenkins.md)
+- **Seed jobs library** - see [Jenkins documentation](./docs/jenkins.md)
 
 ### Shared pipeline libraries
 Apart from these pipelines, the `jenkins-pipeline-shared-libraries` are also stored in this repository. Functions and classes contained in these libraries can be freely used in all pipelines located under [KIE Jenkins folder](https://ci-builds.apache.org/job/KIE). Just include correct import and annotation in your Jenkinsfile:
