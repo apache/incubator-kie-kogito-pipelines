@@ -9,7 +9,7 @@ repositoriesToBranch = []
 
 pipeline {
     agent {
-        label 'ubuntu'
+        label util.getLabel('ubuntu')
     }
 
     environment {

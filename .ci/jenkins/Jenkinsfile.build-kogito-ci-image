@@ -1,12 +1,14 @@
 import org.jenkinsci.plugins.workflow.libs.Library
 
 pipeline {
-    agent {
-        label 'ubuntu'
-    }
     libraries {
         lib("jenkins-pipeline-shared-libraries@${BRANCH_NAME}")
     }
+
+    agent {
+        label util.getLabel('ubuntu')
+    }
+
     environment {
         DOCKER_CONFIG = "${WORKSPACE}/.docker"
 

@@ -19,7 +19,7 @@ releaseProperties = [:]
 
 pipeline {
     agent {
-        label 'ubuntu'
+        label util.getLabel('ubuntu')
     }
 
     // parameters {

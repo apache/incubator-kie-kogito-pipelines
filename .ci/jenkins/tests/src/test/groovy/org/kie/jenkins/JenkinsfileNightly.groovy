@@ -48,6 +48,7 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
         addEnvVar('STAGE_NAME', 'STAGE_NAME')
         addEnvVar('BUILD_NUMBER', 'BUILD_NUMBER')
         addEnvVar('BUILD_URL', 'BUILD_URL')
+        addEnvVar('FAULTY_NODES', 'faultyNode99')
 
         helper.addShMock('date -u "+%Y-%m-%d"', 'date', 0)
 
@@ -58,6 +59,7 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
         mockSharedLibVarsCall('githubscm', 'resolveRepository', { repo, author, branch, ignoreErrors, credsId -> registerTestCallstack('githubscm.resolveRepository', "${repo}, ${author}, ${branch}, ${ignoreErrors}, ${credsId}") })
         mockSharedLibVarsCall('githubscm', 'createBranch', { branch -> registerTestCallstack('githubscm.createBranch', "${branch}") })
         mockSharedLibVarsCall('githubscm', 'pushObject', { remote, branch, credsId -> registerTestCallstack('githubscm.pushObject', "${remote}, ${branch}, ${credsId}") })
+        mockSharedLibVarsCall('util', 'getLabel', { label -> return label})
 
     }
     @Test

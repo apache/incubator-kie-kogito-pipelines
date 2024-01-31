@@ -555,3 +555,19 @@ void waitForDocker() {
     sleep(10) // give it some ahead time not to invoke docker exec immediately after container start
     sh 'wait-for-docker.sh' // script in kogito-ci-build image itself put in /usr/local/bin
 }
+
+/**
+ * Method to wrap original label and exclude nodes that are marked as faulty in some of the parent folders.
+ * This environment variable is inherited down the folder tree and available in jobs.
+ * @param label Node label to be used
+ * @return Node label extended with an expression ensuring to exclude nodes marked as faulty.
+ */
+String getLabel(String label) {
+    String faultyNodesString = env.FAULTY_NODES
+    if((faultyNodesString == null) || faultyNodesString.isEmpty()) {
+        return label
+    }
+    String[] faultyNodes = faultyNodesString.split(',')
+    String result = "(${label}) && !(${String.join(' || ', faultyNodes)})"
+    return result.toString()
+}
