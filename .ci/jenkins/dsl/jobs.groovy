@@ -63,6 +63,9 @@ if (isMainStream()) {
 
 // Weekly
 setupWeeklyJob()
+if (isMainStream()) {
+    setupWeeklyCloudJob()
+}
 
 // Release
 setupReleaseArtifactsJob()
@@ -188,6 +191,38 @@ void setupWeeklyJob() {
     KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         parameters {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
+            booleanParam('SKIP_CLOUD_WEEKLY', !isMainStream(), 'Skip cloud weekly execution')
+        }
+    }
+}
+
+void setupWeeklyCloudJob() {
+    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-weekly-cloud', JobType.OTHER, "${jenkins_path}/Jenkinsfile.weekly.cloud", 'Kogito Weekly')
+    jobParams.env.putAll([
+        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+
+        GIT_BRANCH_NAME: "${GIT_BRANCH}",
+        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
+        GIT_AUTHOR_CREDS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
+
+        IMAGE_REGISTRY_CREDENTIALS: "${CLOUD_IMAGE_REGISTRY_CREDENTIALS}",
+        IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
+        IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
+        BRANCH_FOR_LATEST: "${CLOUD_IMAGE_LATEST_GIT_BRANCH}",
+
+        MAVEN_SETTINGS_CONFIG_FILE_ID: "${MAVEN_SETTINGS_FILE_ID}",
+        ARTIFACTS_REPOSITORY: "${MAVEN_ARTIFACTS_REPOSITORY}",
+    ])
+    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
+        parameters {
+            booleanParam('SKIP_TESTS', false, 'Skip all tests')
+
+            booleanParam('SKIP_IMAGES', false, 'To skip Images Deployment')
+            booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
+
+            stringParam('GIT_CHECKOUT_DATETIME', '', 'Git checkout date and time - (Y-m-d H:i)')
+
+            booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
         }
     }
 }
