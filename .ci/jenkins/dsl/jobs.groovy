@@ -63,9 +63,10 @@ if (isMainStream()) {
 
 // Weekly
 setupWeeklyJob()
-if (isMainStream()) {
-    setupWeeklyCloudJob()
-}
+setupWeeklyCloudJob()
+// if (isMainStream()) {
+//     setupWeeklyCloudJob()
+// }
 
 // Release
 setupReleaseArtifactsJob()
