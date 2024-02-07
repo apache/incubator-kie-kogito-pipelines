@@ -1,7 +1,7 @@
 name: quay.io/kiegroup/kogito-jenkins-node
 version: "1.40.0"
 from: quay.io/openshift/origin-jenkins-agent-base:4.14
-description: Image used by dynamic jenkins agent to build kogito-cloud-operator using podman
+description: Image used by dynamic jenkins agent to build Kogito Operators using podman
 packages:
   manager: dnf
   install:
@@ -14,8 +14,7 @@ modules:
   repositories:
     - path: modules
   install:
-    - name: org.kie.kogito.golang.1.17
-    - name: org.kie.kogito.golang.1.19
+    - name: org.kie.kogito.golang.1.21
     - name: org.kie.kogito.graalvm
       version: "22.3"
     - name: org.kie.kogito.maven

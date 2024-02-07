@@ -32,7 +32,6 @@ Apart from this repository, pipelines are also concerning those repositories:
 * [kogito-apps](https://github.com/apache/incubator-kie-kogito-apps)
 * [kogito-examples](https://github.com/apache/incubator-kie-kogito-examples)
 * [kogito-images](https://github.com/apache/incubator-kie-kogito-images)
-* [kogito-operator](https://github.com/apache/incubator-kie-kogito-operator)
 * [kie-tools](https://github.com/apache/incubator-kie-tools)
 
 # The different Kogito pipelines
@@ -95,8 +94,6 @@ They are run on both Jenkins and GHA with some slight differences.
 There is one check per downstream repository. This allows parallelization and more flexibility in restart of a specific downstream repo.
 
 `kogito-images` is run only on Jenkins and is using its own `.ci/jenkins/Jenkinsfile`.
-
-`kogito-operator` is run on another Jenkins and is using its own `.ci/jenkins/Jenkinsfile`.
 
 **NOTE:** PR checks are also available for the different environments listed above. Please read the PR template to know which one are available for a specific repository.
 

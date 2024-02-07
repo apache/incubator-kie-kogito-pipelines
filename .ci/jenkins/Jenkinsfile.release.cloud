@@ -4,7 +4,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 kogitoImagesRepo = 'kogito-images'
 kogitoExamplesImagesRepo = 'kogito-examples-images'
-kogitoOperatorRepo = 'kogito-operator'
 kogitoServerlessOperatorRepo = 'kogito-serverless-operator'
 
 ARTIFACTS_STAGING_STAGE = 'stage.artifacts.staging'
@@ -62,7 +61,6 @@ pipeline {
                 always {
                     setReleasePropertyIfneeded('kogito.version', getKogitoVersion())
                     setReleasePropertyIfneeded('kogito.images.version', getKogitoImagesVersion())
-                    setReleasePropertyIfneeded('kogito.operator.version', getKogitoOperatorVersion())
                     setReleasePropertyIfneeded('kogito.serverless.operator.version', getKogitoServerlessOperatorVersion())
                     setReleasePropertyIfneeded('deploy.latest', isDeployAsLatest())
                 }
@@ -128,41 +126,6 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Kogito Operator') {
-            when {
-                expression { return isOperatorRelease() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
-                    addSkipTestsParam(buildParams)
-                    addImageBuildParams(buildParams, getKogitoOperatorTempTag())
-
-                    // For BDD tests
-                    // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
-                    if (isImagesRelease()) {
-                        addImageBuildParams(buildParams, getKogitoImagesTempTag(), false, kogitoImagesParamsPrefix)
-                    } else {
-                        // If we are in that case, we suppose images have been released ...
-                        addImageBuildParams(buildParams, getKogitoImagesFinalTag(), true, kogitoImagesParamsPrefix)
-                    }
-
-                    if (isExamplesImagesRelease()) {
-                        addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag(), false, examplesImagesParamsPrefix)
-                    } else {
-                        // If we are in that case, we suppose images have been released ...
-                        addImageBuildParams(buildParams, getKogitoExamplesImagesFinalTag(), true, examplesImagesParamsPrefix)
-                    }
-                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), 'always')
-                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
-
-                    addExamplesParam(buildParams)
-
-                    buildJob(getDeployJobName(kogitoOperatorRepo), buildParams)
-                }
-            }
-        }
-
         stage('Build & Deploy Kogito Serverless Operator') {
             when {
                 expression { return isServerlessOperatorRelease() }
@@ -214,26 +177,6 @@ pipeline {
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
 
                     buildJob(getPromoteJobName(kogitoExamplesImagesRepo), buildParams)
-                }
-            }
-        }
-
-        stage('Promote Kogito Operator') {
-            when {
-                expression { return isOperatorRelease() && isJobConsideredOk(getDeployJobName(kogitoOperatorRepo)) }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
-                    addDeployBuildUrlParamOrClosure(buildParams, getDeployJobName(kogitoOperatorRepo))  {
-                        addImageBuildParams(buildParams, getKogitoOperatorTempTag(), false, baseImageParamsPrefix)
-                    }
-
-                    // Base image information is given by the deploy URL
-                    addImageBuildParams(buildParams, getKogitoOperatorFinalTag(), true, promoteImageParamsPrefix)
-                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
-
-                    buildJob(getPromoteJobName(kogitoOperatorRepo), buildParams)
                 }
             }
         }
@@ -509,10 +452,6 @@ String getKogitoImagesVersion() {
     return params.KOGITO_IMAGES_VERSION ?: (getReleaseProperty('kogito.images.version') ?: removeVersionSuffixIfExist(getKogitoVersion()))
 }
 
-String getKogitoOperatorVersion() {
-    return params.KOGITO_OPERATOR_VERSION ?: (getReleaseProperty('kogito.operator.version') ?: removeVersionSuffixIfExist(getKogitoVersion()))
-}
-
 String getKogitoServerlessOperatorVersion() {
     return params.KOGITO_SERVERLESS_OPERATOR_VERSION ?: (getReleaseProperty('kogito.serverless.operator.version') ?: removeVersionSuffixIfExist(getKogitoVersion()))
 }
@@ -533,10 +472,6 @@ boolean isExamplesImagesRelease() {
     return !params.SKIP_EXAMPLES_IMAGES_RELEASE
 }
 
-boolean isOperatorRelease() {
-    return !params.SKIP_OPERATOR_RELEASE
-}
-
 boolean isServerlessOperatorRelease() {
     return !params.SKIP_SERVERLESS_OPERATOR_RELEASE
 }
@@ -555,14 +490,6 @@ String getKogitoExamplesImagesTempTag() {
 
 String getKogitoExamplesImagesFinalTag() {
     return "${getKogitoVersion()}".toLowerCase()
-}
-
-String getKogitoOperatorTempTag() {
-    return "${getKogitoOperatorVersion()}-temp".toLowerCase()
-}
-
-String getKogitoOperatorFinalTag() {
-    return "${getKogitoOperatorVersion()}".toLowerCase()
 }
 
 String getKogitoServerlessOperatorTempTag() {

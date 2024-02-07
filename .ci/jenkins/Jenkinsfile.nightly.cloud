@@ -5,7 +5,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 // Deploy jobs
 IMAGES_DEPLOY = 'kogito-images-deploy'
 EXAMPLES_IMAGES_DEPLOY = 'kogito-examples-images-deploy'
-OPERATOR_DEPLOY = 'kogito-operator-deploy'
 SEVERLESS_OPERATOR_DEPLOY = 'kogito-serverless-operator-deploy'
 
 // Map of executed jobs
@@ -91,83 +90,49 @@ pipeline {
             }
         }
 
-        stage('Build examples images & BDD testing') {
-            parallel {
-                stage('Build examples images & BDD testing') {
-                    stages {
-                        stage('Build & Deploy Examples Images') {
-                            when {
-                                expression { return isExamplesImagesDeploy() }
-                            }
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams()
-                                    addSkipTestsParam(buildParams)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                                    addDeployImageWithLatestTagParam(buildParams)
+        stage('Build & Deploy Serverless Operator') {
+            when {
+                expression { return isOperatorDeploy() }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                    addDeployImageWithLatestTagParam(buildParams)
 
-                                    // For BDD tests
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                                    addExamplesParam(buildParams)
-
-                                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams)
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage(EXAMPLES_IMAGES_DEPLOY)
-                                }
-                            }
-                        }
-                        stage('Build & Deploy Operator') {
-                            when {
-                                expression { return isOperatorDeploy() }
-                            }
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams()
-                                    addSkipTestsParam(buildParams)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                                    addDeployImageWithLatestTagParam(buildParams)
-
-                                    // For BDD tests
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, examplesImagesParamsPrefix)
-                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), isExamplesImagesDeploy() ? 'always' : 'never')
-                                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
-                                    addExamplesParam(buildParams)
-
-                                    buildJob(OPERATOR_DEPLOY, buildParams)
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage(OPERATOR_DEPLOY)
-                                }
-                            }
-                        }
-                    }
+                    buildJob(SEVERLESS_OPERATOR_DEPLOY, buildParams)
                 }
-                stage('Build & Deploy Serverless Operator') {
-                    when {
-                        expression { return isOperatorDeploy() }
-                    }
-                    steps {
-                        script {
-                            def buildParams = getDefaultBuildParams()
-                            addSkipTestsParam(buildParams)
-                            addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                            addDeployImageWithLatestTagParam(buildParams)
+            }
+            post {
+                failure {
+                    addFailedStage(SEVERLESS_OPERATOR_DEPLOY)
+                }
+            }
+        }
 
-                            buildJob(SEVERLESS_OPERATOR_DEPLOY, buildParams)
-                        }
-                    }
-                    post {
-                        failure {
-                            addFailedStage(SEVERLESS_OPERATOR_DEPLOY)
-                        }
-                    }
+        stage('Build & Deploy Examples Images') {
+            when {
+                expression { return isExamplesImagesDeploy() }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addSkipTestsParam(buildParams)
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
+                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
+                    addDeployImageWithLatestTagParam(buildParams)
+
+                    // For BDD tests
+                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
+                    addExamplesParam(buildParams)
+
+                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams)
+                }
+            }
+            post {
+                failure {
+                    addFailedStage(EXAMPLES_IMAGES_DEPLOY)
                 }
             }
         }

@@ -15,7 +15,6 @@ Here is a small overview of current pipelines existing around Kogito project.
   - https://github.com/apache/incubator-kie-kogito-apps
   - https://github.com/apache/incubator-kie-kogito-examples
   - https://github.com/apache/incubator-kie-kogito-images
-  - https://github.com/apache/incubator-kie-kogito-operator
   - https://github.com/apache/incubator-kie-kogito-docs
   - https://github.com/apache/incubator-kie-kogito-serverless-operator
   - https://github.com/apache/incubator-kie-docs

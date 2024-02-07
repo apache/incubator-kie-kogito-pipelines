@@ -46,10 +46,7 @@ Here is the list of jobs and link to Jenkinsfiles:
 * [kogito-examples-promote](https://github.com/apache/incubator-kie-kogito-examples/blob/main/Jenkinsfile.promote)
 * [kogito-images-deploy](https://github.com/apache/incubator-kie-kogito-images/blob/main/Jenkinsfile.deploy)
 * [kogito-images-promote](https://github.com/apache/incubator-kie-kogito-images/blob/main/Jenkinsfile.promote)
-* [kogito-examples-images-deploy](https://github.com/apache/incubator-kie-kogito-operator/blob/main/Jenkinsfile.examples-images.deploy)
-* [kogito-examples-images-promote](https://github.com/apache/incubator-kie-kogito-operator/blob/main/Jenkinsfile.examples-images.promote)
-* [kogito-operator-deploy](https://github.com/apache/incubator-kie-kogito-operator/blob/main/Jenkinsfile.deploy)
-* [kogito-operator-promote](https://github.com/apache/incubator-kie-kogito-operator/blob/main/Jenkinsfile.promote)
+
 
 ## Release process
 
@@ -159,7 +156,7 @@ Once the Release Pipeline is finished, there are some actions to be done:
 
 ##### Operator Crd/Csv files
 
-Once the operator's release has been done, it created new csv and crd files under `deploy/olm-catalog/kogito-operator/{VERSION}` on the release branch in [kogito-operator](https://github.com/apache/incubator-kie-kogito-operator).
+Once the operator's release has been done, it created new csv and crd files under `deploy/olm-catalog/kogito-serverless-operator/{VERSION}` on the release branch in [kogito-serverless-operator](https://github.com/apache/incubator-kie-kogito-serverless-operator).
 You will need to create, with those files, new OperatorHub PRs (one for Openshift and one for Kubernetes) or asked someone from Cloud part to do it.
 
 If there is any change to be done due to PRs, do it on the release branch.
@@ -182,8 +179,6 @@ To deploy only artifacts (without Cloud part), you should start the release pipe
 * SKIP_IMAGES_PROMOTE => checked
 * SKIP_EXAMPLES_IMAGES_DEPLOY => checked
 * SKIP_EXAMPLES_IMAGES_PROMOTE => checked
-* SKIP_OPERATOR_DEPLOY => checked
-* SKIP_OPERATOR_PROMOTE => checked
 
 ### Deploy only Cloud images / Operator
 

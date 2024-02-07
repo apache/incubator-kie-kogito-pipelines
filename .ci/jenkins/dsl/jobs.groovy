@@ -317,7 +317,6 @@ void setupReleaseCloudJob() {
 
             stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
             stringParam('KOGITO_IMAGES_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
-            stringParam('KOGITO_OPERATOR_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
             stringParam('KOGITO_SERVERLESS_OPERATOR_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
             booleanParam('DEPLOY_AS_LATEST', false, 'Given project version is considered the latest version')
 
@@ -331,7 +330,6 @@ void setupReleaseCloudJob() {
 
             booleanParam('SKIP_IMAGES_RELEASE', false, 'To skip Images Test & Deployment.')
             booleanParam('SKIP_EXAMPLES_IMAGES_RELEASE', false, 'To skip Examples Images Deployment')
-            booleanParam('SKIP_OPERATOR_RELEASE', false, 'To skip Operator Test & Deployment.')
             booleanParam('SKIP_SERVERLESS_OPERATOR_RELEASE', false, 'To skip Serverless Operator Test & Deployment.')
 
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
