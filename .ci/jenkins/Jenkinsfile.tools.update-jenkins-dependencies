@@ -10,7 +10,7 @@ branchCreated = false
 
 pipeline {
     agent {
-        label util.getLabel('ubuntu')
+        label util.avoidFaultyNodes('ubuntu')
     }
 
     options {

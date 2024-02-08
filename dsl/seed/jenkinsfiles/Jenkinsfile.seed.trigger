@@ -4,7 +4,7 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 pipeline {
     agent {
-        label util.getLabel(env.AGENT_LABEL)
+        label util.avoidFaultyNodes(env.AGENT_LABEL)
     }
 
     options {
