@@ -557,17 +557,37 @@ void waitForDocker() {
 }
 
 /**
- * Method to wrap original label and exclude nodes that are marked as faulty in some of the parent folders.
- * This environment variable is inherited down the folder tree and available in jobs.
+ * Method to wrap original label and exclude nodes that were marked as faulty in some of the parent folders.
+ * Example usage in agent block: `label util.avoidFaultyNodes('ubuntu')`
+ * `FAULTY_NODES` environment variable is inherited down the folder tree and available in jobs.
  * @param label Node label to be used
  * @return Node label extended with an expression ensuring to exclude nodes marked as faulty.
  */
-String getLabel(String label) {
+String avoidFaultyNodes(String label) {
+    if (label == null || label.isEmpty()) {
+        return avoidFaultyNodes()
+    }
     String faultyNodesString = env.FAULTY_NODES
     if((faultyNodesString == null) || faultyNodesString.isEmpty()) {
         return label
     }
     String[] faultyNodes = faultyNodesString.split(',')
     String result = "(${label}) && !(${String.join(' || ', faultyNodes)})"
+    return result.toString()
+}
+
+/**
+ * Method to exclude nodes that were marked as faulty in some of the parent folders.
+ * Example usage in agent block: `label util.avoidFaultyNodes()`
+ * `FAULTY_NODES` environment variable is inherited down the folder tree and available in jobs.
+ * @return Node label expression ensuring to exclude nodes marked as faulty.
+ */
+String avoidFaultyNodes() {
+    String faultyNodesString = env.FAULTY_NODES
+    if((faultyNodesString == null) || faultyNodesString.isEmpty()) {
+        return '!dummyLabel'    // we need to put something here because label without parameter would cause compile error
+    }
+    String[] faultyNodes = faultyNodesString.split(',')
+    String result = "!(${String.join(' || ', faultyNodes)})"
     return result.toString()
 }

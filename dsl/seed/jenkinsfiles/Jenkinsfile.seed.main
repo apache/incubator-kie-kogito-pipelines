@@ -11,7 +11,7 @@ seedConfig = [:]
 
 pipeline {
     agent {
-        label util.getLabel(env.AGENT_LABEL)
+        label util.avoidFaultyNodes(env.AGENT_LABEL)
     }
 
     options {

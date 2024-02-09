@@ -26,7 +26,7 @@ promoteImageParamsPrefix = 'PROMOTE_IMAGE'
 
 pipeline {
     agent {
-        label util.getLabel('ubuntu')
+        label util.avoidFaultyNodes('ubuntu')
     }
 
     // parameters {

@@ -5,7 +5,7 @@ import org.kie.jenkins.MavenCommand
 
 pipeline {
     agent {
-        label util.getLabel('ubuntu')
+        label util.avoidFaultyNodes('ubuntu')
     }
 
     options {

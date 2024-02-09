@@ -59,7 +59,7 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
         mockSharedLibVarsCall('githubscm', 'resolveRepository', { repo, author, branch, ignoreErrors, credsId -> registerTestCallstack('githubscm.resolveRepository', "${repo}, ${author}, ${branch}, ${ignoreErrors}, ${credsId}") })
         mockSharedLibVarsCall('githubscm', 'createBranch', { branch -> registerTestCallstack('githubscm.createBranch', "${branch}") })
         mockSharedLibVarsCall('githubscm', 'pushObject', { remote, branch, credsId -> registerTestCallstack('githubscm.pushObject', "${remote}, ${branch}, ${credsId}") })
-        mockSharedLibVarsCall('util', 'getLabel', { label -> return label})
+        mockSharedLibVarsCall('util', 'avoidFaultyNodes', { label -> return label })
 
     }
     @Test

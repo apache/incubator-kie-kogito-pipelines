@@ -3,6 +3,7 @@ pipeline {
         docker { 
             image 'quay.io/kiegroup/kogito-ci-build:latest'  // TODO to set in branch config
             args '-v /var/run/docker.sock:/var/run/docker.sock --group-add docker --group-add input --group-add render'
+            label util.avoidFaultyNodes()
         }
     }
     options {

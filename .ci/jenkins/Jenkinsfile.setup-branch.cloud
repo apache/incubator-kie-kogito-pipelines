@@ -16,7 +16,7 @@ examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
 
 pipeline {
     agent {
-        label util.getLabel('ubuntu')
+        label util.avoidFaultyNodes('ubuntu')
     }
 
     options {

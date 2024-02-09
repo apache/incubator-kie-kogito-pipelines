@@ -7,7 +7,7 @@ failingRepos = []
 
 pipeline {
     agent {
-        label util.getLabel('ubuntu')
+        label util.avoidFaultyNodes('ubuntu')
     }
 
     environment {

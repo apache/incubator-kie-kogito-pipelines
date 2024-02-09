@@ -28,7 +28,7 @@ SeedJobUtils.createSeedJobTrigger(
 
 pipeline {
     agent {
-        label util.getLabel(env.AGENT_LABEL)
+        label util.avoidFaultyNodes(env.AGENT_LABEL)
     }
 
     tools {
