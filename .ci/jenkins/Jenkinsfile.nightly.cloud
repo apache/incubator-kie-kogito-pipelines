@@ -4,7 +4,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 // Deploy jobs
 IMAGES_DEPLOY = 'kogito-images-deploy'
-EXAMPLES_IMAGES_DEPLOY = 'kogito-examples-images-deploy'
 SEVERLESS_OPERATOR_DEPLOY = 'kogito-serverless-operator-deploy'
 
 // Map of executed jobs
@@ -16,10 +15,6 @@ FAILED_STAGES = [:]
 UNSTABLE_STAGES = [:]
 
 defaultImageParamsPrefix = 'IMAGE'
-kogitoImagesParamsPrefix = 'KOGITO_IMAGES'
-examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
-baseImageParamsPrefix = 'BASE_IMAGE'
-promoteImageParamsPrefix = 'PROMOTE_IMAGE'
 
 // Should be multibranch pipeline
 pipeline {
@@ -47,7 +42,7 @@ pipeline {
                 returnStdout: true,
                 script: 'date -u "+%Y-%m-%d"'
             ).trim()}"""
-}
+    }
 
     stages {
         stage('Initialize') {
@@ -75,7 +70,6 @@ pipeline {
 
                     // For testing
                     addSkipTestsParam(buildParams)
-                    addExamplesParam(buildParams)
 
                     // Ask to create the PR with changes occuring in this
                     addBooleanParam(buildParams, 'CREATE_PR', true)
@@ -107,32 +101,6 @@ pipeline {
             post {
                 failure {
                     addFailedStage(SEVERLESS_OPERATOR_DEPLOY)
-                }
-            }
-        }
-
-        stage('Build & Deploy Examples Images') {
-            when {
-                expression { return isExamplesImagesDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                    addDeployImageWithLatestTagParam(buildParams)
-
-                    // For BDD tests
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG, kogitoImagesParamsPrefix)
-                    addExamplesParam(buildParams)
-
-                    buildJob(EXAMPLES_IMAGES_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(EXAMPLES_IMAGES_DEPLOY)
                 }
             }
         }
@@ -234,11 +202,6 @@ void addAppsParam(buildParams) {
     addStringParam(buildParams, 'APPS_URI', "https://github.com/${getGitAuthor()}/incubator-kie-kogito-apps")
 }
 
-void addExamplesParam(buildParams) {
-    addStringParam(buildParams, 'EXAMPLES_URI', "https://github.com/${getGitAuthor()}/incubator-kie-kogito-examples")
-    addStringParam(buildParams, 'EXAMPLES_REF', "nightly-${getBuildBranch()}")
-}
-
 void addImageBuildParams(List buildParams, String tag, String paramsPrefix = defaultImageParamsPrefix, String extraSuffix = '') {
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
@@ -281,10 +244,6 @@ boolean isDeployImagesLatestTag() {
 
 boolean isImagesDeploy() {
     return !params.SKIP_IMAGES
-}
-
-boolean isExamplesImagesDeploy() {
-    return !params.SKIP_EXAMPLES_IMAGES
 }
 
 boolean isOperatorDeploy() {

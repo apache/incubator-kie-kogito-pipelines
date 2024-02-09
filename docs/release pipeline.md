@@ -116,7 +116,6 @@ In order to start, here are the minimal parameters to the Release Pipeline:
 The Release pipeline can be tweaked with some other parameters if needed.
 
 One option is the possibility to skip some stages, depending on which part you want to release.  
-**NOTE: If you decide to skip the runtimes/examples part, please be careful on `EXAMPLES_URI` and `EXAMPLES_REF` parameters**
 
 See [Release Jenkinsfile](../Jenkinsfile.release) for the full list on parameters.
 
@@ -177,15 +176,11 @@ To deploy only artifacts (without Cloud part), you should start the release pipe
 
 * SKIP_IMAGES_DEPLOY => checked
 * SKIP_IMAGES_PROMOTE => checked
-* SKIP_EXAMPLES_IMAGES_DEPLOY => checked
-* SKIP_EXAMPLES_IMAGES_PROMOTE => checked
 
 ### Deploy only Cloud images / Operator
 
 To deploy only the Cloud part, you should start the release pipeline with those parameters:
 
-* EXAMPLES_URI => point to `kogito-examples` repository (https://github.com/apache/incubator-kie-kogito-examples)
-* EXAMPLES_REF => point to current release branch
 * SKIP_ARTIFACTS_DEPLOY => checked
 * SKIP_ARTIFACTS_PROMOTE => checked
 

@@ -10,10 +10,6 @@ JOBS = [:]
 FAILED_STAGES = [:]
 UNSTABLE_STAGES = [:]
 
-defaultImageParamsPrefix = 'IMAGE'
-kogitoImagesParamsPrefix = 'KOGITO_IMAGES'
-examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
-
 pipeline {
     agent {
         label util.avoidFaultyNodes('ubuntu')
