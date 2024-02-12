@@ -38,9 +38,6 @@ if (isMainStream()) {
     setupCleanOldNightlyImagesToolsJob()
 
     KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'kogito')
-    if (Utils.isMainBranch(this)) {
-        setupBuildOperatorNode()
-    }
 
     KogitoJobUtils.createMainQuarkusUpdateToolsJob(this,
         [ 'kogito-runtimes', 'kogito-examples', 'kogito-docs', 'kogito-images' ],
@@ -249,7 +246,6 @@ void setupNightlyCloudJob() {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
             booleanParam('SKIP_IMAGES', false, 'To skip Images Deployment')
-            booleanParam('SKIP_EXAMPLES_IMAGES', false, 'To skip Examples Images Deployment')
             booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
 
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
@@ -317,7 +313,6 @@ void setupReleaseCloudJob() {
 
             stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
             stringParam('KOGITO_IMAGES_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
-            stringParam('KOGITO_OPERATOR_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
             stringParam('KOGITO_SERVERLESS_OPERATOR_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
             booleanParam('DEPLOY_AS_LATEST', false, 'Given project version is considered the latest version')
 
@@ -326,21 +321,10 @@ void setupReleaseCloudJob() {
 
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
-            stringParam('EXAMPLES_URI', '', 'Override default. Git uri to the kogito-examples repository to use for tests.')
-            stringParam('EXAMPLES_REF', '', 'Override default. Git reference (branch/tag) to the kogito-examples repository to use for tests.')
-
             booleanParam('SKIP_IMAGES_RELEASE', false, 'To skip Images Test & Deployment.')
-            booleanParam('SKIP_EXAMPLES_IMAGES_RELEASE', false, 'To skip Examples Images Deployment')
-            booleanParam('SKIP_OPERATOR_RELEASE', false, 'To skip Operator Test & Deployment.')
             booleanParam('SKIP_SERVERLESS_OPERATOR_RELEASE', false, 'To skip Serverless Operator Test & Deployment.')
 
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
         }
     }
 }
-
-void setupBuildOperatorNode() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, 'build-operator-node', JobType.TOOLS, "${jenkins_path}/Jenkinsfile.build-operator-node")
-    KogitoJobTemplate.createPipelineJob(this, jobParams)
-}
-

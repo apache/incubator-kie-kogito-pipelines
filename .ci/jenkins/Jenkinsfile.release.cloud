@@ -3,8 +3,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 @Library('jenkins-pipeline-shared-libraries')_
 
 kogitoImagesRepo = 'kogito-images'
-kogitoExamplesImagesRepo = 'kogito-examples-images'
-kogitoOperatorRepo = 'kogito-operator'
 kogitoServerlessOperatorRepo = 'kogito-serverless-operator'
 
 ARTIFACTS_STAGING_STAGE = 'stage.artifacts.staging'
@@ -19,8 +17,6 @@ JOB_DECISION_MESSAGE_PROPERTY_KEY = 'decisionMessage'
 releaseProperties = [:]
 
 defaultImageParamsPrefix = 'IMAGE'
-kogitoImagesParamsPrefix = 'KOGITO_IMAGES'
-examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
 baseImageParamsPrefix = 'BASE_IMAGE'
 promoteImageParamsPrefix = 'PROMOTE_IMAGE'
 
@@ -62,7 +58,6 @@ pipeline {
                 always {
                     setReleasePropertyIfneeded('kogito.version', getKogitoVersion())
                     setReleasePropertyIfneeded('kogito.images.version', getKogitoImagesVersion())
-                    setReleasePropertyIfneeded('kogito.operator.version', getKogitoOperatorVersion())
                     setReleasePropertyIfneeded('kogito.serverless.operator.version', getKogitoServerlessOperatorVersion())
                     setReleasePropertyIfneeded('deploy.latest', isDeployAsLatest())
                 }
@@ -72,18 +67,12 @@ pipeline {
         stage('Setup configuration for testing') {
             steps {
                 script {
-                    env.EXAMPLES_URI = params.EXAMPLES_URI ?: (getReleaseProperty('examples.uri') ?: "https://github.com/${getGitAuthor()}/incubator-kie-kogito-examples")
-                    env.EXAMPLES_REF = params.EXAMPLES_REF ?: (getReleaseProperty('examples.ref') ?: getKogitoVersion())
                     env.APPS_URI = params.APPS_URI ?: (getReleaseProperty('apps.uri') ?: "https://github.com/${getGitAuthor()}/incubator-kie-kogito-apps")
                     env.APPS_REF = params.APPS_REF ?: (getReleaseProperty('apps.ref') ?: getKogitoVersion())
 
-                    echo "Got examples uri ${env.EXAMPLES_URI}"
-                    echo "Got examples ref ${env.EXAMPLES_REF}"
                     echo "Got apps uri ${env.APPS_URI}"
                     echo "Got apps ref ${env.APPS_REF}"
 
-                    setReleasePropertyIfneeded('examples.uri', env.EXAMPLES_URI)
-                    setReleasePropertyIfneeded('examples.ref', env.EXAMPLES_REF)
                     setReleasePropertyIfneeded('apps.uri', env.APPS_URI)
                     setReleasePropertyIfneeded('apps.ref', env.APPS_REF)
                 }
@@ -104,61 +93,6 @@ pipeline {
                     addExamplesParam(buildParams)
 
                     buildJob(getDeployJobName(kogitoImagesRepo), buildParams)
-                }
-            }
-        }
-
-        stage('Build & Deploy Examples Images') {
-            when {
-                expression { return isExamplesImagesRelease() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoVersion())
-                    addSkipTestsParam(buildParams)
-                    addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag())
-                    addStringParam(buildParams, constructKey(defaultImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-
-                    // For BDD tests
-                    addImageBuildParams(buildParams, getKogitoImagesTempTag(), false, kogitoImagesParamsPrefix)
-                    addExamplesParam(buildParams)
-
-                    buildJob(getDeployJobName(kogitoExamplesImagesRepo), buildParams)
-                }
-            }
-        }
-
-        stage('Build & Deploy Kogito Operator') {
-            when {
-                expression { return isOperatorRelease() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
-                    addSkipTestsParam(buildParams)
-                    addImageBuildParams(buildParams, getKogitoOperatorTempTag())
-
-                    // For BDD tests
-                    // We use the quay image registry for temp images until https://issues.redhat.com/browse/KOGITO-2219 is solved
-                    if (isImagesRelease()) {
-                        addImageBuildParams(buildParams, getKogitoImagesTempTag(), false, kogitoImagesParamsPrefix)
-                    } else {
-                        // If we are in that case, we suppose images have been released ...
-                        addImageBuildParams(buildParams, getKogitoImagesFinalTag(), true, kogitoImagesParamsPrefix)
-                    }
-
-                    if (isExamplesImagesRelease()) {
-                        addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag(), false, examplesImagesParamsPrefix)
-                    } else {
-                        // If we are in that case, we suppose images have been released ...
-                        addImageBuildParams(buildParams, getKogitoExamplesImagesFinalTag(), true, examplesImagesParamsPrefix)
-                    }
-                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'CACHE_MODE'), 'always')
-                    addStringParam(buildParams, constructKey(examplesImagesParamsPrefix, 'NAME_PREFIX'), 'examples')
-
-                    addExamplesParam(buildParams)
-
-                    buildJob(getDeployJobName(kogitoOperatorRepo), buildParams)
                 }
             }
         }
@@ -192,48 +126,6 @@ pipeline {
                     addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
 
                     buildJob(getPromoteJobName(kogitoImagesRepo), buildParams)
-                }
-            }
-        }
-
-        stage('Promote Examples Images') {
-            when {
-                expression { return isExamplesImagesRelease() && isJobConsideredOk(getDeployJobName(kogitoExamplesImagesRepo)) }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoVersion())
-
-                    addDeployBuildUrlParamOrClosure(buildParams, getDeployJobName(kogitoExamplesImagesRepo))  {
-                        addImageBuildParams(buildParams, getKogitoExamplesImagesTempTag(), false, baseImageParamsPrefix)
-                        addStringParam(buildParams, constructKey(baseImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                    }
-
-                    addImageBuildParams(buildParams, getKogitoExamplesImagesFinalTag(), true, promoteImageParamsPrefix)
-                    addStringParam(buildParams, constructKey(promoteImageParamsPrefix, 'NAME_PREFIX'), 'examples')
-                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
-
-                    buildJob(getPromoteJobName(kogitoExamplesImagesRepo), buildParams)
-                }
-            }
-        }
-
-        stage('Promote Kogito Operator') {
-            when {
-                expression { return isOperatorRelease() && isJobConsideredOk(getDeployJobName(kogitoOperatorRepo)) }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoOperatorVersion())
-                    addDeployBuildUrlParamOrClosure(buildParams, getDeployJobName(kogitoOperatorRepo))  {
-                        addImageBuildParams(buildParams, getKogitoOperatorTempTag(), false, baseImageParamsPrefix)
-                    }
-
-                    // Base image information is given by the deploy URL
-                    addImageBuildParams(buildParams, getKogitoOperatorFinalTag(), true, promoteImageParamsPrefix)
-                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
-
-                    buildJob(getPromoteJobName(kogitoOperatorRepo), buildParams)
                 }
             }
         }
@@ -468,11 +360,6 @@ void addAppsParam(buildParams) {
     addStringParam(buildParams, 'APPS_REF', env.APPS_REF)
 }
 
-void addExamplesParam(buildParams) {
-    addStringParam(buildParams, 'EXAMPLES_URI', env.EXAMPLES_URI)
-    addStringParam(buildParams, 'EXAMPLES_REF', env.EXAMPLES_REF)
-}
-
 void addImageBuildParams(List buildParams, String tag, boolean isFinalImage = false, String paramsPrefix = defaultImageParamsPrefix) {
     addBooleanParam(buildParams, constructKey(paramsPrefix, 'USE_OPENSHIFT_REGISTRY'), !isFinalImage && params.USE_TEMP_OPENSHIFT_REGISTRY)
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
@@ -509,10 +396,6 @@ String getKogitoImagesVersion() {
     return params.KOGITO_IMAGES_VERSION ?: (getReleaseProperty('kogito.images.version') ?: removeVersionSuffixIfExist(getKogitoVersion()))
 }
 
-String getKogitoOperatorVersion() {
-    return params.KOGITO_OPERATOR_VERSION ?: (getReleaseProperty('kogito.operator.version') ?: removeVersionSuffixIfExist(getKogitoVersion()))
-}
-
 String getKogitoServerlessOperatorVersion() {
     return params.KOGITO_SERVERLESS_OPERATOR_VERSION ?: (getReleaseProperty('kogito.serverless.operator.version') ?: removeVersionSuffixIfExist(getKogitoVersion()))
 }
@@ -529,14 +412,6 @@ boolean isImagesRelease() {
     return !params.SKIP_IMAGES_RELEASE
 }
 
-boolean isExamplesImagesRelease() {
-    return !params.SKIP_EXAMPLES_IMAGES_RELEASE
-}
-
-boolean isOperatorRelease() {
-    return !params.SKIP_OPERATOR_RELEASE
-}
-
 boolean isServerlessOperatorRelease() {
     return !params.SKIP_SERVERLESS_OPERATOR_RELEASE
 }
@@ -547,22 +422,6 @@ String getKogitoImagesTempTag() {
 
 String getKogitoImagesFinalTag() {
     return "${getKogitoImagesVersion()}".toLowerCase()
-}
-
-String getKogitoExamplesImagesTempTag() {
-    return "${getKogitoVersion()}-temp".toLowerCase()
-}
-
-String getKogitoExamplesImagesFinalTag() {
-    return "${getKogitoVersion()}".toLowerCase()
-}
-
-String getKogitoOperatorTempTag() {
-    return "${getKogitoOperatorVersion()}-temp".toLowerCase()
-}
-
-String getKogitoOperatorFinalTag() {
-    return "${getKogitoOperatorVersion()}".toLowerCase()
 }
 
 String getKogitoServerlessOperatorTempTag() {

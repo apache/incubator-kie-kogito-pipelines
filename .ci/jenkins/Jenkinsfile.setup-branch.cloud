@@ -10,10 +10,6 @@ JOBS = [:]
 FAILED_STAGES = [:]
 UNSTABLE_STAGES = [:]
 
-defaultImageParamsPrefix = 'IMAGE'
-kogitoImagesParamsPrefix = 'KOGITO_IMAGES'
-examplesImagesParamsPrefix = 'EXAMPLES_IMAGES'
-
 pipeline {
     agent {
         label util.avoidFaultyNodes('ubuntu')
@@ -52,40 +48,17 @@ pipeline {
             }
         }
 
-        stage('Init operators') {
-            parallel {
-                stage('Init Kogito Operator') {
-                    stages {
-                        stage('Init Operator') {
-                            steps {
-                                script {
-                                    def buildParams = getDefaultBuildParams()
-                                    addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
-                                    buildJob('kogito-operator', buildParams)
-                                }
-                            }
-                            post {
-                                failure {
-                                    addFailedStage('kogito-operator')
-                                }
-                            }
-                        }
-                    }
+        stage('Init Serverless Operator') {
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
+                    buildJob('kogito-serverless-operator', buildParams)
                 }
-
-                stage('Init Serverless Operator') {
-                    steps {
-                        script {
-                            def buildParams = getDefaultBuildParams()
-                            addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
-                            buildJob('kogito-serverless-operator', buildParams)
-                        }
-                    }
-                    post {
-                        failure {
-                            addFailedStage('kogito-serverless-operator')
-                        }
-                    }
+            }
+            post {
+                failure {
+                    addFailedStage('kogito-serverless-operator')
                 }
             }
         }
