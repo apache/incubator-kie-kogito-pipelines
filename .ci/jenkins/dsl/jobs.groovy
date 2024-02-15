@@ -240,6 +240,7 @@ void setupNightlyCloudJob() {
 
         MAVEN_SETTINGS_CONFIG_FILE_ID: "${MAVEN_SETTINGS_FILE_ID}",
         ARTIFACTS_REPOSITORY: "${MAVEN_ARTIFACTS_REPOSITORY}",
+        FAULTY_NODES: "builds56"
     ])
     KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         parameters {
