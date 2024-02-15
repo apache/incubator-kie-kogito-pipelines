@@ -19,7 +19,7 @@ defaultImageParamsPrefix = 'IMAGE'
 // Should be multibranch pipeline
 pipeline {
     agent {
-        label util.avoidFaultyNodes('ubuntu')
+        label util.avoidFaultyNodes("${env.AGENT_LABEL}")
     }
 
     options {
