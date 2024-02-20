@@ -20,7 +20,7 @@
 import org.kie.jenkins.MavenCommand
 
 // TODO Docker image and args could be passed as env or anything ?
-dockerGroups = [
+dockerGroups = [ 
     'docker',
 ]
 dockerArgs = [
@@ -39,23 +39,21 @@ void launch() {
 }
 
 void launchInDocker(String builderImage) {
-    node(util.avoidFaultyNodes()) {
-        docker.image(builderImage).inside(dockerArgs.join(' ')) {
-            sh 'printenv > env_props'
-            archiveArtifacts artifacts: 'env_props'
-            util.waitForDocker()
-            sh 'ls -last /var/run/docker.sock'
-            try {
-                launchStages()
-            } finally {
-                echo "Got build result ${currentBuild.currentResult}"
-                if (currentBuild.currentResult != 'SUCCESS') {
-                    // TODO ci token as env ?
-                    postComment(
-                            util.getMarkdownTestSummary('PR', getReproducer(true), "${BUILD_URL}", 'GITHUB'),
-                            'kie-ci3-token'
-                    )
-                }
+    docker.image(builderImage).inside(dockerArgs.join(' ')) {
+        sh 'printenv > env_props'
+        archiveArtifacts artifacts: 'env_props'
+        util.waitForDocker()
+        sh 'ls -last /var/run/docker.sock'
+        try {
+            launchStages()
+        } finally {
+            echo "Got build result ${currentBuild.currentResult}"
+            if (currentBuild.currentResult != 'SUCCESS') {
+                // TODO ci token as env ?
+                postComment(
+                    util.getMarkdownTestSummary('PR', getReproducer(true), "${BUILD_URL}", 'GITHUB'),
+                    'kie-ci3-token'
+                )
             }
         }
     }
