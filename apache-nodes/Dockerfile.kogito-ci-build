@@ -191,5 +191,9 @@ RUN sudo bash -c "echo \"dash dash/sh boolean false\" | debconf-set-selections"
 RUN sudo bash -c "DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash"
 # Use bash as default instead of dash (END)
 
+# Disable quarkus usage analytics (BEGIN)
+RUN mkdir ~/.redhat && (echo '{"disabled":true}' > ~/.redhat/io.quarkus.analytics.localconfig)
+# Disable quarkus usage analytics (END)
+
 ENTRYPOINT ["entrypoint.sh"]
 CMD ["bash"]
