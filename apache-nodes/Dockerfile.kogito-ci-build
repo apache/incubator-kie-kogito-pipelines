@@ -120,7 +120,7 @@ RUN wget https://github.com/mislav/hub/releases/download/v2.14.2/hub-linux-amd64
   sudo update-alternatives --install /usr/local/bin/hub hub /opt/hub/bin/hub 1
 
 # Cekit
-RUN pip${PYTHON_MAJOR_MINOR_VERSION} install cekit==4.8.0 behave lxml docker docker-squash elementPath pyyaml ruamel.yaml python-dateutil Jinja2 pykwalify colorlog click && \
+RUN pip${PYTHON_MAJOR_MINOR_VERSION} install cekit==4.11.0 behave lxml docker docker-squash elementPath pyyaml ruamel.yaml python-dateutil Jinja2 pykwalify colorlog click && \
   sudo update-alternatives --install /usr/local/bin/cekit cekit ~/.local/bin/cekit 1 && \
   sudo update-alternatives --install /usr/local/bin/docker-squash docker-squash ~/.local/bin/docker-squash 1
 RUN wget https://github.com/openshift/source-to-image/releases/download/v1.3.8/source-to-image-v1.3.8-980ca195-linux-amd64.tar.gz -P /tmp && \
