@@ -1,42 +1,30 @@
 generation_config:
   missing_environment: ignore
-environments:
-  native:
-    env_vars:
-      NATIVE: true
-      BUILD_MVN_OPTS_CURRENT: -Dnative -Dquarkus.native.container-build=true
-      ADDITIONAL_TIMEOUT: 720
-    ids:
-    - native
-  sonarcloud:
-    auto_generation: false
-    env_vars:
-      ENABLE_SONARCLOUD: true
-    ids:
-    - sonarcloud
-    - coverage
-  ecosystem:
-    auto_generation: false
-    ids:
-    - ecosystem
+
+job_types:
+  setup-branch:
+    disabled: true
+  nightly:
+    disabled: false
+  other:
+    disabled: true
+  pullrequest:
+    disabled: true
+  release:
+    disabled: true
+  tools:
+    disabled: true
+
+disable:
+  triggers: true
+  deploy: true
+  pr_check: true
+  
 repositories:
 - name: incubator-kie-kogito-pipelines
   job_display_name: kogito-pipelines
-- name: incubator-kie-kogito-runtimes
-  job_display_name: kogito-runtimes
-- name: incubator-kie-kogito-apps
-  job_display_name: kogito-apps
-- name: incubator-kie-kogito-examples
-  job_display_name: kogito-examples
 - name: incubator-kie-kogito-images
   job_display_name: kogito-images
-- name: incubator-kie-kogito-serverless-operator
-  job_display_name: kogito-serverless-operator
-- name: incubator-kie-kogito-docs
-  job_display_name: kogito-docs
-- name: incubator-kie-docs
-  job_display_name: kie-docs
-  branch: main-kogito
 git:
   author:
     name: apache
@@ -99,3 +87,4 @@ jenkins:
     maven: maven_3.9.3
     sonar_jdk: jdk_17_latest
   jobs_definition_file: .ci/jenkins/dsl/jobs.groovy
+  
