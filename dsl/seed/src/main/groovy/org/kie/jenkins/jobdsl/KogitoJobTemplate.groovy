@@ -151,6 +151,7 @@ class KogitoJobTemplate {
                             }
                             branch(jobParams.git.branch)
                             extensions {
+                                wipeOutWorkspace()
                                 cleanBeforeCheckout()
                                 if (jobParams.git.useRelativeTargetDirectory) {
                                     relativeTargetDirectory(repository)
@@ -235,6 +236,7 @@ class KogitoJobTemplate {
                             branch(jobParams.pr.checkout_branch ?: '${sha1}')
 
                             extensions {
+                                wipeOutWorkspace()
                                 cleanBeforeCheckout()
                                 if (jobParams.git.useRelativeTargetDirectory) {
                                     relativeTargetDirectory(repository)

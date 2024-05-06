@@ -109,6 +109,7 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
                     }
                     branch('${SEED_BRANCH}')
                     extensions {
+                        wipeOutWorkspace()
                         cleanBeforeCheckout()
                     }
                 }
@@ -160,6 +161,7 @@ pipelineJob("${GENERATION_BRANCH}/tools/toggle-dsl-triggers") {
                     }
                     branch(Utils.getSeedBranch(this))
                     extensions {
+                        wipeOutWorkspace()
                         cleanBeforeCheckout()
                     }
                 }
