@@ -137,7 +137,7 @@ pipelineJob('0-seed-job') {
                     }
                     branch('${SEED_BRANCH}')
                     extensions {
-                        wipeOutWorkspace()
+                        wipeWorkspace()
                         cleanBeforeCheckout()
                     }
                 }
