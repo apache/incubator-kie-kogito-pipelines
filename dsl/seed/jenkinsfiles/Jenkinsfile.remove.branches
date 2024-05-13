@@ -70,9 +70,7 @@ pipeline {
                         String targetBranch = "${getBuildBranch()}"
                         if (githubscm.isThereAnyChanges()) {
                             String prLink = commitAndCreatePR(commitMsg, localBranch, targetBranch)
-                            sh "git checkout ${targetBranch}"
-                            mergeAndPush(prLink, targetBranch)
-                            githubscm.removeRemoteBranch('origin', localBranch, getGitAuthorPushCredsId())
+                            approveAndMergePR(prLink)
                         } else {
                             println '[WARN] no changes to commit'
                         }
@@ -106,15 +104,15 @@ String getBuildBranch() {
     return env.GIT_BRANCH_TO_BUILD
 }
 
-void getRemoveBranch(){
+void getRemoveBranch() {
     return params.BRANCH_TO_REMOVE
 }
 
-void getGitAuthorCredsId(){
+void getGitAuthorCredsId() {
     return env.GIT_AUTHOR_CREDENTIALS_ID
 }
 
-void getGitAuthorPushCredsId(){
+void getGitAuthorPushCredsId() {
     return env.GIT_AUTHOR_PUSH_CREDENTIALS_ID
 }
 
@@ -140,9 +138,9 @@ String commitAndCreatePR(String commitMsg, String localBranch, String targetBran
     return githubscm.createPR(commitMsg, prBody, targetBranch, getGitAuthorCredsId())
 }
 
-void mergeAndPush(String prLink, String targetBranch) {
+void approveAndMergePR(String prLink) {
     if (prLink?.trim()) {
-        githubscm.mergePR(prLink, getGitAuthorCredsId())
-        githubscm.pushObject('origin', targetBranch, getGitAuthorPushCredsId())
+        githubscm.approvePR(prLink, getGitAuthorPushCredsId())
+        githubscm.mergePR(prLink, getGitAuthorPushCredsId())
     }
 }

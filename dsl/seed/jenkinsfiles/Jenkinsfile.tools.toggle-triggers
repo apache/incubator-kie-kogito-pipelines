@@ -64,10 +64,7 @@ pipeline {
                             String prLink = githubscm.createPR(commitMsg, prBody, getSeedConfigBranch(), getSeedConfigAuthorCredsId())
 
                             // Merge automatically PR
-                            sh "git checkout ${getSeedConfigBranch()}"
-                            githubscm.mergePR(prLink, getSeedConfigAuthorCredsId())
-                            githubscm.pushObject('origin', getSeedConfigBranch(), getSeedConfigAuthorPushCredsId())
-                            githubscm.removeRemoteBranch('origin', getPRBranch(), getSeedConfigAuthorPushCredsId())
+                            approveAndMergePR(prLink)
                         } else {
                             println '[WARN] no changes to commit'
                         }
@@ -132,4 +129,11 @@ void sendNotification(String body) {
 
 void sendErrorNotification() {
     sendNotification("Job #${BUILD_NUMBER} was: **${currentBuild.currentResult}**\nPlease look here: ${BUILD_URL}")
+}
+
+void approveAndMergePR(String prLink) {
+    if (prLink?.trim()) {
+        githubscm.approvePR(prLink, getSeedConfigAuthorPushCredsId())
+        githubscm.mergePR(prLink, getSeedConfigAuthorPushCredsId())
+    }
 }
