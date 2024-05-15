@@ -80,9 +80,9 @@ maven:
     creds_id: TO_DEFINE
 cloud:
   image:
-    registry_credentials: quay_kiegroup_registry_token
-    registry: quay.io
-    namespace: kiegroup
+    registry_credentials: dockerhub_apache_kie_registry_token
+    registry: docker.io
+    namespace: apache
     latest_git_branch: main
 jenkins:
   email_creds_id: KOGITO_CI_NOTIFICATION_EMAILS
@@ -92,7 +92,7 @@ jenkins:
         # At some point, this image will need to be changed when a release branch is created 
         # but we need to make sure the image exists first ... simple tag before setting up the branch ?
         # See https://github.com/kiegroup/kie-issues/issues/551
-        image: quay.io/kiegroup/kogito-ci-build:main-latest
+        image: docker.io/apache/incubator-kie-kogito-ci-build:main-latest
         args: --privileged --group-add docker
   default_tools:
     jdk: jdk_17_latest
