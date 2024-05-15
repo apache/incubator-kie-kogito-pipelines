@@ -12,7 +12,7 @@ pipeline {
     environment {
         DOCKER_CONFIG = "${WORKSPACE}/.docker"
 
-        IMAGE_NAME = 'quay.io/kiegroup/kogito-ci-build'
+        IMAGE_NAME = 'docker.io/apache/incubator-kie-kogito-ci-build'
         IMAGE_TAG = "${BRANCH_NAME}-build-${BUILD_NUMBER}"
         IMAGE_NAME_TAG = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
     }
@@ -29,7 +29,7 @@ pipeline {
 
                     currentBuild.displayName = env.IMAGE_TAG
 
-                    cloud.loginContainerRegistry('quay.io', 'quay_kiegroup_registry_token')
+                    cloud.loginContainerRegistry('docker.io', 'dockerhub_apache_kie_registry_token')
 
                     dir('kogito-pipelines') {
                         deleteDir()
@@ -54,7 +54,7 @@ pipeline {
                 always {
                     script {
                         sh "rm -rf ${DOCKER_CONFIG}"
-                        sh 'docker logout quay.io'
+                        sh 'docker logout docker.io'
                     }
                 }
             }
