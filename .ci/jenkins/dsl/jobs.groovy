@@ -77,6 +77,7 @@ Utils.isMainBranch(this) && KogitoJobTemplate.createBranchMultibranchPipelineJob
 void setupCleanOldNamespacesToolsJob() {
     def jobParams = JobParamsUtils.getBasicJobParams(this, 'kogito-clean-old-namespaces', JobType.TOOLS, "${jenkins_path}/Jenkinsfile.tools.clean-old-namespaces")
     jobParams.triggers = [ cron : '@midnight' ]
+    JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(this, jobParams)
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
