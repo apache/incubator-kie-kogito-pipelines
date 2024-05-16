@@ -101,17 +101,19 @@ pipeline {
                         script {
                             env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
                             echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
-                            if (mavenDeployArtifacts) {
-                                env.DEPLOY_MVN_OPTS = "${env.DEPLOY_MVN_OPTS ?: ''} -DaltDeploymentRepository=local::default::file://${getMavenDeployLocalDir()}"
-                                echo "DEPLOY_MVN_OPTS = ${DEPLOY_MVN_OPTS}"
-                            }
+                            withCredentials([usernamePassword(credentialsId: mavenDeployRepositoryCredsId, usernameVariable: 'REPOSITORY_USER', passwordVariable: 'REPOSITORY_TOKEN')]) {
+                                if (mavenDeployArtifacts) {
+                                    env.DEPLOY_MVN_OPTS = "${env.DEPLOY_MVN_OPTS ?: ''} -DdeployAtEnd -Dapache.repository.username=${REPOSITORY_USER} -Dapache.repository.password=${REPOSITORY_TOKEN} -DretryFailedDeploymentCount=5"
+                                    echo "DEPLOY_MVN_OPTS = ${DEPLOY_MVN_OPTS}"
+                                }
 
-                            configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
-                                withCredentials([string(credentialsId: "${BUILDCHAIN_CONFIG_GIT_TOKEN_CREDENTIALS_ID}", variable: 'GITHUB_TOKEN')]) {
-                                    env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
-                                    echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
+                                configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
+                                    withCredentials([string(credentialsId: "${BUILDCHAIN_CONFIG_GIT_TOKEN_CREDENTIALS_ID}", variable: 'GITHUB_TOKEN')]) {
+                                        env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
+                                        echo "BUILD_MVN_OPTS = ${BUILD_MVN_OPTS}"
 
-                                    sh getBuildChainCommandline(true)
+                                        sh getBuildChainCommandline(true)
+                                    }
                                 }
                             }
                         }
@@ -151,27 +153,6 @@ pipeline {
                                             .withSettingsXmlFile(MAVEN_SETTINGS_FILE)
                                             .run("-e -nsu validate -Psonarcloud-analysis -Denforcer.skip=true ${env.SONARCLOUD_ANALYSIS_MVN_OPTS ?: ''}")
                                     }
-                                }
-                            }
-                        }
-                    }
-                }
-                stage('Upload artifacts to repository') {
-                    when {
-                        expression { return mavenDeployArtifacts }
-                    }
-                    steps {
-                        script {
-                            withCredentials([usernamePassword(credentialsId: mavenDeployRepositoryCredsId, usernameVariable: 'REPOSITORY_USER', passwordVariable: 'REPOSITORY_TOKEN')]) {
-                                configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
-                                    new MavenCommand(this)
-                                        .withSettingsXmlFile(MAVEN_SETTINGS_FILE)
-                                        .withProperty('wagon.source', "file://${getMavenDeployLocalDir()}")
-                                        .withProperty('wagon.target', mavenDeployRepository)
-                                        .withProperty('wagon.targetId', 'apache-snapshots-repository')
-                                        .withProperty('apache.snapshot.repository.username', REPOSITORY_USER)
-                                        .withProperty('apache.snapshot.repository.password', REPOSITORY_TOKEN)
-                                        .run("org.codehaus.mojo:wagon-maven-plugin:2.0.2:merge-maven-repos")
                                 }
                             }
                         }
