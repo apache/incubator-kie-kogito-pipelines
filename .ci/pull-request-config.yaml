@@ -73,7 +73,7 @@ build:
       after:
         # In case of deploy, deploy the parent poms only.
         current: |
-          bash -c "if [ '${{ env.ENABLE_DEPLOY }}' = 'true' ]; then mvn dependency:tree -DskipTests -DskipITs -pl .,kogito-quarkus-examples,kogito-springboot-examples,serverless-workflow-examples deploy ${{ env.DEPLOY_MVN_OPTS }} ${{ env.KOGITO_EXAMPLES_DEPLOY_MVN_OPTS }}; else echo 'No deploy is scheduled'; fi"
+          bash -c "if [ '${{ env.ENABLE_DEPLOY }}' = 'true' ]; then mvn dependency:tree -DskipTests -DskipITs -pl .,kogito-quarkus-examples,kogito-springboot-examples,serverless-workflow-examples deploy ${{ env.BUILD_MVN_OPTS }} ${{ env.DEPLOY_MVN_OPTS }} ${{ env.KOGITO_EXAMPLES_DEPLOY_MVN_OPTS }}; else echo 'No deploy is scheduled'; fi"
   # - project: kiegroup/kie-jpmml-integration
   #   build-command:
   #     current: |
