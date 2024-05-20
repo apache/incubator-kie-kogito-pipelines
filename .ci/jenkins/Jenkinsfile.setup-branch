@@ -136,6 +136,21 @@ pipeline {
                 }
             }
         }
+
+        // Launch the weekly to deploy all artifacts from the branch
+        stage('Launch the weekly') {
+            when {
+                expression { return params.DEPLOY }
+            }
+            steps {
+                script {
+                    def buildParams = getDefaultBuildParams()
+                    addBooleanParam(buildParams, 'SKIP_TESTS', true)
+                    addBooleanParam(buildParams, 'SKIP_CLOUD_NIGHTLY', true)
+                    build(job: '../other/0-kogito-weekly', wait: false, parameters: buildParams, propagate: false)
+                }
+            }
+        }
     }
     post {
         unsuccessful {
