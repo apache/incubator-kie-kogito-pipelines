@@ -1,0 +1,51 @@
+import org.jenkinsci.plugins.workflow.libs.Library
+
+@Library('jenkins-pipeline-shared-libraries@kie-issues-828')_
+
+pipeline {
+    agent {
+        label util.avoidFaultyNodes()
+    }
+    options {
+        timeout(time: 120, unit: 'MINUTES')
+    }
+
+    stages {
+        stage('Create sources ZIP') {
+            steps {
+                sh 'tools/zip-sources-all.sh'
+                archiveArtifacts artifacts: '**/*-sources.zip'
+            }
+        }
+        stage('Sign and upload the sources.zip') {
+            steps {
+                script {
+                    String sourcesNameBase = "incubator-kie-${VERSION}-sources"
+                    String sourcesFileName = "${sourcesNameBase}.zip"
+                    String signatureFileName = "${sourcesNameBase}.asc"
+                    release.gpgImportKeyFromFileWithPassword(getReleaseGpgSignKeyCredsId(), getReleaseGpgSignPassphraseCredsId())
+                    release.gpgSignFileDetachedSignatureWithPassword(sourcesFileName, signatureFileName, getReleaseGpgSignPassphraseCredsId())
+                    // Currently not working because  CI permissions are fubar
+                    //release.svnUploadFileToRepository(getReleaseSvnRepository(), getReleaseSvnCredsId(), $VERSION, sourcesFileName, signatureFileName)
+                }
+            }
+        }
+    }
+}
+
+
+String getReleaseGpgSignKeyCredsId() {
+    return env.RELEASE_GPG_SIGN_KEY_CREDS_ID
+}
+
+String getReleaseGpgSignPassphraseCredsId() {
+    return env.RELEASE_GPG_SIGN_PASSPHRASE_CREDS_ID
+}
+
+String getReleaseSvnRepository() {
+    return env.RELEASE_SVN_REPOSITORY
+}
+
+String getReleaseSvnCredsId() {
+    return env.RELEASE_SVN_CREDS_ID
+}
