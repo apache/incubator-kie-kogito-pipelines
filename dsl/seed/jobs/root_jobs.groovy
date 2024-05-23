@@ -37,6 +37,7 @@ def jobParams = [
     env: [:],
     jenkinsfile: 'dsl/seed/jenkinsfiles/Jenkinsfile.release.prepare',
 ]
+JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(this, jobParams)
 
 KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
     parameters {
@@ -83,6 +84,7 @@ def jobParamsRemove = [
     env: [:],
     jenkinsfile: 'dsl/seed/jenkinsfiles/Jenkinsfile.remove.branches',
 ]
+JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(this, jobParamsRemove)
 
 List nonMainBranches = ALL_BRANCHES.split(',').findAll { it != MAIN_BRANCH_NAME }
 if (nonMainBranches) {

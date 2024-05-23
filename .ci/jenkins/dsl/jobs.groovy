@@ -116,6 +116,7 @@ void setupUpdateJenkinsDependenciesJob() {
         GIT_AUTHOR_CREDS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
         GIT_AUTHOR_PUSH_CREDS_ID: "${GIT_AUTHOR_PUSH_CREDENTIALS_ID}",
     ])
+    JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(this, jobParams)
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 

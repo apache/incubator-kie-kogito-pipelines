@@ -141,6 +141,7 @@ class KogitoJobUtils {
             SEED_CONFIG_FILE_GIT_BRANCH: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_GIT_BRANCH'),
             SEED_CONFIG_FILE_PATH: Utils.getBindingValue(script, 'SEED_CONFIG_FILE_PATH'),
         ])
+        JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(script, jobParams)
         JobParamsUtils.setupJobParamsSeedRepoEnv(script, jobParams)
         def job = KogitoJobTemplate.createPipelineJob(script, jobParams)
         job?.with {
