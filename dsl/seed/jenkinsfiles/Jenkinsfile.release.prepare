@@ -9,6 +9,8 @@ repositoriesToBranch = []
 
 pipeline {
     agent {
+        image env.AGENT_DOCKER_BUILDER_IMAGE
+        args env.AGENT_DOCKER_BUILDER_ARGS
         label util.avoidFaultyNodes('ubuntu')
     }
 
