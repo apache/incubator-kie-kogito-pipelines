@@ -123,57 +123,57 @@ pipelineJob("${GENERATION_BRANCH}/${JOB_NAME}") {
     }
 }
 
-// Toggle triggers job
-folder("${GENERATION_BRANCH}/tools")
-pipelineJob("${GENERATION_BRANCH}/tools/toggle-dsl-triggers") {
-    description('Toggle DSL triggers')
+// // Toggle triggers job
+// folder("${GENERATION_BRANCH}/tools")
+// pipelineJob("${GENERATION_BRANCH}/tools/toggle-dsl-triggers") {
+//     description('Toggle DSL triggers')
 
-    logRotator {
-        numToKeep(5)
-    }
+//     logRotator {
+//         numToKeep(5)
+//     }
 
-    throttleConcurrentBuilds {
-        maxTotal(1)
-    }
+//     throttleConcurrentBuilds {
+//         maxTotal(1)
+//     }
 
-    parameters {
-        booleanParam('DISABLE_TRIGGERS', false, 'If selected the triggers will be disabled.')
-    }
+//     parameters {
+//         booleanParam('DISABLE_TRIGGERS', false, 'If selected the triggers will be disabled.')
+//     }
 
-    environmentVariables {
-        env('SEED_CONFIG_FILE_GIT_REPOSITORY', "${SEED_CONFIG_FILE_GIT_REPOSITORY}")
-        env('SEED_CONFIG_FILE_GIT_AUTHOR_NAME', "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}")
-        env('SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
-        env('SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID}")
-        env('SEED_CONFIG_FILE_GIT_BRANCH', "${SEED_CONFIG_FILE_GIT_BRANCH}")
-        env('SEED_CONFIG_FILE_PATH', "${SEED_CONFIG_FILE_PATH}")
+//     environmentVariables {
+//         env('SEED_CONFIG_FILE_GIT_REPOSITORY', "${SEED_CONFIG_FILE_GIT_REPOSITORY}")
+//         env('SEED_CONFIG_FILE_GIT_AUTHOR_NAME', "${SEED_CONFIG_FILE_GIT_AUTHOR_NAME}")
+//         env('SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_CREDS_ID}")
+//         env('SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID}")
+//         env('SEED_CONFIG_FILE_GIT_BRANCH', "${SEED_CONFIG_FILE_GIT_BRANCH}")
+//         env('SEED_CONFIG_FILE_PATH', "${SEED_CONFIG_FILE_PATH}")
 
-        env('JENKINS_EMAIL_CREDS_ID', Utils.getJenkinsEmailCredsId(this))
+//         env('JENKINS_EMAIL_CREDS_ID', Utils.getJenkinsEmailCredsId(this))
 
-        env('AGENT_DOCKER_BUILDER_IMAGE', Utils.getJenkinsAgentDockerImage(script, 'builder'))
-        env('AGENT_DOCKER_BUILDER_ARGS',  Utils.getJenkinsAgentDockerArgs(script, 'builder'))
-    }
+//         env('AGENT_DOCKER_BUILDER_IMAGE', Utils.getJenkinsAgentDockerImage(script, 'builder'))
+//         env('AGENT_DOCKER_BUILDER_ARGS',  Utils.getJenkinsAgentDockerArgs(script, 'builder'))
+//     }
 
-    definition {
-        cpsScm {
-            scm {
-                git {
-                    remote {
-                        url("https://github.com/${Utils.getSeedAuthor(this)}/${Utils.getSeedRepo(this)}.git")
-                        credentials(Utils.getSeedAuthorCredsId(this))
-                    }
-                    branch(Utils.getSeedBranch(this))
-                    extensions {
-                        wipeWorkspace()
-                        cleanBeforeCheckout()
-                    }
-                }
-            }
-            scriptPath("dsl/seed/jenkinsfiles/Jenkinsfile.tools.toggle-triggers")
-        }
-    }
+//     definition {
+//         cpsScm {
+//             scm {
+//                 git {
+//                     remote {
+//                         url("https://github.com/${Utils.getSeedAuthor(this)}/${Utils.getSeedRepo(this)}.git")
+//                         credentials(Utils.getSeedAuthorCredsId(this))
+//                     }
+//                     branch(Utils.getSeedBranch(this))
+//                     extensions {
+//                         wipeWorkspace()
+//                         cleanBeforeCheckout()
+//                     }
+//                 }
+//             }
+//             scriptPath("dsl/seed/jenkinsfiles/Jenkinsfile.tools.toggle-triggers")
+//         }
+//     }
 
-    properties {
-        githubProjectUrl("https://github.com/${Utils.getSeedAuthor(this)}/${Utils.getSeedRepo(this)}/")
-    }
-}
+//     properties {
+//         githubProjectUrl("https://github.com/${Utils.getSeedAuthor(this)}/${Utils.getSeedRepo(this)}/")
+//     }
+// }
