@@ -35,8 +35,6 @@ pipeline {
 
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
 
-        IMAGE_NAME_WEEKLY_SUFFIX = 'nightly'
-
         // Use branch name in weekly tag as we may have parallel main and release branch builds
         WEEKLY_TAG = """${getBuildBranch()}-${getCurrentDate()}"""
     }
@@ -207,7 +205,6 @@ void addImageBuildParams(List buildParams, String tag, String paramsPrefix = def
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
     addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
-    addStringParam(buildParams, constructKey(paramsPrefix, 'NAME_SUFFIX'), (extraSuffix ? "${extraSuffix}-" : '') + env.IMAGE_NAME_WEEKLY_SUFFIX)
     addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)
 }
 
