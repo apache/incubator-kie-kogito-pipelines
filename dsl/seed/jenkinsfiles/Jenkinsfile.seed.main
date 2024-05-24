@@ -58,6 +58,8 @@ pipeline {
                         SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID: readSeedConfig().seed.config_file.git.author.push.credentials_id,
                         SEED_CONFIG_FILE_GIT_BRANCH: "${SEED_CONFIG_FILE_GIT_BRANCH}",
                         SEED_CONFIG_FILE_PATH: "${SEED_CONFIG_FILE_PATH}",
+                        JENKINS_AGENT_DOCKER_BUILDER_IMAGE: readSeedConfig().jenkins.agent.docker.builder.image,
+                        JENKINS_AGENT_DOCKER_BUILDER_ARGS: readSeedConfig().jenkins.agent.docker.builder.args,
                         ALL_BRANCHES: readSeedConfig().git.branches.collect { it.name }.join(','),
                         MAIN_BRANCH_NAME: readSeedConfig().git.branches.find { it.main_branch }?.name,
                     ]
@@ -104,6 +106,8 @@ pipeline {
                             SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID: branchConfigFileInfo.push_credentials,
                             SEED_CONFIG_FILE_GIT_BRANCH: branchConfigFileInfo.branch,
                             SEED_CONFIG_FILE_PATH: branchConfigFileInfo.filepath,
+                            JENKINS_AGENT_DOCKER_BUILDER_IMAGE: readSeedConfig().jenkins.agent.docker.builder.image,
+                            JENKINS_AGENT_DOCKER_BUILDER_ARGS: readSeedConfig().jenkins.agent.docker.builder.args,
                         ]
                         echo 'Got envProperties for generation'
                         echo "${envProperties}"
@@ -138,6 +142,8 @@ pipeline {
                         SEED_CONFIG_FILE_GIT_BRANCH: "${SEED_CONFIG_FILE_GIT_BRANCH}",
                         SEED_CONFIG_FILE_PATH: "${SEED_CONFIG_FILE_PATH}",
                         JENKINS_EMAIL_CREDS_ID: readSeedConfig().jenkins.email_creds_id,
+                        JENKINS_AGENT_DOCKER_BUILDER_IMAGE: readSeedConfig().jenkins.agent.docker.builder.image,
+                        JENKINS_AGENT_DOCKER_BUILDER_ARGS: readSeedConfig().jenkins.agent.docker.builder.args,
                     ]
                     dir(scriptUtils.getDslSeedFolderAbsolutePath()) {
                         println "[INFO] Generate main seed job with properties ${envProperties}"

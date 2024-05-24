@@ -150,8 +150,8 @@ pipelineJob("${GENERATION_BRANCH}/tools/toggle-dsl-triggers") {
 
         env('JENKINS_EMAIL_CREDS_ID', Utils.getJenkinsEmailCredsId(this))
 
-        env('AGENT_DOCKER_BUILDER_IMAGE', Utils.getJenkinsAgentDockerImage(script, 'builder'))
-        env('AGENT_DOCKER_BUILDER_ARGS',  Utils.getJenkinsAgentDockerArgs(script, 'builder'))
+        env('AGENT_DOCKER_BUILDER_IMAGE', Utils.getJenkinsAgentDockerImage(this, 'builder'))
+        env('AGENT_DOCKER_BUILDER_ARGS',  Utils.getJenkinsAgentDockerArgs(this, 'builder'))
     }
 
     definition {

@@ -19,7 +19,6 @@
 
 // +++++++++++++++++++++++++++++++++++++++++++ root jobs ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-import org.kie.jenkins.jobdsl.utils.JobParamsUtils
 import org.kie.jenkins.jobdsl.KogitoConstants
 import org.kie.jenkins.jobdsl.KogitoJobTemplate
 import org.kie.jenkins.jobdsl.Utils
@@ -38,7 +37,6 @@ def jobParams = [
     env: [:],
     jenkinsfile: 'dsl/seed/jenkinsfiles/Jenkinsfile.release.prepare',
 ]
-JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(this, jobParams)
 
 KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
     parameters {
@@ -68,6 +66,9 @@ KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         env('SEED_BRANCH', Utils.getSeedBranch(this))
         env('SEED_CREDENTIALS_ID', Utils.getSeedAuthorCredsId(this))
         env('SEED_PUSH_CREDENTIALS_ID', Utils.getSeedAuthorPushCredsId(this))
+
+        env('AGENT_DOCKER_BUILDER_IMAGE', Utils.getJenkinsAgentDockerImage(this, 'builder'))
+        env('AGENT_DOCKER_BUILDER_ARGS',  Utils.getJenkinsAgentDockerArgs(this, 'builder'))
     }
 }
 
@@ -85,7 +86,6 @@ def jobParamsRemove = [
     env: [:],
     jenkinsfile: 'dsl/seed/jenkinsfiles/Jenkinsfile.remove.branches',
 ]
-JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(this, jobParamsRemove)
 
 List nonMainBranches = ALL_BRANCHES.split(',').findAll { it != MAIN_BRANCH_NAME }
 if (nonMainBranches) {
@@ -103,6 +103,9 @@ if (nonMainBranches) {
             env('GIT_AUTHOR_PUSH_CREDENTIALS_ID', "${SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID}")
             env('GIT_BRANCH_TO_BUILD', "${SEED_CONFIG_FILE_GIT_BRANCH}")
             env('CONFIG_FILE_PATH', "${SEED_CONFIG_FILE_PATH}")
+
+            env('AGENT_DOCKER_BUILDER_IMAGE', Utils.getJenkinsAgentDockerImage(this, 'builder'))
+            env('AGENT_DOCKER_BUILDER_ARGS',  Utils.getJenkinsAgentDockerArgs(this, 'builder'))
         }
     }
 } else {

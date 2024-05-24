@@ -83,6 +83,8 @@ class JobScriptsSpec extends Specification {
         envVars.put('SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID', 'SEED_CONFIG_FILE_GIT_AUTHOR_PUSH_CREDS_ID')
         envVars.put('SEED_CONFIG_FILE_GIT_BRANCH', 'SEED_CONFIG_FILE_GIT_BRANCH')
         envVars.put('SEED_CONFIG_FILE_PATH', 'SEED_CONFIG_FILE_PATH')
+        envVars.put('JENKINS_AGENT_DOCKER_BUILDER_IMAGE', 'JENKINS_AGENT_DOCKER_BUILDER_IMAGE')
+        envVars.put('JENKINS_AGENT_DOCKER_BUILDER_ARGS', 'JENKINS_AGENT_DOCKER_BUILDER_ARGS')
 
         envVars.put('GIT_JENKINS_CONFIG_PATH', 'GIT_JENKINS_CONFIG_PATH')
         JobManagement jm = new JenkinsJobManagement(System.out, envVars, new File('.'))
