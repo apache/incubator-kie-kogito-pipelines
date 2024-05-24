@@ -326,8 +326,25 @@ class Utils {
         return getBindingValue(script, 'DISABLE_DEPLOY').toBoolean() || isTestEnvironment(script)
     }
 
+    static boolean isImagesDeployDisabled(def script) {
+        return getBindingValue(script, 'DISABLE_IMAGES_DEPLOY').toBoolean() || isTestEnvironment(script)
+    }
+
     static boolean isPrCheckDisabled(def script) {
         return getBindingValue(script, 'DISABLE_PR_CHECK').toBoolean() || isTestEnvironment(script)
+    }
+
+    static String getReleaseGpgSignKeyCredentialsId(def script) {
+        return getBindingValue(script, 'RELEASE_GPG_SIGN_KEY_CREDENTIALS_ID')
+    }
+    static String getReleaseGpgSignPassphraseCredentialsId(def script) {
+        return getBindingValue(script, 'RELEASE_GPG_SIGN_PASSPHRASE_CREDENTIALS_ID')
+    }
+    static String getReleaseSvnCredentialsId(def script) {
+        return getBindingValue(script, 'RELEASE_SVN_CREDENTIALS_ID')
+    }
+    static String getReleaseSvnStagingRepository(def script) {
+        return getBindingValue(script, 'RELEASE_SVN_STAGING_REPOSITORY')
     }
 
 }

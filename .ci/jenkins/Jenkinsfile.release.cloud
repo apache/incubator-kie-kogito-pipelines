@@ -33,8 +33,6 @@ pipeline {
         // Some generated env is also defined into ./dsl/jobs.groovy file
 
         KOGITO_CI_EMAIL_TO = credentials("${JENKINS_EMAIL_CREDS_ID}")
-
-        IMAGE_NAME_NIGHTLY_SUFFIX = 'nightly'
     }
 
     stages {
@@ -97,68 +95,58 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy Kogito Serverless Operator') {
-            when {
-                expression { return isServerlessOperatorRelease() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoServerlessOperatorVersion())
-                    addSkipTestsParam(buildParams)
-                    addImageBuildParams(buildParams, getKogitoServerlessOperatorTempTag())
+        // stage('Build & Deploy Kogito Serverless Operator') {
+        //     when {
+        //         expression { return isServerlessOperatorRelease() }
+        //     }
+        //     steps {
+        //         script {
+        //             def buildParams = getDefaultBuildParams(getKogitoServerlessOperatorVersion())
+        //             addSkipTestsParam(buildParams)
+        //             addImageBuildParams(buildParams, getKogitoServerlessOperatorTempTag())
 
-                    buildJob(getDeployJobName(kogitoServerlessOperatorRepo), buildParams)
-                }
-            }
-        }
+        //             buildJob(getDeployJobName(kogitoServerlessOperatorRepo), buildParams)
+        //         }
+        //     }
+        // }
 
-        stage('Promote Kogito Images') {
-            when {
-                expression { return isImagesRelease() && isJobConsideredOk(getDeployJobName(kogitoImagesRepo)) }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
-                    addDeployBuildUrlParamOrClosure(buildParams, getDeployJobName(kogitoImagesRepo)) {
-                        addImageBuildParams(buildParams, getKogitoImagesTempTag(), false, baseImageParamsPrefix)
-                    }
-                    addImageBuildParams(buildParams, getKogitoImagesFinalTag(), true, promoteImageParamsPrefix)
-                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
+        // stage('Promote Kogito Images') {
+        //     when {
+        //         expression { return isImagesRelease() && isJobConsideredOk(getDeployJobName(kogitoImagesRepo)) }
+        //     }
+        //     steps {
+        //         script {
+        //             def buildParams = getDefaultBuildParams(getKogitoImagesVersion())
+        //             addDeployBuildUrlParamOrClosure(buildParams, getDeployJobName(kogitoImagesRepo)) {
+        //                 addImageBuildParams(buildParams, getKogitoImagesTempTag(), false, baseImageParamsPrefix)
+        //             }
+        //             addImageBuildParams(buildParams, getKogitoImagesFinalTag(), true, promoteImageParamsPrefix)
+        //             addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
 
-                    buildJob(getPromoteJobName(kogitoImagesRepo), buildParams)
-                }
-            }
-        }
+        //             buildJob(getPromoteJobName(kogitoImagesRepo), buildParams)
+        //         }
+        //     }
+        // }
 
-        stage('Promote Kogito Serverless Operator') {
-            when {
-                expression { return isServerlessOperatorRelease() && isJobConsideredOk(getDeployJobName(kogitoServerlessOperatorRepo)) }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getKogitoServerlessOperatorVersion())
-                    addDeployBuildUrlParamOrClosure(buildParams, getDeployJobName(kogitoServerlessOperatorRepo))  {
-                        addImageBuildParams(buildParams, getKogitoServerlessOperatorTempTag(), false, baseImageParamsPrefix)
-                    }
+        // stage('Promote Kogito Serverless Operator') {
+        //     when {
+        //         expression { return isServerlessOperatorRelease() && isJobConsideredOk(getDeployJobName(kogitoServerlessOperatorRepo)) }
+        //     }
+        //     steps {
+        //         script {
+        //             def buildParams = getDefaultBuildParams(getKogitoServerlessOperatorVersion())
+        //             addDeployBuildUrlParamOrClosure(buildParams, getDeployJobName(kogitoServerlessOperatorRepo))  {
+        //                 addImageBuildParams(buildParams, getKogitoServerlessOperatorTempTag(), false, baseImageParamsPrefix)
+        //             }
 
-                    // Base image information is given by the deploy URL
-                    addImageBuildParams(buildParams, getKogitoServerlessOperatorFinalTag(), true, promoteImageParamsPrefix)
-                    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
+        //             // Base image information is given by the deploy URL
+        //             addImageBuildParams(buildParams, getKogitoServerlessOperatorFinalTag(), true, promoteImageParamsPrefix)
+        //             addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployAsLatest())
 
-                    buildJob(getPromoteJobName(kogitoServerlessOperatorRepo), buildParams)
-                }
-            }
-        }
-
-        stage('Setup next snapshot version') {
-            steps {
-                script {
-                    def buildParams = []
-                    addStringParam(buildParams, 'KOGITO_VERSION', util.getNextVersion(getKogitoVersion(), 'micro'))
-                    build(job: '../setup-branch/0-setup-branch-cloud', wait: false, parameters: buildParams, propagate: false)
-                }
-            }
-        }
+        //             buildJob(getPromoteJobName(kogitoServerlessOperatorRepo), buildParams)
+        //         }
+        //     }
+        // }
     }
     post {
         always {
@@ -365,9 +353,6 @@ void addImageBuildParams(List buildParams, String tag, boolean isFinalImage = fa
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
     addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
-    if (!isFinalImage) {
-        addStringParam(buildParams, constructKey(paramsPrefix, 'NAME_SUFFIX'), env.IMAGE_NAME_NIGHTLY_SUFFIX)
-    }
     addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)
 }
 
