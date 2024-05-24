@@ -1,6 +1,6 @@
 def gpgImportKeyFromFileWithPassword(String gpgKeyCredentialsId, String gpgKeyPasswordCredentialsId) {
     withCredentials([file(credentialsId: gpgKeyCredentialsId, variable: 'SIGNING_KEY')]) {
-        withCredentials([file(credentialsId: gpgKeyPasswordCredentialsId, variable: 'SIGNING_KEY_PASSWORD')]) {
+        withCredentials([string(credentialsId: gpgKeyPasswordCredentialsId, variable: 'SIGNING_KEY_PASSWORD')]) {
             // copy the key to singkey.gpg file in *plain text* so we can import it
             sh """
                 cat $SIGNING_KEY > $WORKSPACE/signkey.gpg
@@ -14,7 +14,7 @@ def gpgImportKeyFromFileWithPassword(String gpgKeyCredentialsId, String gpgKeyPa
 }
 
 def gpgSignFileDetachedSignatureWithPassword(String file, String signatureTarget, String gpgKeyPasswordCredentialsId) {
-    withCredentials([file(credentialsId: gpgKeyPasswordCredentialsId, variable: 'SIGNING_KEY_PASSWORD')]) {
+    withCredentials([string(credentialsId: gpgKeyPasswordCredentialsId, variable: 'SIGNING_KEY_PASSWORD')]) {
         sh "gpg --batch --sign --pinentry-mode=loopback --passphrase \"${SIGNING_KEY_PASSWORD}\" --output ${signatureTarget} --detach-sig ${file}"
     }
 }
