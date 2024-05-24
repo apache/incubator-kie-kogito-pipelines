@@ -19,6 +19,8 @@ environments:
     auto_generation: false
     ids:
     - ecosystem
+disable:
+  images-deploy: false
 repositories:
 - name: incubator-kie-kogito-pipelines
   job_display_name: kogito-pipelines
@@ -84,6 +86,14 @@ cloud:
     registry: quay.io
     namespace: kiegroup
     latest_git_branch: main
+release:
+  gpg:
+    sign:
+      key-credentials-id: 'asf-release-gpg-signing-key'
+      passphrase-credentials-id: 'asf-release-gpg-signing-key-passphrase'
+  svn:
+    staging-repository: <TO-BE-DEFINED>
+    credentials-id: <TO-BE-DEFINED>
 jenkins:
   email_creds_id: KOGITO_CI_NOTIFICATION_EMAILS
   agent:
