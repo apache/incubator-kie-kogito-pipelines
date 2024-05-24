@@ -23,6 +23,17 @@ boolean gpgIsValidDetachedSignature(String file, String signature) {
     return sh(returnStatus: true, script: "gpg --batch --verify ${signature} ${file}") == 0
 }
 
-def svnUploadFileToRepository(String svnRepository, String svnCredentialsId, String... files) {
-    throw new NotImplementedException("stub");
+def svnUploadFileToRepository(String svnRepository, String svnCredentialsId, String releaseVersion, String... files) {
+    withCredentials([usernamePassword(credentialsId: svnCredentialsId, usernameVariable: 'ASF_USERNAME', passwordVariable: 'ASF_PASSWORD')]) {
+        sh "svn co --depth=empty ${svnRepository} svn-kie"
+        for (file in files) {
+            sh "cp ${file} svn-kie/${releaseVersion}/"
+        }
+        sh """
+        svn add "svn-kie/${releaseVersion}"
+        cd svn-kie
+        svn ci --non-interactive --no-auth-cache --username ${ASF_USERNAME} --password '${ASF_PASSWORD}' -m "Apache KIE ${releaseVersion} artifacts"
+        rm -rf svn-kie
+        """
+    }
 }
