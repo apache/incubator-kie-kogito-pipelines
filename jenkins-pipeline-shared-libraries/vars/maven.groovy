@@ -59,12 +59,13 @@ def mvnVersionsSet(String newVersion, boolean allowSnapshots = false) {
     mvnVersionsSet(new MavenCommand(this), newVersion, allowSnapshots)
 }
 
-def mvnVersionsSet(MavenCommand mvnCmd, String newVersion, boolean allowSnapshots = false) {
+def mvnVersionsSet(MavenCommand mvnCmd, String newVersion, boolean allowSnapshots = false, boolean processAllModules = true) {
     mvnCmd.clone()
             .withOptions(['-N', '-e'])
             .withProperty('full')
             .withProperty('newVersion', newVersion)
             .withProperty('allowSnapshots', allowSnapshots)
+            .withProperty('processAllModules', processAllModules)
             .withProperty('generateBackupPoms', false)
             .run('versions:set')
 }
