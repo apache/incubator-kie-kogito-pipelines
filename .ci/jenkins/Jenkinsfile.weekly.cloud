@@ -202,7 +202,8 @@ void addExamplesParam(buildParams) {
 }
 
 void addImageBuildParams(List buildParams, String tag, String paramsPrefix = defaultImageParamsPrefix, String extraSuffix = '') {
-    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_CREDENTIALS'), env.IMAGE_REGISTRY_CREDENTIALS)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_USER_CREDENTIALS_ID'), env.IMAGE_REGISTRY_USER_CREDENTIALS_ID)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_TOKEN_CREDENTIALS_ID'), env.IMAGE_REGISTRY_TOKEN_CREDENTIALS_ID)
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
     addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
     addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)

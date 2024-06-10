@@ -185,16 +185,16 @@ maven:
   #artifacts_repository: ''
 cloud:
   image:
-    registry_credentials_nightly: tradisso_registry_token
-    registry_credentials_release: tradisso_registry_token
-    registry: quay.io
-    namespace: tradisso
+    registry_user_credentials_id: DOCKERHUB_USER
+    registry_user_credentials_id: DOCKERHUB_TOKEN
+    registry: docker.io
+    namespace: apache
     latest_git_branch: main
 jenkins:
   email_creds_id: KOGITO_CI_EMAIL_TO_PERSO
   default_tools:
-    jdk: jdk_11_latest
-    maven: maven_3.8.6
+    jdk: jdk_17_latest
+    maven: maven_3.9.6
 
 ```
 
