@@ -20,13 +20,13 @@
 ### MANDATORY VARIABLES DEFINITION - UNCOMMENT FOR LOCAL USE     ###
 ### In Jenkins these VARIABLES are set as jenkins job parameters ###
 
-#VERSION="10.0.0"
-#BRANCH_DEFAULT="main"
-#REPO_ORGANIZATION="apache"
+#TARGET_VERSION="10.0.0"
+#SOURCES_DEFAULT_BRANCH="main"
+#GIT_AUTHOR="apache"
 #
 ## Configuration in format "repository_name;branch(if-override-needed)"
 ## - eg.not all repositories have main branch
-#REPOSITORIES="incubator-kie-drools
+#SOURCES_REPOSITORIES="incubator-kie-drools
 #incubator-kie-kogito-runtimes
 #incubator-kie-kogito-apps
 #incubator-kie-kogito-images
@@ -49,7 +49,7 @@ function zip_sources() {
   fi
 
   while read line; do
-    BRANCH=${BRANCH_DEFAULT}
+    BRANCH=${SOURCES_DEFAULT_BRANCH}
     #get rid of carriage return character if present
     line="$(echo $line | sed 's#\r##g')"
 
@@ -62,7 +62,7 @@ function zip_sources() {
     if [[ ! -z ${REPO_BRANCH} ]]; then
       BRANCH=$REPO_BRANCH
     fi
-    git clone --branch ${BRANCH} --depth 1 "https://github.com/${REPO_ORGANIZATION}/${REPO_NAME}.git" ${REPO_DIRECTORY}
+    git clone --branch ${BRANCH} --depth 1 "https://github.com/${GIT_AUTHOR}/${REPO_NAME}.git" ${REPO_DIRECTORY}
     STATE=$?
     if [[ ${STATE} != 0 ]]; then
       echo "Clonning of ${REPO_NAME} was NOT successfull. Failing"
@@ -84,11 +84,11 @@ function zip_sources() {
     ls -lha
     popd
 
-  done <<< $REPOSITORIES
+  done <<< $SOURCES_REPOSITORIES
 
   #Creating ZIP
   pushd ${SOURCES_DIRECTORY_NAME}
-  ZIP_FILE_NAME="incubator-kie-${VERSION}-sources.zip"
+  ZIP_FILE_NAME="incubator-kie-${TARGET_VERSION}-sources.zip"
   echo "Creating ${ZIP_FILE_NAME}"
   mkdir "../${OUTPUT_DIR}"
   zip -ry "../${OUTPUT_DIR}/${ZIP_FILE_NAME}" *

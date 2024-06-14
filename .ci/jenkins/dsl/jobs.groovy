@@ -67,6 +67,9 @@ if (isMainStream()) {
 // Release
 setupReleaseArtifactsJob()
 setupReleaseCloudJob()
+if (isMainStream()) {
+    setupZipSourcesJob()
+}
 
 Utils.isMainBranch(this) && KogitoJobTemplate.createBranchMultibranchPipelineJob(this, 'kogito-ci-build-image', "${jenkins_path}/Jenkinsfile.build-kogito-ci-image")
 
@@ -329,4 +332,38 @@ void setupReleaseCloudJob() {
             booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
         }
     }
+}
+
+void setupZipSourcesJob() {
+    def jobParams = JobParamsUtils.getBasicJobParams(this, 'zip-and-upload-sources', JobType.TOOLS, "${jenkins_path}/Jenkinsfile.zip.sources", 'Zip sources and upload them into artifactory')
+    jobParams.env.putAll([
+            JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
+
+            GIT_BRANCH_NAME: "${GIT_BRANCH}",
+            GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
+
+            IMAGE_REGISTRY_CREDENTIALS: "${CLOUD_IMAGE_REGISTRY_CREDENTIALS}",
+
+            RELEASE_GPG_SIGN_KEY_CREDS_ID: Utils.getReleaseGpgSignKeyCredentialsId(this),
+            RELEASE_GPG_SIGN_PASSPHRASE_CREDS_ID: Utils.getReleaseGpgSignPassphraseCredentialsId(this),
+            RELEASE_SVN_REPOSITORY: Utils.getReleaseSvnCredentialsId(this),
+            RELEASE_SVN_CREDS_ID: Utils.getReleaseSvnStagingRepository(this)
+            ])
+
+    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
+        parameters {
+            textParam('SOURCES_REPOSITORIES',
+                    '''incubator-kie-drools
+incubator-kie-kogito-runtimes
+incubator-kie-kogito-apps
+incubator-kie-kogito-images
+incubator-kie-optaplanner
+incubator-kie-tools
+incubator-kie-sandbox-quarkus-accelerator''',
+                    'Configuration of sources repositories to pack. Format: "repository_name;branch(if-override-needed)" -eg. we want to override default sources branch for some repositories.')
+            stringParam('TARGET_VERSION', '10.0.0', 'Version of the resulting artifact which will be mentioned in the artifact name')
+            stringParam('SOURCES_DEFAULT_BRANCH', 'main', 'Branch to check ouit sources from. Can be overridden in REPOSITORIES definition')
+        }
+    }
+
 }

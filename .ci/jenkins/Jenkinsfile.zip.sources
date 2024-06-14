@@ -20,14 +20,15 @@ pipeline {
         stage('Sign and upload the sources.zip') {
             steps {
                 script {
-                    String sourcesNameBase = "incubator-kie-${VERSION}-sources"
+                    String sourcesNameBase = "incubator-kie-${TARGET_VERSION}-sources"
                     String sourcesFileName = "${sourcesNameBase}.zip"
                     String signatureFileName = "${sourcesNameBase}.asc"
-                    release.gpgImportKeyFromFileWithPassword(getReleaseGpgSignKeyCredsId(), getReleaseGpgSignPassphraseCredsId())
-                    release.gpgSignFileDetachedSignatureWithPassword(sourcesFileName, signatureFileName, getReleaseGpgSignPassphraseCredsId())
-                    // Currently not working because  CI permissions are fubar
-                    //release.svnUploadFileToRepository(getReleaseSvnRepository(), getReleaseSvnCredsId(), $VERSION, sourcesFileName, signatureFileName)
+                    // Currently not working because  CI permissions and credentials are fubar
+                    //release.gpgImportKeyFromFileWithPassword(getReleaseGpgSignKeyCredsId(), getReleaseGpgSignPassphraseCredsId())
+                    //release.gpgSignFileDetachedSignatureWithPassword(sourcesFileName, signatureFileName, getReleaseGpgSignPassphraseCredsId())
+                    //release.svnUploadFileToRepository(getReleaseSvnRepository(), getReleaseSvnCredsId(), $TARGET_VERSION, sourcesFileName, signatureFileName)
                 }
+                archiveArtifacts artifacts: '**/*.asc'
             }
         }
     }
