@@ -818,25 +818,29 @@ http = false
     def "[cloud.groovy] loginContainerRegistry default"() {
         setup:
         groovyScript.getBinding().setVariable("REGISTRY_USER", 'user')
-        groovyScript.getBinding().setVariable("REGISTRY_PWD", 'password')
+        groovyScript.getBinding().setVariable("REGISTRY_TOKEN", 'password')
         when:
-        groovyScript.loginContainerRegistry('REGISTRY', 'REGISTRY_CREDS_ID')
+        groovyScript.loginContainerRegistry('REGISTRY', 'REGISTRY_USER_CREDS_ID', 'REGISTRY_TOKEN_CREDS_ID')
         then:
-        1 * getPipelineMock('usernamePassword.call')([credentialsId: 'REGISTRY_CREDS_ID', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PWD']) >> 'userNamePassword'
-        1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
-        1 * getPipelineMock("sh")("set +x && docker login -u user -p password  REGISTRY")
+        1 * getPipelineMock('string.call')([credentialsId: 'REGISTRY_USER_CREDS_ID', variable: 'REGISTRY_USER']) >> 'user'
+        1 * getPipelineMock("withCredentials")(['user'], _ as Closure)
+        1 * getPipelineMock('string.call')([credentialsId: 'REGISTRY_TOKEN_CREDS_ID', variable: 'REGISTRY_TOKEN']) >> 'token'
+        1 * getPipelineMock("withCredentials")(['token'], _ as Closure)
+        1 * getPipelineMock("sh")("echo \"password\" | docker login -u \"user\" --password-stdin  REGISTRY")
     }
 
     def "[cloud.groovy] loginContainerRegistry with container engine and options"() {
         setup:
         groovyScript.getBinding().setVariable("REGISTRY_USER", 'user')
-        groovyScript.getBinding().setVariable("REGISTRY_PWD", 'password')
+        groovyScript.getBinding().setVariable("REGISTRY_TOKEN", 'password')
         when:
-        groovyScript.loginContainerRegistry('REGISTRY', 'REGISTRY_CREDS_ID', 'podman', '--tls-verify=false')
+        groovyScript.loginContainerRegistry('REGISTRY', 'REGISTRY_USER_CREDS_ID', 'REGISTRY_TOKEN_CREDS_ID', 'podman', '--tls-verify=false')
         then:
-        1 * getPipelineMock('usernamePassword.call')([credentialsId: 'REGISTRY_CREDS_ID', usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PWD']) >> 'userNamePassword'
-        1 * getPipelineMock("withCredentials")(['userNamePassword'], _ as Closure)
-        1 * getPipelineMock("sh")("set +x && podman login -u user -p password --tls-verify=false REGISTRY")
+        1 * getPipelineMock('string.call')([credentialsId: 'REGISTRY_USER_CREDS_ID', variable: 'REGISTRY_USER']) >> 'user'
+        1 * getPipelineMock("withCredentials")(['user'], _ as Closure)
+        1 * getPipelineMock('string.call')([credentialsId: 'REGISTRY_TOKEN_CREDS_ID', variable: 'REGISTRY_TOKEN']) >> 'token'
+        1 * getPipelineMock("withCredentials")(['token'], _ as Closure)
+        1 * getPipelineMock("sh")("echo \"password\" | podman login -u \"user\" --password-stdin --tls-verify=false REGISTRY")
     }
 
     /////////////////////////////////////////////////////////////////////
@@ -951,4 +955,3 @@ http = false
         1 * getPipelineMock('sh')([script: "curl -H 'Content-type: application/json' -H 'Authorization: Bearer quaytoken' -X PUT --data-binary '@description.json' https://quay.io/api/v1/repository/namespace/repository"])
     }
 }
-
