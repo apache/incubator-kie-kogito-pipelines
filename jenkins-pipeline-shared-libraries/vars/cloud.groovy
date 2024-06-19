@@ -82,9 +82,13 @@ String getOpenShiftRegistryURL() {
 /*
 * Login to a container registry
 */
-void loginContainerRegistry(String registry, String credsId, String containerEngine = 'docker', String containerEngineTlsOptions = '') {
-    withCredentials([usernamePassword(credentialsId: credsId, usernameVariable: 'REGISTRY_USER', passwordVariable: 'REGISTRY_PWD')]) {
-        sh "set +x && ${containerEngine} login -u ${REGISTRY_USER} -p ${REGISTRY_PWD} ${containerEngineTlsOptions} ${registry}"
+void loginContainerRegistry(String registry, String userCredsId, String tokenCredsId, String containerEngine = 'docker', String containerEngineTlsOptions = '') {
+    withCredentials([string(credentialsId: userCredsId, variable: 'REGISTRY_USER')]) {
+        withCredentials([string(credentialsId: tokenCredsId, variable: 'REGISTRY_TOKEN')]) {
+            sh """
+            echo "${REGISTRY_TOKEN}" | ${containerEngine} login -u "${REGISTRY_USER}" --password-stdin ${containerEngineTlsOptions} ${registry}
+            """.trim()
+        }
     }
 }
 
