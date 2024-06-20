@@ -101,12 +101,7 @@ pipeline {
                         script {
                             env.BUILD_MVN_OPTS_CURRENT = "${env.BUILD_MVN_OPTS_CURRENT ?: ''} ${getBuildMavenOptsCurrent()}"
                             echo "BUILD_MVN_OPTS_CURRENT = ${BUILD_MVN_OPTS_CURRENT}"
-                            withCredentials([usernamePassword(credentialsId: mavenDeployRepositoryCredsId, usernameVariable: 'REPOSITORY_USER', passwordVariable: 'REPOSITORY_TOKEN')]) {
-                                if (mavenDeployArtifacts) {
-                                    env.DEPLOY_MVN_OPTS = "${env.DEPLOY_MVN_OPTS ?: ''} -DdeployAtEnd -Dapache.repository.username=${REPOSITORY_USER} -Dapache.repository.password=${REPOSITORY_TOKEN} -DretryFailedDeploymentCount=5"
-                                    echo "DEPLOY_MVN_OPTS = ${DEPLOY_MVN_OPTS}"
-                                }
-
+                            Closure buildchainCommandClosure = {
                                 configFileProvider([configFile(fileId: settingsXmlId, variable: 'MAVEN_SETTINGS_FILE')]) {
                                     withCredentials([string(credentialsId: "${BUILDCHAIN_CONFIG_GIT_TOKEN_CREDENTIALS_ID}", variable: 'GITHUB_TOKEN')]) {
                                         env.BUILD_MVN_OPTS = "${env.BUILD_MVN_OPTS ?: ''} -s ${MAVEN_SETTINGS_FILE} -Dmaven.wagon.http.ssl.insecure=true -Dmaven.test.failure.ignore=true"
@@ -115,6 +110,16 @@ pipeline {
                                         sh getBuildChainCommandline(true)
                                     }
                                 }
+                            }
+                            if (mavenDeployArtifacts) {
+                                withCredentials([usernamePassword(credentialsId: mavenDeployRepositoryCredsId, usernameVariable: 'REPOSITORY_USER', passwordVariable: 'REPOSITORY_TOKEN')]) {
+                                    env.DEPLOY_MVN_OPTS = "${env.DEPLOY_MVN_OPTS ?: ''} -DdeployAtEnd -Dapache.repository.username=${REPOSITORY_USER} -Dapache.repository.password=${REPOSITORY_TOKEN} -DretryFailedDeploymentCount=5"
+                                    echo "DEPLOY_MVN_OPTS = ${DEPLOY_MVN_OPTS}"
+                                    // for buildchain not to leak credentials this needs to stay in withCredentials scope
+                                    buildchainCommandClosure()
+                                }
+                            } else {
+                                buildchainCommandClosure()
                             }
                         }
                     }
