@@ -148,7 +148,7 @@ class MavenSpec extends JenkinsPipelineSpecification {
         when:
         mavenGroovy.mvnVersionsSet(newVersion)
         then:
-        1 * getPipelineMock("sh")([script: "mvn -B -N -e versions:set -Dfull -DnewVersion=${newVersion} -DallowSnapshots=false -DgenerateBackupPoms=false", returnStdout: false])
+        1 * getPipelineMock("sh")([script: "mvn -B -N -e versions:set -Dfull -DnewVersion=${newVersion} -DallowSnapshots=false -DprocessAllModules=true -DgenerateBackupPoms=false", returnStdout: false])
     }
 
     def "[maven.groovy] run mvn versions set with allow snapshots"() {
@@ -157,7 +157,7 @@ class MavenSpec extends JenkinsPipelineSpecification {
         when:
         mavenGroovy.mvnVersionsSet(newVersion, true)
         then:
-        1 * getPipelineMock("sh")([script: "mvn -B -N -e versions:set -Dfull -DnewVersion=${newVersion} -DallowSnapshots=true -DgenerateBackupPoms=false", returnStdout: false])
+        1 * getPipelineMock("sh")([script: "mvn -B -N -e versions:set -Dfull -DnewVersion=${newVersion} -DallowSnapshots=true -DprocessAllModules=true -DgenerateBackupPoms=false", returnStdout: false])
     }
 
     def "[maven.groovy] run mvn versions update parent"() {

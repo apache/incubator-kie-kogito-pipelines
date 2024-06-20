@@ -28,7 +28,7 @@ dockerArgs = [
 ] + dockerGroups.collect { group -> "--group-add ${group}" }
 
 void launch() {
-    String builderImage = 'quay.io/kiegroup/kogito-ci-build:main-latest'
+    String builderImage = 'docker.io/apache/incubator-kie-kogito-ci-build:main-latest'
     sh "docker rmi -f ${builderImage} || true" // Remove before launching
 
     try {
