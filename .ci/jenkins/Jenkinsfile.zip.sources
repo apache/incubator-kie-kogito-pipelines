@@ -1,11 +1,17 @@
 import org.jenkinsci.plugins.workflow.libs.Library
 
-@Library('jenkins-pipeline-shared-libraries@kie-issues-828')_
+@Library('jenkins-pipeline-shared-libraries')_
 
 pipeline {
     agent {
         label util.avoidFaultyNodes()
     }
+
+    environment {
+        SOURCES_FILE_NAME = "${SOURCES_FILE_NAME_TEMPLATE}.zip"
+        SIGNATURE_FILE_NAME = "${SOURCES_FILE_NAME_TEMPLATE}.asc"
+    }
+
     options {
         timeout(time: 120, unit: 'MINUTES')
     }
@@ -13,22 +19,19 @@ pipeline {
     stages {
         stage('Create sources ZIP') {
             steps {
-                sh 'tools/zip-sources-all.sh'
-                archiveArtifacts artifacts: '**/*-sources.zip'
+                sh "tools/zip-sources-all.sh ${SOURCES_FILE_NAME}"
+                archiveArtifacts artifacts: "**/${SOURCES_FILE_NAME}"
             }
         }
         stage('Sign and upload the sources.zip') {
             steps {
                 script {
-                    String sourcesNameBase = "incubator-kie-${TARGET_VERSION}-sources"
-                    String sourcesFileName = "${sourcesNameBase}.zip"
-                    String signatureFileName = "${sourcesNameBase}.asc"
-                    // Currently not working because  CI permissions and credentials are fubar
-                    //release.gpgImportKeyFromFileWithPassword(getReleaseGpgSignKeyCredsId(), getReleaseGpgSignPassphraseCredsId())
-                    //release.gpgSignFileDetachedSignatureWithPassword(sourcesFileName, signatureFileName, getReleaseGpgSignPassphraseCredsId())
-                    //release.svnUploadFileToRepository(getReleaseSvnRepository(), getReleaseSvnCredsId(), $TARGET_VERSION, sourcesFileName, signatureFileName)
+                    // TODO: Uncomment (and adjust) when we have required credentials available
+                    release.gpgImportKeyFromFileWithPassword(getReleaseGpgSignKeyCredsId(), getReleaseGpgSignPassphraseCredsId())
+                    release.gpgSignFileDetachedSignatureWithPassword(SOURCES_FILE_NAME, SIGNATURE_FILE_NAME, getReleaseGpgSignPassphraseCredsId())
+                    release.svnUploadFileToRepository(getReleaseSvnRepository(), getReleaseSvnCredsId(), TARGET_VERSION, SOURCES_FILE_NAME, SIGNATURE_FILE_NAME)
                 }
-                archiveArtifacts artifacts: '**/*.asc'
+                archiveArtifacts artifacts: "**/${SIGNATURE_FILE_NAME}"
             }
         }
     }

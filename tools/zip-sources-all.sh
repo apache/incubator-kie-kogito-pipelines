@@ -65,7 +65,7 @@ function zip_sources() {
     git clone --branch ${BRANCH} --depth 1 "https://github.com/${GIT_AUTHOR}/${REPO_NAME}.git" ${REPO_DIRECTORY}
     STATE=$?
     if [[ ${STATE} != 0 ]]; then
-      echo "Clonning of ${REPO_NAME} was NOT successfull. Failing"
+      echo "Cloning ${REPO_NAME} was NOT successful. Failing."
       exit 1
     fi
 
@@ -88,7 +88,7 @@ function zip_sources() {
 
   #Creating ZIP
   pushd ${SOURCES_DIRECTORY_NAME}
-  ZIP_FILE_NAME="incubator-kie-${TARGET_VERSION}-sources.zip"
+  ZIP_FILE_NAME=$1
   echo "Creating ${ZIP_FILE_NAME}"
   mkdir "../${OUTPUT_DIR}"
   zip -ry "../${OUTPUT_DIR}/${ZIP_FILE_NAME}" *
@@ -100,4 +100,4 @@ function zip_sources() {
   popd
 }
 
-zip_sources
+zip_sources $1
