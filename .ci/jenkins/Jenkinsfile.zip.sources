@@ -23,17 +23,17 @@ pipeline {
                 archiveArtifacts artifacts: "**/${SOURCES_FILE_NAME}"
             }
         }
-        stage('Sign and upload the sources.zip') {
-            steps {
-                script {
-                    // TODO: Uncomment (and adjust) when we have required credentials available
-                    release.gpgImportKeyFromFileWithPassword(getReleaseGpgSignKeyCredsId(), getReleaseGpgSignPassphraseCredsId())
-                    release.gpgSignFileDetachedSignatureWithPassword(SOURCES_FILE_NAME, SIGNATURE_FILE_NAME, getReleaseGpgSignPassphraseCredsId())
-                    release.svnUploadFileToRepository(getReleaseSvnRepository(), getReleaseSvnCredsId(), TARGET_VERSION, SOURCES_FILE_NAME, SIGNATURE_FILE_NAME)
-                }
-                archiveArtifacts artifacts: "**/${SIGNATURE_FILE_NAME}"
-            }
-        }
+//        stage('Sign and upload the sources.zip') {
+//            steps {
+//                script {
+//                    // TODO: Uncomment (and adjust) when we have required credentials available
+//                    release.gpgImportKeyFromFileWithPassword(getReleaseGpgSignKeyCredsId(), getReleaseGpgSignPassphraseCredsId())
+//                    release.gpgSignFileDetachedSignatureWithPassword(SOURCES_FILE_NAME, SIGNATURE_FILE_NAME, getReleaseGpgSignPassphraseCredsId())
+//                    release.svnUploadFileToRepository(getReleaseSvnRepository(), getReleaseSvnCredsId(), TARGET_VERSION, SOURCES_FILE_NAME, SIGNATURE_FILE_NAME)
+//                }
+//                archiveArtifacts artifacts: "**/${SIGNATURE_FILE_NAME}"
+//            }
+//        }
     }
 }
 
