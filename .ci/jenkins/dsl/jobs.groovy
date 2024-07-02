@@ -363,7 +363,7 @@ incubator-kie-sandbox-quarkus-accelerator''',
                     'Configuration of sources repositories to pack. Format: "repository_name;branch(if-override-needed)" -eg. we want to override default sources branch for some repositories.')
             stringParam('TARGET_VERSION', '10.0.0', 'Version of the resulting artifact which will be mentioned in the artifact name')
             stringParam('SOURCES_DEFAULT_BRANCH', 'main', 'Branch to check out sources from. Can be overridden in REPOSITORIES definition')
-            stringParam('SOURCES_FILE_NAME_TEMPLATE', 'incubator-kie-${TARGET_VERSION}-sources', 'Branch to check ouit sources from. Can be overridden in REPOSITORIES definition')
+            stringParam('SOURCES_FILE_NAME_TEMPLATE', 'incubator-kie-${TARGET_VERSION}-sources', 'Filename pattern for the resulting sources archive. Can be parameterized by job parameters or env variables.')
         }
     }
 
