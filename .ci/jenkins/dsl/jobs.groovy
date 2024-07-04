@@ -345,8 +345,6 @@ void setupZipSourcesJob() {
             GIT_BRANCH_NAME: "${GIT_BRANCH}",
             GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
 
-            IMAGE_REGISTRY_CREDENTIALS: "${CLOUD_IMAGE_REGISTRY_CREDENTIALS}",
-
             RELEASE_GPG_SIGN_KEY_CREDS_ID: Utils.getReleaseGpgSignKeyCredentialsId(this),
             RELEASE_GPG_SIGN_PASSPHRASE_CREDS_ID: Utils.getReleaseGpgSignPassphraseCredentialsId(this),
             RELEASE_SVN_REPOSITORY: Utils.getReleaseSvnCredentialsId(this),
