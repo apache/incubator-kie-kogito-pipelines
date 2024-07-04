@@ -75,7 +75,7 @@ pipeline {
 
                         if (githubscm.isThereAnyChanges()) {
                             sh 'git diff'
-                            githubscm.setUserConfigFromCreds(getGitAuthorPushCredsId())
+                            githubscm.setUserConfigFromCreds(getMainBranchConfigFileGitAuthorPushCredentialsId())
                             githubscm.commitChanges('Setup DSL branch config after cut-off')
                             githubscm.pushObject('origin', newBranch, getMainBranchConfigFileGitAuthorPushCredentialsId())
 
