@@ -23,27 +23,22 @@ pipeline {
                 archiveArtifacts artifacts: "**/${SOURCES_FILE_NAME}"
             }
         }
-//        stage('Sign and upload the sources.zip') {
-//            steps {
-//                script {
-//                    // TODO: Uncomment (and adjust) when we have required credentials available
-//                    release.gpgImportKeyFromFileWithPassword(getReleaseGpgSignKeyCredsId(), getReleaseGpgSignPassphraseCredsId())
-//                    release.gpgSignFileDetachedSignatureWithPassword(SOURCES_FILE_NAME, SIGNATURE_FILE_NAME, getReleaseGpgSignPassphraseCredsId())
-//                    release.svnUploadFileToRepository(getReleaseSvnRepository(), getReleaseSvnCredsId(), TARGET_VERSION, SOURCES_FILE_NAME, SIGNATURE_FILE_NAME)
-//                }
-//                archiveArtifacts artifacts: "**/${SIGNATURE_FILE_NAME}"
-//            }
-//        }
+       stage('Sign and upload the sources.zip') {
+           steps {
+               script {
+                   release.gpgImportKeyFromStringWithoutPassword(getReleaseGpgSignKeyCredsId())
+                   release.gpgSignFileDetachedSignatureWithoutPassword(SOURCES_FILE_NAME, SIGNATURE_FILE_NAME)
+                   release.svnUploadFileToRepository(getReleaseSvnRepository(), getReleaseSvnCredsId(), TARGET_VERSION, SOURCES_FILE_NAME, SIGNATURE_FILE_NAME)
+               }
+               archiveArtifacts artifacts: "**/${SIGNATURE_FILE_NAME}"
+           }
+       }
     }
 }
 
 
 String getReleaseGpgSignKeyCredsId() {
     return env.RELEASE_GPG_SIGN_KEY_CREDS_ID
-}
-
-String getReleaseGpgSignPassphraseCredsId() {
-    return env.RELEASE_GPG_SIGN_PASSPHRASE_CREDS_ID
 }
 
 String getReleaseSvnRepository() {
