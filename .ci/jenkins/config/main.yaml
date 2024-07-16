@@ -17,6 +17,9 @@ git:
   branches:
   - name: main
     main_branch: true
+  - name: 10.0.x
+    seed:
+      branch: seed-kogito-10.0.x
 seed:
   config_file:
     git:
@@ -34,8 +37,5 @@ jenkins:
   agent:
     docker:
       builder:
-        # At some point, this image will need to be changed when a release branch is created
-        # but we need to make sure the image exists first ... simple tag before setting up the branch ?
-        # See https://github.com/kiegroup/kie-issues/issues/551
         image: docker.io/apache/incubator-kie-kogito-ci-build:main-latest
         args: --privileged --group-add docker
