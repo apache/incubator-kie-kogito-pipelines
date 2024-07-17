@@ -90,23 +90,6 @@ pipeline {
             }
         }
 
-        stage('Init Docs') {
-            when {
-                expression { return isMainStream() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    buildJob('kogito-docs', buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage('kogito-docs')
-                }
-            }
-        }
-
         // Launch the nightly to deploy all artifacts from the branch
         stage('Launch the nightly') {
             when {
