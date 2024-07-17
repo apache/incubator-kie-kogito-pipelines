@@ -48,21 +48,6 @@ pipeline {
             }
         }
 
-        stage('Init Serverless Operator') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addStringParam(buildParams, 'PROJECT_VERSION', getKogitoVersion().toLowerCase())
-                    buildJob('kogito-serverless-operator', buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage('kogito-serverless-operator')
-                }
-            }
-        }
-
         // Launch the nightly to deploy all artifacts from the branch
         stage('Launch the nightly') {
             when {
