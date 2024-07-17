@@ -80,27 +80,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Build & Deploy Serverless Operator') {
-            when {
-                expression { return isOperatorDeploy() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
-                    addImageBuildParams(buildParams, env.NIGHTLY_TAG)
-                    addDeployImageWithLatestTagParam(buildParams)
-
-                    buildJob(SEVERLESS_OPERATOR_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(SEVERLESS_OPERATOR_DEPLOY)
-                }
-            }
-        }
     }
     post {
         unsuccessful {
