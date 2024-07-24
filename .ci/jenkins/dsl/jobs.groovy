@@ -283,9 +283,8 @@ void setupReleaseArtifactsJob() {
         parameters {
             stringParam('RESTORE_FROM_PREVIOUS_JOB', '', 'URL to a previous stopped release job which needs to be continued')
 
-            stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
-            stringParam('DROOLS_VERSION', '', 'Drools version to set for the release')
-            booleanParam('DEPLOY_AS_LATEST', false, 'Given project version is considered the latest version')
+            stringParam('RELEASE_VERSION', '', 'Version to release as Major.minor.micro')
+            stringParam('GIT_TAG_NAME', '', 'Git tag to create. i.e.: 10.0.0-rc1')
 
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
@@ -301,21 +300,13 @@ void setupReleaseCloudJob() {
 
         GIT_BRANCH_NAME: "${GIT_BRANCH}",
         GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
-
-        IMAGE_REGISTRY_USER_CREDENTIALS_ID: "${CLOUD_IMAGE_REGISTRY_USER_CREDENTIALS_ID}",
-        IMAGE_REGISTRY_TOKEN_CREDENTIALS_ID: "${CLOUD_IMAGE_REGISTRY_TOKEN_CREDENTIALS_ID}",
-        IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
-        IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
-        BRANCH_FOR_LATEST: "${CLOUD_IMAGE_LATEST_GIT_BRANCH}",
     ])
     KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         parameters {
             stringParam('RESTORE_FROM_PREVIOUS_JOB', '', 'URL to a previous stopped release job which needs to be continued')
 
-            stringParam('KOGITO_VERSION', '', 'Kogito version to release as Major.minor.micro')
-            stringParam('KOGITO_IMAGES_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
-            stringParam('KOGITO_SERVERLESS_OPERATOR_VERSION', '', '(optional) To be set if different from KOGITO_VERSION. Should be only a bug fix update from KOGITO_VERSION.')
-            booleanParam('DEPLOY_AS_LATEST', false, 'Given project version is considered the latest version')
+            stringParam('RELEASE_VERSION', '', 'Version to release as Major.minor.micro. i.e: 10.0.0')
+            stringParam('GIT_TAG_NAME', '', 'Git tag to create. i.e.: 10.0.0-rc1')
 
             stringParam('APPS_URI', '', 'Override default. Git uri to the kogito-apps repository to use for building images.')
             stringParam('APPS_REF', '', 'Override default. Git reference (branch/tag) to the kogito-apps repository to use for building images.')
@@ -323,9 +314,6 @@ void setupReleaseCloudJob() {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
 
             booleanParam('SKIP_IMAGES_RELEASE', false, 'To skip Images Test & Deployment.')
-            booleanParam('SKIP_SERVERLESS_OPERATOR_RELEASE', false, 'To skip Serverless Operator Test & Deployment.')
-
-            booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
         }
     }
 }
