@@ -43,7 +43,7 @@ pipeline {
                 script {
                     dir('drools') {
                         deleteDir()
-                        checkout(githubscm.resolveRepository('incubator-kie-drools', getGitAuthor(), getTargetBranch(7), false))
+                        checkout(githubscm.resolveRepository('incubator-kie-drools', getGitAuthor(), getGitBranch(), false))
                     }
                     dir('kogito-runtimes') {
                         deleteDir()
