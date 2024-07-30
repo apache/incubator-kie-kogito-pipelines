@@ -43,7 +43,7 @@ pipeline {
                 script {
                     dir('drools') {
                         deleteDir()
-                        checkout(githubscm.resolveRepository('incubator-kie-drools', getGitAuthor(), getTargetBranch(7), false))
+                        checkout(githubscm.resolveRepository('incubator-kie-drools', getGitAuthor(), getGitBranch(), false))
                     }
                     dir('kogito-runtimes') {
                         deleteDir()
@@ -56,7 +56,7 @@ pipeline {
                     dir('optaplanner') {
                         deleteDir()
                         // Get current corresponding branch and if not working, latest tag
-                        String opBranch = getTargetBranch(7)
+                        String opBranch = getGitBranch()
                         try {
                             checkout(githubscm.resolveRepository('incubator-kie-optaplanner', getGitAuthor(), opBranch, false))
                         } catch(err) {
