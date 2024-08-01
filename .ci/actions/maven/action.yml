@@ -59,6 +59,8 @@ runs:
         # Workaround taken from https://github.com/actions/toolkit/issues/713#issuecomment-850321461
         path: |
           ~/.m2/repository/*/*
+          !~/.m2/repository/org/jbpm
+          !~/.m2/repository/org/apache/kie/sonataflow
           !~/.m2/repository/org/kie
           !~/.m2/repository/org/drools
           !~/.m2/repository/org/optaplanner
