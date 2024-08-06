@@ -35,7 +35,6 @@ setupUpdateJenkinsDependenciesJob()
 if (isMainStream()) {
     setupCreateIssueToolsJob()
     setupCleanOldNamespacesToolsJob()
-    setupCleanOldNightlyImagesToolsJob()
 
     KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'kogito')
 
@@ -84,12 +83,6 @@ void setupCleanOldNamespacesToolsJob() {
     KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
-void setupCleanOldNightlyImagesToolsJob() {
-    jobParams = JobParamsUtils.getBasicJobParams(this, 'kogito-clean-old-nightly-images', JobType.TOOLS, "${jenkins_path}/Jenkinsfile.tools.clean-nightly-images")
-    jobParams.triggers = [ cron : 'H 8 * * *' ]
-    JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(this, jobParams)
-    KogitoJobTemplate.createPipelineJob(this, jobParams)
-}
 
 void setupCreateIssueToolsJob() {
     jobParams = JobParamsUtils.getBasicJobParams(this, 'kogito-create-issue', JobType.TOOLS, "${jenkins_path}/Jenkinsfile.tools.create-issue")
