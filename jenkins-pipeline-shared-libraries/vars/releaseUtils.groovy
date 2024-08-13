@@ -20,7 +20,7 @@ def gpgImportKeyFromStringWithoutPassword(String gpgKeyCredentialsId) {
             echo "$SIGNING_KEY" > $WORKSPACE/signkey.gpg
             # Please do not remove list keys command. When gpg is run for the first time, it may initialize some internals.
             gpg --list-keys
-            gpg --batch --pinentry-mode=loopback --import signkey.gpg
+            gpg --batch --pinentry-mode=loopback --import $WORKSPACE/signkey.gpg
             rm $WORKSPACE/signkey.gpg
         """
     }
