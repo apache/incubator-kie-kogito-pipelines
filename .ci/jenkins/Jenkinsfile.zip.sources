@@ -26,9 +26,9 @@ pipeline {
        stage('Sign and upload the sources.zip') {
            steps {
                script {
-                   release.gpgImportKeyFromStringWithoutPassword(getReleaseGpgSignKeyCredsId())
-                   release.gpgSignFileDetachedSignatureWithoutPassword(SOURCES_FILE_NAME, SIGNATURE_FILE_NAME)
-                   release.svnUploadFileToRepository(getReleaseSvnRepository(), getReleaseSvnCredsId(), TARGET_VERSION, SOURCES_FILE_NAME, SIGNATURE_FILE_NAME)
+                   releaseUtils.gpgImportKeyFromStringWithoutPassword(getReleaseGpgSignKeyCredsId())
+                   releaseUtils.gpgSignFileDetachedSignatureWithoutPassword(SOURCES_FILE_NAME, SIGNATURE_FILE_NAME)
+                   releaseUtils.svnUploadFileToRepository(getReleaseSvnRepository(), getReleaseSvnCredsId(), TARGET_VERSION, SOURCES_FILE_NAME, SIGNATURE_FILE_NAME)
                }
                archiveArtifacts artifacts: "**/${SIGNATURE_FILE_NAME}"
            }
