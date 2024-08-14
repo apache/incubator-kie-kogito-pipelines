@@ -17,7 +17,7 @@ def gpgImportKeyFromStringWithoutPassword(String gpgKeyCredentialsId) {
     withCredentials([file(credentialsId: gpgKeyCredentialsId, variable: 'SIGNING_KEY')]) {
         sh """
             gpg --list-keys
-            cat "$SIGNING_KEY" | gpg --batch --pinentry-mode=loopback --import
+            gpg --batch --pinentry-mode=loopback --import $SIGNING_KEY
         """
     }
 }
