@@ -14,14 +14,10 @@ def gpgImportKeyFromFileWithPassword(String gpgKeyCredentialsId, String gpgKeyPa
 }
 
 def gpgImportKeyFromStringWithoutPassword(String gpgKeyCredentialsId) {
-    withCredentials([string(credentialsId: gpgKeyCredentialsId, variable: 'SIGNING_KEY')]) {
-        // copy the key to singkey.gpg file in *plain text* so we can import it
+    withCredentials([file(credentialsId: gpgKeyCredentialsId, variable: 'SIGNING_KEY')]) {
         sh """
-            echo "$SIGNING_KEY" > $WORKSPACE/signkey.gpg
-            # Please do not remove list keys command. When gpg is run for the first time, it may initialize some internals.
             gpg --list-keys
-            gpg --batch --pinentry-mode=loopback --import $WORKSPACE/signkey.gpg
-            rm $WORKSPACE/signkey.gpg
+            cat "$SIGNING_KEY" | gpg --batch --pinentry-mode=loopback --import
         """
     }
 }
