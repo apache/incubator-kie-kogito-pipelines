@@ -58,7 +58,6 @@ pipeline {
                 script {
                     def buildParams = getDefaultBuildParams()
                     addImageBuildParams(buildParams, env.WEEKLY_TAG)
-                    addDeployImageWithLatestTagParam(buildParams)
 
                     // For building
                     addAppsParam(buildParams)
@@ -188,10 +187,6 @@ void addImageBuildParams(List buildParams, String tag, String paramsPrefix = def
     addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)
 }
 
-void addDeployImageWithLatestTagParam(buildParams) {
-    addBooleanParam(buildParams, 'DEPLOY_WITH_LATEST_TAG', isDeployImagesLatestTag())
-}
-
 void addStringParam(List params, String key, String value) {
     params.add(string(name: key, value: value))
 }
@@ -214,10 +209,6 @@ String getGitAuthor() {
 
 String getGitAuthorCredsId() {
     return env.GIT_AUTHOR_CREDS_ID
-}
-
-boolean isDeployImagesLatestTag() {
-    return getBuildBranch() == env.BRANCH_FOR_LATEST
 }
 
 boolean isImagesDeploy() {
