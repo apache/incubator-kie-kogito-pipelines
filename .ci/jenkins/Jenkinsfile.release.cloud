@@ -59,7 +59,7 @@ pipeline {
             steps {
                 script {
                     env.APPS_URI = params.APPS_URI ?: (getReleaseProperty('apps.uri') ?: "https://github.com/${getGitAuthor()}/incubator-kie-kogito-apps")
-                    env.APPS_REF = params.APPS_REF ?: (getReleaseProperty('apps.ref') ?: getReleaseVersion())
+                    env.APPS_REF = params.APPS_REF ?: (getReleaseProperty('apps.ref') ?: getGitTagName())
 
                     echo "Got apps uri ${env.APPS_URI}"
                     echo "Got apps ref ${env.APPS_REF}"
