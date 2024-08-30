@@ -38,13 +38,13 @@ boolean gpgIsValidDetachedSignature(String file, String signature) {
 
 def svnUploadFileToRepository(String svnRepository, String svnCredentialsId, String releaseVersion, String... files) {
     withCredentials([usernamePassword(credentialsId: svnCredentialsId, usernameVariable: 'ASF_USERNAME', passwordVariable: 'ASF_PASSWORD')]) {
-        sh "svn co --depth=empty ${svnRepository} svn-kie"
+        sh "svn co --depth=empty ${svnRepository}/${releaseVersion} svn-kie"
         for (file in files) {
-            sh "cp ${file} svn-kie/${releaseVersion}/"
+            sh "cp ${file} svn-kie"
         }
         sh """
-        svn add "svn-kie/${releaseVersion}"
         cd svn-kie
+        svn add . --force
         svn ci --non-interactive --no-auth-cache --username ${ASF_USERNAME} --password '${ASF_PASSWORD}' -m "Apache KIE ${releaseVersion} artifacts"
         rm -rf svn-kie
         """
