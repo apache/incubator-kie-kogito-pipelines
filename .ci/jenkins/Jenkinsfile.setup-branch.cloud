@@ -36,7 +36,7 @@ pipeline {
             steps {
                 script {
                     def buildParams = getDefaultBuildParams()
-                    addStringParam(buildParams, 'KOGITO_VERSION', getKogitoVersion().toLowerCase())
+                    addStringParam(buildParams, 'KOGITO_VERSION', getKogitoVersion())
                     addStringParam(buildParams, 'KOGITO_ARTIFACTS_VERSION', getKogitoVersion())
                     buildJob('kogito-images', buildParams)
                 }
