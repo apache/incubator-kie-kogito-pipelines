@@ -298,6 +298,9 @@ void setupReleaseCloudJob() {
     jobParams.env.putAll([
         JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
 
+        IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
+        IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
+
         GIT_BRANCH_NAME: "${GIT_BRANCH}",
         GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
     ])
