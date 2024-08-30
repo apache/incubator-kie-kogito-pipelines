@@ -287,8 +287,8 @@ void addImageBuildParams(List buildParams, String tag, boolean isFinalImage = fa
     addBooleanParam(buildParams, constructKey(paramsPrefix, 'USE_OPENSHIFT_REGISTRY'), false)
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_USER_CREDENTIALS_ID'), '')
     addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY_TOKEN_CREDENTIALS_ID'), '')
-    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), '')
-    addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), '')
+    addStringParam(buildParams, constructKey(paramsPrefix, 'REGISTRY'), env.IMAGE_REGISTRY)
+    addStringParam(buildParams, constructKey(paramsPrefix, 'NAMESPACE'), env.IMAGE_NAMESPACE)
     addStringParam(buildParams, constructKey(paramsPrefix, 'TAG'), tag)
 }
 
