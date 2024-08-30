@@ -45,7 +45,7 @@ def svnUploadFileToRepository(String svnRepository, String svnCredentialsId, Str
         sh """
         cd svn-kie
         svn add . --force
-        svn ci --non-interactive --no-auth-cache --username ${ASF_USERNAME} --password ${ASF_PASSWORD} -m "Apache KIE ${releaseVersion} artifacts"
+        svn ci --non-interactive --no-auth-cache --username ${ASF_USERNAME} --password '${ASF_PASSWORD}' -m "Apache KIE ${releaseVersion} artifacts"
         rm -rf svn-kie
         """
     }
