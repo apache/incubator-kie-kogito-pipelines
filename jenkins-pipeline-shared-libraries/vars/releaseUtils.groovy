@@ -29,7 +29,10 @@ def gpgSignFileDetachedSignatureWithPassword(String file, String signatureTarget
 }
 
 def gpgSignFileDetachedSignatureWithoutPassword(String file, String signatureTarget) {
-    sh "gpg --batch --sign --pinentry-mode=loopback --output ${signatureTarget} --detach-sig ${file}"
+    sh """
+    gpg --batch --sign --pinentry-mode=loopback --output ${signatureTarget} --detach-sig ${file}
+    shasum -a 512 ${file} > ${file}.sha512
+    """
 }
 
 boolean gpgIsValidDetachedSignature(String file, String signature) {
