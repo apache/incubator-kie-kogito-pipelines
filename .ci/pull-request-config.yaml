@@ -51,7 +51,7 @@ build:
         current: |
           export MVN_EXCLUSION=""
           echo  ${{ env.MVN_EXCLUSION }}
-          mvn clean package -DskipTests -Dfull artifact:3.5.1:compare -Dcompare.fail=false -Dreference.repo=file:~/.m2/repository -pl ${{ env.MVN_EXCLUSION }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS }}
+          mvn clean package -DskipTests -Dfull artifact:3.5.1:compare -Dcompare.fail=false -Dcompare.aggregate.only=true -Dreference.repo=file:~/.m2/repository -pl ${{ env.MVN_EXCLUSION }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS }}
 
   - project: apache/incubator-kie-kogito-apps
     build-command: 
