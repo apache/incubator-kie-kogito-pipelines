@@ -86,6 +86,10 @@ function zip_sources() {
 
   done <<< $SOURCES_REPOSITORIES
 
+  #Add LICENSE, NOTICE and DISCLAIMER files to the root folder of the zip file
+  echo "Adding LICENSE, NOTICE and DISCLAIMER files to the zip file"
+  cp ./tools/zip-sources-files/{LICENSE,NOTICE,DISCLAIMER} ${SOURCES_DIRECTORY_NAME}
+
   #Creating ZIP
   pushd ${SOURCES_DIRECTORY_NAME}
   ZIP_FILE_NAME=$1
