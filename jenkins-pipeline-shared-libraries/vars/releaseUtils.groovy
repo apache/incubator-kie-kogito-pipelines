@@ -14,14 +14,10 @@ def gpgImportKeyFromFileWithPassword(String gpgKeyCredentialsId, String gpgKeyPa
 }
 
 def gpgImportKeyFromStringWithoutPassword(String gpgKeyCredentialsId) {
-    withCredentials([string(credentialsId: gpgKeyCredentialsId, variable: 'SIGNING_KEY')]) {
-        // copy the key to singkey.gpg file in *plain text* so we can import it
+    withCredentials([file(credentialsId: gpgKeyCredentialsId, variable: 'SIGNING_KEY')]) {
         sh """
-            echo "$SIGNING_KEY" > $WORKSPACE/signkey.gpg
-            # Please do not remove list keys command. When gpg is run for the first time, it may initialize some internals.
             gpg --list-keys
-            gpg --batch --pinentry-mode=loopback --import signkey.gpg
-            rm $WORKSPACE/signkey.gpg
+            gpg --batch --pinentry-mode=loopback --import $SIGNING_KEY
         """
     }
 }
@@ -33,7 +29,10 @@ def gpgSignFileDetachedSignatureWithPassword(String file, String signatureTarget
 }
 
 def gpgSignFileDetachedSignatureWithoutPassword(String file, String signatureTarget) {
-    sh "gpg --batch --sign --pinentry-mode=loopback --output ${signatureTarget} --detach-sig ${file}"
+    sh """
+    gpg --batch --sign --pinentry-mode=loopback --output ${signatureTarget} --detach-sig ${file}
+    shasum -a 512 ${file} > ${file}.sha512
+    """
 }
 
 boolean gpgIsValidDetachedSignature(String file, String signature) {
@@ -42,13 +41,13 @@ boolean gpgIsValidDetachedSignature(String file, String signature) {
 
 def svnUploadFileToRepository(String svnRepository, String svnCredentialsId, String releaseVersion, String... files) {
     withCredentials([usernamePassword(credentialsId: svnCredentialsId, usernameVariable: 'ASF_USERNAME', passwordVariable: 'ASF_PASSWORD')]) {
-        sh "svn co --depth=empty ${svnRepository} svn-kie"
+        sh "svn co --depth=empty ${svnRepository}/${releaseVersion} svn-kie"
         for (file in files) {
-            sh "cp ${file} svn-kie/${releaseVersion}/"
+            sh "cp ${file} svn-kie"
         }
         sh """
-        svn add "svn-kie/${releaseVersion}"
         cd svn-kie
+        svn add . --force
         svn ci --non-interactive --no-auth-cache --username ${ASF_USERNAME} --password '${ASF_PASSWORD}' -m "Apache KIE ${releaseVersion} artifacts"
         rm -rf svn-kie
         """

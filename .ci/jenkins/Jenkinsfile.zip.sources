@@ -9,7 +9,8 @@ pipeline {
 
     environment {
         SOURCES_FILE_NAME = "${SOURCES_FILE_NAME_TEMPLATE}.zip"
-        SIGNATURE_FILE_NAME = "${SOURCES_FILE_NAME_TEMPLATE}.asc"
+        SIGNATURE_FILE_NAME = "${SOURCES_FILE_NAME_TEMPLATE}.zip.asc"
+        CHECKSUM_FILE_NAME = "${SOURCES_FILE_NAME_TEMPLATE}.zip.sha512"
     }
 
     options {
@@ -23,19 +24,20 @@ pipeline {
                 archiveArtifacts artifacts: "**/${SOURCES_FILE_NAME}"
             }
         }
-       stage('Sign and upload the sources.zip') {
-           steps {
-               script {
-                   release.gpgImportKeyFromStringWithoutPassword(getReleaseGpgSignKeyCredsId())
-                   release.gpgSignFileDetachedSignatureWithoutPassword(SOURCES_FILE_NAME, SIGNATURE_FILE_NAME)
-                   release.svnUploadFileToRepository(getReleaseSvnRepository(), getReleaseSvnCredsId(), TARGET_VERSION, SOURCES_FILE_NAME, SIGNATURE_FILE_NAME)
-               }
-               archiveArtifacts artifacts: "**/${SIGNATURE_FILE_NAME}"
-           }
-       }
+        stage('Sign and upload the sources.zip') {
+            steps {
+                dir('sources-out') {
+                    script {
+                        releaseUtils.gpgImportKeyFromStringWithoutPassword(getReleaseGpgSignKeyCredsId())
+                        releaseUtils.gpgSignFileDetachedSignatureWithoutPassword(SOURCES_FILE_NAME, SIGNATURE_FILE_NAME)
+                        releaseUtils.svnUploadFileToRepository(getReleaseSvnRepository(), getReleaseSvnCredsId(), TARGET_VERSION, SOURCES_FILE_NAME, SIGNATURE_FILE_NAME, CHECKSUM_FILE_NAME)
+                    }
+                    archiveArtifacts artifacts: "**/${SIGNATURE_FILE_NAME}"
+                }
+            }
+        }
     }
 }
-
 
 String getReleaseGpgSignKeyCredsId() {
     return env.RELEASE_GPG_SIGN_KEY_CREDS_ID
