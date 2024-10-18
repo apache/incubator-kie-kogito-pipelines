@@ -186,11 +186,11 @@ class JobParamsUtils {
         addJobParamsEnvIfNotExisting(script, jobParams, 'INTEGRATION_BRANCH_CURRENT', "${Utils.getGenerationBranch(script)}-integration-${envName}")
     }
 
-    static def setupJobParamsDeployConfiguration(def script, def jobParams) {
+    static def setupJobParamsDeployConfiguration(def script, JobType jobType, def jobParams) {
         jobParams.env = jobParams.env ?: [:]
         jobParams.env.put('ENABLE_DEPLOY', String.valueOf(!Utils.isDeployDisabled(script)))
         addJobParamsEnvIfNotExisting(script, jobParams, 'MAVEN_DEPLOY_REPOSITORY', Utils.getMavenArtifactsUploadRepositoryUrl(script))
-        addJobParamsEnvIfNotExisting(script, jobParams, 'MAVEN_DEPLOY_REPOSITORY_CREDS_ID', Utils.getMavenArtifactsUploadRepositoryCredentialsId(script))
+        addJobParamsEnvIfNotExisting(script, jobParams, 'MAVEN_DEPLOY_REPOSITORY_CREDS_ID', Utils.getMavenArtifactsUploadRepositoryCredentialsId(script, jobType.name))
     }
 
     static def setupJobParamsAgentDockerBuilderImageConfiguration(def script, def jobParams) {
