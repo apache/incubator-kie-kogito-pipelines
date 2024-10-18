@@ -16,8 +16,8 @@ mavenDeployLocalDir = env.MAVEN_DEPLOY_LOCAL_DIR ?: ''
 
 buildChainType = env.BUILDCHAIN_TYPE?.trim() ?: 'cross_pr'
 buildChainProject = env.BUILDCHAIN_PROJECT?.trim()
-defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kie-pr-settings' : 'kie-release-settings'
-settingsXmlId = env.MAVEN_SETTINGS_FILE_ID ?: defaultSettingsXmlId
+defaultSettingsXmlId = isPRBuildChainType() || isFDBBuildChainType() ? 'kie-pr-settings' : 'kie-nightly-settings'
+settingsXmlId = env.MAVEN_SETTINGS_CONFIG_FILE_ID ?: defaultSettingsXmlId
 
 enableSonarCloudAnalysis = env.ENABLE_SONARCLOUD ? env.ENABLE_SONARCLOUD.toBoolean() : false
 downstreamBuild = env.DOWNSTREAM_BUILD ? env.DOWNSTREAM_BUILD.toBoolean() : false
