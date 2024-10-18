@@ -261,7 +261,7 @@ class KogitoJobUtils {
         def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${Utils.getRepositoryJobDisplayName(script, repository)}.build-and-test", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Test for ${repository} using the build-chain", defaultJobParamsGetter)
         jobParams.env.putAll(extraEnv)
         jobParams.triggers = jobParams.triggers ?: [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
-        return createBranchBuildChainJob(script, jobParams, repository, enableNotification, envName)
+        return createBranchBuildChainJob(script, JobType.NIGHTLY, jobParams, repository, enableNotification, envName)
     }
 
     /**
@@ -280,9 +280,9 @@ class KogitoJobUtils {
     */
     static def createNightlyBuildChainBuildAndDeployJob(def script, String envName = '', String repository, Map extraEnv = [:], boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
         def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${Utils.getRepositoryJobDisplayName(script, repository)}.build-and-deploy", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Build & Deploy for ${repository} using the build-chain", defaultJobParamsGetter)
-        JobParamsUtils.setupJobParamsDeployConfiguration(script, jobParams)
+        JobParamsUtils.setupJobParamsDeployConfiguration(script, JobType.NIGHTLY, jobParams)
         jobParams.env.putAll(extraEnv)
-        return createBranchBuildChainJob(script, jobParams, repository, enableNotification, envName)
+        return createBranchBuildChainJob(script, JobType.NIGHTLY, jobParams, repository, enableNotification, envName)
     }
 
     /**
@@ -292,7 +292,7 @@ class KogitoJobUtils {
     *
     */
     static def createNightlyBuildChainIntegrationJob(def script, String envName, String repository, boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
-        return createBuildChainIntegrationJob(script, envName, repository, enableNotification) { jenkinsScript ->
+        return createBuildChainIntegrationJob(script, JobType.NIGHTLY, envName, repository, enableNotification) { jenkinsScript ->
             def jobParams = defaultJobParamsGetter(jenkinsScript)
             jobParams.triggers = jobParams.triggers ?: [ cron : '@midnight' ] // To remove once environment nightlies are managed by main nightly pipeline
             return jobParams
@@ -305,13 +305,13 @@ class KogitoJobUtils {
     * This job will call the build-chain with extra environment variables to allow for the creation of an integration branch
     *
     */
-    static def createBuildChainIntegrationJob(def script, String envName, String repository, boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
+    static def createBuildChainIntegrationJob(def script, JobType jobType, String envName, String repository, boolean enableNotification = false, Closure defaultJobParamsGetter = JobParamsUtils.DEFAULT_PARAMS_GETTER) {
         def jobParams = JobParamsUtils.getSeedJobParamsWithEnv(script, "${Utils.getRepositoryJobDisplayName(script, repository)}.integration", JobType.NIGHTLY, envName, KogitoConstants.BUILD_CHAIN_JENKINSFILE, "Integration with Quarkus for ${repository} using the build-chain", defaultJobParamsGetter)
         if (!envName) {
             throw new RuntimeException('Please provide a non-empty environment to generate an integration branch job...')
         }
         JobParamsUtils.setupJobParamsIntegrationBranchConfiguration(script, jobParams, envName)
-        return createBranchBuildChainJob(script, jobParams, repository, enableNotification, envName)
+        return createBranchBuildChainJob(script, jobType, jobParams, repository, enableNotification, envName)
     }
 
     /**
@@ -323,7 +323,7 @@ class KogitoJobUtils {
     *   - enableNotification: Whether notification should be sent in case of unsuccessful pipeline
     *   - notificationJobName: Identifier for the notification stream
     */
-    static def createBranchBuildChainJob(def script, def jobParams, String repository, boolean enableNotification = false, String notificationJobName = '') {
+    static def createBranchBuildChainJob(def script, JobType jobType, def jobParams, String repository, boolean enableNotification = false, String notificationJobName = '') {
         JobParamsUtils.setupJobParamsBuildChainConfiguration(script, jobParams, repository, 'branch', notificationJobName)
 
         jobParams.parametersClosures.add({
@@ -340,7 +340,7 @@ class KogitoJobUtils {
 
             GIT_AUTHOR: Utils.getGitAuthor(script),
 
-            MAVEN_SETTINGS_CONFIG_FILE_ID: Utils.getBindingValue(script, 'MAVEN_SETTINGS_FILE_ID'),
+            MAVEN_SETTINGS_CONFIG_FILE_ID: Utils.getMavenSettingsConfigFileId(script, jobType.name),
         ])
 
         return KogitoJobTemplate.createPipelineJob(script, jobParams)
