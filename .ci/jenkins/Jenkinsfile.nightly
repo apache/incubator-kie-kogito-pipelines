@@ -134,19 +134,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Start Cloud nightly') {
-            when {
-                expression { !params.SKIP_CLOUD_NIGHTLY }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
-                    build(job: './0-kogito-nightly-cloud', wait: false, parameters: buildParams, propagate: false)
-                }
-            }
-        }
     }
     post {
         unsuccessful {
