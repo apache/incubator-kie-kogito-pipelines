@@ -206,7 +206,7 @@ void setupWeeklyCloudJob() {
         IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
         BRANCH_FOR_LATEST: "${CLOUD_IMAGE_LATEST_GIT_BRANCH}",
 
-        MAVEN_SETTINGS_CONFIG_FILE_ID: "${MAVEN_SETTINGS_FILE_ID}",
+        MAVEN_SETTINGS_CONFIG_FILE_ID: Utils.getMavenSettingsConfigFileId(this, JobType.NIGHTLY.name),
         ARTIFACTS_REPOSITORY: "${MAVEN_ARTIFACTS_REPOSITORY}",
     ])
     KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
@@ -238,7 +238,7 @@ void setupNightlyCloudJob() {
         IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
         BRANCH_FOR_LATEST: "${CLOUD_IMAGE_LATEST_GIT_BRANCH}",
 
-        MAVEN_SETTINGS_CONFIG_FILE_ID: "${MAVEN_SETTINGS_FILE_ID}",
+        MAVEN_SETTINGS_CONFIG_FILE_ID: Utils.getMavenSettingsConfigFileId(this, JobType.NIGHTLY.name),
         ARTIFACTS_REPOSITORY: "${MAVEN_ARTIFACTS_REPOSITORY}",
     ])
     KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
