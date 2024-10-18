@@ -258,12 +258,12 @@ class Utils {
         return getBindingValue(script, 'BUILDCHAIN_CONFIG_GIT_TOKEN_CREDENTIALS_ID')
     }
 
-    static String getMavenArtifactsUploadRepositoryUrl(def script) {
-        return getBindingValue(script, 'MAVEN_ARTIFACTS_UPLOAD_REPOSITORY_URL')
+    static String getMavenArtifactsUploadRepositoryUrl(def script, String jobType = "nightly") {
+        return getBindingValue(script, "MAVEN_ARTIFACTS_UPLOAD_REPOSITORY_${jobType.toUpperCase()}_URL")
     }
 
-    static String getMavenArtifactsUploadRepositoryCredentialsId(def script) {
-        return getBindingValue(script, 'MAVEN_ARTIFACTS_UPLOAD_REPOSITORY_CREDS_ID')
+    static String getMavenArtifactsUploadRepositoryCredentialsId(def script, String jobType = "nightly") {
+        return getBindingValue(script, "MAVEN_ARTIFACTS_UPLOAD_REPOSITORY_${jobType.toUpperCase()}_CREDS_ID")
     }
 
     static String getMavenQuarkusPlatformRepositoryUrl(def script) {
@@ -272,6 +272,10 @@ class Utils {
 
     static String getMavenQuarkusPlatformRepositoryCredentialsId(def script) {
         return getBindingValue(script, 'MAVEN_QUARKUS_PLATFORM_REPOSITORY_CREDS_ID')
+    }
+
+    static String getMavenSettingsConfigFileId(def script, String jobType = 'nightly') {
+        return getBindingValue(script, "MAVEN_SETTINGS_${jobType.toUpperCase()}_CONFIG_FILE_ID")
     }
 
     static String getJenkinsAgentDockerImage(def script, String imageId) {
