@@ -116,23 +116,7 @@ pipeline {
                 script {
                     def buildParams = getDefaultBuildParams()
                     addBooleanParam(buildParams, 'SKIP_TESTS', true)
-                    addBooleanParam(buildParams, 'SKIP_CLOUD_NIGHTLY', true)
                     build(job: '../nightly/0-kogito-nightly', wait: false, parameters: buildParams, propagate: false)
-                }
-            }
-        }
-
-        // Launch the nightly to deploy all artifacts from the branch
-        stage('Launch cloud setup branch') {
-            when {
-                expression { return !params.SKIP_CLOUD_SETUP_BRANCH }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addKogitoVersionParam(buildParams)
-                    addBooleanParam(buildParams, 'DEPLOY', params.DEPLOY)
-                    build(job: './0-setup-branch-cloud', wait: false, parameters: buildParams, propagate: false)
                 }
             }
         }
@@ -146,7 +130,6 @@ pipeline {
                 script {
                     def buildParams = getDefaultBuildParams()
                     addBooleanParam(buildParams, 'SKIP_TESTS', true)
-                    addBooleanParam(buildParams, 'SKIP_CLOUD_NIGHTLY', true)
                     build(job: '../other/0-kogito-weekly', wait: false, parameters: buildParams, propagate: false)
                 }
             }

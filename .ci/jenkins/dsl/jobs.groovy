@@ -46,26 +46,15 @@ if (isMainStream()) {
 
 // Setup branch branch
 createSetupBranchJob()
-if (isMainStream()) {
-    createSetupBranchCloudJob()
-}
 
 // Nightly
 setupNightlyJob()
-setupQuarkusPlatformJob(JobType.NIGHTLY)
-if (isMainStream()) {
-    setupNightlyCloudJob()
-}
 
 // Weekly
 setupWeeklyJob()
-if (isMainStream()) {
-    setupWeeklyCloudJob()
-}
 
 // Release
 setupReleaseArtifactsJob()
-setupReleaseCloudJob()
 if (isMainStream()) {
     setupZipSourcesJob()
 }
@@ -131,24 +120,6 @@ void createSetupBranchJob() {
             stringParam('KOGITO_VERSION', '', 'Kogito version')
             stringParam('DROOLS_VERSION', '', 'Drools version')
             booleanParam('DEPLOY', true, 'Should be deployed after setup ?')
-            booleanParam('SKIP_CLOUD_SETUP_BRANCH', !isMainStream(), 'Skip Cloud setup branch call')
-        }
-    }
-}
-
-void createSetupBranchCloudJob() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-setup-branch-cloud', JobType.SETUP_BRANCH, "${jenkins_path}/Jenkinsfile.setup-branch.cloud", 'Kogito Setup Branch for Cloud')
-    jobParams.env.putAll([
-        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
-
-        GIT_BRANCH_NAME: "${GIT_BRANCH}",
-        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
-        GIT_AUTHOR_CREDS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
-    ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
-        parameters {
-            stringParam('KOGITO_VERSION', '', 'Kogito version')
-            booleanParam('DEPLOY', true, 'Should be deployed after setup ?')
         }
     }
 }
@@ -167,7 +138,6 @@ void setupNightlyJob() {
     KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         parameters {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
-            booleanParam('SKIP_CLOUD_NIGHTLY', !isMainStream(), 'Skip cloud nightly execution')
         }
     }
 }
@@ -186,86 +156,8 @@ void setupWeeklyJob() {
     KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
         parameters {
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
-            booleanParam('SKIP_CLOUD_WEEKLY', !isMainStream(), 'Skip cloud weekly execution')
         }
     }
-}
-
-void setupWeeklyCloudJob() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-weekly-cloud', JobType.OTHER, "${jenkins_path}/Jenkinsfile.weekly.cloud", 'Kogito Weekly')
-    jobParams.env.putAll([
-        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
-
-        GIT_BRANCH_NAME: "${GIT_BRANCH}",
-        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
-        GIT_AUTHOR_CREDS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
-
-        IMAGE_REGISTRY_USER_CREDENTIALS_ID: "${CLOUD_IMAGE_REGISTRY_USER_CREDENTIALS_ID}",
-        IMAGE_REGISTRY_TOKEN_CREDENTIALS_ID: "${CLOUD_IMAGE_REGISTRY_TOKEN_CREDENTIALS_ID}",
-        IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
-        IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
-        BRANCH_FOR_LATEST: "${CLOUD_IMAGE_LATEST_GIT_BRANCH}",
-
-        MAVEN_SETTINGS_CONFIG_FILE_ID: Utils.getMavenSettingsConfigFileId(this, JobType.NIGHTLY.name),
-        ARTIFACTS_REPOSITORY: "${MAVEN_ARTIFACTS_REPOSITORY}",
-    ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
-        parameters {
-            booleanParam('SKIP_TESTS', false, 'Skip all tests')
-
-            booleanParam('SKIP_IMAGES', false, 'To skip Images Deployment')
-            booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
-
-            stringParam('GIT_CHECKOUT_DATETIME', '', 'Git checkout date and time - (Y-m-d H:i)')
-
-            booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
-        }
-    }
-}
-
-void setupNightlyCloudJob() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-nightly-cloud', JobType.NIGHTLY, "${jenkins_path}/Jenkinsfile.nightly.cloud", 'Kogito Nightly')
-    jobParams.env.putAll([
-        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
-
-        GIT_BRANCH_NAME: "${GIT_BRANCH}",
-        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
-        GIT_AUTHOR_CREDS_ID: "${GIT_AUTHOR_CREDENTIALS_ID}",
-
-        IMAGE_REGISTRY_USER_CREDENTIALS_ID: "${CLOUD_IMAGE_REGISTRY_USER_CREDENTIALS_ID}",
-        IMAGE_REGISTRY_TOKEN_CREDENTIALS_ID: "${CLOUD_IMAGE_REGISTRY_TOKEN_CREDENTIALS_ID}",
-        IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
-        IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
-        BRANCH_FOR_LATEST: "${CLOUD_IMAGE_LATEST_GIT_BRANCH}",
-
-        MAVEN_SETTINGS_CONFIG_FILE_ID: Utils.getMavenSettingsConfigFileId(this, JobType.NIGHTLY.name),
-        ARTIFACTS_REPOSITORY: "${MAVEN_ARTIFACTS_REPOSITORY}",
-    ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
-        parameters {
-            booleanParam('SKIP_TESTS', false, 'Skip all tests')
-
-            booleanParam('SKIP_IMAGES', false, 'To skip Images Deployment')
-            booleanParam('SKIP_OPERATOR', false, 'To skip Operator Deployment')
-
-            booleanParam('USE_TEMP_OPENSHIFT_REGISTRY', false, 'If enabled, use Openshift registry to push temporary images')
-        }
-    }
-}
-
-void setupQuarkusPlatformJob(JobType jobType) {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, 'quarkus-platform.deploy', jobType, "${jenkins_path}/Jenkinsfile.nightly.quarkus-platform", 'Kogito Quarkus platform job')
-    JobParamsUtils.setupJobParamsAgentDockerBuilderImageConfiguration(this, jobParams)
-    jobParams.env.putAll([
-        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
-
-        GIT_BRANCH_NAME: "${GIT_BRANCH}",
-        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
-
-        QUARKUS_PLATFORM_NEXUS_URL: Utils.getMavenQuarkusPlatformRepositoryUrl(this),
-        QUARKUS_PLATFORM_NEXUS_CREDS: Utils.getMavenQuarkusPlatformRepositoryCredentialsId(this),
-    ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)
 }
 
 void setupReleaseArtifactsJob() {
@@ -287,36 +179,6 @@ void setupReleaseArtifactsJob() {
             stringParam('GIT_TAG_NAME', '', 'Git tag to create. i.e.: 10.0.0-rc1')
 
             booleanParam('SKIP_TESTS', false, 'Skip all tests')
-
-            booleanParam('SKIP_CLOUD_RELEASE', !isMainStream(), 'To skip Cloud release. To use whenever you have specific parameters to set for the Cloud release')
-        }
-    }
-}
-
-void setupReleaseCloudJob() {
-    def jobParams = JobParamsUtils.getBasicJobParams(this, '0-kogito-release-cloud', JobType.RELEASE, "${jenkins_path}/Jenkinsfile.release.cloud", 'Kogito Cloud Release')
-    jobParams.env.putAll([
-        JENKINS_EMAIL_CREDS_ID: "${JENKINS_EMAIL_CREDS_ID}",
-
-        IMAGE_REGISTRY: "${CLOUD_IMAGE_REGISTRY}",
-        IMAGE_NAMESPACE: "${CLOUD_IMAGE_NAMESPACE}",
-
-        GIT_BRANCH_NAME: "${GIT_BRANCH}",
-        GIT_AUTHOR: "${GIT_AUTHOR_NAME}",
-    ])
-    KogitoJobTemplate.createPipelineJob(this, jobParams)?.with {
-        parameters {
-            stringParam('RESTORE_FROM_PREVIOUS_JOB', '', 'URL to a previous stopped release job which needs to be continued')
-
-            stringParam('RELEASE_VERSION', '', 'Version to release as Major.minor.micro. i.e: 10.0.0')
-            stringParam('GIT_TAG_NAME', '', 'Git tag to create. i.e.: 10.0.0-rc1')
-
-            stringParam('APPS_URI', '', 'Override default. Git uri to the kogito-apps repository to use for building images.')
-            stringParam('APPS_REF', '', 'Override default. Git reference (branch/tag) to the kogito-apps repository to use for building images.')
-
-            booleanParam('SKIP_TESTS', false, 'Skip all tests')
-
-            booleanParam('SKIP_IMAGES_RELEASE', false, 'To skip Images Test & Deployment.')
         }
     }
 }

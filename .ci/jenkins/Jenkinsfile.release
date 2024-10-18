@@ -86,20 +86,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Start Cloud release') {
-            when {
-                expression { isCloudRelease() }
-            }
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getReleaseVersion())
-                    addStringParam(buildParams, 'RELEASE_VERSION', getReleaseVersion())
-                    addSkipTestsParam(buildParams)
-                    build(job: './0-kogito-release-cloud', wait: false, parameters: buildParams, propagate: false)
-                }
-            }
-        }
     }
     post {
         always {
@@ -320,10 +306,6 @@ String getGitTagName() {
 
 String getGitAuthor() {
     return env.GIT_AUTHOR
-}
-
-boolean isCloudRelease() {
-    return !params.SKIP_CLOUD_RELEASE
 }
 
 void setReleasePropertyIfneeded(String key, def value) {
