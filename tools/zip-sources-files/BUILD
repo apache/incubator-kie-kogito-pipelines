@@ -16,7 +16,7 @@ Prerequisites
 - Maven 3.9.6
 - GraalVM for JDK 17
 - Docker 25+
-- Python 3.12
+- Python 3.12.5
 - Make 4.3+
 - Node 20
 - PNPM 9.3.0
