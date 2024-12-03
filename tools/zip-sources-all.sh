@@ -69,7 +69,7 @@ function zip_sources() {
       exit 1
     fi
 
-    #Remove unnecessary dirs
+    #Remove unnecessary content
     pushd $REPO_DIRECTORY
     CURRENT_DIRECTORY=$(pwd)
     echo "Current directory is ${CURRENT_DIRECTORY}"
@@ -80,6 +80,8 @@ function zip_sources() {
         echo ".git directory found, deleting..."
         rm -rf ".git"
     fi
+    echo "remove legal files"
+    rm -f "LICENSE" "NOTICE" "DISCLAIMER" "DISCLAIMER-WIP" "LICENSE-Apache-2.0.txt" "LICENSE.txt"
     echo "After .git removal"
     ls -lha
     popd
@@ -87,8 +89,8 @@ function zip_sources() {
   done <<< $SOURCES_REPOSITORIES
 
   #Add LICENSE, NOTICE and DISCLAIMER files to the root folder of the zip file
-  echo "Adding LICENSE, NOTICE and DISCLAIMER files to the zip file"
-  cp ./tools/zip-sources-files/{LICENSE,NOTICE,DISCLAIMER-WIP} ${SOURCES_DIRECTORY_NAME}
+  echo "Adding LICENSE, NOTICE, DISCLAIMER-WIP, BUILD and build.sh files to the zip file"
+  cp ./tools/zip-sources-files/{LICENSE,NOTICE,DISCLAIMER-WIP,BUILD,build.sh} ${SOURCES_DIRECTORY_NAME}
 
   #Creating ZIP
   pushd ${SOURCES_DIRECTORY_NAME}
