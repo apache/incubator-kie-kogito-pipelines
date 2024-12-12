@@ -64,12 +64,12 @@ cd ..
 5. Build Kogito Images:
 cd incubator-kie-kogito-images
 cekit --descriptor kogito-base-builder-image.yaml build docker --platform linux/amd64
-make build-image KOGITO_APPS_TARGET_BRANCH=10.0.0-rc4 ignore_test=true image_name=kogito-data-index-ephemeral
-make build-image KOGITO_APPS_TARGET_BRANCH=10.0.0-rc4 ignore_test=true image_name=kogito-data-index-postgresql
-make build-image KOGITO_APPS_TARGET_BRANCH=10.0.0-rc4 ignore_test=true image_name=kogito-jit-runner
-make build-image KOGITO_APPS_TARGET_BRANCH=10.0.0-rc4 ignore_test=true image_name=kogito-jobs-service-allinone
-make build-image KOGITO_APPS_TARGET_BRANCH=10.0.0-rc4 ignore_test=true image_name=kogito-jobs-service-ephemeral
-make build-image KOGITO_APPS_TARGET_BRANCH=10.0.0-rc4 ignore_test=true image_name=kogito-jobs-service-postgresql
+make build-image KOGITO_APPS_TARGET_BRANCH=main ignore_test=true image_name=kogito-data-index-ephemeral
+make build-image KOGITO_APPS_TARGET_BRANCH=main ignore_test=true image_name=kogito-data-index-postgresql
+make build-image KOGITO_APPS_TARGET_BRANCH=main ignore_test=true image_name=kogito-jit-runner
+make build-image KOGITO_APPS_TARGET_BRANCH=main ignore_test=true image_name=kogito-jobs-service-allinone
+make build-image KOGITO_APPS_TARGET_BRANCH=main ignore_test=true image_name=kogito-jobs-service-ephemeral
+make build-image KOGITO_APPS_TARGET_BRANCH=main ignore_test=true image_name=kogito-jobs-service-postgresql
 cd ..
 
 6. Build KIE Tools:

@@ -76,7 +76,7 @@ build_components() {
     )
 
     for image in "${images[@]}"; do
-        make build-image KOGITO_APPS_TARGET_BRANCH=10.0.0-rc4 ignore_test=true image_name="$image"
+        make build-image KOGITO_APPS_TARGET_BRANCH=main ignore_test=true image_name="$image"
     done
     cd ..
 
