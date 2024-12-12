@@ -116,7 +116,7 @@ runs:
 
   - name: Upload result
     if: ${{ always() && inputs.save-results }}
-    uses: actions/upload-artifact@v3
+    uses: actions/upload-artifact@v4
     with:
       name: ${{ env.UPLOAD_ARTIFACT_NAME }}
       path: ${{ env.PIPELINES_TEST_DIR }}/dsl/seed/build/reports/tests/test/
