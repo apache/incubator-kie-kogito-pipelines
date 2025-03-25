@@ -86,6 +86,17 @@ function zip_sources() {
 
   done <<< $SOURCES_REPOSITORIES
 
+  #Combining .rat-excludes files
+  pushd ${SOURCES_DIRECTORY_NAME}
+  echo "Combining .rat-excludes files"
+  RAT_EXCLUDES_COMBINED_FILE=".rat-excludes-combined"
+  while read line; do
+    cat ${line}/.rat-excludes >> ${RAT_EXCLUDES_COMBINED_FILE}
+    echo "" >> ${RAT_EXCLUDES_COMBINED_FILE}
+  done <<< $SOURCES_REPOSITORIES
+  echo ${RAT_EXCLUDES_COMBINED_FILE} >> ${RAT_EXCLUDES_COMBINED_FILE}
+  popd
+
   #Add LICENSE, NOTICE and DISCLAIMER files to the root folder of the zip file
   echo "Adding LICENSE, NOTICE and DISCLAIMER files to the zip file"
   cp ./tools/zip-sources-files/{LICENSE,NOTICE,DISCLAIMER} ${SOURCES_DIRECTORY_NAME}
