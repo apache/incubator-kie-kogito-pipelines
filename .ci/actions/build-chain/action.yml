@@ -15,6 +15,7 @@ inputs:
   starting-project:
     description: "the project to start flow from. By default is the project triggering the job"
     required: false
+    default: $GITHUB_REPOSITORY
   logger-level:
     description: "the log level. 'info' (default) | 'trace' | 'debug'"
     default: "info"
