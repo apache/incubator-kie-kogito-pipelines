@@ -94,7 +94,7 @@ function zip_sources() {
     cat ${line}/.rat-excludes >> ${RAT_EXCLUDES_COMBINED_FILE}
     echo "" >> ${RAT_EXCLUDES_COMBINED_FILE}
   done <<< $SOURCES_REPOSITORIES
-  echo ${RAT_EXCLUDES_COMBINED_FILE} >> ${RAT_EXCLUDES_COMBINED_FILE}
+  echo ${RAT_EXCLUDES_COMBINED_FILE} >> ${RAT_EXCLUDES_COMBINED_FILE} #Add the filename itself to the file
   popd
 
   #Add LICENSE, NOTICE and DISCLAIMER files to the root folder of the zip file
