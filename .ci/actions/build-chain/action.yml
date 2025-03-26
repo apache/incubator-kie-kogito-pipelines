@@ -15,7 +15,6 @@ inputs:
   starting-project:
     description: "the project to start flow from. By default is the project triggering the job"
     required: false
-    default: ${{ env.GITHUB_REPOSITORY }}
   logger-level:
     description: "the log level. 'info' (default) | 'trace' | 'debug'"
     default: "info"
@@ -42,7 +41,7 @@ runs:
         build-chain build ${{ inputs.flow-type }} \
           --token ${{ inputs.github-token }} \
           -f ${{ inputs.definition-file }} \
-          -p ${{ inputs.starting-project }} \
+          -p [[ -n ${{ inputs.starting-project }} ]] && ${{ inputs.starting-project }} || ${{ env.GITHUB_REPOSITORY }}  \
           -u ${{ github.event.pull_request.html_url}} \
           -o ${{ env.GITHUB_WORKSPACE }} \
           ${{ inputs.additional-flags }} \
