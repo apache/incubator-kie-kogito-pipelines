@@ -38,6 +38,13 @@ runs:
         node-version: 16
     - run: |
         npm install -g @kie/build-chain-action@v3.5.5
-        build-chain build ${{ inputs.flow-type }} --token ${{ inputs.github-token }} -f ${{ inputs.definition-file }} -o $GITHUB_WORKSPACE ${{ inputs.additional-flags }} --skipParallelCheckout
+        build-chain build ${{ inputs.flow-type }} \
+          --token ${{ inputs.github-token }} \
+          -f ${{ inputs.definition-file }} \
+          -p ${{ inputs.starting-project }} \
+          -u ${{ github.event.pull_request.html_url}} \
+          -o $GITHUB_WORKSPACE \
+          ${{ inputs.additional-flags }} \
+          --skipParallelCheckout
       shell: bash
 
