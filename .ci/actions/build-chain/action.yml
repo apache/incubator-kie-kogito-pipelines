@@ -36,16 +36,6 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: 16
-    - name: Build Chain Tool Execution
-      id: build-chain
-      uses: kiegroup/github-action-build-chain@v3.5.5
-      with:
-        definition-file: ${{ inputs.definition-file }}
-        flow-type: ${{ inputs.flow-type }}
-        starting-project: ${{ inputs.starting-project }}
-        logger-level: ${{ inputs.logger-level }}
-        annotations-prefix: ${{ inputs.annotations-prefix }}
-        additional-flags: ${{ inputs.additional-flags }}
-      env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-        NODE_OPTIONS: "--no-experimental-require-module --no-experimental-detect-module"
+    - run: npm install -g @kie/build-chain-action@v3.5.5
+    - run: build-chain build ${{ inputs.flow-type }} --token ${{ inputs.github-token }} -f ${{ inputs.definition-file }} -o $GITHUB_WORKSPACE ${{ inputs.additional-flags }} --skipParallelCheckout  
+
