@@ -48,7 +48,7 @@ runs:
           -f ${{ inputs.definition-file }} \
           -p $INPUT_STARTING_PROJECT \
           -u ${{ github.event.pull_request.html_url}} \
-          -o ${{ env.GITHUB_WORKSPACE }} \
+          -o $PWD \
           ${{ inputs.additional-flags }} \
           --skipParallelCheckout
       shell: bash
