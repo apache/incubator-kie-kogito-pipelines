@@ -43,3 +43,4 @@ runs:
         additional-flags: ${{ inputs.additional-flags }}
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
+        NODE_OPTIONS: "--no-experimental-require-module --no-experimental-detect-module"
