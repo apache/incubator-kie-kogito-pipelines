@@ -37,12 +37,16 @@ runs:
       with:
         node-version: 16
     - run: |
-        REPO_NAME=${{ github.event.pull_request.base.repo.full_name }}
         npm install -g @kie/build-chain-action@v3.5.5
+        REPO_NAME=${{ github.event.pull_request.base.repo.full_name }}
+        INPUT_STARTING_PROJECT=${{ inputs.starting-project }}
+        if [[ -z "$INPUT_STARTING_PROJECT" ]]; then
+          INPUT_STARTING_PROJECT=$REPO_NAME
+        fi
         build-chain build ${{ inputs.flow-type }} \
           --token ${{ inputs.github-token }} \
           -f ${{ inputs.definition-file }} \
-          -p ${{ inputs.starting-project || $REPO_NAME }} \
+          -p $INPUT_STARTING_PROJECT \
           -u ${{ github.event.pull_request.html_url}} \
           -o ${{ env.GITHUB_WORKSPACE }} \
           ${{ inputs.additional-flags }} \
