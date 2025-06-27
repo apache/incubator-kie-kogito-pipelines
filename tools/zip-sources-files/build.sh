@@ -4,14 +4,14 @@
 # Check required tools
 check_requirements() {
     local requirements=(
-        "java:17.0.11"
+        "java:17.0.12"
         "mvn:3.9.6"
         "docker:25"
         "python3:3.12"
-        "make:4.3"
+        "make:4.4"
         "node:20"
         "pnpm:9.3.0"
-        "go:1.21.9"
+        "go:1.23.6"
         "helm:3.15.2"
     )
 
@@ -23,9 +23,6 @@ check_requirements() {
             exit 1
         fi
     done
-
-    # Check Python packages
-    pip3 install cekit==4.11.0 docker==7.0.0 docker-squash==1.2.0 ruamel.yaml==0.18.5
 }
 
 # Set Docker host based on container runtime
@@ -60,24 +57,6 @@ build_components() {
     # Build Kogito Apps
     cd incubator-kie-kogito-apps || exit 1
     mvn clean install -DskipTests -Dfull -Donly.reproducible=true -Pjitexecutor-native
-    cd ..
-
-    # Build Kogito Images
-    cd incubator-kie-kogito-images || exit 1
-    cekit --descriptor kogito-base-builder-image.yaml build docker --platform linux/amd64
-    
-    local images=(
-        "kogito-data-index-ephemeral"
-        "kogito-data-index-postgresql"
-        "kogito-jit-runner"
-        "kogito-jobs-service-allinone"
-        "kogito-jobs-service-ephemeral"
-        "kogito-jobs-service-postgresql"
-    )
-
-    for image in "${images[@]}"; do
-        make build-image KOGITO_APPS_TARGET_BRANCH=main ignore_test=true image_name="$image"
-    done
     cd ..
 
     # Build KIE Tools
