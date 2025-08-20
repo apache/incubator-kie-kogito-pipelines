@@ -61,11 +61,11 @@ build:
       upstream: |
         mvn dependency:tree clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_APPS_BUILD_MVN_OPTS_UPSTREAM }}
       after:
+        # Make sure you add -pl into MVN_PROJECTS_EXCLUSION when adding some exclusions
         current: |
-          export MVN_EXCLUSION=""
-          export MVN_PROJECTS=$([[ -n "$MVN_EXCLUSION" ]] && echo "-pl ${MVN_EXCLUSION}")
-          echo "${{ env.MVN_PROJECTS }}"
-          mvn clean package -DskipTests -Dfull artifact:3.5.1:compare -Dcompare.fail=false -Dcompare.aggregate.only=true -Dreference.repo=file:~/.m2/repository ${{ env.MVN_PROJECTS }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_APPS_BUILD_MVN_OPTS }}
+          export MVN_PROJECTS_EXCLUSION=""
+          echo  ${{ env.MVN_PROJECTS_EXCLUSION }}
+          mvn clean package -DskipTests -Dfull artifact:3.5.1:compare -Dcompare.fail=false -Dcompare.aggregate.only=true -Dreference.repo=file:~/.m2/repository ${{ env.MVN_PROJECTS_EXCLUSION }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_APPS_BUILD_MVN_OPTS }}
 
   - project: apache/incubator-kie-kogito-examples
     build-command:
