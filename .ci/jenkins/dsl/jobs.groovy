@@ -48,7 +48,7 @@ if (isMainStream()) {
 createSetupBranchJob()
 
 // Nightly
-if (GIT_BRANCH != '2.2.x') {
+if (Utils.getStream(this) != '2.2.x') {
 setupNightlyJob()
 }
 
