@@ -48,7 +48,9 @@ if (isMainStream()) {
 createSetupBranchJob()
 
 // Nightly
+if (GIT_BRANCH != '2.2.x') {
 setupNightlyJob()
+}
 
 // Weekly
 setupWeeklyJob()
