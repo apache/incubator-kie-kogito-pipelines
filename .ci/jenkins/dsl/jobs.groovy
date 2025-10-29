@@ -53,7 +53,9 @@ setupNightlyJob()
 }
 
 // Weekly
+if (Utils.getStream(this) != '2.2.x') {
 setupWeeklyJob()
+}
 
 // Release
 setupReleaseArtifactsJob()
