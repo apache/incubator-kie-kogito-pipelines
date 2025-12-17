@@ -13,7 +13,7 @@ If you prefer to build manually, follow these steps:
 
 Prerequisites
 - Temurin JDK 17.0.11
-- Maven 3.9.6
+- Maven 3.9.11
 - GraalVM for JDK 17
 - Docker 25+
 - Python 3.12.5
