@@ -5,7 +5,7 @@
 check_requirements() {
     local requirements=(
         "java:17.0.11"
-        "mvn:3.9.6"
+        "mvn:3.9.11"
         "docker:25"
         "python3:3.12"
         "make:4.3"
