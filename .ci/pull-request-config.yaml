@@ -20,18 +20,18 @@ default:
         export INTEGRATION_BRANCH=${{ env.INTEGRATION_BRANCH_UPSTREAM }}
         bash -c "if [ ! -z '${{ env.BUILD_ENVIRONMENT }}' ] && [ -f .ci/environments/update.sh ]; then .ci/environments/update.sh ${{ env.BUILD_ENVIRONMENT }} ${{ env.BUILD_ENVIRONMENT_OPTIONS_UPSTREAM }}; fi"
     current: |
-      mvn dependency:tree clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }}
+      mvn dependency:tree -DoutputFile=`pwd`/mvn_dependency_tree.txt -DappendOutput=true clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }}
     upstream: |
-      mvn dependency:tree clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }}
+      mvn dependency:tree -DoutputFile=`pwd`/mvn_dependency_tree.txt -DappendOutput=true clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }}
 
 build:
   - project: apache/incubator-kie-drools
     build-command:
       current: |
         export MVN_CMD=`bash -c "if [ '${{ env.ENABLE_DEPLOY }}' = 'true' ]; then printf 'deploy ${{ env.DEPLOY_MVN_OPTS }} ${{ env.DROOLS_DEPLOY_MVN_OPTS }}'; else printf 'install'; fi"`
-        mvn dependency:tree clean ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.DROOLS_BUILD_MVN_OPTS }}
+        mvn dependency:tree -DoutputFile=`pwd`/mvn_dependency_tree.txt -DappendOutput=true clean ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.DROOLS_BUILD_MVN_OPTS }}
       upstream: |
-        mvn dependency:tree clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.DROOLS_BUILD_MVN_OPTS_UPSTREAM }}
+        mvn dependency:tree -DoutputFile=`pwd`/mvn_dependency_tree.txt -DappendOutput=true clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.DROOLS_BUILD_MVN_OPTS_UPSTREAM }}
 
   - project: apache/incubator-kie-optaplanner
     build-command:
@@ -44,9 +44,9 @@ build:
     build-command:
       current: |
         export MVN_CMD=`bash -c "if [ '${{ env.ENABLE_DEPLOY }}' = 'true' ]; then printf 'deploy ${{ env.DEPLOY_MVN_OPTS }} ${{ env.KOGITO_RUNTIMES_DEPLOY_MVN_OPTS }}'; else printf 'install'; fi"`
-        mvn dependency:tree clean -Dfull ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS }}
+        mvn dependency:tree -DoutputFile=`pwd`/mvn_dependency_tree.txt -DappendOutput=true clean -Dfull ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS }}
       upstream: |
-        mvn dependency:tree clean install -Dquickly -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS_UPSTREAM }}
+        mvn dependency:tree -DoutputFile=`pwd`/mvn_dependency_tree.txt -DappendOutput=true clean install -Dquickly -Dfull ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS_UPSTREAM }}
       after:
         current: |
           export MVN_EXCLUSION="!org.kie.kogito:kogito-serverless-workflow-executor-python,!org.drools:drools-quarkus-rules-integration-test,!org.kie.kogito:jbpm-tests,!org.jbpm:jbpm-quarkus-integration-test,!org.kie.kogito:integration-tests-quarkus-norest,!org.kie.kogito:integration-tests-quarkus-norest,!org.kie.kogito:kogito-spring-boot-integration-tests,!org.kie.kogito:integration-tests-springboot-processes-persistence-common,!org.kie.kogito:integration-tests-springboot-decisions-it,!org.kie.kogito:integration-tests-springboot-kafka-it,!org.kie.kogito:integration-tests-springboot-norest-it,!org.kie.kogito:integration-tests-springboot-processes-it,!org.kie.kogito:integration-tests-springboot-processes-persistence-it,!org.kie.kogito:integration-tests-springboot-processes-infinispan,!org.kie.kogito:integration-tests-springboot-processes-jdbc,!org.kie.kogito:integration-tests-springboot-processes-mongodb,!org.kie.kogito:integration-tests-springboot-processes-postgresql"
@@ -57,9 +57,9 @@ build:
     build-command: 
       current: |
         export MVN_CMD=`bash -c "if [ '${{ env.ENABLE_DEPLOY }}' = 'true' ]; then printf 'deploy ${{ env.DEPLOY_MVN_OPTS }} ${{ env.KOGITO_APPS_DEPLOY_MVN_OPTS }}'; else printf 'install'; fi"`
-        mvn dependency:tree clean ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_APPS_BUILD_MVN_OPTS }}
+        mvn dependency:tree -DoutputFile=`pwd`/mvn_dependency_tree.txt -DappendOutput=true clean ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_APPS_BUILD_MVN_OPTS }}
       upstream: |
-        mvn dependency:tree clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_APPS_BUILD_MVN_OPTS_UPSTREAM }}
+        mvn dependency:tree -DoutputFile=`pwd`/mvn_dependency_tree.txt -DappendOutput=true clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_APPS_BUILD_MVN_OPTS_UPSTREAM }}
       after:
         # Make sure you add -pl into MVN_PROJECTS_EXCLUSION when adding some exclusions
         current: |
@@ -72,14 +72,14 @@ build:
       # First install the main pom
       # Then build the required submodule pom if provided, otherwise build whole
       current: |
-        mvn dependency:tree -pl :kogito-examples clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
-        mvn dependency:tree -f ${{ env.KOGITO_EXAMPLES_SUBFOLDER_POM }}pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
+        mvn dependency:tree -DoutputFile=`pwd`/mvn_dependency_tree.txt -DappendOutput=true -pl :kogito-examples clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
+        mvn dependency:tree -DoutputFile=`pwd`/mvn_dependency_tree.txt -DappendOutput=true -f ${{ env.KOGITO_EXAMPLES_SUBFOLDER_POM }}pom.xml clean install ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS }}
       upstream: |
-        mvn dependency:tree clean install -DskipTests -DskipITs ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_UPSTREAM }}
+        mvn dependency:tree -DoutputFile=`pwd`/mvn_dependency_tree.txt -DappendOutput=true clean install -DskipTests -DskipITs ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_EXAMPLES_BUILD_MVN_OPTS_UPSTREAM }}
       after:
         # In case of deploy, deploy the parent poms only.
         current: |
-          bash -c "if [ '${{ env.ENABLE_DEPLOY }}' = 'true' ]; then mvn dependency:tree -DskipTests -DskipITs -pl .,kogito-quarkus-examples,kogito-springboot-examples,serverless-workflow-examples deploy ${{ env.BUILD_MVN_OPTS }} ${{ env.DEPLOY_MVN_OPTS }} ${{ env.KOGITO_EXAMPLES_DEPLOY_MVN_OPTS }}; else echo 'No deploy is scheduled'; fi"
+          bash -c "if [ '${{ env.ENABLE_DEPLOY }}' = 'true' ]; then mvn dependency:tree -DoutputFile=`pwd`/mvn_dependency_tree.txt -DappendOutput=true -DskipTests -DskipITs -pl .,kogito-quarkus-examples,kogito-springboot-examples,serverless-workflow-examples deploy ${{ env.BUILD_MVN_OPTS }} ${{ env.DEPLOY_MVN_OPTS }} ${{ env.KOGITO_EXAMPLES_DEPLOY_MVN_OPTS }}; else echo 'No deploy is scheduled'; fi"
   # - project: kiegroup/kie-jpmml-integration
   #   build-command:
   #     current: |
