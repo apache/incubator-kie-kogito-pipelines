@@ -57,6 +57,10 @@ pipeline {
         timestamps()
         timeout(time: timeoutValue, unit: 'MINUTES')
     }
+    environment {
+        GITHUB_WORKSPACE = "${WORKSPACE}" // faking GITHUB_WORKSPACE env var for the build-chain config mvn dependency:tree output
+        DEPENDENCY_TREE_FILE = "mvn_dependency_tree.txt"
+    }
     stages {
         stage('Initialize') {
             steps {
