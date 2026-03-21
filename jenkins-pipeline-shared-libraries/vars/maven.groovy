@@ -74,17 +74,14 @@ def mvnVersionsUpdateParent(String newVersion, boolean allowSnapshots = false) {
     mvnVersionsUpdateParent(new MavenCommand(this), newVersion, allowSnapshots)
 }
 
-def mvnVersionsUpdateParent(MavenCommand mvnCmd, String newVersion, boolean allowSnapshots = false, boolean skipResolution = false) {
-    def cmd = mvnCmd.clone()
+def mvnVersionsUpdateParent(MavenCommand mvnCmd, String newVersion, boolean allowSnapshots = false) {
+    mvnCmd.clone()
             .withOptions(['-N', '-e'])
             .withProperty('full')
             .withProperty('parentVersion', "[${newVersion}]")
             .withProperty('allowSnapshots', allowSnapshots)
             .withProperty('generateBackupPoms', false)
-    if (skipResolution) {
-        cmd.withProperty('skipResolution', true)
-    }
-    cmd.run('versions:update-parent')
+            .run('versions:update-parent')
 }
 
 def mvnVersionsUpdateChildModules(boolean allowSnapshots = false) {
