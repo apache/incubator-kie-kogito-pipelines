@@ -54,7 +54,8 @@ build:
           export MVN_EXCLUSION="!org.drools:drools-quarkus-rules-integration-test,!org.kie.kogito:jbpm-tests,!org.jbpm:jbpm-quarkus-integration-test,!org.kie.kogito:integration-tests-quarkus-norest,!org.kie.kogito:integration-tests-quarkus-norest,!org.kie.kogito:kogito-spring-boot-integration-tests,!org.kie.kogito:integration-tests-springboot-processes-persistence-common,!org.kie.kogito:integration-tests-springboot-decisions-it,!org.kie.kogito:integration-tests-springboot-kafka-it,!org.kie.kogito:integration-tests-springboot-norest-it,!org.kie.kogito:integration-tests-springboot-processes-it,!org.kie.kogito:integration-tests-springboot-processes-persistence-it,!org.kie.kogito:integration-tests-springboot-processes-infinispan,!org.kie.kogito:integration-tests-springboot-processes-jdbc,!org.kie.kogito:integration-tests-springboot-processes-mongodb,!org.kie.kogito:integration-tests-springboot-processes-postgresql"
           echo  ${{ env.MVN_EXCLUSION }}
           mvn clean package -DskipTests -Dfull artifact:3.5.1:compare -Dcompare.fail=false -Dcompare.aggregate.only=true -Dreference.repo=file:~/.m2/repository -pl ${{ env.MVN_EXCLUSION }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS }}
-
+        upstream: |
+          echo "Skipping dependency tree comparison for upstream builds"
   - project: apache/incubator-kie-kogito-apps
     build-command: 
       current: |
@@ -68,7 +69,8 @@ build:
           export MVN_PROJECTS_EXCLUSION=""
           echo  ${{ env.MVN_PROJECTS_EXCLUSION }}
           mvn clean package -DskipTests -Dfull artifact:3.5.1:compare -Dcompare.fail=false -Dcompare.aggregate.only=true -Dreference.repo=file:~/.m2/repository ${{ env.MVN_PROJECTS_EXCLUSION }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_APPS_BUILD_MVN_OPTS }}
-
+        upstream: |
+          echo "Skipping dependency tree comparison for upstream builds"
   - project: apache/incubator-kie-kogito-examples
     build-command:
       # First install the main pom
