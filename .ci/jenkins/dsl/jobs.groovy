@@ -204,7 +204,6 @@ void setupZipSourcesJob() {
 incubator-kie-kogito-runtimes
 incubator-kie-kogito-apps
 incubator-kie-kogito-images
-incubator-kie-optaplanner
 incubator-kie-tools
 incubator-kie-sandbox-quarkus-accelerator''',
                     'Configuration of sources repositories to pack. Format: "repository_name;branch(if-override-needed)" -eg. we want to override default sources branch for some repositories.')
