@@ -20,7 +20,6 @@ Here is a small overview of current pipelines existing around Kogito project.
   - https://github.com/apache/incubator-kie-docs
   - https://github.com/kiegroup/kie-tools
 - OptaPlanner
-  - https://github.com/apache/incubator-kie-optaplanner
   - https://github.com/apache/incubator-kie-optaplanner-quickstarts
   - https://github.com/kiegroup/optaplanner-website
 

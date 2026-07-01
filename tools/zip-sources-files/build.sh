@@ -47,11 +47,6 @@ build_components() {
     mvn clean install -DskipTests -Dfull -Donly.reproducible=true
     cd ..
 
-    # Build OptaPlanner
-    cd incubator-kie-optaplanner || exit 1
-    mvn clean install -DskipTests -Dfull -Donly.reproducible=true
-    cd ..
-
     # Build Kogito Runtimes
     cd incubator-kie-kogito-runtimes || exit 1
     mvn clean install -DskipTests -Dfull -Donly.reproducible=true

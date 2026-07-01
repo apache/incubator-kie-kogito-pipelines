@@ -30,7 +30,6 @@
 #incubator-kie-kogito-runtimes
 #incubator-kie-kogito-apps
 #incubator-kie-kogito-images
-#incubator-kie-optaplanner
 #incubator-kie-tools
 #incubator-kie-sandbox-quarkus-accelerator"
 
