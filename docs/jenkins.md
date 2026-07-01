@@ -194,7 +194,7 @@ jenkins:
   email_creds_id: KOGITO_CI_EMAIL_TO_PERSO
   default_tools:
     jdk: jdk_17_latest
-    maven: maven_3.9.6
+    maven: maven_3.9.11
 
 ```
 
