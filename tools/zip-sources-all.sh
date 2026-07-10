@@ -27,7 +27,6 @@
 ## Configuration in format "repository_name;branch(if-override-needed)"
 ## - eg.not all repositories have main branch
 #SOURCES_REPOSITORIES="incubator-kie-drools
-#incubator-kie-kogito-runtimes
 #incubator-kie-kogito-apps
 #incubator-kie-kogito-images
 #incubator-kie-tools

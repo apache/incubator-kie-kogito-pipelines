@@ -1,18 +1,14 @@
 version: "2.1"
 dependencies:
   - project: apache/incubator-kie-drools
-
-  - project: apache/incubator-kie-kogito-runtimes
-    dependencies:
-      - project: apache/incubator-kie-drools
   
   - project: apache/incubator-kie-kogito-apps
     dependencies:
-      - project: apache/incubator-kie-kogito-runtimes
+      - project: apache/incubator-kie-drools
 
   - project: apache/incubator-kie-kogito-examples
     dependencies:
-      - project: apache/incubator-kie-kogito-runtimes
+      - project: apache/incubator-kie-drools
       - project: apache/incubator-kie-kogito-apps
   
   # - project: kiegroup/kie-jpmml-integration

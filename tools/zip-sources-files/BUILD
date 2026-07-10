@@ -46,17 +46,12 @@ git init .
 mvn clean install -DskipTests -Dfull -Donly.reproducible=true
 cd ..
 
-2. Build Kogito Runtimes:
-cd incubator-kie-kogito-runtimes
-mvn clean install -DskipTests -Dfull -Donly.reproducible=true
-cd ..
-
-3. Build Kogito Apps:
+2. Build Kogito Apps:
 cd incubator-kie-kogito-apps
 mvn clean install -DskipTests -Dfull -Donly.reproducible=true -Pjitexecutor-native
 cd ..
 
-4. Build Kogito Images:
+3. Build Kogito Images:
 cd incubator-kie-kogito-images
 cekit --descriptor kogito-base-builder-image.yaml build docker --platform linux/amd64
 make build-image KOGITO_APPS_TARGET_BRANCH=main ignore_test=true image_name=kogito-data-index-ephemeral
@@ -67,7 +62,7 @@ make build-image KOGITO_APPS_TARGET_BRANCH=main ignore_test=true image_name=kogi
 make build-image KOGITO_APPS_TARGET_BRANCH=main ignore_test=true image_name=kogito-jobs-service-postgresql
 cd ..
 
-5. Build KIE Tools:
+4. Build KIE Tools:
 cd incubator-kie-tools
 git init .
 git config user.name "Builder"

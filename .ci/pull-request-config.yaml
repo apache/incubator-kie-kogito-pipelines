@@ -34,21 +34,6 @@ build:
         mvn dependency:tree -DoutputFile=${{ env.GITHUB_WORKSPACE }}/${{ env.DEPENDENCY_TREE_FILE }} -DappendOutput=true clean ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.DROOLS_BUILD_MVN_OPTS }}
       upstream: |
         mvn dependency:tree -DoutputFile=${{ env.GITHUB_WORKSPACE }}/${{ env.DEPENDENCY_TREE_FILE }} -DappendOutput=true clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.DROOLS_BUILD_MVN_OPTS_UPSTREAM }}
-
-  - project: apache/incubator-kie-kogito-runtimes
-    build-command:
-      current: |
-        export MVN_CMD=`bash -c "if [ '${{ env.ENABLE_DEPLOY }}' = 'true' ]; then printf 'deploy ${{ env.DEPLOY_MVN_OPTS }} ${{ env.KOGITO_RUNTIMES_DEPLOY_MVN_OPTS }}'; else printf 'install'; fi"`
-        mvn dependency:tree -DoutputFile=${{ env.GITHUB_WORKSPACE }}/${{ env.DEPENDENCY_TREE_FILE }} -DappendOutput=true clean -Dfull ${{ env.MVN_CMD }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS }}
-      upstream: |
-        mvn dependency:tree -DoutputFile=${{ env.GITHUB_WORKSPACE }}/${{ env.DEPENDENCY_TREE_FILE }} -DappendOutput=true clean install -Dquickly ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_UPSTREAM }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS_UPSTREAM }}
-      after:
-        current: |
-          export MVN_EXCLUSION="!org.drools:drools-quarkus-rules-integration-test,!org.kie.kogito:jbpm-tests,!org.jbpm:jbpm-quarkus-integration-test,!org.kie.kogito:integration-tests-quarkus-norest,!org.kie.kogito:integration-tests-quarkus-norest,!org.kie.kogito:kogito-spring-boot-integration-tests,!org.kie.kogito:integration-tests-springboot-processes-persistence-common,!org.kie.kogito:integration-tests-springboot-decisions-it,!org.kie.kogito:integration-tests-springboot-kafka-it,!org.kie.kogito:integration-tests-springboot-norest-it,!org.kie.kogito:integration-tests-springboot-processes-it,!org.kie.kogito:integration-tests-springboot-processes-persistence-it,!org.kie.kogito:integration-tests-springboot-processes-infinispan,!org.kie.kogito:integration-tests-springboot-processes-jdbc,!org.kie.kogito:integration-tests-springboot-processes-mongodb,!org.kie.kogito:integration-tests-springboot-processes-postgresql"
-          echo  ${{ env.MVN_EXCLUSION }}
-          mvn clean package -DskipTests -Dfull artifact:3.5.1:compare -Dcompare.fail=false -Dcompare.aggregate.only=true -Dreference.repo=file:~/.m2/repository -pl ${{ env.MVN_EXCLUSION }} ${{ env.BUILD_MVN_OPTS }} ${{ env.BUILD_MVN_OPTS_CURRENT }} ${{ env.KOGITO_RUNTIMES_BUILD_MVN_OPTS }}
-        upstream: |
-          echo "Skipping dependency tree comparison for upstream builds"
   - project: apache/incubator-kie-kogito-apps
     build-command: 
       current: |
