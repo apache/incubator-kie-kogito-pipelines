@@ -28,7 +28,6 @@ This repository contains some of the pipelines of Kogito project.
 
 Apart from this repository, pipelines are also concerning those repositories:
 
-* [kogito-runtimes](https://github.com/apache/incubator-kie-kogito-runtimes)
 * [kogito-apps](https://github.com/apache/incubator-kie-kogito-apps)
 * [kogito-examples](https://github.com/apache/incubator-kie-kogito-examples)
 * [kogito-images](https://github.com/apache/incubator-kie-kogito-images)

@@ -39,7 +39,7 @@ if (isMainStream()) {
     KogitoJobUtils.createQuarkusPlatformUpdateToolsJob(this, 'kogito')
 
     KogitoJobUtils.createMainQuarkusUpdateToolsJob(this,
-        [ 'kogito-runtimes', 'kogito-examples', 'kogito-docs', 'kogito-images' ],
+        [ 'kogito-examples', 'kogito-docs', 'kogito-images' ],
         [ 'radtriste', 'cristianonicolai' ]
     )
 }

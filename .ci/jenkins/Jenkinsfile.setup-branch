@@ -32,22 +32,6 @@ pipeline {
             }
         }
 
-        stage('Init Kogito Runtimes') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addDroolsVersionParam(buildParams)
-                    addKogitoVersionParam(buildParams)
-                    buildJob('kogito-runtimes', buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage('kogito-runtimes')
-                }
-            }
-        }
-
         stage('Init Kogito Apps') {
             steps {
                 script {
