@@ -103,6 +103,12 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
     @Test
     void deploy_failing() throws Exception {
         helper.registerAllowedMethod('build', [Map.class], { map ->
+            if (map.get('job') == 'kogito-apps.build-and-deploy') {
+                return [
+                    result: 'FAILURE',
+                    absoluteUrl: 'URL',
+                ]
+            }
             return [
                 result: 'SUCCESS',
                 absoluteUrl: 'URL',
