@@ -11,7 +11,6 @@ Here is a small overview of current pipelines existing around Kogito project.
   - https://github.com/kiegroup/kie-pmml-integration
 - Kogito
   - https://github.com/apache/incubator-kie-kogito-pipelines
-  - https://github.com/apache/incubator-kie-kogito-runtimes
   - https://github.com/apache/incubator-kie-kogito-apps
   - https://github.com/apache/incubator-kie-kogito-examples
   - https://github.com/apache/incubator-kie-kogito-images

@@ -3,7 +3,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 @Library('jenkins-pipeline-shared-libraries')_
 
 // Deploy jobs
-RUNTIMES_DEPLOY = 'kogito-runtimes.weekly-deploy'
 APPS_DEPLOY = 'kogito-apps.weekly-deploy'
 
 // Map of executed jobs
@@ -44,22 +43,6 @@ pipeline {
                     echo "weekly tag is ${env.WEEKLY_TAG}"
 
                     currentBuild.displayName = env.WEEKLY_TAG
-                }
-            }
-        }
-
-        stage('Build & Deploy Kogito Runtimes') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
-                    addSkipIntegrationTestsParam(buildParams)
-                    buildJob(RUNTIMES_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(RUNTIMES_DEPLOY)
                 }
             }
         }
