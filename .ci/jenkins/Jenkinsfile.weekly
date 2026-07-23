@@ -2,9 +2,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 @Library('jenkins-pipeline-shared-libraries')_
 
-// Deploy jobs
-APPS_DEPLOY = 'kogito-apps.weekly-deploy'
-
 // Map of executed jobs
 // See https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html
 // for more options on built job entity
@@ -43,22 +40,6 @@ pipeline {
                     echo "weekly tag is ${env.WEEKLY_TAG}"
 
                     currentBuild.displayName = env.WEEKLY_TAG
-                }
-            }
-        }
-
-        stage('Build & Deploy Kogito Apps') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams()
-                    addSkipTestsParam(buildParams)
-                    addSkipIntegrationTestsParam(buildParams)
-                    buildJob(APPS_DEPLOY, buildParams)
-                }
-            }
-            post {
-                failure {
-                    addFailedStage(APPS_DEPLOY)
                 }
             }
         }
