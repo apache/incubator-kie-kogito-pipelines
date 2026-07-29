@@ -72,7 +72,6 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
         runJenkinsfileAndAssertSuccess()
 
         assertDeployBuildCalls([
-            'kogito-apps' : [:],
             'kogito-examples': [:],
         ])
         assertTestCallstackContains('githubscm.resolveRepository', 'incubator-kie-kogito-examples, AUTHOR, BRANCH, false, AUTHOR_CREDS_ID')
@@ -91,7 +90,6 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
         runJenkinsfileAndAssertSuccess()
 
         assertDeployBuildCalls([
-            'kogito-apps' : [:],
             'kogito-examples': [:],
         ], true)
 
@@ -103,7 +101,7 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
     @Test
     void deploy_failing() throws Exception {
         helper.registerAllowedMethod('build', [Map.class], { map ->
-            if (map.get('job') == 'kogito-apps.build-and-deploy') {
+            if (map.get('job') == 'quarkus-platform.deploy') {
                 return [
                     result: 'FAILURE',
                     absoluteUrl: 'URL',
@@ -118,7 +116,6 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
         runJenkinsfileAndAssertUnstable()
 
         assertDeployBuildCalls([
-            'kogito-apps' : [:],
             'kogito-examples': [:],
         ])
 
@@ -130,7 +127,7 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
     @Test
     void deploy_unstable() throws Exception {
         helper.registerAllowedMethod('build', [Map.class], { map ->
-            if (map.get('job') == 'kogito-apps.build-and-deploy') {
+            if (map.get('job') == 'quarkus-platform.deploy') {
                 return [
                     result: 'UNSTABLE',
                     absoluteUrl: 'URL',
@@ -145,7 +142,6 @@ class TestJenkinsfileNightly extends SingleFileDeclarativePipelineTest {
         runJenkinsfileAndAssertUnstable()
 
         assertDeployBuildCalls([
-            'kogito-apps' : [:],
             'kogito-examples': [:],
         ])
 

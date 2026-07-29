@@ -2,8 +2,6 @@ import org.jenkinsci.plugins.workflow.libs.Library
 
 @Library('jenkins-pipeline-shared-libraries')_
 
-kogitoAppsRepo = 'kogito-apps'
-
 ARTIFACTS_STAGING_STAGE = 'stage.artifacts.staging'
 
 JOB_PROPERTY_PREFIX = 'build'
@@ -50,16 +48,6 @@ pipeline {
                 always {
                     setReleasePropertyIfneeded('release.version', getReleaseVersion())
                     setReleasePropertyIfneeded('git.tag.name', getGitTagName())
-                }
-            }
-        }
-
-        stage('Build & Deploy Kogito Apps') {
-            steps {
-                script {
-                    def buildParams = getDefaultBuildParams(getReleaseVersion())
-                    addSkipTestsParam(buildParams)
-                    buildJob(getDeployJobName(kogitoAppsRepo), buildParams)
                 }
             }
         }

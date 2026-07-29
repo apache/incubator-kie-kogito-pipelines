@@ -201,7 +201,6 @@ void setupZipSourcesJob() {
         parameters {
             textParam('SOURCES_REPOSITORIES',
                     '''incubator-kie-drools
-incubator-kie-kogito-apps
 incubator-kie-kogito-images
 incubator-kie-tools
 incubator-kie-sandbox-quarkus-accelerator''',

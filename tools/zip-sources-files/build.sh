@@ -47,11 +47,6 @@ build_components() {
     mvn clean install -DskipTests -Dfull -Donly.reproducible=true
     cd ..
 
-    # Build Kogito Apps
-    cd incubator-kie-kogito-apps || exit 1
-    mvn clean install -DskipTests -Dfull -Donly.reproducible=true -Pjitexecutor-native
-    cd ..
-
     # Build Kogito Images
     cd incubator-kie-kogito-images || exit 1
     cekit --descriptor kogito-base-builder-image.yaml build docker --platform linux/amd64
