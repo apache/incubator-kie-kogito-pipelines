@@ -1,3 +1,12 @@
+> [!NOTE]
+> **This repository is archived.**
+>
+> The Kogito CI/CD pipelines maintained here have been retired and replaced by local CI and release scripts
+> now living directly in the [apache/incubator-kie](https://github.com/apache/incubator-kie)
+> and [apache/incubator-kie-tools](https://github.com/apache/incubator-kie-tools) repositories.
+>
+> For CI configuration, release scripts, or to file issues, please use those repositories.
+
 # Kogito Pipelines
 
 This repository contains some of the pipelines of Kogito project.
